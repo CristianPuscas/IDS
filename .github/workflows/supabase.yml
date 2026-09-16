@@ -50,6 +50,14 @@ jobs:
             "$U/storage/v1/object/list/poze" -H "apikey: $K" \
             -H "Content-Type: application/json" -d '{"prefix":"","limit":1}'
 
+          # Scrierea e singurul lucru pe care o citire nu-l poate dovedi.
+          # Rândul foloseşte stop = -1: harta sare peste orice oprire care nu
+          # există, deci proba rămâne invizibilă în album.
+          proba "inserare de probă" \
+            -X POST "$U/rest/v1/poze" -H "apikey: $K" \
+            -H "Content-Type: application/json" -H "Prefer: return=representation" \
+            -d '{"stop":-1,"autor":"probă","path":"probă"}'
+
           if [ "$ok" = "1" ]; then
             echo "Depozitul răspunde la tot ce foloseşte harta."
           else
