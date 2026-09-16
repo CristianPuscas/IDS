@@ -1732,8 +1732,10 @@ try { render(); } catch (err) { /* reincercam dupa ce aflam capabilitatile */ }
       applyRemote(await REMOTE.list());
       mode = "remote"; canWrite = true; canUpload = true;
     } catch (err) {
-      mode = "local"; probeCode = (err && err.code) || "upstream";
-      await withTimeout(loadLocal(), 3000, null);
+      /* Depozitul propriu nu răspunde. În artefact e de aşteptat: CSP-ul de
+         acolo blochează cererile către alt host. Nu cădem direct pe local —
+         încercăm mai întâi capabilităţile artefactului, care poate merg. */
+      probeCode = (err && err.code) || "upstream";
     }
     if (mode === "remote"){
       /* depozitul n-are canal de notificare: întrebăm periodic, dar numai
@@ -1742,8 +1744,8 @@ try { render(); } catch (err) { /* reincercam dupa ce aflam capabilitatile */ }
       document.addEventListener("visibilitychange", function(){
         if (!document.hidden) refreshRemote();
       });
+      return;
     }
-    return;
   }
 
   const use = window.claude && window.claude.use;
