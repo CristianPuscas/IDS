@@ -160,7 +160,9 @@ h1{
 /* ---------- harta ---------- */
 .mapbox{ margin-top:16px; border:1px solid var(--rule); border-radius:10px; background:var(--paper-2); overflow:hidden; }
 .mapscroll{ overflow-x:auto; }
-.mapscroll svg{ display:block; width:100%; min-width:620px; height:auto; }
+/* Safari nu deduce proportia dintr-un viewBox singur: fara raport explicit,
+   `height:auto` da inaltime zero si harta dispare. */
+.mapscroll svg{ display:block; width:100%; min-width:620px; height:auto; aspect-ratio:1000 / 720; }
 .maphint{
   font-family:"Alegreya Sans",sans-serif; font-size:.86rem; color:var(--ink-2);
   padding:10px 16px; border-top:1px solid var(--rule); background:var(--paper);
@@ -718,7 +720,8 @@ function drawMap(){
   });
 
   document.getElementById("stage").innerHTML =
-    '<svg viewBox="0 0 1000 720" role="img" aria-label="Harta traseului de duminică">' +
+    '<svg viewBox="0 0 1000 720" width="1000" height="720" preserveAspectRatio="xMidYMid meet"' +
+      ' role="img" aria-label="Harta traseului de duminică">' +
       DECOR_MAP() + '<g>' + routes + '</g><g>' + marks + '</g><g>' + pins + '</g>' +
     '</svg>';
 
@@ -1703,9 +1706,12 @@ function render(){
   drawMap(); drawPanel(); drawChest();
 }
 
-render();
+/* Daca desenarea cade, pagina tot trebuie sa afle unde se salveaza pozele:
+   altfel blocul de mai jos nici nu porneste. */
+try { render(); } catch (err) { /* reincercam dupa ce aflam capabilitatile */ }
 
 (async function(){
+ try {
   if (hasRemote){
     try {
       applyRemote(await REMOTE.list());
@@ -1714,11 +1720,6 @@ render();
       mode = "local"; probeCode = (err && err.code) || "upstream";
       await withTimeout(loadLocal(), 3000, null);
     }
-    capsChecked = true;
-    hintTail = mode === "remote"
-      ? "Pozele sunt comune — le vede oricine deschide linkul."
-      : "Pozele tale rămân pe dispozitivul ăsta, doar ale tale.";
-    render();
     if (mode === "remote"){
       /* depozitul n-are canal de notificare: întrebăm periodic, dar numai
          cât timp pagina e pe ecran */
@@ -1789,11 +1790,19 @@ render();
     /* IndexedDB ori răspunde repede, ori e blocat: nu merită așteptat mai mult */
     await withTimeout(loadLocal(), 3000, null);
   }
-  capsChecked = true;
-  hintTail = mode === "shared"
-    ? "Pozele sunt comune — le vede oricine deschide harta."
-    : "Pozele tale rămân pe dispozitivul ăsta, doar ale tale.";
-  render();
+ } catch (err){
+   /* orice cadere lasa pagina in modul local, niciodata in asteptare */
+   if (mode !== "remote") mode = "local";
+   if (!probeCode) probeCode = (err && (err.code || err.name)) || "eroare";
+ } finally {
+   /* Mesajul de asteptare are voie sa dispara o singura data: aici.
+      Orice alt drum prin functia asta trece tot pe aici. */
+   capsChecked = true;
+   hintTail = mode === "remote" ? "Pozele sunt comune — le vede oricine deschide linkul."
+     : mode === "shared" ? "Pozele sunt comune — le vede oricine deschide harta."
+     : "Pozele tale rămân pe dispozitivul ăsta, doar ale tale.";
+   render();
+ }
 })();
 </script>
 
