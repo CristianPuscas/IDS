@@ -1,0 +1,12 @@
+# Configurație Netlify pentru site-ul static din public/
+# Documentație: https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  # Nu e nevoie de build — fișierele din public/ se publică așa cum sunt.
+  publish = "public"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
