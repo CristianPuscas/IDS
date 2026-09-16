@@ -382,6 +382,11 @@ h1{
 .al-loot.gold{ background:#e2b561; }
 
 .al-controls{ display:grid; grid-template-columns:1fr 1.15fr 1fr; gap:8px; margin:14px 0; }
+.al-save{
+  display:flex; align-items:center; gap:10px 12px; flex-wrap:wrap; margin:0 0 12px;
+  font-family:"Alegreya Sans",sans-serif; font-size:.84rem; color:#9db4c4;
+}
+.al-save button[disabled]{ opacity:.5; cursor:default; }
 .al-btn{
   height:48px; border:0; border-radius:15px; background:#1c1c1e; color:#f5f5f7;
   font-size:12px; font-weight:650; cursor:pointer; font-family:inherit;
@@ -503,6 +508,11 @@ h1{
     </div>
 
     <div class="al-thumbs" id="albumThumbs"></div>
+
+    <div class="al-save">
+      <button class="al-btn" id="albumVideo" type="button">⬇ Salvează ca video</button>
+      <span id="albumVideoNote"></span>
+    </div>
 
     <div class="al-bottom"><span id="albumCounter"></span></div>
   </div>
@@ -1362,11 +1372,199 @@ function stopTimer(){
   setAuto(false);
 }
 
+/* ---------- albumul ca video ----------
+   Un slideshow desenat pe canvas si inregistrat cu MediaRecorder. Pozele vin
+   de pe alt domeniu, iar o imagine cross-origin desenata direct "pateaza"
+   panza si blocheaza inregistrarea; de aceea fiecare poza e adusa intai ca
+   blob si afisata dintr-un object URL, care e same-origin. */
+const VID = { w: 1280, h: 720, hold: 2800, fade: 420, fps: 30, title: 2400, end: 2200 };
+
+function vidMime(){
+  if (!window.MediaRecorder) return "";
+  /* Niciodata "video/mp4" fara codec: cerut asa, Chromium ambaleaza VP9
+     intr-un container MP4, iar fisierul nu se deschide pe iPhone si nici in
+     QuickTime. MP4 doar cu H.264 confirmat; altfel WebM, etichetat corect. */
+  const list = ["video/mp4;codecs=avc1.42E01E", "video/mp4;codecs=avc1.4D401E",
+                "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+  for (let i = 0; i < list.length; i++){
+    try { if (MediaRecorder.isTypeSupported(list[i])) return list[i]; }
+    catch (err) { /* browserul nu stie tipul; incercam urmatorul */ }
+  }
+  return "";
+}
+
+function videoSupported(){
+  const c = document.createElement("canvas");
+  return !!(window.MediaRecorder && c.captureStream && vidMime());
+}
+
+async function fetchImage(src){
+  const res = await fetch(src);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const url = URL.createObjectURL(await res.blob());
+  const img = new Image();
+  try {
+    await new Promise(function(ok, no){
+      img.onload = ok;
+      img.onerror = function(){ no(new Error("imagine invalida")); };
+      img.src = url;
+    });
+  } catch (err) { URL.revokeObjectURL(url); throw err; }
+  return { img: img, revoke: function(){ URL.revokeObjectURL(url); } };
+}
+
+function drawCover(ctx, img, w, h){
+  const r = Math.max(w / img.width, h / img.height);
+  const dw = img.width * r, dh = img.height * r;
+  ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+}
+
+function fadeAt(local, span, fade){
+  return Math.max(0, Math.min(1, Math.min(local / fade, (span - local) / fade, 1)));
+}
+
+function paintCard(ctx, title, sub, alpha){
+  ctx.globalAlpha = alpha;
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#f7f2e4";
+  ctx.font = "72px 'Pirata One', Papyrus, fantasy";
+  ctx.fillText(title, VID.w / 2, VID.h / 2 - 6);
+  ctx.fillStyle = "#c9b98a";
+  ctx.font = "22px 'Alegreya Sans', sans-serif";
+  ctx.fillText(sub, VID.w / 2, VID.h / 2 + 44);
+  ctx.globalAlpha = 1;
+}
+
+function paintShot(ctx, s, alpha){
+  ctx.globalAlpha = alpha;
+  drawCover(ctx, s.img, VID.w, VID.h);
+  const g = ctx.createLinearGradient(0, VID.h - 190, 0, VID.h);
+  g.addColorStop(0, "rgba(9,18,26,0)");
+  g.addColorStop(1, "rgba(9,18,26,.86)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, VID.h - 190, VID.w, 190);
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#f7f2e4";
+  ctx.font = "34px 'Alegreya Sans', sans-serif";
+  ctx.fillText("Oprirea " + s.n + " — " + s.where, 56, VID.h - (s.by ? 76 : 52));
+  if (s.by){
+    ctx.fillStyle = "#c9b98a";
+    ctx.font = "22px 'Alegreya Sans', sans-serif";
+    ctx.fillText("📷 " + s.by, 56, VID.h - 40);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function paintFrame(ctx, shots, t, head){
+  ctx.fillStyle = "#12283a";
+  ctx.fillRect(0, 0, VID.w, VID.h);
+  if (t < VID.title){
+    paintCard(ctx, head.title, head.sub, fadeAt(t, VID.title, 500));
+    return;
+  }
+  const into = t - VID.title;
+  const i = Math.floor(into / VID.hold);
+  if (i >= shots.length){
+    paintCard(ctx, "Sfârșit", head.sub, fadeAt(into - shots.length * VID.hold, VID.end, 500));
+    return;
+  }
+  paintShot(ctx, shots[i], fadeAt(into - i * VID.hold, VID.hold, VID.fade));
+}
+
+async function buildVideo(note){
+  const mime = vidMime();
+  if (!mime) throw new Error("fara-recorder");
+  const head = {
+    title: document.querySelector(".al-title").textContent.trim(),
+    sub: document.querySelector(".al-sub").textContent.trim()
+  };
+  const shots = [];
+  for (let i = 0; i < slides.length; i++){
+    note("se pregătește poza " + (i + 1) + " din " + slides.length + "…");
+    const got = await fetchImage(srcOf(slides[i].id));
+    shots.push(Object.assign({}, slides[i], got));
+  }
+  /* fonturile trebuie sa fie gata inainte de primul cadru, altfel titlul
+     se deseneaza cu litera de rezerva */
+  try { await document.fonts.ready; } catch (err) { /* fara control pe fonturi */ }
+
+  const cv = document.createElement("canvas");
+  cv.width = VID.w; cv.height = VID.h;
+  const ctx = cv.getContext("2d");
+  paintFrame(ctx, shots, 0, head);
+
+  const rec = new MediaRecorder(cv.captureStream(VID.fps),
+    { mimeType: mime, videoBitsPerSecond: 4500000 });
+  const parts = [];
+  rec.ondataavailable = function(e){ if (e.data && e.data.size) parts.push(e.data); };
+  const closed = new Promise(function(ok){ rec.onstop = ok; });
+  rec.start();
+
+  const total = VID.title + shots.length * VID.hold + VID.end;
+  const t0 = performance.now();
+  await new Promise(function(finish){
+    (function frame(now){
+      const t = now - t0;
+      if (t >= total) { finish(); return; }
+      paintFrame(ctx, shots, t, head);
+      note("se înregistrează… " + Math.min(99, Math.round(t / total * 100)) + "%");
+      requestAnimationFrame(frame);
+    })(performance.now());
+  });
+
+  rec.stop();
+  await closed;
+  shots.forEach(function(x){ x.revoke(); });
+  if (!parts.length) throw new Error("gol");
+  return new Blob(parts, { type: mime.split(";")[0] });
+}
+
+/* In artefact pagina n-are voie sa porneasca singura o descarcare: acolo
+   trece prin capabilitatea `downloads`. Gazduita normal, o ancora ajunge. */
+async function offerVideo(blob, name){
+  const use = window.claude && window.claude.use;
+  if (use){
+    const dl = await use("downloads");
+    if (dl){ await dl.save({ filename: name, data: blob }); return; }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
+}
+
+let vidBusy = false;
+async function saveAlbumVideo(){
+  if (vidBusy) return;
+  const btn = document.getElementById("albumVideo");
+  const note = function(text){ document.getElementById("albumVideoNote").textContent = text; };
+  vidBusy = true; btn.disabled = true;
+  stopTimer();
+  try {
+    const mime = vidMime();
+    const blob = await buildVideo(note);
+    note("se salvează…");
+    await offerVideo(blob, "harta-comorilor" + (mime.indexOf("mp4") > -1 ? ".mp4" : ".webm"));
+    note("gata — " + Math.round(blob.size / 102400) / 10 + " MB");
+  } catch (err){
+    const code = err && err.code;
+    note(code === "declined" ? "Salvarea a fost anulată."
+      : code === "too_large" ? "Filmul e prea mare pentru salvare."
+      : err && err.message === "fara-recorder" ? "Browserul ăsta nu poate face filme. Încearcă din Chrome sau Safari."
+      : "Filmul nu s-a putut face. Mai încearcă o dată.");
+  }
+  vidBusy = false; btn.disabled = false;
+}
+
 function openAlbum(){
   if (!allDone()) return;
   buildAlbum();
   document.getElementById("album").hidden = false;
   document.body.style.overflow = "hidden";
+  /* pe un browser fara inregistrare, butonul nu are ce promite */
+  document.querySelector(".al-save").hidden = !videoSupported();
+  document.getElementById("albumVideoNote").textContent = "";
   showSlide(0, false);
   startTimer();
   document.getElementById("albumClose").focus();
@@ -1387,6 +1585,7 @@ document.getElementById("albumBtn").addEventListener("click", openAlbum);
 document.getElementById("albumClose").addEventListener("click", closeAlbum);
 document.getElementById("albumNext").addEventListener("click", function(){ albumStep(1); });
 document.getElementById("albumPrev").addEventListener("click", function(){ albumStep(-1); });
+document.getElementById("albumVideo").addEventListener("click", saveAlbumVideo);
 document.getElementById("albumAuto").addEventListener("click", function(){
   if (timer) stopTimer();
   else if (slideAt < slides.length) startTimer();

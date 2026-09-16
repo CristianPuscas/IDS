@@ -102,6 +102,26 @@ refuzul la ștergere fără să se strice — butonul de șters arată o eroare 
 Dacă vrei totuși ștergere pentru invitați, varianta sigură e o coloană-secret
 verificată la ștergere, nu accesul liber.
 
+## Albumul ca video
+
+Butonul „Salvează ca video" din album desenează un slideshow pe canvas și îl
+înregistrează cu `MediaRecorder`: card de titlu, fiecare poză cu oprirea și
+autorul, card de final.
+
+Două lucruri de știut dacă umbli la el:
+
+- **Containerul.** Se cere MP4 doar cu H.264 confirmat explicit
+  (`avc1.…`); altfel se trece pe WebM. Cerut ca `video/mp4` fără codec,
+  Chromium ambalează VP9 într-un MP4 — fișierul are antet valid dar nu se
+  deschide pe iPhone sau în QuickTime.
+- **Pozele de pe alt domeniu.** Fiecare poză e adusă întâi ca blob și afișată
+  dintr-un object URL. O imagine cross-origin desenată direct „pătează" panza,
+  iar înregistrarea eșuează.
+
+Înregistrarea merge în timp real, deci durează cât filmul, și are nevoie ca
+pagina să rămână pe ecran. În artefact descărcarea trece prin capabilitatea
+`downloads`; găzduită normal, printr-o ancoră obișnuită.
+
 ## Cum se modifică traseul
 
 Opriri, ore, povești, sfaturi și poziții pe hartă se editează în obiectul
