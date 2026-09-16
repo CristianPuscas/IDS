@@ -1103,8 +1103,14 @@ function stamp(){
    (care poza, la ce oprire, cine), bucket-ul tine fisierele. */
 const REMOTE = (function(){
   const base = String(CONFIG.url).replace(/\/+$/, "");
+  /* Doua formate de cheie publica. Cele vechi sunt JWT (`eyJ...`) si se trimit
+     si ca Bearer, fiindca rolul sta in interiorul lor. Cele noi
+     (`sb_publishable_...`) se rezolva din antetul `apikey` singur, iar trimise
+     ca Bearer pot fi respinse ca jeton de utilizator invalid. */
   const head = function(extra){
-    return Object.assign({ apikey: CONFIG.key, Authorization: "Bearer " + CONFIG.key }, extra || {});
+    const h = { apikey: CONFIG.key };
+    if (/^eyJ/.test(CONFIG.key)) h.Authorization = "Bearer " + CONFIG.key;
+    return Object.assign(h, extra || {});
   };
   const fail = async function(res, what){
     let detail = "";
