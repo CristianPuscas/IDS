@@ -1,0 +1,57 @@
+name: Depozit
+
+# Proxy-ul sesiunii Claude nu poate ajunge la proiect, dar runnerele GitHub pot.
+# Workflow-ul probează exact endpointurile pe care le foloseşte harta şi
+# raportează codurile, ca defectele să se vadă în loguri, nu la Silvia pe telefon.
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/dazzling-babbage-re158y]
+    paths: ["docs/index.html", ".github/workflows/supabase.yml"]
+
+jobs:
+  verifica:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # O singură sursă de adevăr: valorile se citesc din blocul CONFIG al
+      # paginii, ca să nu existe două locuri de actualizat la o rotire de cheie.
+      - id: cfg
+        run: |
+          BLOC=$(awk '/const CONFIG = \{/,/\};/' docs/index.html)
+          echo "url=$(printf '%s' "$BLOC" | sed -n 's/.*url: "\([^"]*\)".*/\1/p')" >> "$GITHUB_OUTPUT"
+          echo "key=$(printf '%s' "$BLOC" | sed -n 's/.*key: "\([^"]*\)".*/\1/p')" >> "$GITHUB_OUTPUT"
+
+      - name: Starea depozitului
+        env:
+          U: ${{ steps.cfg.outputs.url }}
+          K: ${{ steps.cfg.outputs.key }}
+        run: |
+          echo "proiect: $U"
+          ok=1
+
+          proba () {
+            local nume="$1"; shift
+            local cod
+            cod=$(curl -s -o /tmp/raspuns -w '%{http_code}' "$@")
+            echo "--- $nume: HTTP $cod"
+            head -c 400 /tmp/raspuns; echo
+            case "$cod" in 2*) ;; *) ok=0 ;; esac
+          }
+
+          proba "tabel, doar apikey" \
+            "$U/rest/v1/poze?select=id&limit=1" -H "apikey: $K"
+
+          proba "tabel, apikey + Bearer" \
+            "$U/rest/v1/poze?select=id&limit=1" -H "apikey: $K" -H "Authorization: Bearer $K"
+
+          proba "listare bucket" \
+            "$U/storage/v1/object/list/poze" -H "apikey: $K" \
+            -H "Content-Type: application/json" -d '{"prefix":"","limit":1}'
+
+          if [ "$ok" = "1" ]; then
+            echo "Depozitul răspunde la tot ce foloseşte harta."
+          else
+            echo "::warning::Cel puţin o probă a eşuat — vezi codurile de mai sus."
+          fi
