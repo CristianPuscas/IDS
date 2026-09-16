@@ -972,11 +972,16 @@ function proofBlock(){
 
   /* în albumul comun nu intră poze nesemnate: altfel nu se mai știe a cui e care */
   const needsName = mode === "shared" && !who;
-  const readOnly = mode === "shared" && canWrite === false;
+  /* Proba de scriere e un indiciu, nu un verdict: scrie in colectia `probe`,
+     nu in `shots`, si poate pica din motive care n-au legatura cu incarcarea.
+     Nu mai ascundem butonul din cauza ei — omul incearca, iar daca incercarea
+     chiar cade primeste eroarea adevarata, de la operatia adevarata. */
+  const doubtful = mode === "shared" && canWrite === false;
+  const caution = doubtful
+    ? '<p class="gate"><span>👀</span><span>Verificarea spune că acest cont n-ar avea drept de încărcare. Încearcă oricum — dacă merge, cu atât mai bine.</span></p>'
+    : "";
   const uploader = !capsChecked
     ? '<p class="gate"><span>⏳</span><span>Se pregătește locul pentru poze…</span></p>'
-    : readOnly
-    ? '<p class="gate"><span>👀</span><span>Doar vizionare: îți trebuie drept de editare pe hartă ca să încarci. Vezi caseta de sus.</span></p>'
     : '<div class="drop" id="drop"><button class="addbtn" id="addBtn" type="button"' +
         (busy || needsName ? " disabled" : "") + '>' +
         (busy ? "se încarcă…" : "Adaugă poze") + '</button>' +
@@ -989,7 +994,7 @@ function proofBlock(){
     '<span class="proof-count" data-ok="' + ok + '">' + list.length + ' / ' + REQUIRED + '</span></p>' +
     '<span class="pips">' + pips + '</span>' +
     (shots ? '<div class="shots">' + shots + '</div>' : "") +
-    uploader + gate + where + '</div>';
+    caution + uploader + gate + where + '</div>';
 }
 
 function drawPanel(){
@@ -1663,10 +1668,9 @@ function drawStatus(){
   }
   if (mode === "shared" && canWrite === false){
     el.dataset.tone = "warn";
-    el.innerHTML = "👀 <b>Poți vedea albumul, dar nu poți adăuga în el.</b> " +
-      "Harta ți-a fost dată doar pentru vizionare. Ca să încarci poze, cel care a publicat harta " +
-      "trebuie să-ți dea drept de <b>editare</b> din meniul Share al artefactului — " +
-      "accesul „oricine are linkul” nu primește niciodată drept de încărcare." +
+    el.innerHTML = "👀 <b>Verificarea spune că n-ai drept de încărcare — dar încearcă oricum.</b> " +
+      "Proba scrie în altă parte decât pozele, deci se poate înșela. Butonul de adăugat e la locul lui; " +
+      "dacă încărcarea chiar e refuzată, îți spune atunci, cu motivul adevărat." +
       "<span class='code'>cod: " + esc(probeCode) + (permCode ? " · " + esc(permCode) : "") + "</span>";
   } else if (mode === "shared"){
     el.dataset.tone = "ok";
