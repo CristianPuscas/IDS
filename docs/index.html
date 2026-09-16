@@ -970,8 +970,11 @@ function proofBlock(){
     : '<p class="gate"><span>🔒</span><span>Mai ai nevoie de ' + (REQUIRED - list.length) +
       ' ' + (REQUIRED - list.length === 1 ? "poză" : "poze") + ' ca să treci mai departe.</span></p>';
 
-  /* în albumul comun nu intră poze nesemnate: altfel nu se mai știe a cui e care */
-  const needsName = mode === "shared" && !who;
+  /* Semnătura e binevenită, nu obligatorie. Câmpul ei stă în capul paginii, iar
+     pe telefon asta e mult peste ecran: cerută, lăsa un buton mort şi o notă
+     care trimitea „sus”, unde nu se vedea nimic. O poză nesemnată e infinit mai
+     bună decât o poză nepusă. */
+  const unsigned = (mode === "shared" || mode === "remote") && !who;
   /* Proba de scriere e un indiciu, nu un verdict: scrie in colectia `probe`,
      nu in `shots`, si poate pica din motive care n-au legatura cu incarcarea.
      Nu mai ascundem butonul din cauza ei — omul incearca, iar daca incercarea
@@ -983,10 +986,10 @@ function proofBlock(){
   const uploader = !capsChecked
     ? '<p class="gate"><span>⏳</span><span>Se pregătește locul pentru poze…</span></p>'
     : '<div class="drop" id="drop"><button class="addbtn" id="addBtn" type="button"' +
-        (busy || needsName ? " disabled" : "") + '>' +
+        (busy ? " disabled" : "") + '>' +
         (busy ? "se încarcă…" : "Adaugă poze") + '</button>' +
         '<span id="dropNote">' +
-        (needsName ? "Scrie-ți întâi numele, sus." : (status || "sau trage pozele aici")) + '</span>' +
+        (status || (unsigned ? "poţi semna pozele din capul paginii" : "sau trage pozele aici")) + '</span>' +
         '<input type="file" id="fileInput" accept="image/*" multiple></div>';
 
   return '<div class="proof">' +
@@ -1183,7 +1186,6 @@ async function refreshRemote(){
 
 async function takeFiles(fileList){
   if (busy) return;
-  if (mode === "shared" && !who){ document.getElementById("whoInput").focus(); return; }
   const files = Array.prototype.slice.call(fileList || []).filter(function(f){ return /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic)$/i.test(f.name); });
   if (!files.length) return;
   busy = true; status = ""; render();
