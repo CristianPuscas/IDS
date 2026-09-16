@@ -435,7 +435,7 @@ h1{
       <p class="subtitle">Milano &rarr; Lacul Maggiore</p>
       <p class="intro">Nu vizităm un lac, îl <strong>prădăm</strong>. Patru opriri, iar fiecare cere dovadă:
         <strong id="introReq">două poze</strong> făcute acolo. Fără ele, drumul spre următoarea rămâne închis.
-        Pozele le pune oricine deschide harta. La capăt se deschide albumul — și, după el, cufărul.</p>
+        Pozele le pune oricine are drept de editare pe hartă. La capăt se deschide albumul — și, după el, cufărul.</p>
     </div>
     <div class="badge" aria-hidden="true"><b id="badgeNum">2</b><span>poze</span></div>
   </header>
@@ -466,7 +466,7 @@ h1{
   <div class="board">
     <section class="mapbox in-board">
       <div class="mapscroll"><div id="stage"></div></div>
-      <p class="maphint" id="mapHint">Opririle se deschid pe rând: două poze, și se descuie următoarea. Oricine deschide harta poate încărca.</p>
+      <p class="maphint" id="mapHint">Opririle se deschid pe rând: două poze, și se descuie următoarea.</p>
     </section>
     <aside class="panel" id="panel" aria-live="polite"></aside>
   </div>
@@ -801,6 +801,7 @@ const DOC_LIMIT = 250 * 1024;
    abia după ce și-a ales pozele. */
 let canWrite = null;
 let probeCode = "";            /* codul exact cu care a picat proba */
+let permCode = "";             /* ce spune `permissions` despre db/assets */
 
 /* Semnătura: numele și-l scrie fiecare o dată, în browserul lui.
    Capabilitatea `user` nu e disponibilă pe acest cont, deci pagina nu are
@@ -945,7 +946,7 @@ function proofBlock(){
   const uploader = !capsChecked
     ? '<p class="gate"><span>⏳</span><span>Se pregătește locul pentru poze…</span></p>'
     : readOnly
-    ? '<p class="gate"><span>👀</span><span>Doar vizionare: contul ăsta nu poate adăuga poze.</span></p>'
+    ? '<p class="gate"><span>👀</span><span>Doar vizionare: îți trebuie drept de editare pe hartă ca să încarci. Vezi caseta de sus.</span></p>'
     : '<div class="drop" id="drop"><button class="addbtn" id="addBtn" type="button"' +
         (busy || needsName ? " disabled" : "") + '>' +
         (busy ? "se încarcă…" : "Adaugă poze") + '</button>' +
@@ -1325,7 +1326,7 @@ async function migrateOldDoc(shared){
 
 /* ---------- pornire ---------- */
 /* coada indiciului de sub hartă: se schimbă când aflăm unde ajung pozele */
-let hintTail = "Oricine deschide harta poate încărca.";
+let hintTail = "";
 
 /* Unde ajung pozele — spus din capul paginii, ca nimeni să nu încarce
    degeaba o oprire întreagă. Caseta se vede ÎNTOTDEAUNA: dacă verificarea
@@ -1339,9 +1340,11 @@ function drawStatus(){
   }
   if (mode === "shared" && canWrite === false){
     el.dataset.tone = "warn";
-    el.innerHTML = "👀 <b>Poți vedea albumul comun, dar nu poți adăuga în el.</b> " +
-      "Depozitul a refuzat scrierea pentru contul ăsta. " +
-      "<span class='code'>cod: " + esc(probeCode) + "</span>";
+    el.innerHTML = "👀 <b>Poți vedea albumul, dar nu poți adăuga în el.</b> " +
+      "Harta ți-a fost dată doar pentru vizionare. Ca să încarci poze, cel care a publicat harta " +
+      "trebuie să-ți dea drept de <b>editare</b> din meniul Share al artefactului — " +
+      "accesul „oricine are linkul” nu primește niciodată drept de încărcare." +
+      "<span class='code'>cod: " + esc(probeCode) + (permCode ? " · " + esc(permCode) : "") + "</span>";
   } else if (mode === "shared"){
     el.dataset.tone = "ok";
     el.innerHTML = "👥 <b>Album comun.</b> Pozele se salvează pe server: " +
@@ -1364,7 +1367,9 @@ function whyNoShared(){
     return "<b>Ai deschis harta ca pagină separată.</b> Așa nu funcționează niciodată depozitul comun. " +
       "Deschide-o din conversația Claude, unde harta apare în panoul ei — pe telefon, din aplicația Claude.";
   }
-  return "Contul cu care ești conectat nu primește acces la depozitul comun al hărții.";
+  return "Contul cu care ești conectat nu are drept de scriere pe hartă. " +
+    "Proprietarul trebuie să-l adauge cu drept de <b>editare</b> din meniul Share." +
+    (permCode ? " <span class='code'>" + esc(permCode) + "</span>" : "");
 }
 
 function render(){
@@ -1373,7 +1378,7 @@ function render(){
   document.getElementById("introReq").textContent = pozeWord(REQUIRED);
   document.getElementById("badgeNum").textContent = REQUIRED;
   document.getElementById("mapHint").textContent =
-    "Opririle se deschid pe rând: " + pozeWord(REQUIRED) + ", și se descuie următoarea. " + hintTail;
+    ("Opririle se deschid pe rând: " + pozeWord(REQUIRED) + ", și se descuie următoarea. " + hintTail).trim();
   if (active > 0 && !open(active)) active = 0;
   drawMap(); drawPanel(); drawChest();
 }
@@ -1384,6 +1389,15 @@ render();
   const use = window.claude && window.claude.use;
   let shared = null;
   if (use){
+    /* `permissions` e built-in si nu prompteaza: singura cale de a deosebi
+       "nu e servit" de "contul asta n-are dreptul" fara sa ghicim */
+    const perms = await withTimeout(window.claude.use("permissions"), 8000, null);
+    if (perms){
+      try {
+        const st = await perms.state();
+        permCode = "db:" + (st.db || "unavailable") + " assets:" + (st.assets || "unavailable");
+      } catch (err) { /* fara diagnostic, mergem mai departe */ }
+    }
     /* contractul promite un răspuns în ~10s; peste asta mergem mai departe */
     shared = await withTimeout(window.claude.use("db"), 12000, null);
     assetsApi = await withTimeout(window.claude.use("assets"), 12000, null);
