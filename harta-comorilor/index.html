@@ -1,0 +1,1442 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Harta Comorilor Milano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Pirata+One&display=swap">
+</head>
+<body>
+<style>
+:root{
+  --paper: rgb(250,246,238);
+  --paper-2: rgb(243,236,223);
+  --paper-3: rgb(234,224,206);
+  --ink: rgb(44,37,29);
+  --ink-2: rgb(96,85,70);
+  --rule: rgb(206,193,170);
+  --seal: rgb(158,58,38);
+  --gold: rgb(150,108,34);
+  --gold-soft: rgb(228,206,158);
+  --water: rgb(198,220,224);
+  --water-2: rgb(122,160,166);
+  --terrain: rgb(216,228,203);
+  --terrain-2: rgb(139,163,124);
+  --shadow: rgba(60,48,34,0.12);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper: rgb(32,29,26);
+    --paper-2: rgb(41,37,33);
+    --paper-3: rgb(52,46,40);
+    --ink: rgb(240,234,223);
+    --ink-2: rgb(183,172,156);
+    --rule: rgb(86,76,65);
+    --seal: rgb(226,122,96);
+    --gold: rgb(226,181,97);
+    --gold-soft: rgb(84,68,42);
+    --water: rgb(48,70,76);
+    --water-2: rgb(120,159,166);
+    --terrain: rgb(50,62,46);
+    --terrain-2: rgb(126,152,116);
+    --shadow: rgba(0,0,0,0.4);
+  }
+}
+:root[data-theme="dark"]{
+  --paper: rgb(32,29,26);
+  --paper-2: rgb(41,37,33);
+  --paper-3: rgb(52,46,40);
+  --ink: rgb(240,234,223);
+  --ink-2: rgb(183,172,156);
+  --rule: rgb(86,76,65);
+  --seal: rgb(226,122,96);
+  --gold: rgb(226,181,97);
+  --gold-soft: rgb(84,68,42);
+  --water: rgb(48,70,76);
+  --water-2: rgb(120,159,166);
+  --terrain: rgb(50,62,46);
+  --terrain-2: rgb(126,152,116);
+  --shadow: rgba(0,0,0,0.4);
+}
+</style>
+<style>
+*{ box-sizing:border-box }
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"EB Garamond","Iowan Old Style",Georgia,serif;
+  font-size:18px;
+  line-height:1.65;
+  -webkit-text-size-adjust:100%;
+}
+.sheet{ max-width:1160px; margin:0 auto; padding-inline:20px; padding-block:clamp(26px,5vw,52px) 60px; }
+h1,h2,h3{ margin:0; text-wrap:balance; }
+p{ margin:0; }
+
+/* ---------- antet ---------- */
+.head{ display:flex; gap:22px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+.kicker{
+  font-family:"Alegreya Sans",sans-serif;
+  font-size:.86rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-2); margin-bottom:6px;
+}
+h1{
+  font-family:"Pirata One",Papyrus,fantasy; font-weight:400;
+  font-size:clamp(2.6rem,7vw,4rem); line-height:1; letter-spacing:.01em;
+}
+.subtitle{
+  font-family:"Alegreya Sans",sans-serif; font-weight:500;
+  font-size:1.05rem; letter-spacing:.06em; color:var(--seal);
+  margin-top:6px;
+}
+.intro{ max-width:62ch; margin-top:16px; color:var(--ink-2); }
+.intro strong{ color:var(--ink); font-weight:600; }
+.badge{
+  flex:none; width:96px; height:96px; border-radius:50%;
+  display:grid; place-items:center; text-align:center;
+  background:var(--seal); color:var(--paper);
+  box-shadow:0 3px 10px var(--shadow);
+}
+.badge b{ font-family:"Pirata One",fantasy; font-size:1.9rem; line-height:1; }
+.badge span{ font-family:"Alegreya Sans",sans-serif; font-size:.6rem; letter-spacing:.16em; text-transform:uppercase; }
+
+/* ---------- progres ---------- */
+.tally{
+  margin-top:28px; padding:14px 18px;
+  border:1px solid var(--rule); border-radius:8px; background:var(--paper-2);
+  display:flex; align-items:center; gap:12px 18px; flex-wrap:wrap;
+  font-family:"Alegreya Sans",sans-serif;
+}
+.tally b{ font-size:1.25rem; color:var(--seal); font-variant-numeric:tabular-nums; }
+.tally .lbl{ color:var(--ink-2); font-size:.95rem; }
+.bar{ flex:1 1 180px; height:9px; min-width:140px; border-radius:99px; background:var(--paper-3); overflow:hidden; }
+.bar i{ display:block; height:100%; width:0; background:var(--gold); border-radius:99px; transition:width .35s ease; }
+/* ---------- unde ajung pozele ---------- */
+.statusline{
+  margin-top:12px; padding:12px 16px; border-radius:8px;
+  border:1px solid var(--rule); background:var(--paper-2); color:var(--ink-2);
+  font-family:"Alegreya Sans",sans-serif; font-size:.95rem; line-height:1.5;
+}
+.statusline b{ color:var(--ink); font-weight:700; }
+.statusline[data-tone="ok"]{ border-color:var(--gold); background:var(--gold-soft); color:var(--ink); }
+.statusline[data-tone="warn"]{ border-color:var(--seal); border-width:1.5px; color:var(--ink); }
+.statusline[data-tone="warn"] b{ color:var(--seal); }
+.statusline .code{
+  display:inline-block; margin-left:4px; padding:1px 8px; border-radius:99px;
+  background:var(--paper-3); color:var(--ink-2);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.8rem;
+}
+
+/* ---------- semnătura ---------- */
+.whobox{
+  margin-top:10px; padding:11px 16px; border-radius:8px;
+  border:1px dashed var(--rule); background:var(--paper-2);
+  font-family:"Alegreya Sans",sans-serif; font-size:.95rem; color:var(--ink-2);
+}
+.whobox p{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.whobox[data-set="true"] .who-edit{ display:none; }
+.whobox[data-set="false"] .who-done{ display:none; }
+.whobox b{ color:var(--ink); }
+.whobox input{
+  font-family:inherit; font-size:.95rem; padding:7px 12px; min-width:0; flex:1 1 150px;
+  border:1px solid var(--rule); border-radius:99px;
+  background:var(--paper); color:var(--ink);
+}
+.whobox button{
+  font-family:inherit; font-size:.9rem; font-weight:500; cursor:pointer;
+  border:1.5px solid var(--seal); background:transparent; color:var(--seal);
+  border-radius:99px; padding:6px 15px;
+}
+.whobox button:hover{ background:var(--seal); color:var(--paper); }
+.shot .who{
+  position:absolute; left:0; right:0; bottom:0; padding:9px 4px 2px;
+  font-family:"Alegreya Sans",sans-serif; font-size:.62rem; text-align:center;
+  color:#fff; background:linear-gradient(to top, rgba(12,10,8,.8), transparent);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+/* ---------- restul paginii ---------- */
+:focus-visible{ outline:2.5px solid var(--seal); outline-offset:2px; }
+
+/* ---------- harta ---------- */
+.mapbox{ margin-top:16px; border:1px solid var(--rule); border-radius:10px; background:var(--paper-2); overflow:hidden; }
+.mapscroll{ overflow-x:auto; }
+.mapscroll svg{ display:block; width:100%; min-width:620px; height:auto; }
+.maphint{
+  font-family:"Alegreya Sans",sans-serif; font-size:.86rem; color:var(--ink-2);
+  padding:10px 16px; border-top:1px solid var(--rule); background:var(--paper);
+}
+
+.ill{ fill:none; stroke:#1c3a54; stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round; }
+.sea{ fill:#bfdfe9; stroke:#1c3a54; stroke-width:2.5; }
+.bigtitle{
+  font-family:"Alegreya Sans",sans-serif; font-weight:700; font-size:44px;
+  fill:#1c3a54; letter-spacing:.06em;
+}
+.bigsub{ font-family:"Alegreya Sans",sans-serif; font-size:14px; fill:#4f7086; letter-spacing:.24em; }
+.placename{ font-family:"Alegreya Sans",sans-serif; font-weight:700; font-size:14px; fill:#4f7086; letter-spacing:.2em; }
+.placename.sm{ font-weight:400; font-size:12px; letter-spacing:.12em; }
+
+.route{ fill:none; stroke:#ffffff; stroke-width:11; stroke-linecap:round; }
+.route-flow{ fill:none; stroke:#f2b705; stroke-width:11; stroke-linecap:round; }
+.route-spark{
+  fill:none; stroke:#fff6cf; stroke-width:13; stroke-linecap:round;
+  filter:drop-shadow(0 0 7px #f2b705);
+}
+.legmark{ font-size:17px; text-anchor:middle; dominant-baseline:central; }
+.legnote{
+  font-family:"Alegreya Sans",sans-serif; font-size:13px; fill:#1c3a54; text-anchor:middle;
+  paint-order:stroke; stroke:#d5e4c4; stroke-width:4; stroke-linejoin:round;
+}
+
+.stop{ cursor:pointer; }
+.stop .dot{ fill:#ffffff; stroke:#1c3a54; stroke-width:3; }
+.stop .ring{ fill:none; stroke:#c4523a; stroke-width:3; opacity:0; }
+.stop[data-active="true"] .ring{ opacity:1; }
+.stop[data-found="true"] .dot{ fill:#f2b705; stroke:#1c3a54; }
+.stop:hover .dot{ fill:#ffe9a8; }
+.stop .stopname{
+  font-family:"Alegreya Sans",sans-serif; font-weight:700; font-size:17px;
+  fill:#1c3a54; letter-spacing:.06em; pointer-events:none;
+  paint-order:stroke; stroke:#ffffff; stroke-width:5; stroke-linejoin:round;
+}
+.stop .stopmeta{
+  font-family:"Alegreya Sans",sans-serif; font-size:13.5px; fill:#4f7086;
+  pointer-events:none; paint-order:stroke; stroke:#ffffff; stroke-width:4; stroke-linejoin:round;
+}
+.stop[data-found="true"] .stopmeta{ fill:#8a6a12; font-weight:700; }
+.stop[data-locked="true"]{ cursor:not-allowed; }
+.stop[data-locked="true"] .ill{ opacity:.34; }
+.stop[data-locked="true"] .stopname,
+.stop[data-locked="true"] .stopmeta{ fill:#7e8f7a; }
+
+</style>
+<style>
+/* ---------- harta + panou ---------- */
+.board{ display:grid; grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr); gap:16px; align-items:start; margin-top:16px; }
+.mapbox.in-board{ margin-top:0; }
+.daynote{ font-family:"Alegreya Sans",sans-serif; font-size:.95rem; color:var(--ink-2); margin-top:30px; max-width:70ch; }
+.panel{
+  position:sticky; top:16px;
+  border:1px solid var(--rule); border-radius:10px; background:var(--paper-2);
+  padding:16px 18px 20px;
+}
+.panel-actions{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding-bottom:14px; margin-bottom:14px; border-bottom:1px solid var(--rule);
+}
+.navbtn{
+  font-family:"Alegreya Sans",sans-serif; font-size:1rem; line-height:1;
+  width:36px; height:36px; border-radius:50%; cursor:pointer;
+  border:1px solid var(--rule); background:var(--paper); color:var(--ink);
+}
+.navbtn:hover:not(:disabled){ background:var(--paper-3); }
+.navbtn:disabled{ opacity:.4; cursor:not-allowed; }
+.navspacer{ margin-left:auto; display:flex; gap:8px; }
+.btn{
+  font-family:"Alegreya Sans",sans-serif; font-size:.95rem; font-weight:500;
+  border:1.5px solid var(--seal); background:transparent; color:var(--seal);
+  border-radius:99px; padding:8px 18px; cursor:pointer;
+}
+.btn:hover{ background:var(--seal); color:var(--paper); }
+.btn[data-on="true"]{ background:var(--gold); border-color:var(--gold); color:var(--paper); }
+.panel-step{
+  font-family:"Alegreya Sans",sans-serif; font-size:.82rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-2);
+}
+.panel h3{ font-size:1.35rem; font-weight:600; line-height:1.25; margin-top:6px; }
+.panel .alias{ font-family:"Alegreya Sans",sans-serif; font-size:.95rem; color:var(--seal); margin-top:3px; }
+.chips{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+.chip{
+  font-family:"Alegreya Sans",sans-serif; font-size:.85rem;
+  border:1px solid var(--rule); border-radius:99px; padding:2px 11px;
+  color:var(--ink-2); background:var(--paper); font-variant-numeric:tabular-nums;
+}
+.panel .story{ margin-top:14px; }
+.panel .tip{ margin-top:12px; padding:12px 14px; border-radius:6px; background:var(--paper-3); font-size:.97rem; }
+.panel .tip b{
+  display:block; font-family:"Alegreya Sans",sans-serif; font-weight:700;
+  font-size:.78rem; letter-spacing:.1em; text-transform:uppercase; color:var(--seal); margin-bottom:4px;
+}
+.hopline{
+  display:flex; align-items:center; gap:8px;
+  margin-top:12px; padding:9px 12px; border-radius:6px;
+  border:1px dashed var(--rule); background:var(--paper);
+  font-family:"Alegreya Sans",sans-serif; font-size:.9rem; color:var(--ink-2);
+}
+.hopline b{ color:var(--ink); font-weight:500; }
+
+/* ---------- dovada: pozele ---------- */
+.proof{ margin-top:16px; padding:14px; border-radius:8px; border:1px solid var(--rule); background:var(--paper); }
+.proof-head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  font-family:"Alegreya Sans",sans-serif; font-size:.82rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-2);
+}
+.proof-count{ font-weight:700; color:var(--seal); font-variant-numeric:tabular-nums; letter-spacing:0; font-size:1rem; }
+.proof-count[data-ok="true"]{ color:var(--gold); }
+.pips{ display:flex; flex-wrap:wrap; gap:4px; margin-top:10px; }
+.pips i{ width:15px; height:5px; border-radius:99px; background:var(--paper-3); display:block; }
+.pips i.on{ background:var(--gold); }
+.shots{ display:grid; grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); gap:6px; margin-top:12px; }
+.shot{ position:relative; aspect-ratio:1; border-radius:6px; overflow:hidden; background:var(--paper-3); }
+.shot img{ width:100%; height:100%; object-fit:cover; display:block; }
+.shot .rm{
+  position:absolute; top:3px; right:3px; width:20px; height:20px; border-radius:50%;
+  border:none; cursor:pointer; font-size:.75rem; line-height:1;
+  background:rgba(20,16,12,.72); color:#fff;
+}
+.drop{
+  margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:12px; border:1.5px dashed var(--rule); border-radius:8px;
+  font-family:"Alegreya Sans",sans-serif; font-size:.88rem; color:var(--ink-2);
+}
+.drop[data-over="true"]{ border-color:var(--seal); background:var(--paper-3); }
+.drop input[type=file]{ position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+.addbtn{
+  font-family:"Alegreya Sans",sans-serif; font-size:.92rem; font-weight:500;
+  border:1.5px solid var(--ink); background:var(--ink); color:var(--paper);
+  border-radius:99px; padding:8px 16px; cursor:pointer;
+}
+.addbtn:hover{ background:var(--seal); border-color:var(--seal); }
+.addbtn:disabled{ opacity:.5; cursor:progress; }
+.gate{
+  margin-top:12px; font-family:"Alegreya Sans",sans-serif; font-size:.88rem;
+  color:var(--seal); display:flex; gap:8px; align-items:flex-start;
+}
+.gate[data-ok="true"]{ color:var(--gold); }
+.pin[data-locked="true"] .disc{ stroke-dasharray:3 3; fill:var(--paper-3); }
+.pin[data-locked="true"]{ cursor:not-allowed; }
+.pin[data-locked="true"] .lbl{ fill:var(--ink-2); font-weight:400; }
+
+/* ---------- cufar ---------- */
+.chest{
+  margin-top:40px; padding:26px 24px; text-align:center;
+  border:1px solid var(--rule); border-radius:10px; background:var(--paper-2);
+}
+.chest .lid{ font-size:2.6rem; line-height:1; display:block; }
+.chest h3{ font-family:"Pirata One",fantasy; font-weight:400; font-size:1.7rem; margin:8px 0 6px; }
+.chest p{ max-width:56ch; margin:0 auto; color:var(--ink-2); }
+.chest[data-open="true"]{ border-color:var(--gold); background:var(--gold-soft); }
+.chest[data-open="true"] h3{ color:var(--gold); }
+.chest[data-open="true"] p{ color:var(--ink); }
+.loot{
+  display:inline-block; margin-top:16px; border:none;
+  font-family:"Alegreya Sans",sans-serif; font-size:1.05rem; font-weight:700;
+  padding:13px 26px; border-radius:99px; cursor:pointer;
+  background:var(--ink); color:var(--paper); text-decoration:none;
+}
+.loot:hover{ background:var(--seal); }
+
+.foot{
+  margin-top:34px; padding-top:16px; border-top:1px solid var(--rule);
+  font-family:"Alegreya Sans",sans-serif; font-size:.88rem; color:var(--ink-2);
+  display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;
+}
+
+/* ---------- albumul ---------- */
+.album{
+  position:fixed; inset:0; z-index:50;
+  background:#050506; color:#f5f5f7;
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+}
+.album[hidden]{ display:none; }
+.album-wrap{ max-width:760px; margin:auto; padding:18px 14px 28px; }
+
+.al-head{ display:flex; justify-content:space-between; align-items:flex-start; padding:2px 3px 24px; }
+.al-title{ font-size:11px; font-weight:800; letter-spacing:.16em; line-height:1.2; }
+.al-sub{ font-size:9px; color:#77777e; margin-top:6px; letter-spacing:.18em; text-transform:uppercase; }
+.al-x{
+  flex:none; width:42px; height:42px; display:grid; place-items:center;
+  border:1px solid #ffffff14; border-radius:50%; background:#1c1c1e; color:#fff;
+  font-size:16px; cursor:pointer; font-family:inherit;
+}
+.al-x:active{ transform:scale(.9); }
+
+.al-stage{
+  position:relative; width:100%; aspect-ratio:4/5;
+  min-height:390px; max-height:min(68vh,880px);
+  overflow:hidden; border-radius:28px; background:#111113;
+  border:1px solid #ffffff12; box-shadow:0 24px 80px #000;
+}
+.al-stage img{ width:100%; height:100%; object-fit:cover; display:block; }
+.al-stage img.enter{ animation:enter 2s cubic-bezier(.2,.75,.2,1) both; }
+@keyframes enter{
+  0%{ opacity:0; transform:scale(1.10) translateY(24px); filter:blur(14px); }
+  35%{ opacity:.45; transform:scale(1.045) translateY(10px); filter:blur(7px); }
+  68%{ opacity:.82; transform:scale(1.015) translateY(2px); filter:blur(1px); }
+  100%{ opacity:1; transform:scale(1.055) translateY(0); filter:blur(0); }
+}
+
+.al-final{ height:100%; display:grid; place-items:center; text-align:center; padding:35px; }
+.al-final .lid{ font-size:44px; line-height:1; display:block; }
+.al-final h2{ font-size:19px; font-weight:750; letter-spacing:-.5px; margin:14px 0 7px; }
+.al-final p{ font-size:12px; color:#77777e; line-height:1.5; margin:0 auto; max-width:34ch; }
+.al-loot{
+  display:inline-block; margin-top:20px; border:0; border-radius:15px;
+  padding:14px 24px; font-size:12px; font-weight:650; cursor:pointer;
+  background:#f5f5f7; color:#08080a; text-decoration:none; font-family:inherit;
+}
+.al-loot:active{ transform:scale(.98); }
+.al-loot.gold{ background:#e2b561; }
+
+.al-controls{ display:grid; grid-template-columns:1fr 1.15fr 1fr; gap:8px; margin:14px 0; }
+.al-btn{
+  height:48px; border:0; border-radius:15px; background:#1c1c1e; color:#f5f5f7;
+  font-size:12px; font-weight:650; cursor:pointer; font-family:inherit;
+}
+.al-btn.primary{ background:#f5f5f7; color:#08080a; }
+.al-btn:disabled{ opacity:.3; cursor:not-allowed; }
+.al-btn:active:not(:disabled){ transform:scale(.98); }
+.al-btn.autoActive{ background:#f5f5f7; color:#08080a; }
+
+.al-thumbs{
+  display:grid; grid-template-columns:repeat(7,1fr); align-content:start; gap:5px;
+  margin-top:16px; max-height:232px; overflow-y:auto; scrollbar-width:thin;
+}
+.al-thumb{
+  width:100%; aspect-ratio:1; object-fit:cover; border-radius:9px;
+  opacity:.38; cursor:pointer; transition:.25s;
+}
+.al-thumb.active{ opacity:1; box-shadow:0 0 0 2px #fff; transform:scale(.92); }
+
+.al-bottom{
+  display:flex; justify-content:center; text-align:center;
+  padding-top:14px; color:#63636a; font-size:11px;
+}
+
+@media (max-width:900px){
+  .board{ grid-template-columns:1fr; }
+  .panel{ position:static; }
+}
+/* pe ecran lat strâmtăm coloana, ca poza să rămână portret și să încapă tot */
+@media (min-width:700px){
+  .album-wrap{ max-width:600px; }
+  .al-stage{ max-height:56vh; }
+  .al-thumbs{ max-height:160px; }
+}
+@media (max-width:450px){
+  .album-wrap{ padding:10px 10px 22px; }
+  .al-title{ font-size:10px; }
+  .al-stage{ min-height:350px; border-radius:23px; }
+  .al-thumbs{ grid-template-columns:repeat(6,1fr); max-height:196px; }
+  .al-btn{ font-size:11px; }
+}
+@media (prefers-reduced-motion:reduce){
+  .album *{ animation:none!important; transition:none!important; }
+}
+</style>
+<main class="sheet">
+  <header class="head">
+    <div>
+      <p class="kicker">Jurnal de bord &middot; duminică</p>
+      <h1>Harta Comorilor</h1>
+      <p class="subtitle">Milano &rarr; Lacul Maggiore</p>
+      <p class="intro">Nu vizităm un lac, îl <strong>prădăm</strong>. Patru opriri, iar fiecare cere dovadă:
+        <strong id="introReq">două poze</strong> făcute acolo. Fără ele, drumul spre următoarea rămâne închis.
+        Pozele le pune oricine deschide harta. La capăt se deschide albumul — și, după el, cufărul.</p>
+    </div>
+    <div class="badge" aria-hidden="true"><b id="badgeNum">2</b><span>poze</span></div>
+  </header>
+
+  <div class="tally">
+    <b id="tallyCount">0/4</b>
+    <span class="lbl">opriri cu dovada făcută</span>
+    <span class="bar" aria-hidden="true"><i id="barFill"></i></span>
+    <span class="lbl" id="shotTotal"></span>
+  </div>
+
+  <p class="statusline" id="statusLine" data-tone="wait">⏳ Se verifică unde se salvează pozele…</p>
+
+  <div class="whobox" id="whoBox" data-set="false" hidden>
+    <p class="who-edit">
+      <label for="whoInput">Semnezi pozele ca</label>
+      <input id="whoInput" type="text" maxlength="24" placeholder="numele tău" autocomplete="nickname">
+      <button id="whoSave" type="button">Salvează</button>
+    </p>
+    <p class="who-done">
+      <span>✍️ Încarci ca <b id="whoName"></b></span>
+      <button id="whoEdit" type="button">schimbă</button>
+    </p>
+  </div>
+
+  <p class="daynote" id="dayNote"></p>
+
+  <div class="board">
+    <section class="mapbox in-board">
+      <div class="mapscroll"><div id="stage"></div></div>
+      <p class="maphint" id="mapHint">Opririle se deschid pe rând: două poze, și se descuie următoarea. Oricine deschide harta poate încărca.</p>
+    </section>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <section class="chest" id="chest" data-open="false">
+    <span class="lid" id="chestLid" aria-hidden="true">🧰</span>
+    <h3 id="chestTitle">Cufărul e încă închis</h3>
+    <p id="chestText">Adună cele două poze la fiecare dintre cele patru opriri.</p>
+    <button class="loot" id="albumBtn" type="button" hidden>Vezi ce este în comoară</button>
+  </section>
+
+  <footer class="foot">
+    <span>Orele sunt orientative, nu obligatorii.</span>
+    <span>Verifică ultima cursă de întoarcere înainte de plecare.</span>
+  </footer>
+</main>
+
+<div class="album" id="album" hidden role="dialog" aria-modal="true" aria-label="Albumul lui Silvia">
+  <div class="album-wrap">
+    <header class="al-head">
+      <div>
+        <div class="al-title">ALBUMUL LUI SILVIA</div>
+        <div class="al-sub">12 NOIEMBRIE 2026</div>
+      </div>
+      <button class="al-x" id="albumClose" type="button" aria-label="Închide albumul">✕</button>
+    </header>
+
+    <section class="al-stage" id="albumStage" aria-live="polite"></section>
+
+    <div class="al-controls">
+      <button class="al-btn" id="albumPrev" type="button">‹ Înapoi</button>
+      <button class="al-btn primary" id="albumAuto" type="button">▶ AUTO</button>
+      <button class="al-btn" id="albumNext" type="button">Înainte ›</button>
+    </div>
+
+    <div class="al-thumbs" id="albumThumbs"></div>
+
+    <div class="al-bottom"><span id="albumCounter"></span></div>
+  </div>
+</div>
+<script>
+const DATA = {
+  d2: {
+    tabLabel: "Duminică",
+    cart: "Arhipelagul Borromeo",
+    cartSub: "expediție pe apă &middot; dus-întors într-o zi",
+    note: "O zi cu două mijloace de transport și o singură regulă: nu pierde ultimul vaporaș spre Stresa.",
+    stops: [
+      { n:1, x:832, y:612, anchor:"end", lx:-26, ly:4,
+        name:"Milano Centrale", map:"Milano Centrale",
+        code:"Portul de fier", icon:"🚆", time:"08:30", dur:"plecarea",
+        story:"O gară construită ca să sperie: două sute de metri de piatră, vulturi, cai înaripați și boltă de sticlă peste peroane. De aici pleacă corabia — doar că are roți.",
+        tip:"Spre Stresa faci în jur de o oră (regionalul ceva mai mult). Ia bilet dus-întors, validează-l dacă e pe hârtie și fotografiază orarul ultimei curse de întoarcere înainte să urci." },
+      { n:2, x:248, y:302, anchor:"end", lx:-26, ly:4,
+        name:"Stresa", map:"Stresa",
+        code:"Satul de la țărm", icon:"⚓", time:"~09:45", dur:"escală",
+        story:"Debarcaderul. Faleza cu hoteluri albe, palmieri care n-ar trebui să existe la poalele Alpilor și un lac care se face argintiu dimineața. De aici înainte nu se mai merge pe uscat.",
+        tip:"Gara e la zece minute de mers de debarcader, la vale. Ia biletul de vaporaș care îți permite să cobori și să urci pe insule cât vrei — iese mai bine decât bilete separate." },
+      { n:3, x:522, y:432, isle:true, anchor:"start", lx:28, ly:4,
+        name:"Isola Bella", map:"Isola Bella",
+        code:"Insula-corabie", icon:"🏰", time:"10:15", dur:"~2h",
+        story:"O stâncă transformată în navă de piatră: palatul la proră, grădina în zece terase la pupa. Păunii albi patrulează pe trepte ca niște gardieni care știu că nu-i poate concedia nimeni.",
+        tip:"Palazzo Borromeo plus grădinile cer două ore bune. Nu rata grota de la parter, îmbrăcată toată în scoici și pietriș — cea mai ciudată și mai răcoroasă cameră de pe lac." },
+      { n:4, x:430, y:228, isle:true, anchor:"start", lx:28, ly:2,
+        name:"Isola dei Pescatori", map:"Isola dei Pescatori",
+        code:"Insula pescarilor", icon:"🐟", time:"13:00", dur:"~2h",
+        story:"Singura insulă locuită tot anul: case lipite una de alta, plase puse la uscat, o stradă și jumătate. Se traversează în cinci minute și se ține minte mult mai mult.",
+        tip:"Prânz cu pește de lac, la o masă cât mai aproape de apă. Apoi vaporașul înapoi la Stresa și trenul spre Milano — pleacă din timp, serile de duminică sunt aglomerate." }
+    ],
+    legs: [
+      { a:0,b:1,bow:-300, mode:"🚆", note:"tren · circa o oră" },
+      { a:1,b:2,bow:70, mode:"🚤", note:"vaporaș" },
+      { a:2,b:3,bow:-60, mode:"🚤", quiet:true },
+      { a:3,b:1,bow:70, back:true },
+      { a:1,b:0,bow:104, mode:"🚆", note:"întoarcere", back:true, skip:true }
+    ]
+  }
+};</script>
+<script>
+/* ---------- ilustrațiile hărții ---------- */
+const INK = "#1c3a54";
+const CREAM = "#f7f2e4";
+const ROOF = "#c46a47";
+const GLASS = "#8ec1d1";
+const LEAF = "#7aa863";
+const SUN = "#f7c63c";
+
+function ill(x, y, body){ return '<g transform="translate(' + x + ',' + y + ')" class="ill">' + body + '</g>'; }
+
+/* gara Milano Centrale */
+function illStation(){
+  return '<path d="M-60 -66 h120 l-9 -13 h-102 z" fill="' + ROOF + '"/>' +
+    '<rect x="-52" y="-66" width="104" height="66" fill="' + CREAM + '"/>' +
+    '<path d="M-24 0 v-34 a24 24 0 0 1 48 0 v34 z" fill="' + GLASS + '"/>' +
+    '<path d="M0 -58 v24" />' +
+    '<rect x="-45" y="-52" width="15" height="19" fill="' + GLASS + '"/>' +
+    '<rect x="30" y="-52" width="15" height="19" fill="' + GLASS + '"/>' +
+    '<circle cx="0" cy="-52" r="8" fill="' + SUN + '"/>' +
+    '<path d="M-52 0 h104"/>';
+}
+
+/* Stresa: vilă pe faleză, cu palmier */
+function illVilla(){
+  return '<path d="M-46 -40 l26 -22 26 22 z" fill="' + ROOF + '"/>' +
+    '<rect x="-40" y="-40" width="52" height="40" fill="' + CREAM + '"/>' +
+    '<rect x="-31" y="-31" width="12" height="13" fill="' + GLASS + '"/>' +
+    '<rect x="-9" y="-31" width="12" height="13" fill="' + GLASS + '"/>' +
+    '<path d="M-20 0 v-15 h13 v15" fill="' + GLASS + '"/>' +
+    '<path d="M30 0 v-34"/>' +
+    '<path d="M30 -34 q-16 -6 -20 4 M30 -34 q16 -6 20 4 M30 -34 q-6 -16 4 -20 M30 -34 q10 -14 18 -8" fill="none" stroke="' + LEAF + '" stroke-width="4" stroke-linecap="round"/>' +
+    '<path d="M-46 0 h84"/>';
+}
+
+/* Isola Bella: palat cu grădină în terase și păun */
+function illPalace(){
+  return '<path d="M8 0 h54 v-12 h-54 z M14 -12 h42 v-12 h-42 z M20 -24 h30 v-12 h-30 z" fill="' + LEAF + '"/>' +
+    '<path d="M-56 0 v-44 h46 v44 z" fill="' + CREAM + '"/>' +
+    '<path d="M-56 -44 h46 l-23 -16 z" fill="' + ROOF + '"/>' +
+    '<rect x="-48" y="-34" width="11" height="13" fill="' + GLASS + '"/>' +
+    '<rect x="-29" y="-34" width="11" height="13" fill="' + GLASS + '"/>' +
+    '<path d="M-42 0 v-14 h13 v14" fill="' + GLASS + '"/>' +
+    '<circle cx="34" cy="-46" r="7" fill="' + GLASS + '"/>' +
+    '<path d="M34 -39 q-12 10 -6 24 M34 -39 q12 10 6 24" fill="none" stroke="' + INK + '" stroke-width="2"/>' +
+    '<path d="M-56 0 h118"/>';
+}
+
+/* Isola dei Pescatori: case lipite și o barcă */
+function illFishing(){
+  return '<rect x="-52" y="-38" width="30" height="38" fill="' + CREAM + '"/>' +
+    '<path d="M-54 -38 h34 l-17 -14 z" fill="' + ROOF + '"/>' +
+    '<rect x="-20" y="-52" width="28" height="52" fill="' + CREAM + '"/>' +
+    '<path d="M-22 -52 h32 l-16 -13 z" fill="' + ROOF + '"/>' +
+    '<rect x="10" y="-30" width="26" height="30" fill="' + CREAM + '"/>' +
+    '<path d="M8 -30 h30 l-15 -12 z" fill="' + ROOF + '"/>' +
+    '<rect x="-44" y="-28" width="10" height="12" fill="' + GLASS + '"/>' +
+    '<rect x="-12" y="-42" width="10" height="12" fill="' + GLASS + '"/>' +
+    '<rect x="16" y="-22" width="10" height="11" fill="' + GLASS + '"/>' +
+    '<path d="M-52 0 h88"/>' +
+    '<path d="M42 -2 h26 l-5 9 h-16 z" fill="' + GLASS + '"/>';
+}
+
+const ILLUS = [illStation, illVilla, illPalace, illFishing];
+
+/* ---------- decorul ---------- */
+const LAKE = "M320 -30 C348 120 330 230 344 330 C356 420 392 492 440 532 C486 570 560 574 620 546 C676 520 706 460 700 380 C694 290 676 200 692 100 C700 46 706 6 712 -30 Z";
+
+function DECOR_MAP(){
+  const wave = function(x, y, w){
+    return '<path d="M' + x + ' ' + y + ' q' + (w / 4) + ' -7 ' + (w / 2) + ' 0 t' + (w / 2) + ' 0" fill="none" stroke="#7fb3c4" stroke-width="3" stroke-linecap="round"/>';
+  };
+  const peak = function(x, y, w, h){
+    return '<path d="M' + (x - w) + ' ' + y + ' L' + x + ' ' + (y - h) + ' L' + (x + w) + ' ' + y + ' z" fill="#b7c9ab" stroke="' + INK + '" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '<path d="M' + (x - w * 0.34) + ' ' + (y - h * 0.6) + ' L' + x + ' ' + (y - h) + ' L' + (x + w * 0.34) + ' ' + (y - h * 0.6) + ' z" fill="' + CREAM + '" stroke="none"/>';
+  };
+  return '<g aria-hidden="true">' +
+    '<rect x="0" y="0" width="1000" height="720" fill="#d5e4c4"/>' +
+    '<path class="sea" d="' + LAKE + '"/>' +
+    wave(372, 196, 74) + wave(588, 250, 74) + wave(404, 470, 74) + wave(614, 428, 74) +
+    peak(126, 236, 88, 112) + peak(216, 252, 66, 80) + peak(46, 258, 58, 70) +
+    peak(852, 244, 80, 98) + peak(938, 268, 58, 72) +
+    '<text class="placename" x="126" y="278" text-anchor="middle">ALPII</text>' +
+    '<text class="placename" x="866" y="308" text-anchor="middle">SPRE MILANO</text>' +
+    '<ellipse cx="618" cy="332" rx="28" ry="16" fill="#cde0ba" stroke="' + INK + '" stroke-width="2.5"/>' +
+    '<path d="M618 332 v-17 M611 321 q7 -12 14 0" fill="none" stroke="' + LEAF + '" stroke-width="3.5" stroke-linecap="round"/>' +
+    '<text class="placename sm" x="618" y="364" text-anchor="middle">ISOLA MADRE</text>' +
+    '<g class="ill"><path d="M596 150 h52 l-9 15 h-34 z" fill="' + CREAM + '"/>' +
+    '<rect x="612" y="138" width="20" height="12" fill="' + GLASS + '"/>' +
+    '<path d="M622 138 v-15"/></g>' +
+    '<g class="ill"><path d="M622 466 q22 -15 44 0 q-22 15 -44 0 z" fill="' + GLASS + '"/>' +
+    '<path d="M622 466 l-12 -9 v18 z" fill="' + GLASS + '"/></g>' +
+    '<text class="bigtitle" x="500" y="66" text-anchor="middle">LAGO MAGGIORE</text>' +
+    '<text class="bigsub" x="500" y="92" text-anchor="middle">' +
+      STOPS.length + ' OPRIRI &middot; ' + TOTAL + ' POZE</text>' +
+    '</g>';
+}
+
+/* ---------- harta ---------- */
+const SVGNS = "http://www.w3.org/2000/svg";
+const calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let flowed = new Set();
+
+function legPath(a, b, bow){
+  const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const cx = mx + (-dy / len) * bow, cy = my + (dx / len) * bow;
+  return { d: "M" + a.x + " " + a.y + " Q" + cx + " " + cy + " " + b.x + " " + b.y,
+           mid: [(a.x + 2 * cx + b.x) / 4, (a.y + 2 * cy + b.y) / 4] };
+}
+
+function spark(el){
+  if (calm) return;
+  const len = el.getTotalLength();
+  const s = el.cloneNode(false);
+  s.removeAttribute("id");
+  s.setAttribute("class", "route-spark");
+  s.style.strokeDasharray = "22 " + (len + 22);
+  s.style.strokeDashoffset = String(len + 22);
+  el.parentNode.appendChild(s);
+  requestAnimationFrame(function(){
+    s.style.transition = "stroke-dashoffset 1.5s cubic-bezier(.45,.05,.25,1)";
+    s.style.strokeDashoffset = "0";
+  });
+  setTimeout(function(){ if (s.parentNode) s.parentNode.removeChild(s); }, 1800);
+}
+
+function drawMap(){
+  let routes = "", marks = "";
+  LEGS.forEach(function(l, k){
+    if (l.skip) return;
+    const p = legPath(STOPS[l.a], STOPS[l.b], l.bow);
+    const full = done(l.a) && done(l.b);
+    routes += '<path class="route" d="' + p.d + '"/>' +
+      '<path class="route-flow" id="flow' + k + '" data-k="' + k + '" data-full="' + full + '" d="' + p.d + '"/>';
+    if (l.mode){
+      marks += '<circle cx="' + p.mid[0] + '" cy="' + p.mid[1] + '" r="16" fill="#ffffff" stroke="' + INK + '" stroke-width="2.5"/>' +
+        '<text class="legmark" x="' + p.mid[0] + '" y="' + p.mid[1] + '">' + l.mode + '</text>';
+      if (l.note && !l.quiet){
+        marks += '<text class="legnote" x="' + p.mid[0] + '" y="' + (p.mid[1] + 32) + '">' + l.note + '</text>';
+      }
+    }
+  });
+
+  let pins = "";
+  STOPS.forEach(function(s, i){
+    const f = done(i), locked = !open(i);
+    pins += '<g class="stop" data-i="' + i + '" data-found="' + f + '" data-locked="' + locked + '"' +
+      ' data-active="' + (i === active) + '" tabindex="' + (locked ? -1 : 0) + '" role="button"' +
+      ' aria-disabled="' + locked + '"' +
+      ' aria-label="Oprirea ' + s.n + ": " + s.name + (locked ? ", încuiată" : ", " + photos[i].length + " din " + REQUIRED + " poze") + '">' +
+      (s.isle ? '<ellipse cx="' + s.x + '" cy="' + s.y + '" rx="66" ry="19" fill="#cde0ba" stroke="' + INK + '" stroke-width="2.5"/>' : "") +
+      ill(s.x, s.y, ILLUS[i]()) +
+      '<circle class="ring" cx="' + s.x + '" cy="' + s.y + '" r="17"/>' +
+      '<circle class="dot" cx="' + s.x + '" cy="' + s.y + '" r="9"/>' +
+      '<text class="stopname" x="' + s.x + '" y="' + (s.y + 34) + '" text-anchor="middle">' + (locked ? "🔒 " : "") + s.map.toUpperCase() + '</text>' +
+      '<text class="stopmeta" x="' + s.x + '" y="' + (s.y + 54) + '" text-anchor="middle">' +
+        (locked ? "încuiat" : s.time + " · " + photos[i].length + "/" + REQUIRED + " poze") + '</text>' +
+      '</g>';
+  });
+
+  document.getElementById("stage").innerHTML =
+    '<svg viewBox="0 0 1000 720" role="img" aria-label="Harta traseului de duminică">' +
+      DECOR_MAP() + '<g>' + routes + '</g><g>' + marks + '</g><g>' + pins + '</g>' +
+    '</svg>';
+
+  requestAnimationFrame(function(){
+    document.querySelectorAll(".route-flow").forEach(function(el){
+      const k = Number(el.dataset.k);
+      const len = el.getTotalLength();
+      el.style.strokeDasharray = len + " " + len;
+      if (el.dataset.full === "true"){
+        if (flowed.has(k) || calm){
+          el.style.strokeDashoffset = "0";
+        } else {
+          el.style.strokeDashoffset = String(len);
+          el.style.transition = "stroke-dashoffset 1.5s cubic-bezier(.45,.05,.25,1)";
+          requestAnimationFrame(function(){ el.style.strokeDashoffset = "0"; });
+          spark(el);
+        }
+        flowed.add(k);
+      } else {
+        el.style.strokeDashoffset = String(len);
+        flowed.delete(k);
+      }
+    });
+  });
+
+  document.querySelectorAll(".stop").forEach(function(g){
+    const i = Number(g.dataset.i);
+    if (g.dataset.locked === "true") return;
+    const go = function(){ active = i; render(); };
+    g.addEventListener("click", go);
+    g.addEventListener("keydown", function(ev){
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); }
+    });
+  });
+}
+
+/* Comoara din cufăr: adresa deschisă de butonul final. */
+const TREASURE = {
+  url: "https://www.marry.md/blog/mesaje-de-felicitare-pentru-zile-de-nastere",
+  label: "Vezi mesajul 🎂"
+};
+
+/* Câte poze cere fiecare oprire. Toate textele din pagină se iau după numărul
+   ăsta, deci se schimbă dintr-un singur loc. */
+const REQUIRED = 2;
+const day = "d2";
+const STOPS = DATA.d2.stops;
+const LEGS = DATA.d2.legs;
+const TOTAL = REQUIRED * STOPS.length;
+
+const NUM = ["zero","o","două","trei","patru","cinci","șase","șapte","opt","nouă","zece",
+  "unsprezece","douăsprezece","treisprezece","paisprezece","cincisprezece"];
+const spell = function(n){ return NUM[n] || String(n); };
+const pozeWord = function(n){ return spell(n) + (n === 1 ? " poză" : " poze"); };
+
+let photos = STOPS.map(function(){ return []; });
+let active = 0;
+let assetsApi = null;
+let shotsCol = null;
+let capsChecked = false;
+let busy = false;
+let status = "";
+
+/* "shared" = depozitul comun al artefactului (db), "local" = doar browserul ăsta.
+   db e sursa de adevăr: acolo poate scrie orice vizitator. assets ține fișierele
+   întregi, dar e writer-only — cine n-are drept de editare primește null și
+   atunci poza intră direct în documentul db, comprimată ca să încapă. */
+let mode = "local";
+let canUpload = false;         /* avem assets: pozele merg ca fișiere separate */
+const localUrls = {};          /* cheie locală -> object URL */
+const srcById = {};            /* id document -> sursa de afișat */
+const assetById = {};          /* id document -> id fișier, când există */
+const srcOf = function(id){ return srcById[id] || localUrls[id] || ""; };
+
+const byById = {};             /* id document -> cine a încărcat */
+
+/* Numele vin din depozitul comun, scrise de alți vizitatori: text străin,
+   deci nu intră niciodată nefiltrat în HTML. */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+  });
+}
+
+/* Un document db ține 256 KiB. Măsurăm documentul întreg, cu margine. */
+const DOC_LIMIT = 250 * 1024;
+
+/* Are contul ăsta drept de scriere? Aflăm la pornire, printr-un document
+   minuscul scris și șters imediat — altfel omul descoperă că nu poate
+   abia după ce și-a ales pozele. */
+let canWrite = null;
+let probeCode = "";            /* codul exact cu care a picat proba */
+
+/* Semnătura: numele și-l scrie fiecare o dată, în browserul lui.
+   Capabilitatea `user` nu e disponibilă pe acest cont, deci pagina nu are
+   cum să afle contul real — numele ăsta e declarat, nu verificat. */
+let who = "";
+try { who = localStorage.getItem("harta-nume") || ""; } catch (err) { /* fără localStorage */ }
+
+function drawWho(){
+  const box = document.getElementById("whoBox");
+  box.hidden = !(capsChecked && mode === "shared");
+  if (box.hidden) return;
+  box.dataset.set = who ? "true" : "false";
+  document.getElementById("whoName").textContent = who;
+  const input = document.getElementById("whoInput");
+  if (document.activeElement !== input) input.value = who;
+}
+
+function saveWho(){
+  const v = document.getElementById("whoInput").value.trim().slice(0, 24);
+  if (!v) { document.getElementById("whoInput").focus(); return; }
+  who = v;
+  try { localStorage.setItem("harta-nume", who); } catch (err) { /* ține cât ține pagina */ }
+  render();
+}
+
+document.getElementById("whoSave").addEventListener("click", saveWho);
+document.getElementById("whoInput").addEventListener("keydown", function(ev){
+  if (ev.key === "Enter") { ev.preventDefault(); saveWho(); }
+});
+document.getElementById("whoEdit").addEventListener("click", function(){
+  document.getElementById("whoBox").dataset.set = "false";
+  document.getElementById("whoInput").focus();
+});
+
+/* Nicio așteptare fără capăt: pe Safari, indexedDB.open() poate să nu
+   răspundă niciodată, iar pagina rămânea blocată în „se verifică”. */
+function withTimeout(promise, ms, fallback){
+  return Promise.race([
+    Promise.resolve(promise).catch(function(){ return fallback; }),
+    new Promise(function(resolve){ setTimeout(function(){ resolve(fallback); }, ms); })
+  ]);
+}
+
+/* Depozitul din browserul vizitatorului, ca oricine poate încărca fără cont. */
+const IDB = (function(){
+  let opened = null;
+  function open(){
+    if (opened) return opened;
+    opened = new Promise(function(resolve, reject){
+      if (!window.indexedDB) { reject(new Error("fără indexedDB")); return; }
+      const req = indexedDB.open("harta-comorilor", 1);
+      req.onupgradeneeded = function(){
+        const db = req.result;
+        if (!db.objectStoreNames.contains("shots")) db.createObjectStore("shots", { autoIncrement: true });
+        if (!db.objectStoreNames.contains("meta")) db.createObjectStore("meta");
+      };
+      req.onsuccess = function(){ resolve(req.result); };
+      req.onerror = function(){ reject(req.error); };
+    });
+    return opened;
+  }
+  function run(store, access, fn){
+    return open().then(function(db){
+      return new Promise(function(resolve, reject){
+        const t = db.transaction(store, access);
+        const req = fn(t.objectStore(store));
+        t.oncomplete = function(){ resolve(req ? req.result : undefined); };
+        t.onerror = function(){ reject(t.error); };
+        t.onabort = function(){ reject(t.error); };
+      });
+    });
+  }
+  return {
+    put: function(blob){ return run("shots", "readwrite", function(st){ return st.add(blob); }); },
+    get: function(k){ return run("shots", "readonly", function(st){ return st.get(k); }); },
+    del: function(k){ return run("shots", "readwrite", function(st){ return st.delete(k); }); },
+    readMeta: function(){ return run("meta", "readonly", function(st){ return st.get("stops"); }); },
+    writeMeta: function(v){ return run("meta", "readwrite", function(st){ return st.put(v, "stops"); }); }
+  };
+})();
+
+async function loadLocal(){
+  let body;
+  try { body = await IDB.readMeta(); } catch (err) { return; }
+  if (!body) return;
+  const next = STOPS.map(function(_, i){
+    const list = body[String(i)];
+    return Array.isArray(list) ? list.slice() : [];
+  });
+  for (const list of next){
+    for (const key of list){
+      if (localUrls[key]) continue;
+      try {
+        const blob = await IDB.get(Number(key.slice(2)));
+        if (blob) localUrls[key] = URL.createObjectURL(blob);
+      } catch (err) { /* poza lipsește; rândul rămâne gol */ }
+    }
+  }
+  photos = next.map(function(list){ return list.filter(function(k){ return localUrls[k]; }); });
+}
+const done = function(i){ return photos[i].length >= REQUIRED; };
+const open = function(i){ return i === 0 || done(i - 1); };
+const allDone = function(){ return STOPS.every(function(_, i){ return done(i); }); };
+const shotCount = function(){ return photos.reduce(function(n, p){ return n + p.length; }, 0); };
+
+/* ---------- panoul ---------- */
+function hopLine(){
+  const hop = LEGS.filter(function(l){ return l.a === active && l.b === active + 1; })[0];
+  if (!hop) return "";
+  return '<p class="hopline">' + (hop.mode || "🚶") +
+    ' <span>spre <b>' + STOPS[hop.b].map + '</b> &middot; ' + (hop.note || "pe jos, câteva minute") + '</span></p>';
+}
+
+function proofBlock(){
+  const list = photos[active];
+  const ok = done(active);
+  let pips = "";
+  for (let k = 0; k < Math.max(REQUIRED, list.length); k++){
+    pips += '<i class="' + (k < list.length ? "on" : "") + '"></i>';
+  }
+  let shots = "";
+  list.forEach(function(id, k){
+    const by = byById[id];
+    shots += '<span class="shot"><img src="' + srcOf(id) + '" alt="Poza ' + (k + 1) + ' de la ' + STOPS[active].map +
+      (by ? ", încărcată de " + esc(by) : "") + '">' +
+      (by ? '<span class="who">' + esc(by) + '</span>' : "") +
+      '<button class="rm" type="button" data-k="' + k + '" aria-label="Șterge poza ' + (k + 1) + '">✕</button></span>';
+  });
+
+  const where = mode === "shared"
+    ? '<p class="gate" data-ok="true"><span>👥</span><span>Pozele intră în depozitul comun: tot ce încarcă oricine ajunge în același album.</span></p>'
+    : '<p class="gate"><span>⚠️</span><span>Pozele stau doar în browserul ăsta și <b>se pot pierde la refresh</b>. Vezi caseta de sus.</span></p>';
+
+  const gate = ok
+    ? '<p class="gate" data-ok="true"><span>✓</span><span>Dovada e completă. Drumul mai departe e deschis.</span></p>'
+    : '<p class="gate"><span>🔒</span><span>Mai ai nevoie de ' + (REQUIRED - list.length) +
+      ' ' + (REQUIRED - list.length === 1 ? "poză" : "poze") + ' ca să treci mai departe.</span></p>';
+
+  /* în albumul comun nu intră poze nesemnate: altfel nu se mai știe a cui e care */
+  const needsName = mode === "shared" && !who;
+  const readOnly = mode === "shared" && canWrite === false;
+  const uploader = !capsChecked
+    ? '<p class="gate"><span>⏳</span><span>Se pregătește locul pentru poze…</span></p>'
+    : readOnly
+    ? '<p class="gate"><span>👀</span><span>Doar vizionare: contul ăsta nu poate adăuga poze.</span></p>'
+    : '<div class="drop" id="drop"><button class="addbtn" id="addBtn" type="button"' +
+        (busy || needsName ? " disabled" : "") + '>' +
+        (busy ? "se încarcă…" : "Adaugă poze") + '</button>' +
+        '<span id="dropNote">' +
+        (needsName ? "Scrie-ți întâi numele, sus." : (status || "sau trage pozele aici")) + '</span>' +
+        '<input type="file" id="fileInput" accept="image/*" multiple></div>';
+
+  return '<div class="proof">' +
+    '<p class="proof-head"><span>' + (mode === "shared" ? "Dovada opririi &middot; album comun" : "Dovada opririi &middot; doar la tine") + '</span>' +
+    '<span class="proof-count" data-ok="' + ok + '">' + list.length + ' / ' + REQUIRED + '</span></p>' +
+    '<span class="pips">' + pips + '</span>' +
+    (shots ? '<div class="shots">' + shots + '</div>' : "") +
+    uploader + gate + where + '</div>';
+}
+
+function drawPanel(){
+  const s = STOPS[active];
+  const canNext = active < STOPS.length - 1 && done(active);
+  document.getElementById("panel").innerHTML =
+    '<div class="panel-actions">' +
+      '<span class="btn" data-on="' + done(active) + '" role="status">' +
+        (done(active) ? "✓ oprire completă" : photos[active].length + " din " + REQUIRED + " poze") + '</span>' +
+      '<span class="navspacer">' +
+        '<button class="navbtn" id="prevBtn" type="button" aria-label="Oprirea anterioară"' +
+          (active === 0 ? " disabled" : "") + '>←</button>' +
+        '<button class="navbtn" id="nextBtn" type="button" aria-label="Oprirea următoare"' +
+          (canNext ? "" : " disabled") + '>→</button>' +
+      '</span>' +
+    '</div>' +
+    '<p class="panel-step">Oprirea ' + s.n + ' din ' + STOPS.length + ' &middot; duminică</p>' +
+    '<h3>' + s.icon + " " + s.name + '</h3>' +
+    '<p class="alias">„' + s.code + '”</p>' +
+    '<p class="chips"><span class="chip">' + s.time + '</span><span class="chip">' + s.dur + '</span></p>' +
+    proofBlock() +
+    '<p class="story">' + s.story + '</p>' +
+    '<p class="tip"><b>Sfat practic</b>' + s.tip + '</p>' +
+    hopLine();
+
+  const prev = document.getElementById("prevBtn");
+  const next = document.getElementById("nextBtn");
+  prev.addEventListener("click", function(){ if (active > 0) { active--; render(); } });
+  next.addEventListener("click", function(){ if (canNext) { active++; render(); } });
+
+  const input = document.getElementById("fileInput");
+  if (input){
+    document.getElementById("addBtn").addEventListener("click", function(){ input.click(); });
+    input.addEventListener("change", function(){ takeFiles(input.files); input.value = ""; });
+    const drop = document.getElementById("drop");
+    ["dragenter", "dragover"].forEach(function(ev){
+      drop.addEventListener(ev, function(e){ e.preventDefault(); drop.dataset.over = "true"; });
+    });
+    ["dragleave", "drop"].forEach(function(ev){
+      drop.addEventListener(ev, function(e){ e.preventDefault(); drop.dataset.over = "false"; });
+    });
+    drop.addEventListener("drop", function(e){ takeFiles(e.dataTransfer.files); });
+  }
+  document.querySelectorAll(".shot .rm").forEach(function(b){
+    b.addEventListener("click", function(){ removeShot(Number(b.dataset.k)); });
+  });
+}
+
+/* ---------- pozele ---------- */
+function shrink(file, max, quality){
+  return new Promise(function(resolve){
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = function(){
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale) || img.width;
+      const h = Math.round(img.height * scale) || img.height;
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(function(blob){ resolve(blob || file); }, "image/jpeg", quality);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+/* Fără assets, poza merge în chiar documentul db. Limita e pe DOCUMENTUL
+   serializat, nu pe poză, deci construim documentul întreg și îl măsurăm —
+   ghicitul din mărimea blob-ului rata base64 și restul câmpurilor. */
+async function inlineDoc(file, base){
+  const tries = [[1400,.82],[1200,.78],[1000,.72],[860,.66],[720,.58],[600,.5],[480,.42]];
+  for (let t = 0; t < tries.length; t++){
+    const blob = await shrink(file, tries[t][0], tries[t][1]);
+    const body = Object.assign({}, base, { data: await toDataUrl(blob) });
+    if (JSON.stringify(body).length <= DOC_LIMIT) return body;
+  }
+  return null;
+}
+
+function toDataUrl(blob){
+  return new Promise(function(resolve, reject){
+    const r = new FileReader();
+    r.onload = function(){ resolve(r.result); };
+    r.onerror = function(){ reject(r.error || new Error("citire eșuată")); };
+    r.readAsDataURL(blob);
+  });
+}
+
+/* cheie de ordonare unică, ca două telefoane care încarcă simultan
+   să nu cadă pe aceeași secundă */
+function stamp(){
+  return new Date().toISOString() + "-" + Math.random().toString(36).slice(2, 8);
+}
+
+async function takeFiles(fileList){
+  if (busy) return;
+  if (mode === "shared" && !who){ document.getElementById("whoInput").focus(); return; }
+  const files = Array.prototype.slice.call(fileList || []).filter(function(f){ return /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic)$/i.test(f.name); });
+  if (!files.length) return;
+  busy = true; status = ""; render();
+  const note = function(text){
+    status = text;
+    const el = document.getElementById("dropNote");
+    if (el) el.textContent = text;
+  };
+  let failed = false;
+  for (let k = 0; k < files.length; k++){
+    note("se încarcă poza " + (k + 1) + " din " + files.length + "…");
+    try {
+      if (mode === "shared"){
+        /* fiecare poză e propriul ei document, deci doi oameni care încarcă
+           în același timp nu se suprascriu unul pe altul */
+        const ref = shotsCol.doc();
+        const base = { stop: active, at: stamp(), by: who };
+        if (canUpload){
+          const blob = await shrink(files[k], 1600, .86);
+          const res = await assetsApi.upload(blob, { type: blob.type || "image/jpeg" });
+          await ref.set(Object.assign({}, base, { asset: res.id }));
+        } else {
+          const body = await inlineDoc(files[k], base);
+          if (!body){
+            failed = true;
+            note("Poza asta nu a putut fi micșorată — poate fi un format pe care telefonul nu-l convertește.");
+            break;
+          }
+          await ref.set(body);
+        }
+        /* lista vine înapoi din snapshot, ca să nu numărăm de două ori aceeași poză */
+      } else {
+        const blob = await shrink(files[k], 1600, .86);
+        const n = await IDB.put(blob);
+        const key = "L:" + n;
+        localUrls[key] = URL.createObjectURL(blob);
+        photos[active] = photos[active].concat(key);
+        await saveState();
+      }
+    } catch (err){
+      const code = err && err.code;
+      note(code === "too_large" ? "Poza e prea mare — încearcă una mai mică."
+        : code === "unsupported_type" ? "Formatul ăsta nu merge (încearcă JPG sau PNG)."
+        : code === "quota_or_state" || code === "quota_exceeded" ? "S-a umplut spațiul pentru poze."
+        : code === "rate_limited" || code === "resource_exhausted" ? "Prea multe deodată — mai așteaptă puțin."
+        /* documentul a fost măsurat înainte de scriere, deci mărimea e exclusă:
+           ce rămâne e dreptul de scriere */
+        : code === "invalid_argument" ? "Depozitul a refuzat scrierea. Contul ăsta pare să n-aibă drept de scriere pe hartă."
+        : code === "revoked" ? "Accesul la depozit s-a închis. Reîncarcă pagina."
+        : "Poza nu s-a încărcat. Mai încearcă o dată.");
+      failed = true;
+      break;
+    }
+  }
+  busy = false;
+  if (!failed) status = "";
+  render();
+}
+
+async function removeShot(k){
+  const id = photos[active][k];
+  if (!id) return;
+  if (mode === "shared"){
+    /* lista se reface din snapshot, deci nu o atingem aici */
+    const asset = assetById[id];
+    try { await shotsCol.doc(id).delete(); } catch (err) { /* rândul e deja curat */ }
+    if (asset && assetsApi){
+      try { await assetsApi.delete(asset); } catch (err) { /* fișierul rămâne, referința nu */ }
+    }
+    delete srcById[id]; delete assetById[id];
+    return;
+  }
+  photos[active] = photos[active].filter(function(_, j){ return j !== k; });
+  render();
+  await saveState();
+  if (localUrls[id]) { URL.revokeObjectURL(localUrls[id]); delete localUrls[id]; }
+  try { await IDB.del(Number(id.slice(2))); } catch (err) { /* rândul e deja curat */ }
+}
+
+async function saveState(){
+  const body = {};
+  photos.forEach(function(list, i){ body[String(i)] = list; });
+  try { await IDB.writeMeta(body); }
+  catch (err) { /* fără depozit local, pozele țin cât ține pagina deschisă */ }
+}
+
+/* ---------- cufărul ---------- */
+function drawChest(){
+  const n = photos.filter(function(_, i){ return done(i); }).length;
+  document.getElementById("tallyCount").textContent = n + "/" + STOPS.length;
+  document.getElementById("barFill").style.width = (n / STOPS.length * 100) + "%";
+  document.getElementById("shotTotal").textContent = shotCount() + " poze adunate";
+
+  const chest = document.getElementById("chest");
+  const ready = allDone();
+  chest.dataset.open = ready;
+  document.getElementById("chestLid").textContent = ready ? "💰" : (n > 0 ? "🗝️" : "🧰");
+  document.getElementById("chestTitle").textContent = ready
+    ? "Toate dovezile sunt adunate"
+    : (n === 0 ? "Cufărul e încă închis" : "Mai ai " + (STOPS.length - n) + " opriri de dovedit");
+  document.getElementById("chestText").textContent = ready
+    ? TOTAL + " poze, " + spell(STOPS.length) + " opriri, o zi întreagă pe apă. Albumul e gata de deschis."
+    : "Adună cele " + pozeWord(REQUIRED) + " la fiecare dintre cele " + spell(STOPS.length) + " opriri.";
+  document.getElementById("albumBtn").hidden = !ready;
+}
+
+/* ---------- albumul ---------- */
+let slides = [];
+let slideAt = 0;
+let timer = null;
+
+function buildAlbum(){
+  slides = [];
+  photos.forEach(function(list, i){
+    list.forEach(function(id){
+      slides.push({ id: id, where: STOPS[i].map, n: STOPS[i].n, by: byById[id] || "" });
+    });
+  });
+  document.getElementById("albumThumbs").innerHTML = slides.map(function(s, k){
+    return '<img class="al-thumb" data-k="' + k + '" src="' + srcOf(s.id) +
+      '" alt="Fotografia ' + (k + 1) + ' de la ' + s.where + '">';
+  }).join("");
+  document.querySelectorAll("#albumThumbs .al-thumb").forEach(function(t){
+    t.addEventListener("click", function(){ stopTimer(); showSlide(Number(t.dataset.k)); });
+  });
+}
+
+/* miniatura activă rămâne în dreptul ochiului fără să miște pagina */
+function trackThumb(k){
+  const box = document.getElementById("albumThumbs");
+  const el = box.children[k];
+  if (!el) return;
+  const top = el.offsetTop - box.offsetTop;
+  if (top < box.scrollTop || top + el.offsetHeight > box.scrollTop + box.clientHeight){
+    box.scrollTop = top - (box.clientHeight - el.offsetHeight) / 2;
+  }
+}
+
+function chestCard(){
+  return '<div class="al-final"><div><span class="lid">🧰</span>' +
+    '<h2>Albumul s-a terminat</h2>' +
+    '<p>Toate dovezile sunt la locul lor. A mai rămas un singur lucru de făcut.</p>' +
+    '<button class="al-loot" id="openChest" type="button">Deschide comoara</button></div></div>';
+}
+
+function revealTreasure(){
+  document.getElementById("albumStage").innerHTML =
+    '<div class="al-final"><div><span class="lid">💰</span>' +
+    '<h2>Comoara</h2>' +
+    '<p>Înăuntru nu era aur. Era asta.</p>' +
+    '<a class="al-loot gold" href="' + TREASURE.url + '" target="_blank" rel="noopener noreferrer">' +
+    TREASURE.label + '</a></div></div>';
+}
+
+function showSlide(k, animated){
+  slideAt = k;
+  const stage = document.getElementById("albumStage");
+  const atEnd = k >= slides.length;
+  if (atEnd){
+    stopTimer();
+    stage.innerHTML = chestCard();
+    document.getElementById("openChest").addEventListener("click", revealTreasure);
+    document.getElementById("albumCounter").textContent = "Cufărul";
+  } else {
+    const s = slides[k];
+    stage.innerHTML = '<img class="' + (animated === false ? "" : "enter") + '" src="' + srcOf(s.id) +
+      '" alt="Fotografia ' + (k + 1) + ' de la ' + s.where + '">';
+    document.getElementById("albumCounter").textContent =
+      (k + 1) + " / " + slides.length + " · Oprirea " + s.n + " — " + s.where +
+      (s.by ? " · 📷 " + s.by : "");
+  }
+  document.getElementById("albumPrev").disabled = k === 0;
+  document.getElementById("albumNext").disabled = atEnd;
+  document.querySelectorAll("#albumThumbs .al-thumb").forEach(function(el, j){
+    el.classList.toggle("active", j === k);
+  });
+  if (!atEnd) trackThumb(k);
+}
+
+function setAuto(on){
+  const b = document.getElementById("albumAuto");
+  b.textContent = on ? "Ⅱ AUTO" : "▶ AUTO";
+  b.classList.toggle("autoActive", on);
+}
+
+function startTimer(){
+  stopTimer();
+  timer = setInterval(function(){
+    if (slideAt >= slides.length) { stopTimer(); return; }
+    showSlide(slideAt + 1);
+  }, 4000);
+  setAuto(true);
+}
+function stopTimer(){
+  if (timer) { clearInterval(timer); timer = null; }
+  setAuto(false);
+}
+
+function openAlbum(){
+  if (!allDone()) return;
+  buildAlbum();
+  document.getElementById("album").hidden = false;
+  document.body.style.overflow = "hidden";
+  showSlide(0, false);
+  startTimer();
+  document.getElementById("albumClose").focus();
+}
+function closeAlbum(){
+  stopTimer();
+  document.getElementById("album").hidden = true;
+  document.body.style.overflow = "";
+  document.getElementById("albumBtn").focus();
+}
+
+const albumStep = function(d){
+  stopTimer();
+  showSlide(Math.min(Math.max(slideAt + d, 0), slides.length));
+};
+
+document.getElementById("albumBtn").addEventListener("click", openAlbum);
+document.getElementById("albumClose").addEventListener("click", closeAlbum);
+document.getElementById("albumNext").addEventListener("click", function(){ albumStep(1); });
+document.getElementById("albumPrev").addEventListener("click", function(){ albumStep(-1); });
+document.getElementById("albumAuto").addEventListener("click", function(){
+  if (timer) stopTimer();
+  else if (slideAt < slides.length) startTimer();
+});
+document.addEventListener("keydown", function(ev){
+  if (document.getElementById("album").hidden) return;
+  if (ev.key === "Escape") closeAlbum();
+  if (ev.key === "ArrowRight") albumStep(1);
+  if (ev.key === "ArrowLeft") albumStep(-1);
+});
+
+/* degetul pe poză: stânga-dreapta trece mai departe */
+let swipeAt = 0;
+const albumStage = document.getElementById("albumStage");
+albumStage.addEventListener("touchstart", function(ev){
+  swipeAt = ev.changedTouches[0].clientX;
+}, { passive:true });
+albumStage.addEventListener("touchend", function(ev){
+  const d = ev.changedTouches[0].clientX - swipeAt;
+  if (Math.abs(d) > 45) albumStep(d < 0 ? 1 : -1);
+}, { passive:true });
+
+/* Pozele puse înainte de depozitul comun stăteau într-un singur document.
+   Le mutăm o singură dată, ca să nu se piardă. */
+async function migrateOldDoc(shared){
+  const legacy = shared.doc("trip/photos");
+  const snap = await legacy.get();
+  if (!snap.exists) return;
+  const body = snap.data() || {};
+  const stops = body.stops;
+  if (!stops || body.moved) return;
+  const at = body.updatedAt || new Date().toISOString();
+  for (let i = 0; i < STOPS.length; i++){
+    const list = stops[String(i)];
+    if (!Array.isArray(list)) continue;
+    for (let k = 0; k < list.length; k++){
+      await shotsCol.doc(list[k]).set({ stop: i, at: at + "-" + i + "-" + k, asset: list[k] });
+    }
+  }
+  await legacy.set({ moved: true, movedAt: new Date().toISOString() });
+}
+
+/* ---------- pornire ---------- */
+/* coada indiciului de sub hartă: se schimbă când aflăm unde ajung pozele */
+let hintTail = "Oricine deschide harta poate încărca.";
+
+/* Unde ajung pozele — spus din capul paginii, ca nimeni să nu încarce
+   degeaba o oprire întreagă. Caseta se vede ÎNTOTDEAUNA: dacă verificarea
+   se blochează, trebuie să se vadă că se așteaptă, nu să dispară rândul. */
+function drawStatus(){
+  const el = document.getElementById("statusLine");
+  if (!capsChecked){
+    el.dataset.tone = "wait";
+    el.innerHTML = "⏳ Se verifică unde se salvează pozele…";
+    return;
+  }
+  if (mode === "shared" && canWrite === false){
+    el.dataset.tone = "warn";
+    el.innerHTML = "👀 <b>Poți vedea albumul comun, dar nu poți adăuga în el.</b> " +
+      "Depozitul a refuzat scrierea pentru contul ăsta. " +
+      "<span class='code'>cod: " + esc(probeCode) + "</span>";
+  } else if (mode === "shared"){
+    el.dataset.tone = "ok";
+    el.innerHTML = "👥 <b>Album comun.</b> Pozele se salvează pe server: " +
+      "tot ce încarcă oricine se vede la toată lumea, de pe orice telefon, și rezistă la refresh.";
+  } else {
+    el.dataset.tone = "warn";
+    el.innerHTML = "⚠️ <b>Pozele nu se salvează în albumul comun.</b> Rămân doar în browserul ăsta, " +
+      "nu le vede nimeni altcineva și se pot pierde la refresh.<br>" + whyNoShared();
+  }
+}
+
+/* De ce nu merge depozitul comun. Contractul spune că, servită ca pagină
+   de sine stătătoare, pagina primește `null` la orice capabilitate — deci
+   „deschide-o în panoul de artefact” e singurul sfat corect acolo. */
+function whyNoShared(){
+  if (!(window.claude && window.claude.use)){
+    return "Ăsta e un fișier salvat, nu harta publicată. Albumul comun merge doar pe linkul din Claude.";
+  }
+  if (window.top === window.self){
+    return "<b>Ai deschis harta ca pagină separată.</b> Așa nu funcționează niciodată depozitul comun. " +
+      "Deschide-o din conversația Claude, unde harta apare în panoul ei — pe telefon, din aplicația Claude.";
+  }
+  return "Contul cu care ești conectat nu primește acces la depozitul comun al hărții.";
+}
+
+function render(){
+  document.getElementById("dayNote").textContent = DATA.d2.note;
+  drawStatus(); drawWho();
+  document.getElementById("introReq").textContent = pozeWord(REQUIRED);
+  document.getElementById("badgeNum").textContent = REQUIRED;
+  document.getElementById("mapHint").textContent =
+    "Opririle se deschid pe rând: " + pozeWord(REQUIRED) + ", și se descuie următoarea. " + hintTail;
+  if (active > 0 && !open(active)) active = 0;
+  drawMap(); drawPanel(); drawChest();
+}
+
+render();
+
+(async function(){
+  const use = window.claude && window.claude.use;
+  let shared = null;
+  if (use){
+    /* contractul promite un răspuns în ~10s; peste asta mergem mai departe */
+    shared = await withTimeout(window.claude.use("db"), 12000, null);
+    assetsApi = await withTimeout(window.claude.use("assets"), 12000, null);
+  }
+  if (shared){
+    /* depozitul comun: toate pozele, de la toată lumea, în același loc.
+       db ajunge — assets doar îmbunătățește calitatea când îl avem. */
+    mode = "shared";
+    canUpload = !!assetsApi;
+    shotsCol = shared.collection("shots");
+    /* un document minuscul, scris și șters: răspunde la „pot scrie?” */
+    const probe = shared.collection("probe").doc();
+    try {
+      await probe.set({ at: stamp() });
+      canWrite = true;
+      try { await probe.delete(); } catch (err) { /* rândul gol nu strică nimic */ }
+    } catch (err) {
+      canWrite = false;
+      probeCode = (err && err.code) || "necunoscut";
+    }
+    try { await migrateOldDoc(shared); } catch (err) { /* nimic de mutat */ }
+    shotsCol.orderBy("at").onSnapshot(function(snap){
+      const next = STOPS.map(function(){ return []; });
+      snap.docs.forEach(function(d){
+        const body = d.data() || {};
+        const i = Number(body.stop);
+        if (!next[i]) return;
+        byById[d.id] = typeof body.by === "string" ? body.by : "";
+        if (body.data){
+          srcById[d.id] = body.data;
+        } else {
+          /* pozele vechi foloseau chiar id-ul documentului drept id de fișier */
+          const asset = body.asset || d.id;
+          assetById[d.id] = asset;
+          srcById[d.id] = "/_blob/" + asset;
+        }
+        next[i].push(d.id);
+      });
+      photos = next;
+      render();
+    }, function(){ /* subscrierea a căzut; ce e pe ecran rămâne */ });
+  } else {
+    /* fără depozit comun: pozele rămân în browserul vizitatorului */
+    mode = "local";
+    /* IndexedDB ori răspunde repede, ori e blocat: nu merită așteptat mai mult */
+    await withTimeout(loadLocal(), 3000, null);
+  }
+  capsChecked = true;
+  hintTail = mode === "shared"
+    ? "Pozele sunt comune — le vede oricine deschide harta."
+    : "Pozele tale rămân pe dispozitivul ăsta, doar ale tale.";
+  render();
+})();
+</script>
+
+</body></html>
