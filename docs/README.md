@@ -80,7 +80,14 @@ create policy "poze sterge"  on storage.objects for delete to anon using (bucket
 
 ### 3. Găzduirea
 
-Pune `index.html` pe GitHub Pages sau echivalent și dă linkul mai departe.
+Pagina stă în `docs/index.html`, adică exact unde o servește GitHub Pages fără
+workflow și fără branch separat. Rămâne un singur pas manual, în repo:
+
+**Settings → Pages → Source: Deploy from a branch**, branch-ul dorit, folder
+`/docs`. Adresa rezultată e `https://<utilizator>.github.io/IDS/`.
+
+Nu există API disponibil pentru comutatorul ăsta din sesiunea Claude, deci
+activarea o faci tu o singură dată; după aceea fiecare push actualizează pagina.
 
 ## Ce presupune deschiderea către oricine
 
