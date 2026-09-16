@@ -753,6 +753,20 @@ const TREASURE = {
 
 /* Câte poze cere fiecare oprire. Toate textele din pagină se iau după numărul
    ăsta, deci se schimbă dintr-un singur loc. */
+/* ---------- depozitul comun (varianta gazduita in afara claude.ai) ----------
+   Completeaza cele doua valori si pozele merg intr-un depozit pe care il poate
+   scrie oricine deschide linkul, fara cont. Lasate goale, pagina se poarta ca
+   inainte: depozitul artefactului daca exista, altfel doar browserul curent.
+   Cheia `key` este cheia ANON (publica) a proiectului - e proiectata sa stea in
+   pagina. Nu pune niciodata aici cheia `service_role`. */
+const CONFIG = {
+  url: "",                 /* ex: https://abcdefgh.supabase.co */
+  key: "",                 /* cheia anon/public */
+  bucket: "poze",
+  table: "poze"
+};
+const hasRemote = !!(CONFIG.url && CONFIG.key);
+
 const REQUIRED = 2;
 const day = "d2";
 const STOPS = DATA.d2.stops;
@@ -780,7 +794,8 @@ let mode = "local";
 let canUpload = false;         /* avem assets: pozele merg ca fișiere separate */
 const localUrls = {};          /* cheie locală -> object URL */
 const srcById = {};            /* id document -> sursa de afișat */
-const assetById = {};          /* id document -> id fișier, când există */
+const assetById = {};
+const pathById = {};             /* id rand -> calea fisierului in depozitul extern */          /* id document -> id fișier, când există */
 const srcOf = function(id){ return srcById[id] || localUrls[id] || ""; };
 
 const byById = {};             /* id document -> cine a încărcat */
@@ -931,7 +946,9 @@ function proofBlock(){
       '<button class="rm" type="button" data-k="' + k + '" aria-label="Șterge poza ' + (k + 1) + '">✕</button></span>';
   });
 
-  const where = mode === "shared"
+  const where = mode === "remote"
+    ? '<p class="gate" data-ok="true"><span>🌍</span><span>Pozele intră în depozitul comun: oricine are linkul poate adăuga, fără cont.</span></p>'
+    : mode === "shared"
     ? '<p class="gate" data-ok="true"><span>👥</span><span>Pozele intră în depozitul comun: tot ce încarcă oricine ajunge în același album.</span></p>'
     : '<p class="gate"><span>⚠️</span><span>Pozele stau doar în browserul ăsta și <b>se pot pierde la refresh</b>. Vezi caseta de sus.</span></p>';
 
@@ -955,7 +972,7 @@ function proofBlock(){
         '<input type="file" id="fileInput" accept="image/*" multiple></div>';
 
   return '<div class="proof">' +
-    '<p class="proof-head"><span>' + (mode === "shared" ? "Dovada opririi &middot; album comun" : "Dovada opririi &middot; doar la tine") + '</span>' +
+    '<p class="proof-head"><span>' + (mode === "shared" || mode === "remote" ? "Dovada opririi &middot; album comun" : "Dovada opririi &middot; doar la tine") + '</span>' +
     '<span class="proof-count" data-ok="' + ok + '">' + list.length + ' / ' + REQUIRED + '</span></p>' +
     '<span class="pips">' + pips + '</span>' +
     (shots ? '<div class="shots">' + shots + '</div>' : "") +
@@ -1056,6 +1073,83 @@ function stamp(){
   return new Date().toISOString() + "-" + Math.random().toString(36).slice(2, 8);
 }
 
+/* ---------- adaptorul depozitului extern ----------
+   REST simplu, fara SDK: pagina ramane un singur fisier. Tabelul tine evidenta
+   (care poza, la ce oprire, cine), bucket-ul tine fisierele. */
+const REMOTE = (function(){
+  const base = String(CONFIG.url).replace(/\/+$/, "");
+  const head = function(extra){
+    return Object.assign({ apikey: CONFIG.key, Authorization: "Bearer " + CONFIG.key }, extra || {});
+  };
+  const fail = async function(res, what){
+    let detail = "";
+    try { detail = (await res.text()).slice(0, 180); } catch (err) { /* fara corp */ }
+    const e = new Error(what + " " + res.status + " " + detail);
+    e.code = res.status === 401 || res.status === 403 ? "denied"
+      : res.status === 404 ? "missing"
+      : res.status === 413 ? "too_large" : "upstream";
+    throw e;
+  };
+  return {
+    publicUrl: function(path){
+      return base + "/storage/v1/object/public/" + CONFIG.bucket + "/" + path;
+    },
+    list: async function(){
+      const res = await fetch(base + "/rest/v1/" + CONFIG.table + "?select=id,stop,at,autor,path&order=at.asc",
+        { headers: head() });
+      if (!res.ok) await fail(res, "citire");
+      return res.json();
+    },
+    add: async function(blob, stop, by){
+      const ext = (blob.type || "image/jpeg").indexOf("png") > -1 ? "png" : "jpg";
+      const path = stop + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) + "." + ext;
+      const up = await fetch(base + "/storage/v1/object/" + CONFIG.bucket + "/" + path, {
+        method: "POST",
+        headers: head({ "Content-Type": blob.type || "image/jpeg" }),
+        body: blob
+      });
+      if (!up.ok) await fail(up, "incarcare");
+      const row = await fetch(base + "/rest/v1/" + CONFIG.table, {
+        method: "POST",
+        headers: head({ "Content-Type": "application/json", Prefer: "return=representation" }),
+        body: JSON.stringify({ stop: stop, at: new Date().toISOString(), autor: by || "", path: path })
+      });
+      if (!row.ok) await fail(row, "indexare");
+      return row.json();
+    },
+    del: async function(id, path){
+      const row = await fetch(base + "/rest/v1/" + CONFIG.table + "?id=eq." + encodeURIComponent(id),
+        { method: "DELETE", headers: head() });
+      if (!row.ok) await fail(row, "stergere");
+      try {
+        await fetch(base + "/storage/v1/object/" + CONFIG.bucket + "/" + path,
+          { method: "DELETE", headers: head() });
+      } catch (err) { /* fisierul ramane orfan, evidenta e curata */ }
+    }
+  };
+})();
+
+/* Traducem lista din depozit in structurile pe care le deseneaza pagina. */
+function applyRemote(rows){
+  const next = STOPS.map(function(){ return []; });
+  rows.forEach(function(r){
+    const i = Number(r.stop);
+    if (!next[i]) return;
+    const id = "R:" + r.id;
+    srcById[id] = REMOTE.publicUrl(r.path);
+    pathById[id] = r.path;
+    byById[id] = typeof r.autor === "string" ? r.autor : "";
+    next[i].push(id);
+  });
+  photos = next;
+}
+
+async function refreshRemote(){
+  try { applyRemote(await REMOTE.list()); render(); }
+  catch (err) { /* pastram ce e pe ecran; reincercam la urmatorul tur */ }
+}
+
+
 async function takeFiles(fileList){
   if (busy) return;
   if (mode === "shared" && !who){ document.getElementById("whoInput").focus(); return; }
@@ -1071,7 +1165,11 @@ async function takeFiles(fileList){
   for (let k = 0; k < files.length; k++){
     note("se încarcă poza " + (k + 1) + " din " + files.length + "…");
     try {
-      if (mode === "shared"){
+      if (mode === "remote"){
+        const blob = await shrink(files[k], 1600, .86);
+        await REMOTE.add(blob, active, who);
+        await refreshRemote();
+      } else if (mode === "shared"){
         /* fiecare poză e propriul ei document, deci doi oameni care încarcă
            în același timp nu se suprascriu unul pe altul */
         const ref = shotsCol.doc();
@@ -1121,6 +1219,13 @@ async function takeFiles(fileList){
 async function removeShot(k){
   const id = photos[active][k];
   if (!id) return;
+  if (mode === "remote"){
+    try { await REMOTE.del(id.slice(2), pathById[id]); }
+    catch (err) { status = "Poza nu s-a putut șterge."; }
+    delete srcById[id]; delete pathById[id];
+    await refreshRemote();
+    return;
+  }
   if (mode === "shared"){
     /* lista se reface din snapshot, deci nu o atingem aici */
     const asset = assetById[id];
@@ -1338,6 +1443,19 @@ function drawStatus(){
     el.innerHTML = "⏳ Se verifică unde se salvează pozele…";
     return;
   }
+  if (mode === "remote"){
+    el.dataset.tone = "ok";
+    el.innerHTML = "🌍 <b>Album comun, deschis.</b> Pozele se salvează în depozitul hărții: " +
+      "oricine are linkul poate adăuga, fără cont, și tot ce încarcă cineva se vede la toți.";
+    return;
+  }
+  if (hasRemote && mode === "local"){
+    el.dataset.tone = "warn";
+    el.innerHTML = "⚠️ <b>Depozitul comun nu răspunde.</b> Pozele rămân doar în browserul ăsta. " +
+      "Verifică adresa și cheia din CONFIG, și regulile de acces ale depozitului." +
+      "<span class='code'>cod: " + esc(probeCode) + "</span>";
+    return;
+  }
   if (mode === "shared" && canWrite === false){
     el.dataset.tone = "warn";
     el.innerHTML = "👀 <b>Poți vedea albumul, dar nu poți adăuga în el.</b> " +
@@ -1386,6 +1504,30 @@ function render(){
 render();
 
 (async function(){
+  if (hasRemote){
+    try {
+      applyRemote(await REMOTE.list());
+      mode = "remote"; canWrite = true; canUpload = true;
+    } catch (err) {
+      mode = "local"; probeCode = (err && err.code) || "upstream";
+      await withTimeout(loadLocal(), 3000, null);
+    }
+    capsChecked = true;
+    hintTail = mode === "remote"
+      ? "Pozele sunt comune — le vede oricine deschide linkul."
+      : "Pozele tale rămân pe dispozitivul ăsta, doar ale tale.";
+    render();
+    if (mode === "remote"){
+      /* depozitul n-are canal de notificare: întrebăm periodic, dar numai
+         cât timp pagina e pe ecran */
+      setInterval(function(){ if (!document.hidden) refreshRemote(); }, 10000);
+      document.addEventListener("visibilitychange", function(){
+        if (!document.hidden) refreshRemote();
+      });
+    }
+    return;
+  }
+
   const use = window.claude && window.claude.use;
   let shared = null;
   if (use){
