@@ -1056,9 +1056,13 @@ function shrink(file, max, quality){
       canvas.width = w; canvas.height = h;
       canvas.getContext("2d").drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      canvas.toBlob(function(blob){ resolve(blob || file); }, "image/jpeg", quality);
+      canvas.toBlob(function(blob){
+        resolve(blob ? { blob: blob, ok: true } : { blob: file, ok: false });
+      }, "image/jpeg", quality);
     };
-    img.onerror = function(){ URL.revokeObjectURL(url); resolve(file); };
+    /* Formatul nu s-a putut decoda (HEIC pe un browser care nu-l ştie).
+       Intoarcem originalul, dar spunem limpede ca nu s-a convertit. */
+    img.onerror = function(){ URL.revokeObjectURL(url); resolve({ blob: file, ok: false }); };
     img.src = url;
   });
 }
@@ -1069,11 +1073,14 @@ function shrink(file, max, quality){
 async function inlineDoc(file, base){
   const tries = [[1400,.82],[1200,.78],[1000,.72],[860,.66],[720,.58],[600,.5],[480,.42]];
   for (let t = 0; t < tries.length; t++){
-    const blob = await shrink(file, tries[t][0], tries[t][1]);
-    const body = Object.assign({}, base, { data: await toDataUrl(blob) });
+    const got = await shrink(file, tries[t][0], tries[t][1]);
+    /* Fara conversie, fiecare incercare da acelasi fisier: nu are rost sa
+       repetam de sapte ori, si cauza e alta decat marimea. */
+    if (!got.ok) { const e = new Error("neconvertit"); e.code = "format"; throw e; }
+    const body = Object.assign({}, base, { data: await toDataUrl(got.blob) });
     if (JSON.stringify(body).length <= DOC_LIMIT) return body;
   }
-  return null;
+  const e = new Error("prea mare"); e.code = "prea_mare"; throw e;
 }
 
 function toDataUrl(blob){
@@ -1184,7 +1191,7 @@ async function takeFiles(fileList){
     note("se încarcă poza " + (k + 1) + " din " + files.length + "…");
     try {
       if (mode === "remote"){
-        const blob = await shrink(files[k], 1600, .86);
+        const blob = (await shrink(files[k], 1600, .86)).blob;
         await REMOTE.add(blob, active, who);
         await refreshRemote();
       } else if (mode === "shared"){
@@ -1193,21 +1200,16 @@ async function takeFiles(fileList){
         const ref = shotsCol.doc();
         const base = { stop: active, at: stamp(), by: who };
         if (canUpload){
-          const blob = await shrink(files[k], 1600, .86);
+          const blob = (await shrink(files[k], 1600, .86)).blob;
           const res = await assetsApi.upload(blob, { type: blob.type || "image/jpeg" });
           await ref.set(Object.assign({}, base, { asset: res.id }));
         } else {
-          const body = await inlineDoc(files[k], base);
-          if (!body){
-            failed = true;
-            note("Poza asta nu a putut fi micșorată — poate fi un format pe care telefonul nu-l convertește.");
-            break;
-          }
-          await ref.set(body);
+          /* inlineDoc arunca acum cu un cod anume; prinderea e mai jos */
+          await ref.set(await inlineDoc(files[k], base));
         }
         /* lista vine înapoi din snapshot, ca să nu numărăm de două ori aceeași poză */
       } else {
-        const blob = await shrink(files[k], 1600, .86);
+        const blob = (await shrink(files[k], 1600, .86)).blob;
         const n = await IDB.put(blob);
         const key = "L:" + n;
         localUrls[key] = URL.createObjectURL(blob);
@@ -1224,7 +1226,10 @@ async function takeFiles(fileList){
            ce rămâne e dreptul de scriere */
         : code === "invalid_argument" ? "Depozitul a refuzat scrierea. Contul ăsta pare să n-aibă drept de scriere pe hartă."
         : code === "revoked" ? "Accesul la depozit s-a închis. Reîncarcă pagina."
-        : "Poza nu s-a încărcat. Mai încearcă o dată.");
+        : code === "format" ? "Formatul pozei nu s-a putut converti pe telefonul ăsta."
+        : code === "prea_mare" ? "Poza rămâne prea mare chiar și micșorată la maximum."
+        /* Fara codul adevarat, un esec necunoscut nu se poate diagnostica. */
+        : "Poza nu s-a încărcat. " + (code ? "(" + code + ")" : "(motiv necunoscut)"));
       failed = true;
       break;
     }
