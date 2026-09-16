@@ -1451,8 +1451,11 @@ function drawStatus(){
   }
   if (hasRemote && mode === "local"){
     el.dataset.tone = "warn";
-    el.innerHTML = "⚠️ <b>Depozitul comun nu răspunde.</b> Pozele rămân doar în browserul ăsta. " +
-      "Verifică adresa și cheia din CONFIG, și regulile de acces ale depozitului." +
+    /* Pagina e un cadou: cine o deschide e invitat, nu dezvoltator. Mesajul
+       spune ce s-a întâmplat și ce urmează, nu ce e de reparat în cod. */
+    el.innerHTML = "⚠️ <b>Albumul comun nu răspunde acum.</b> Pozele pe care le pui rămân " +
+      "deocamdată pe dispozitivul ăsta. Mai încearcă peste câteva minute — dacă tot nu merge, " +
+      "spune-i celui care ți-a dat harta." +
       "<span class='code'>cod: " + esc(probeCode) + "</span>";
     return;
   }

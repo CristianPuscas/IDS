@@ -92,9 +92,15 @@ activarea o faci tu o singură dată; după aceea fiecare push actualizează pag
 ## Ce presupune deschiderea către oricine
 
 Politicile de mai sus permit oricui are linkul să adauge **și să șteargă** poze,
-fără cont. E prețul pentru „fără cont”. Dacă devine o problemă, variantele sunt:
-scoaterea politicii de `delete`, o coloană-secret verificată la ștergere, sau
-moderare în Supabase.
+fără cont. E prețul pentru „fără cont”: nu există identitate de verificat.
+
+**Pentru o hartă dată cadou, omite politica de `delete`.** Altfel oricine ajunge
+la link poate goli albumul, iar pozele nu se mai pot recupera. Pagina tratează
+refuzul la ștergere fără să se strice — butonul de șters arată o eroare scurtă
+și atât. Ștergerile rămân de făcut din panoul Supabase, de către tine.
+
+Dacă vrei totuși ștergere pentru invitați, varianta sigură e o coloană-secret
+verificată la ștergere, nu accesul liber.
 
 ## Cum se modifică traseul
 
