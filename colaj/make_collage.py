@@ -61,14 +61,14 @@ LAYOUT = [
 MIRROR = ("oglinda_drum", (570, 640, 555), (1380, 1685, 235), (1.02, 1.06, 1.04, 0.02, 0.20, 1))  # sursa (cx, cy, r), destinatie (cx, cy, r), editare
 CARD = (410, 560, 700, 1080, 2.0)  # loc propriu intre poze, nu acopera nimic
 
-TEXTS = [  # (text, font, marime, (x, y), rotire)
-    ("Together", "Sacramento-Regular.ttf", 190, (2420, 680), -5.0),
-    ("You", "Sacramento-Regular.ttf", 150, (3000, 850), -4.0),
-    ("& Me", "Sacramento-Regular.ttf", 150, (3050, 975), -4.0),
+TEXTS = [  # (text, font, marime, (x, y), rotire, ingrosare, umbra_inchisa)
+    ("Together", "Sacramento-Regular.ttf", 190, (2420, 680), -5.0, 1, 0.35),
+    ("You", "Sacramento-Regular.ttf", 150, (3000, 850), -4.0, 3, 0.7),
+    ("& Me", "Sacramento-Regular.ttf", 150, (3050, 975), -4.0, 3, 0.7),
 ]
 HEARTS = [  # (cx, cy, marime, culoare, grosime)
     (2660, 800, 70, (255, 255, 255), 4),
-    (2860, 925, 44, (255, 255, 255), 4),
+    (2860, 925, 44, (255, 255, 255), 6),
 ]
 
 
@@ -281,12 +281,14 @@ def draw_heart(canvas, cx, cy, s, color, width, shadow=True):
     canvas.alpha_composite(layer)
 
 
-def draw_text(canvas, text, font_path, size, pos, rot, color=(255, 255, 255), shadow=True):
+def draw_text(canvas, text, font_path, size, pos, rot, stroke=0, glow=0.0, color=(255, 255, 255), shadow=True):
+    """stroke = ingrosare litere (px); glow = umbra inchisa difuza in spate, pentru fundal luminos (0..1)."""
     font = ImageFont.truetype(font_path, size)
-    l, t, r, b = font.getbbox(text)
-    pad = 40
+    l, t, r, b = font.getbbox(text, stroke_width=stroke)
+    pad = 60
     layer = Image.new("RGBA", (r - l + 2 * pad, b - t + 2 * pad), (0, 0, 0, 0))
-    ImageDraw.Draw(layer).text((pad - l, pad - t), text, font=font, fill=color + (255,))
+    ImageDraw.Draw(layer).text((pad - l, pad - t), text, font=font, fill=color + (255,),
+                               stroke_width=stroke, stroke_fill=color + (255,))
     if rot:
         layer = layer.rotate(rot, resample=Image.BICUBIC, expand=True)
     x, y = int(pos[0] - layer.width / 2), int(pos[1] - layer.height / 2)
@@ -294,6 +296,10 @@ def draw_text(canvas, text, font_path, size, pos, rot, color=(255, 255, 255), sh
         sh = Image.new("RGBA", layer.size, (0, 0, 0, 0))
         sh.putalpha(layer.getchannel("A").point(lambda a: int(a * 0.75)).filter(ImageFilter.GaussianBlur(6)))
         canvas.alpha_composite(sh, (x + 3, y + 5))
+    if glow:
+        gl = Image.new("RGBA", layer.size, (15, 12, 10, 0))
+        gl.putalpha(layer.getchannel("A").filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.GaussianBlur(14)).point(lambda a: int(min(255, a * glow * 1.6))))
+        canvas.alpha_composite(gl, (x, y))
     canvas.alpha_composite(layer, (x, y))
 
 
@@ -345,8 +351,8 @@ def main(photos, fonts, out):
     piece, dx, dy = mirror_circle(enhance(Image.open(f"{photos}/{name}.png").convert("RGB"), edit), src, dst)
     place(canvas, piece, dx, dy, 0, shadow=0.55)
 
-    for text, font, size, pos, rot in TEXTS:
-        draw_text(canvas, text, f"{fonts}/{font}", size, pos, rot)
+    for text, font, size, pos, rot, stroke, glow in TEXTS:
+        draw_text(canvas, text, f"{fonts}/{font}", size, pos, rot, stroke, glow)
     for cx, cy, s, col, wdt in HEARTS:
         draw_heart(canvas, cx, cy, s, col, wdt)
 
