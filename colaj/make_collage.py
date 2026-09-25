@@ -13,62 +13,109 @@ import sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
-W, H = 4200, 2800
+W, H = 4800, 3200
 CREAM = (238, 229, 212)
 SS = 2  # supersampling pentru masti
 
-# (fisier, (x0, y0, x1, y1), rotire, (focus_x, focus_y), banda_film, editare)
-# editare = (luminozitate, contrast, saturatie, caldura, vibranta, claritate) - aleasa separat pe fiecare poza.
-# Ultima din lista e poza principala (desenata peste vecini).
-LAYOUT = [
-    ('cetate_imbratisare', (-30, -30, 470, 560), -1.5, (0.55, 0.3), None, (1.02, 1.08, 1.05, 0.04, 0.2, 1)),
-    ('rau_noaptea', (435, -30, 1015, 560), 1.2, (0.62, 0.4), 'left', (1.08, 1.05, 1.0, 0.03, 0.15, 1)),
-    ('motan', (980, -30, 1340, 560), -2.0, (0.5, 0.4), None, (1.08, 1.06, 1.0, 0.03, 0.1, 0)),
-    ('lac_sarut', (1305, -30, 1885, 560), 1.0, (0.47, 0.45), None, (1.0, 1.05, 1.0, 0.02, 0.2, 1)),
-    ('schi', (1850, -30, 2210, 560), -1.5, (0.45, 0.42), None, (1.04, 1.06, 1.0, 0.0, 0.1, 1)),
-    ('soare_selfie', (2175, -30, 2695, 560), 1.5, (0.45, 0.4), None, (1.0, 1.04, 0.97, 0.0, 0.05, 0)),
-    ('ea_cal', (2660, -30, 3060, 560), -1.2, (0.55, 0.45), None, (1.0, 1.06, 1.0, 0.03, 0.2, 1)),
-    ('usa_pupic', (3025, -30, 3545, 560), 1.3, (0.58, 0.42), None, (1.02, 1.05, 1.0, 0.03, 0.12, 0)),
-    ('motan_sapca', (3510, -30, 3890, 560), -1.8, (0.65, 0.42), None, (1.02, 1.06, 1.0, 0.03, 0.1, 0)),
-    ('retrovizoare', (3855, -30, 4235, 560), 1.5, (0.55, 0.42), None, (1.0, 1.12, 1.0, 0.0, 0.2, 1)),
-    ('seara_apa', (-30, 530, 420, 1110), 1.2, (0.52, 0.42), None, (1.0, 1.05, 1.02, 0.0, 0.15, 0)),
-    ('munte_brazi', (690, 530, 1030, 1110), -1.8, (0.5, 0.48), None, (0.98, 1.04, 0.97, 0.0, 0.1, 1)),
-    ('oglinda_hol', (1000, 530, 1340, 1110), 1.6, (0.46, 0.45), None, (1.04, 1.05, 1.0, 0.0, 0.1, 0)),
-    ('vara_butoaie', (-30, 1080, 450, 1660), -1.0, (0.4, 0.35), None, (1.0, 1.05, 1.0, 0.02, 0.15, 1)),
-    ('el_vale', (415, 1080, 895, 1660), 1.4, (0.55, 0.45), None, (1.0, 1.08, 1.0, 0.02, 0.2, 1)),
-    ('hol_valiza', (860, 1080, 1340, 1660), -1.5, (0.6, 0.42), None, (1.0, 1.05, 1.0, 0.0, 0.1, 0)),
-    ('casuta_stanca', (2870, 530, 3350, 1110), -1.2, (0.6, 0.5), None, (1.0, 1.08, 1.0, 0.0, 0.2, 1)),
-    ('atv', (3315, 530, 3795, 1110), 1.5, (0.55, 0.45), None, (1.0, 1.08, 1.05, 0.03, 0.2, 1)),
-    ('pod_ceata', (3760, 530, 4240, 1110), -1.6, (0.47, 0.5), None, (1.03, 1.08, 1.0, 0.0, 0.25, 1)),
-    ('cal', (2870, 1080, 3350, 1660), 1.3, (0.62, 0.4), None, (1.0, 1.04, 0.98, 0.02, 0.05, 1)),
-    ('atv_alb', (3315, 1080, 3795, 1660), -1.4, (0.5, 0.55), None, (1.0, 1.06, 1.0, 0.03, 0.15, 1)),
-    ('patura_rosie', (3760, 1080, 4240, 1660), 1.6, (0.52, 0.38), None, (0.97, 1.06, 1.0, 0.02, 0.1, 0)),
-    ('cetate_selfie', (-30, 1630, 640, 2230), 1.0, (0.45, 0.4), 'right', (1.02, 1.08, 1.05, 0.04, 0.2, 1)),
-    ('apus_fata', (-30, 2200, 640, 2830), -1.2, (0.48, 0.35), None, (1.02, 1.06, 1.0, 0.02, 0.2, 0)),
-    ('craciun', (605, 1630, 1130, 2230), -1.5, (0.5, 0.4), None, (1.03, 1.04, 0.98, 0.0, 0.05, 0)),
-    ('masina_pupic', (605, 2200, 1130, 2830), 1.4, (0.55, 0.35), None, (1.0, 1.05, 1.0, 0.02, 0.1, 0)),
-    ('lac_munti', (1095, 1630, 1720, 2830), -1.0, (0.5, 0.5), None, (1.0, 1.06, 0.95, 0.0, 0.08, 1)),
-    ('cascada', (1685, 1630, 2585, 2230), 1.2, (0.55, 0.4), None, (1.03, 1.08, 1.0, 0.04, 0.25, 1)),
-    ('lac_selfie', (1685, 2200, 2585, 2830), -1.0, (0.5, 0.5), None, (1.0, 1.05, 1.0, 0.03, 0.2, 1)),
-    ('ea_lac_aurie', (2550, 1630, 3175, 2830), 1.0, (0.48, 0.5), None, (1.0, 1.05, 1.0, 0.03, 0.2, 1)),
-    ('lac_apus', (3140, 1630, 3680, 2230), -1.4, (0.48, 0.55), None, (1.0, 1.04, 0.98, 0.0, 0.05, 0)),
-    ('acasa_selfie', (3645, 1630, 4240, 2230), 1.2, (0.72, 0.4), None, (1.0, 1.03, 0.97, 0.0, 0.05, 0)),
-    ('casute', (3140, 2200, 3620, 2830), 1.6, (0.62, 0.42), None, (1.05, 1.04, 1.0, 0.0, 0.1, 0)),
-    ('certificat', (3585, 2200, 4240, 2830), -1.2, (0.55, 0.45), None, (1.0, 1.05, 1.0, 0.02, 0.1, 0)),
-    ('copac_rosu', (1300, 540, 2900, 1650), 0.0, (0.58, 0.4), None, (1.03, 1.06, 0.97, 0.0, 0.05, 1)),
+ROWS = [  # (y0, y1, x0, x1, [(fisier, latime_relativa, focus, banda_film, editare) sau "CARD"])
+    (-30, 640, -30, 4830, [
+        ('cetate_imbratisare', 1.5, (0.55, 0.3), None, (1.02, 1.08, 1.05, 0.04, 0.2, 1)),
+        ('rau_noaptea', 1.5, (0.62, 0.4), 'left', (1.08, 1.05, 1.0, 0.03, 0.15, 1)),
+        ('motan', 1.0, (0.5, 0.4), None, (1.08, 1.06, 1.0, 0.03, 0.1, 0)),
+        ('lac_sarut', 1.5, (0.47, 0.45), None, (1.0, 1.05, 1.0, 0.02, 0.2, 1)),
+        ('schi', 1.0, (0.45, 0.42), None, (1.04, 1.06, 1.0, 0.0, 0.1, 1)),
+        ('soare_selfie', 1.5, (0.45, 0.4), None, (1.0, 1.04, 0.97, 0.0, 0.05, 0)),
+        ('ea_cal', 1.0, (0.55, 0.45), None, (1.0, 1.06, 1.0, 0.03, 0.2, 1)),
+        ('usa_pupic', 1.5, (0.58, 0.42), None, (1.02, 1.05, 1.0, 0.03, 0.12, 0)),
+        ('motan_sapca', 1.0, (0.65, 0.42), None, (1.02, 1.06, 1.0, 0.03, 0.1, 0)),
+        ('retrovizoare', 1.0, (0.55, 0.42), None, (1.0, 1.12, 1.0, 0.0, 0.2, 1)),
+    ]),
+    (610, 1250, -30, 1630, [
+        ('seara_apa', 1.0, (0.52, 0.42), None, (1.0, 1.05, 1.02, 0.0, 0.15, 0)),
+        "CARD",
+        ('munte_brazi', 1.0, (0.5, 0.48), None, (0.98, 1.04, 0.97, 0.0, 0.1, 1)),
+        ('hol_valiza', 1.0, (0.6, 0.42), None, (1.0, 1.05, 1.0, 0.0, 0.1, 0)),
+    ]),
+    (1220, 1860, -30, 1630, [
+        ('vara_butoaie', 1.0, (0.4, 0.35), None, (1.0, 1.05, 1.0, 0.02, 0.15, 1)),
+        ('el_vale', 1.0, (0.55, 0.45), None, (1.0, 1.08, 1.0, 0.02, 0.2, 1)),
+        ('oglinda_hol', 1.0, (0.46, 0.45), None, (1.04, 1.05, 1.0, 0.0, 0.1, 0)),
+        ('patura_rosie', 1.0, (0.52, 0.38), None, (0.97, 1.06, 1.0, 0.02, 0.1, 0)),
+    ]),
+    (610, 1250, 3170, 4830, [
+        ('casuta_stanca', 1.0, (0.6, 0.5), None, (1.0, 1.08, 1.0, 0.0, 0.2, 1)),
+        ('atv', 1.0, (0.55, 0.45), None, (1.0, 1.08, 1.05, 0.03, 0.2, 1)),
+        ('pod_ceata', 1.0, (0.47, 0.5), None, (1.03, 1.08, 1.0, 0.0, 0.25, 1)),
+        ('lexus_profil', 1.0, (0.5, 0.62), None, (1.03, 1.08, 1.0, 0.0, 0.12, 1)),
+    ]),
+    (1220, 1860, 3170, 4830, [
+        ('cal', 1.0, (0.62, 0.4), None, (1.0, 1.04, 0.98, 0.02, 0.05, 1)),
+        ('atv_alb', 1.0, (0.5, 0.55), None, (1.0, 1.06, 1.0, 0.03, 0.15, 1)),
+        ('lexus_alb', 1.0, (0.45, 0.62), None, (1.02, 1.1, 1.0, -0.02, 0.1, 1)),
+        ('motan_doarme', 1.0, (0.5, 0.45), None, (1.04, 1.05, 1.0, 0.02, 0.08, 1)),
+    ]),
+    (1830, 2480, -30, 4830, [
+        ('cetate_selfie', 1.5, (0.45, 0.4), 'right', (1.02, 1.08, 1.05, 0.04, 0.2, 1)),
+        ('craciun', 1.0, (0.5, 0.4), None, (1.03, 1.04, 0.98, 0.0, 0.05, 0)),
+        ('noapte_pat', 1.0, (0.54, 0.6), None, (1.75, 1.08, 0.85, 0.03, 0.0, 0)),
+        ('cascada', 1.5, (0.55, 0.4), None, (1.03, 1.08, 1.0, 0.04, 0.25, 1)),
+        ('lexus_fata', 1.0, (0.48, 0.55), None, (1.05, 1.06, 1.0, 0.0, 0.05, 1)),
+        ('apus_fata', 1.5, (0.48, 0.35), None, (1.02, 1.06, 1.0, 0.02, 0.2, 0)),
+        ('lac_apus', 1.0, (0.48, 0.55), None, (1.0, 1.04, 0.98, 0.0, 0.05, 0)),
+        ('oglinda_trafic', 1.0, (0.5, 0.5), None, (1.0, 1.02, 1.0, 0.0, 0.0, 0)),
+        ('acasa_selfie', 1.5, (0.72, 0.4), None, (1.0, 1.03, 0.97, 0.0, 0.05, 0)),
+        ('casute', 1.0, (0.62, 0.42), None, (1.05, 1.04, 1.0, 0.0, 0.1, 0)),
+    ]),
+    (2450, 3230, -30, 4830, [
+        ('masina_pupic', 1.0, (0.55, 0.35), None, (1.0, 1.05, 1.0, 0.02, 0.1, 0)),
+        ('lac_munti', 1.0, (0.5, 0.5), None, (1.0, 1.06, 0.95, 0.0, 0.08, 1)),
+        ('lac_selfie', 1.5, (0.5, 0.5), None, (1.0, 1.05, 1.0, 0.03, 0.2, 1)),
+        ('lexus_chei', 1.0, (0.5, 0.6), None, (1.0, 1.08, 1.0, 0.0, 0.15, 1)),
+        ('certificat', 1.5, (0.55, 0.45), None, (1.0, 1.05, 1.0, 0.02, 0.1, 0)),
+        ('ea_lac_aurie', 1.0, (0.48, 0.5), None, (1.0, 1.05, 1.0, 0.03, 0.2, 1)),
+        ('motan_prosop', 1.5, (0.62, 0.5), None, (1.03, 1.06, 1.0, 0.02, 0.1, 1)),
+    ]),
 ]
+HERO = ("copac_rosu", (1600, 590, 3200, 1880), (0.58, 0.40), None, (1.03, 1.06, 0.97, 0.0, 0.05, 1))
+OVERLAP = 35
 
-MIRROR = ("oglinda_drum", (570, 640, 555), (1380, 1685, 235), (1.02, 1.06, 1.04, 0.02, 0.20, 1))  # sursa (cx, cy, r), destinatie (cx, cy, r), editare
-CARD = (410, 560, 700, 1080, 2.0)  # loc propriu intre poze, nu acopera nimic
+
+def build_layout():
+    """Imparte fiecare rand intre poze dupa latimea relativa; intoarce LAYOUT si locul biletelului."""
+    layout, card = [], None
+    for y0, y1, x0, x1, items in ROWS:
+        weights = [1.0 if it == "CARD" else it[1] for it in items]
+        unit = (x1 - x0 + OVERLAP * (len(items) - 1)) / sum(weights)
+        x = x0
+        for k, (it, wt) in enumerate(zip(items, weights)):
+            w = int(round(unit * wt))
+            rot = (1.0 + (k * 7 + y0 // 10) % 9 * 0.12) * (-1 if (k + y0 // 100) % 2 else 1)
+            if it == "CARD":
+                card = (x + 25, y0 + 30, x + w - 25, y1 - 30, 2.0)
+            else:
+                name, _, focus, film, edit = it
+                layout.append((name, (x, y0, x + w, y1), rot, focus, film, edit))
+            x += w - OVERLAP
+    name, box, focus, film, edit = HERO
+    layout.append((name, box, 0.0, focus, film, edit))  # principala, desenata ultima
+    return layout, card
+
+
+LAYOUT, CARD = build_layout()
+
+MIRROR = ("oglinda_drum", (570, 640, 555), (4060, 2560, 215), (1.02, 1.06, 1.04, 0.02, 0.20, 1))  # sursa (cx, cy, r), destinatie (cx, cy, r), editare
 
 TEXTS = [  # (text, font, marime, (x, y), rotire, ingrosare, umbra_inchisa)
-    ("Together", "Sacramento-Regular.ttf", 190, (2420, 680), -5.0, 1, 0.35),
-    ("You", "Sacramento-Regular.ttf", 150, (3000, 850), -4.0, 3, 0.7),
-    ("& Me", "Sacramento-Regular.ttf", 150, (3050, 975), -4.0, 3, 0.7),
+    ("Together", "Sacramento-Regular.ttf", 190, (2720, 730), -5.0, 1, 0.35),
+    ("You", "Sacramento-Regular.ttf", 150, (3300, 900), -4.0, 3, 0.7),
+    ("& Me", "Sacramento-Regular.ttf", 150, (3350, 1025), -4.0, 3, 0.7),
+]
+STICKERS = [  # (fisier_png_transparent, (cx, cy), latime, rotire)
+    ("pisoi_sticker", (2220, 2555), 400, -6.0),
 ]
 HEARTS = [  # (cx, cy, marime, culoare, grosime)
-    (2660, 800, 70, (255, 255, 255), 4),
-    (2860, 925, 44, (255, 255, 255), 6),
+    (2960, 850, 70, (255, 255, 255), 4),
+    (3160, 975, 44, (255, 255, 255), 6),
 ]
 
 
@@ -259,6 +306,19 @@ def mirror_circle(img, src, dst):
     return piece, dx, dy
 
 
+def make_sticker(img, width, rot, border=16):
+    """Decupaj transparent cu contur alb, ca un autocolant."""
+    img = img.resize((width, int(img.height * width / img.width)), Image.LANCZOS)
+    pad = border + 30
+    a = Image.new("L", (img.width + 2 * pad, img.height + 2 * pad), 0)
+    a.paste(img.getchannel("A"), (pad, pad))
+    outline = a.point(lambda v: 255 if v > 90 else 0).filter(ImageFilter.MaxFilter(2 * border + 1)).filter(ImageFilter.GaussianBlur(1.5))
+    piece = Image.new("RGBA", a.size, (255, 255, 255, 0))
+    piece.putalpha(outline)
+    piece.alpha_composite(img, (pad, pad))
+    return piece
+
+
 def heart_points(cx, cy, s, n=120):
     pts = []
     for i in range(n + 1):
@@ -350,6 +410,10 @@ def main(photos, fonts, out):
     name, src, dst, edit = MIRROR
     piece, dx, dy = mirror_circle(enhance(Image.open(f"{photos}/{name}.png").convert("RGB"), edit), src, dst)
     place(canvas, piece, dx, dy, 0, shadow=0.55)
+
+    for name, (cx, cy), width, rot in STICKERS:
+        piece = make_sticker(Image.open(f"{photos}/{name}.png").convert("RGBA"), width, rot)
+        place(canvas, piece, cx, cy, rot, shadow=0.5)
 
     for text, font, size, pos, rot, stroke, glow in TEXTS:
         draw_text(canvas, text, f"{fonts}/{font}", size, pos, rot, stroke, glow)
