@@ -312,7 +312,10 @@ def make_sticker(img, width, rot, border=16):
     pad = border + 30
     a = Image.new("L", (img.width + 2 * pad, img.height + 2 * pad), 0)
     a.paste(img.getchannel("A"), (pad, pad))
-    outline = a.point(lambda v: 255 if v > 90 else 0).filter(ImageFilter.MaxFilter(2 * border + 1)).filter(ImageFilter.GaussianBlur(1.5))
+    # conturul se calculeaza din forma netezita, ca mustatile sa nu faca zimti
+    body = a.filter(ImageFilter.GaussianBlur(border)).point(lambda v: 255 if v > 128 else 0)
+    outline = body.filter(ImageFilter.MaxFilter(2 * border + 1)).filter(ImageFilter.GaussianBlur(border / 3))
+    outline = outline.point(lambda v: 255 if v > 128 else 0).filter(ImageFilter.GaussianBlur(1.5))
     piece = Image.new("RGBA", a.size, (255, 255, 255, 0))
     piece.putalpha(outline)
     piece.alpha_composite(img, (pad, pad))
