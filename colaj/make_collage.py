@@ -4,7 +4,7 @@ Utilizare:
     python3 make_collage.py <folder_poze> <folder_fonturi> <iesire.jpg>
 
 Pozele NU se tin in repo - folderul de poze ramane local.
-Fonturi necesare in <folder_fonturi>: LaBelleAurore.ttf, PinyonScript-Regular.ttf (Google Fonts, OFL).
+Fonturi necesare in <folder_fonturi>: Sacramento-Regular.ttf, PinyonScript-Regular.ttf (Google Fonts, OFL).
 """
 import math
 import random
@@ -31,9 +31,9 @@ LAYOUT = [
     ('usa_pupic', (3025, -30, 3545, 560), 1.3, (0.58, 0.42), None, (1.02, 1.05, 1.0, 0.03, 0.12, 0)),
     ('motan_sapca', (3510, -30, 3890, 560), -1.8, (0.65, 0.42), None, (1.02, 1.06, 1.0, 0.03, 0.1, 0)),
     ('retrovizoare', (3855, -30, 4235, 560), 1.5, (0.55, 0.42), None, (1.0, 1.12, 1.0, 0.0, 0.2, 1)),
-    ('seara_apa', (-30, 530, 450, 1110), 1.2, (0.52, 0.42), None, (1.0, 1.05, 1.02, 0.0, 0.15, 0)),
-    ('munte_brazi', (415, 530, 895, 1110), -1.8, (0.5, 0.48), None, (0.98, 1.04, 0.97, 0.0, 0.1, 1)),
-    ('oglinda_hol', (860, 530, 1340, 1110), 1.6, (0.46, 0.45), None, (1.04, 1.05, 1.0, 0.0, 0.1, 0)),
+    ('seara_apa', (-30, 530, 420, 1110), 1.2, (0.52, 0.42), None, (1.0, 1.05, 1.02, 0.0, 0.15, 0)),
+    ('munte_brazi', (690, 530, 1030, 1110), -1.8, (0.5, 0.48), None, (0.98, 1.04, 0.97, 0.0, 0.1, 1)),
+    ('oglinda_hol', (1000, 530, 1340, 1110), 1.6, (0.46, 0.45), None, (1.04, 1.05, 1.0, 0.0, 0.1, 0)),
     ('vara_butoaie', (-30, 1080, 450, 1660), -1.0, (0.4, 0.35), None, (1.0, 1.05, 1.0, 0.02, 0.15, 1)),
     ('el_vale', (415, 1080, 895, 1660), 1.4, (0.55, 0.45), None, (1.0, 1.08, 1.0, 0.02, 0.2, 1)),
     ('hol_valiza', (860, 1080, 1340, 1660), -1.5, (0.6, 0.42), None, (1.0, 1.05, 1.0, 0.0, 0.1, 0)),
@@ -58,17 +58,17 @@ LAYOUT = [
     ('copac_rosu', (1300, 540, 2900, 1650), 0.0, (0.58, 0.4), None, (1.03, 1.06, 0.97, 0.0, 0.05, 1)),
 ]
 
-MIRROR = ("oglinda_drum", (570, 640, 555), (1340, 1655, 250), (1.02, 1.06, 1.04, 0.02, 0.20, 1))  # sursa (cx, cy, r), destinatie (cx, cy, r), editare
-CARD = (330, 420, 690, 980, 4.0)
+MIRROR = ("oglinda_drum", (570, 640, 555), (1380, 1685, 235), (1.02, 1.06, 1.04, 0.02, 0.20, 1))  # sursa (cx, cy, r), destinatie (cx, cy, r), editare
+CARD = (410, 560, 700, 1080, 2.0)  # loc propriu intre poze, nu acopera nimic
 
 TEXTS = [  # (text, font, marime, (x, y), rotire)
-    ("Together", "LaBelleAurore.ttf", 170, (2480, 660), -4.0),
-    ("You", "LaBelleAurore.ttf", 135, (2800, 1150), -6.0),
-    ("& Me", "LaBelleAurore.ttf", 120, (2850, 1290), -6.0),
+    ("Together", "Sacramento-Regular.ttf", 190, (2420, 680), -5.0),
+    ("You", "Sacramento-Regular.ttf", 150, (3000, 850), -4.0),
+    ("& Me", "Sacramento-Regular.ttf", 150, (3050, 975), -4.0),
 ]
 HEARTS = [  # (cx, cy, marime, culoare, grosime)
-    (2800, 590, 64, (255, 255, 255), 6),
-    (2690, 1330, 46, (255, 255, 255), 5),
+    (2660, 800, 70, (255, 255, 255), 4),
+    (2860, 925, 44, (255, 255, 255), 4),
 ]
 
 
