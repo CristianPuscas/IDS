@@ -4,3 +4,4 @@ colaj/fonts/
 colaj/*.jpg
 colaj/*.png
 colaj/*.webp
+__pycache__/
