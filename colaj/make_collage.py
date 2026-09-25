@@ -17,38 +17,41 @@ W, H = 3000, 2000
 CREAM = (238, 229, 212)
 SS = 2  # supersampling pentru masti
 
-# (fisier, (x0, y0, x1, y1), rotire, (focus_x, focus_y), banda_film, luminozitate)
+# (fisier, (x0, y0, x1, y1), rotire, (focus_x, focus_y), banda_film, (luminozitate, contrast, saturatie))
+# Editarea e aleasa separat pentru fiecare poza, dupa cat de luminoasa/saturata e deja.
 LAYOUT = [
     # rand sus
-    ("cetate_imbratisare", (-30, -30, 790, 590), -1.5, (0.55, 0.40), None, 1.0),
-    ("rau_noaptea", (750, -30, 1560, 620), 1.2, (0.62, 0.40), "left", 1.08),
-    ("schi", (1520, -40, 2080, 640), -2.0, (0.45, 0.42), None, 1.0),
-    ("lac_sarut", (2040, -30, 3030, 610), 1.5, (0.50, 0.45), None, 1.0),
+    ("cetate_imbratisare", (-30, -30, 790, 590), -1.5, (0.55, 0.40), None, (1.02, 1.08, 1.05)),
+    ("rau_noaptea", (750, -30, 1560, 620), 1.2, (0.62, 0.40), "left", (1.08, 1.04, 1.00)),
+    ("schi", (1520, -40, 2080, 640), -2.0, (0.45, 0.42), None, (1.04, 1.06, 1.00)),
+    ("lac_sarut", (2040, -30, 3030, 610), 1.5, (0.50, 0.45), None, (1.00, 1.04, 1.02)),
     # coloana stanga
-    ("seara_apa", (-30, 540, 460, 1420), 1.2, (0.52, 0.42), None, 1.18),
-    ("munte_brazi", (420, 570, 900, 1400), -1.8, (0.50, 0.48), None, 1.0),
+    ("seara_apa", (-30, 540, 460, 1420), 1.2, (0.52, 0.42), None, (1.00, 1.05, 1.02)),
+    ("munte_brazi", (420, 570, 900, 1400), -1.8, (0.50, 0.48), None, (0.98, 1.03, 0.97)),
     # coloana dreapta
-    ("oglinda_hol", (2110, 560, 2590, 1450), 1.6, (0.46, 0.45), None, 1.02),
-    ("atv", (2550, 560, 3030, 1500), -1.2, (0.55, 0.45), None, 1.0),
+    ("oglinda_hol", (2110, 560, 2590, 1450), 1.6, (0.46, 0.45), None, (1.04, 1.05, 1.00)),
+    ("atv", (2550, 560, 3030, 1500), -1.2, (0.55, 0.45), None, (1.00, 1.07, 1.05)),
     # rand jos
-    ("cetate_selfie", (-30, 1350, 770, 2030), 1.0, (0.45, 0.40), "right", 1.0),
-    ("craciun", (740, 1390, 1280, 2040), -1.5, (0.50, 0.40), None, 1.0),
-    ("casute", (1520, 1400, 1960, 2040), 1.8, (0.68, 0.42), None, 1.05),
-    ("acasa_selfie", (1930, 1445, 2480, 2095), -1.2, (0.72, 0.40), None, 1.0),
+    ("cetate_selfie", (-30, 1350, 770, 2030), 1.0, (0.45, 0.40), "right", (1.02, 1.07, 1.05)),
+    ("craciun", (740, 1390, 1390, 2040), -1.5, (0.50, 0.40), None, (1.03, 1.04, 0.98)),
+    ("casute", (1350, 1400, 1960, 2040), 1.8, (0.68, 0.42), None, (1.05, 1.04, 1.00)),
+    ("acasa_selfie", (1930, 1445, 2480, 2095), -1.2, (0.72, 0.40), None, (1.00, 1.03, 0.97)),
     # poza principala (desenata ultima, peste vecini)
-    ("copac_rosu", (830, 560, 2170, 1430), 0.0, (0.52, 0.36), None, 1.0),
+    ("copac_rosu", (830, 560, 2170, 1430), 0.0, (0.52, 0.36), None, (1.03, 1.06, 0.97)),
 ]
 
-MIRROR = ("oglinda_drum", (570, 640, 555), (2730, 1705, 310))  # (sursa cx, cy, r), (dest cx, cy, r)
-CARD = (1265, 1450, 1545, 1975, -3.0)
+MIRROR = ("oglinda_drum", (570, 640, 555), (2730, 1705, 310), (1.02, 1.06, 1.04))  # (sursa cx, cy, r), (dest cx, cy, r)
+CARD = (300, 350, 580, 850, 4.0)
 
 TEXTS = [  # (text, font, marime, (x, y), rotire)
-    ("Together", "LaBelleAurore.ttf", 150, (1190, 1320), -6.0),
-    ("You & Me", "LaBelleAurore.ttf", 100, (235, 1450), -5.0),
+    ("Together", "LaBelleAurore.ttf", 150, (1830, 640), -4.0),
+    ("You", "LaBelleAurore.ttf", 125, (2170, 1120), -6.0),
+    ("& Me", "LaBelleAurore.ttf", 110, (2230, 1250), -6.0),
 ]
 HEARTS = [  # (cx, cy, marime, culoare, grosime)
-    (1545, 1270, 60, (255, 255, 255), 6),
-    (1000, 1180, 38, (255, 255, 255), 4),
+    (2105, 575, 60, (255, 255, 255), 6),
+    (2060, 1310, 44, (255, 255, 255), 5),
+    (2890, 70, 45, (255, 255, 255), 5),
 ]
 
 
@@ -147,21 +150,20 @@ def film_strip(h, width=62):
     return s
 
 
-def enhance(photo, bright=1.0):
-    """Putin mai mult contrast si culoare, ca pozele sa arate mai vii."""
-    photo = ImageOps.autocontrast(photo, cutoff=0.6, preserve_tone=True)
-    if bright != 1.0:
-        photo = ImageEnhance.Brightness(photo).enhance(bright)
-    photo = ImageEnhance.Contrast(photo).enhance(1.12)
-    photo = ImageEnhance.Color(photo).enhance(1.12)
-    return ImageEnhance.Sharpness(photo).enhance(1.15)
+def enhance(photo, edit=(1.0, 1.0, 1.0)):
+    """Editare separata pe poza: (luminozitate, contrast, saturatie)."""
+    bright, contrast, color = edit
+    photo = ImageEnhance.Brightness(photo).enhance(bright)
+    photo = ImageEnhance.Contrast(photo).enhance(contrast)
+    photo = ImageEnhance.Color(photo).enhance(color)
+    return ImageEnhance.Sharpness(photo).enhance(1.1)
 
 
-def make_piece(img, w, h, focus, film, name, bright=1.0):
+def make_piece(img, w, h, focus, film, name, edit=(1.0, 1.0, 1.0)):
     """Poza cu margine de hartie rupta (+ banda de film). Intoarce RGBA."""
     rng = rng_for(name)
     fw = 62 if film else 0
-    photo = enhance(crop_cover(img, w - fw, h, focus), bright)
+    photo = enhance(crop_cover(img, w - fw, h, focus), edit)
     content = Image.new("RGB", (w, h))
     if film == "left":
         content.paste(film_strip(h), (0, 0))
@@ -300,17 +302,17 @@ def make_card(fonts):
 def main(photos, fonts, out):
     canvas = paper(W, H, rng_for("fundal")).convert("RGBA")
 
-    for name, (x0, y0, x1, y1), rot, focus, film, bright in LAYOUT:
+    for name, (x0, y0, x1, y1), rot, focus, film, edit in LAYOUT:
         img = Image.open(f"{photos}/{name}.png").convert("RGB")
         img = ImageOps.exif_transpose(img)
-        piece = make_piece(img, x1 - x0, y1 - y0, focus, film, name, bright)
+        piece = make_piece(img, x1 - x0, y1 - y0, focus, film, name, edit)
         place(canvas, piece, (x0 + x1) / 2, (y0 + y1) / 2, rot, shadow=0.55 if name == "copac_rosu" else 0.45)
 
     card, cx, cy, rot = make_card(fonts)
     place(canvas, card, cx, cy, rot, shadow=0.5)
 
-    name, src, dst = MIRROR
-    piece, dx, dy = mirror_circle(Image.open(f"{photos}/{name}.png").convert("RGB"), src, dst)
+    name, src, dst, edit = MIRROR
+    piece, dx, dy = mirror_circle(enhance(Image.open(f"{photos}/{name}.png").convert("RGB"), edit), src, dst)
     place(canvas, piece, dx, dy, 0, shadow=0.55)
 
     for text, font, size, pos, rot in TEXTS:
