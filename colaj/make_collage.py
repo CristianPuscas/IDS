@@ -4,7 +4,7 @@ Utilizare:
     python3 make_collage.py <folder_poze> <folder_fonturi> <iesire.jpg>
 
 Pozele NU se tin in repo - folderul de poze ramane local.
-Fonturi necesare in <folder_fonturi>: GreatVibes-Regular.ttf, Allura-Regular.ttf (Google Fonts, OFL).
+Fonturi necesare in <folder_fonturi> (Google Fonts): IMFeENit28P.ttf, IMFeENrm28P.ttf, AbrilFatface-Regular.ttf,\nUnifrakturMaguntia-Book.ttf, OldStandard-Bold.ttf, SpecialElite-Regular.ttf.
 """
 import math
 import random
@@ -43,9 +43,9 @@ MIRROR = ("oglinda_drum", (570, 640, 555), (2730, 1705, 310))  # (sursa cx, cy, 
 CARD = (1265, 1450, 1545, 1975, -3.0)
 
 TEXTS = [  # (text, font, marime, (x, y), rotire)
-    ("Together", "GreatVibes-Regular.ttf", 180, (1830, 640), -4.0),
-    ("You", "GreatVibes-Regular.ttf", 150, (2170, 1120), -6.0),
-    ("& Me", "GreatVibes-Regular.ttf", 130, (2230, 1250), -6.0),
+    ("Together", "IMFeENit28P.ttf", 170, (1830, 640), -4.0),
+    ("You", "IMFeENit28P.ttf", 140, (2170, 1120), -6.0),
+    ("& Me", "IMFeENit28P.ttf", 120, (2230, 1250), -6.0),
 ]
 HEARTS = [  # (cx, cy, marime, culoare, grosime)
     (2105, 575, 60, (255, 255, 255), 6),
@@ -251,50 +251,120 @@ def draw_heart(canvas, cx, cy, s, color, width, shadow=True):
     canvas.alpha_composite(layer)
 
 
+def distress(alpha, rng, amount=1.0):
+    """Uzeaza cerneala: margini zgrunturoase si mici goluri, ca la tiparul vechi."""
+    w, h = alpha.size
+    g = np.random.default_rng(rng.randint(0, 10**6))
+    a = np.asarray(alpha.filter(ImageFilter.GaussianBlur(1.2)), dtype=float) / 255
+    grain = np.asarray(Image.fromarray((g.random((h, w)) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.0)), dtype=float) / 255
+    a = np.clip((a - 0.5 + (grain - 0.5) * 0.9 * amount) * 6 + 0.5, 0, 1)
+    specks = Image.fromarray((g.random((h // 6 + 1, w // 6 + 1)) * 255).astype(np.uint8)).resize((w, h), Image.BICUBIC)
+    holes = np.asarray(specks.filter(ImageFilter.GaussianBlur(1.5)), dtype=float) / 255
+    a = a * np.clip((0.78 + 0.1 * (1 - amount) - holes) * 8, 0, 1)
+    return Image.fromarray((a * 255).astype(np.uint8), "L")
+
+
 def draw_text(canvas, text, font_path, size, pos, rot, color=(255, 255, 255), shadow=True):
     font = ImageFont.truetype(font_path, size)
     l, t, r, b = font.getbbox(text)
     pad = 40
-    layer = Image.new("RGBA", (r - l + 2 * pad, b - t + 2 * pad), (0, 0, 0, 0))
-    ImageDraw.Draw(layer).text((pad - l, pad - t), text, font=font, fill=color + (255,))
+    mask = Image.new("L", (r - l + 2 * pad, b - t + 2 * pad), 0)
+    ImageDraw.Draw(mask).text((pad - l, pad - t), text, font=font, fill=255)
+    mask = distress(mask, rng_for(text))
+    layer = Image.new("RGBA", mask.size, color + (0,))
+    layer.putalpha(mask)
     if rot:
         layer = layer.rotate(rot, resample=Image.BICUBIC, expand=True)
     x, y = int(pos[0] - layer.width / 2), int(pos[1] - layer.height / 2)
     if shadow:
         sh = Image.new("RGBA", layer.size, (0, 0, 0, 0))
-        sh.putalpha(layer.getchannel("A").point(lambda a: int(a * 0.75)).filter(ImageFilter.GaussianBlur(6)))
+        sh.putalpha(layer.getchannel("A").point(lambda a: int(a * 0.8)).filter(ImageFilter.GaussianBlur(6)))
         canvas.alpha_composite(sh, (x + 3, y + 5))
     canvas.alpha_composite(layer, (x, y))
 
 
+NEWSPRINT = (224, 214, 190)
+
+
+def newspaper_bg(w, h, rng, fonts):
+    """Hartie de ziar ingalbenita, cu coloane de text marunt si sters."""
+    img = paper(w, h, rng, base=NEWSPRINT)
+    d = ImageDraw.Draw(img)
+    font = ImageFont.truetype(fonts + "/IMFeENrm28P.ttf", 17)
+    letters = "abcdefghilmnoprstuvaeioe"
+    cols = max(1, w // 150)
+    cw = w / cols
+    for c in range(cols):
+        y = rng.randint(-10, 10)
+        while y < h:
+            line = " ".join("".join(rng.choice(letters) for _ in range(rng.randint(2, 8))) for _ in range(8))
+            d.text((c * cw + 8, y), line, font=font, fill=(155, 145, 126))
+            y += 20
+        if c:
+            d.line((c * cw - 3, 0, c * cw - 3, h), fill=(140, 130, 112), width=1)
+    img = img.crop((0, 0, w, h))
+    return img
+
+
+def clipping(word, font_path, size, rng, fonts, invert=False):
+    """Un cuvant decupat din ziar, cu margini rupte."""
+    font = ImageFont.truetype(font_path, size)
+    l, t, r, b = font.getbbox(word)
+    tw, th = r - l, b - t
+    px, py = 22, 16
+    w, h = tw + 2 * px, th + 2 * py
+    pad = 24
+    cw, ch = w + 2 * pad, h + 2 * pad
+    bg = Image.new("RGB", (cw, ch), (24, 22, 20)) if invert else newspaper_bg(cw, ch, rng, fonts)
+    ink = Image.new("L", (cw, ch), 0)
+    ImageDraw.Draw(ink).text((pad + px - l, pad + py - t), word, font=font, fill=255)
+    ink = distress(ink, rng, amount=0.6)
+    col = (246, 240, 226) if invert else (22, 20, 18)
+    bg.paste(col, (0, 0), ink)
+    piece = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    piece.paste(bg, (0, 0), poly_mask((cw, ch), torn_rect(pad, pad, pad + w, pad + h, 6, rng, radius=6, bites=3)))
+    return piece
+
+
 def make_card(fonts):
+    """Biletel ca o bucata rupta din ziar, cu cuvinte decupate lipite peste."""
     x0, y0, x1, y1, rot = CARD
     w, h = x1 - x0, y1 - y0
     rng = rng_for("card")
-    pad = 30
+    pad = 50
     cw, ch = w + 2 * pad, h + 2 * pad
-    base = paper(cw, ch, rng, base=(236, 226, 206))
-    # pete usoare de hartie veche
+    base = newspaper_bg(cw, ch, rng, fonts)
     stains = Image.new("L", (cw, ch), 0)
     sd = ImageDraw.Draw(stains)
-    for _ in range(6):
-        rx, ry, rr = rng.randint(0, cw), rng.randint(0, ch), rng.randint(40, 110)
-        sd.ellipse((rx - rr, ry - rr, rx + rr, ry + rr), fill=rng.randint(15, 35))
-    base.paste((200, 180, 150), (0, 0), stains.filter(ImageFilter.GaussianBlur(40)))
+    for _ in range(7):
+        rx, ry, rr = rng.randint(0, cw), rng.randint(0, ch), rng.randint(40, 120)
+        sd.ellipse((rx - rr, ry - rr, rx + rr, ry + rr), fill=rng.randint(25, 55))
+    base.paste((170, 140, 95), (0, 0), stains.filter(ImageFilter.GaussianBlur(45)))
     piece = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    piece.paste(base, (0, 0), poly_mask((cw, ch), torn_rect(pad, pad, pad + w, pad + h, 10, rng, radius=24, bites=4)))
-    ink = (48, 36, 28)
-    words = ["Good", "People", "Better", "Moments"]
-    size = 96
-    font = ImageFont.truetype(fonts + "/Allura-Regular.ttf", size)
-    while max(font.getlength(wd) for wd in words) > w - 70:
-        size -= 2
-        font = ImageFont.truetype(fonts + "/Allura-Regular.ttf", size)
-    d = ImageDraw.Draw(piece)
-    for i, word in enumerate(words):
-        d.text((pad + 22 + (i % 2) * 16, pad + 45 + i * (h - 170) // 4), word, font=font, fill=ink)
+    piece.paste(base, (0, 0), poly_mask((cw, ch), torn_rect(pad, pad, pad + w, pad + h, 15, rng, radius=20, bites=8)))
+
+    words = [  # (cuvant, font, marime, inversat)
+        ("Good", "AbrilFatface-Regular.ttf", 64, False),
+        ("People", "UnifrakturMaguntia-Book.ttf", 60, True),
+        ("Better", "OldStandard-Bold.ttf", 58, False),
+        ("Moments", "SpecialElite-Regular.ttf", 50, True),
+    ]
+    step = (h - 120) / len(words)
+    for i, (word, font, size, inv) in enumerate(words):
+        c = clipping(word, f"{fonts}/{font}", size, rng, fonts, inv)
+        scale = min(1.0, (w - 20) / c.width)
+        if scale < 1:
+            c = c.resize((int(c.width * scale), int(c.height * scale)), Image.LANCZOS)
+        c = c.rotate(rng.uniform(-6, 6), resample=Image.BICUBIC, expand=True)
+        cx = pad + w / 2 + (-14 if i % 2 else 14)
+        cy = pad + 55 + i * step + step / 2 - 20
+        x, y = int(cx - c.width / 2), int(cy - c.height / 2)
+        sh = Image.new("RGBA", c.size, (0, 0, 0, 0))
+        sh.putalpha(c.getchannel("A").point(lambda a: int(a * 0.45)).filter(ImageFilter.GaussianBlur(4)))
+        piece.alpha_composite(sh, (x + 3, y + 4))
+        piece.alpha_composite(c, (x, y))
     heart = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    ImageDraw.Draw(heart).line(heart_points(pad + w - 75, pad + h - 70, 50), fill=ink + (255,), width=4, joint="curve")
+    ImageDraw.Draw(heart).line(heart_points(pad + w - 60, pad + h - 45, 44), fill=(150, 25, 30, 255), width=5, joint="curve")
     piece.alpha_composite(heart)
     return piece, (x0 + x1) / 2, (y0 + y1) / 2, rot
 
