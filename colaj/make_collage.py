@@ -23,7 +23,7 @@ LAYOUT = [
     ("cetate_imbratisare", (-30, -30, 790, 590), -1.5, (0.55, 0.40), None, 1.0),
     ("rau_noaptea", (750, -30, 1560, 620), 1.2, (0.62, 0.40), "left", 1.08),
     ("schi", (1520, -40, 2080, 640), -2.0, (0.45, 0.42), None, 1.0),
-    ("copac_rosu", (2040, -30, 3030, 610), 1.5, (0.52, 0.38), None, 1.0),
+    ("lac_sarut", (2040, -30, 3030, 610), 1.5, (0.50, 0.45), None, 1.0),
     # coloana stanga
     ("seara_apa", (-30, 540, 460, 1420), 1.2, (0.52, 0.42), None, 1.18),
     ("munte_brazi", (420, 570, 900, 1400), -1.8, (0.50, 0.48), None, 1.0),
@@ -36,19 +36,19 @@ LAYOUT = [
     ("casute", (1520, 1400, 1960, 2040), 1.8, (0.68, 0.42), None, 1.05),
     ("acasa_selfie", (1930, 1445, 2480, 2095), -1.2, (0.72, 0.40), None, 1.0),
     # poza principala (desenata ultima, peste vecini)
-    ("lac_sarut", (830, 560, 2170, 1430), 0.0, (0.47, 0.45), None, 1.0),
+    ("copac_rosu", (830, 560, 2170, 1430), 0.0, (0.52, 0.36), None, 1.0),
 ]
 
 MIRROR = ("oglinda_drum", (570, 640, 555), (2730, 1705, 310))  # (sursa cx, cy, r), (dest cx, cy, r)
 CARD = (1265, 1450, 1545, 1975, -3.0)
 
 TEXTS = [  # (text, font, marime, (x, y), rotire)
-    ("Together", "GreatVibes-Regular.ttf", 190, (1530, 575), -4.0),
+    ("Together", "GreatVibes-Regular.ttf", 180, (1830, 640), -4.0),
     ("You", "GreatVibes-Regular.ttf", 150, (2170, 1120), -6.0),
     ("& Me", "GreatVibes-Regular.ttf", 130, (2230, 1250), -6.0),
 ]
 HEARTS = [  # (cx, cy, marime, culoare, grosime)
-    (2045, 690, 70, (255, 255, 255), 6),
+    (2105, 575, 60, (255, 255, 255), 6),
     (2060, 1310, 44, (255, 255, 255), 5),
     (2890, 70, 45, (255, 255, 255), 5),
 ]
@@ -78,21 +78,45 @@ def smooth_noise(n, rng, knots_every=10):
     return out
 
 
-def torn_rect(x0, y0, x1, y1, amp, rng, step=5):
-    """Poligon cu margini neregulate (hartie rupta) in jurul unui dreptunghi."""
-    pts = []
-    corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
-    for i in range(4):
-        (ax, ay), (bx, by) = corners[i], corners[(i + 1) % 4]
-        length = math.hypot(bx - ax, by - ay)
-        n = max(4, int(length / step))
-        nx, ny = (by - ay) / length, -(bx - ax) / length  # normala spre exterior
-        low = smooth_noise(n, rng)
+def rounded_path(x0, y0, x1, y1, r, step):
+    """Puncte (x, y, nx, ny) pe conturul unui dreptunghi cu colturi rotunjite; n = normala spre exterior."""
+    r = max(0, min(r, (x1 - x0) / 2, (y1 - y0) / 2))
+    out = []
+
+    def line(ax, ay, bx, by, nx, ny):
+        n = max(1, int(math.hypot(bx - ax, by - ay) / step))
+        out.extend((ax + (bx - ax) * j / n, ay + (by - ay) * j / n, nx, ny) for j in range(n))
+
+    def arc(cx, cy, a0):
+        n = max(2, int(r * math.pi / 2 / step))
         for j in range(n):
-            t = j / n
-            off = low[j] * amp + rng.uniform(-1, 1) * amp * 0.45
-            pts.append((ax + (bx - ax) * t + nx * off, ay + (by - ay) * t + ny * off))
-    return pts
+            a = math.radians(a0 + 90 * j / n)
+            out.append((cx + r * math.cos(a), cy + r * math.sin(a), math.cos(a), math.sin(a)))
+
+    line(x0 + r, y0, x1 - r, y0, 0, -1)
+    arc(x1 - r, y0 + r, -90)
+    line(x1, y0 + r, x1, y1 - r, 1, 0)
+    arc(x1 - r, y1 - r, 0)
+    line(x1 - r, y1, x0 + r, y1, 0, 1)
+    arc(x0 + r, y1 - r, 90)
+    line(x0, y1 - r, x0, y0 + r, -1, 0)
+    arc(x0 + r, y0 + r, 180)
+    return out
+
+
+def torn_rect(x0, y0, x1, y1, amp, rng, radius=0, bites=0, step=4):
+    """Poligon cu margini de hartie rupta (colturi rotunjite + rupturi mai adanci)."""
+    path = rounded_path(x0, y0, x1, y1, radius, step)
+    n = len(path)
+    low = smooth_noise(n, rng, knots_every=9)
+    mid = smooth_noise(n, rng, knots_every=3)
+    offs = [low[i] * amp + mid[i] * amp * 0.45 + rng.uniform(-1, 1) * amp * 0.3 for i in range(n)]
+    for _ in range(bites):  # rupturi mai adanci, spre interior
+        c, width, depth = rng.randrange(n), rng.uniform(4, 14), amp * rng.uniform(1.2, 2.6)
+        for i in range(n):
+            d = min(abs(i - c), n - abs(i - c))
+            offs[i] -= depth * math.exp(-(d / width) ** 2)
+    return [(x + nx * o, y + ny * o) for (x, y, nx, ny), o in zip(path, offs)]
 
 
 def poly_mask(size, pts):
@@ -109,7 +133,9 @@ def crop_cover(img, w, h, focus):
     left = min(max(0, int(focus[0] * rw - w / 2)), rw - w)
     top = min(max(0, int(focus[1] * rh - h / 2)), rh - h)
     img = img.crop((left, top, left + w, top + h))
-    if scale > 1.05:
+    if scale > 1.4:
+        img = img.filter(ImageFilter.UnsharpMask(radius=2.5, percent=90, threshold=2))
+    elif scale > 1.05:
         img = img.filter(ImageFilter.UnsharpMask(radius=2, percent=60, threshold=2))
     return img
 
@@ -123,14 +149,21 @@ def film_strip(h, width=62):
     return s
 
 
+def enhance(photo, bright=1.0):
+    """Putin mai mult contrast si culoare, ca pozele sa arate mai vii."""
+    photo = ImageOps.autocontrast(photo, cutoff=0.6, preserve_tone=True)
+    if bright != 1.0:
+        photo = ImageEnhance.Brightness(photo).enhance(bright)
+    photo = ImageEnhance.Contrast(photo).enhance(1.12)
+    photo = ImageEnhance.Color(photo).enhance(1.12)
+    return ImageEnhance.Sharpness(photo).enhance(1.15)
+
+
 def make_piece(img, w, h, focus, film, name, bright=1.0):
     """Poza cu margine de hartie rupta (+ banda de film). Intoarce RGBA."""
     rng = rng_for(name)
     fw = 62 if film else 0
-    photo = crop_cover(img, w - fw, h, focus)
-    if bright != 1.0:
-        photo = ImageEnhance.Brightness(photo).enhance(bright)
-        photo = ImageEnhance.Contrast(photo).enhance(1.03)
+    photo = enhance(crop_cover(img, w - fw, h, focus), bright)
     content = Image.new("RGB", (w, h))
     if film == "left":
         content.paste(film_strip(h), (0, 0))
@@ -141,14 +174,17 @@ def make_piece(img, w, h, focus, film, name, bright=1.0):
     else:
         content.paste(photo, (0, 0))
 
-    pad = 40
+    pad = 70
     cw, ch = w + 2 * pad, h + 2 * pad
-    rim_mask = poly_mask((cw, ch), torn_rect(pad - 14, pad - 14, pad + w + 14, pad + h + 14, 9, rng))
-    photo_mask = poly_mask((cw, ch), torn_rect(pad + 2, pad + 2, pad + w - 2, pad + h - 2, 5, rng))
+    rim = torn_rect(pad - 20, pad - 20, pad + w + 20, pad + h + 20, 13, rng, radius=46, bites=5)
+    fiber = torn_rect(pad - 6, pad - 6, pad + w + 6, pad + h + 6, 8, rng, radius=36, bites=4)
+    inner = torn_rect(pad + 4, pad + 4, pad + w - 4, pad + h - 4, 8, rng, radius=30, bites=6)
 
     piece = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    piece.paste(paper(cw, ch, rng), (0, 0), rim_mask)
-    piece.paste(content, (pad, pad), photo_mask.crop((pad, pad, pad + w, pad + h)))
+    piece.paste(paper(cw, ch, rng), (0, 0), poly_mask((cw, ch), rim))
+    piece.paste(paper(cw, ch, rng, base=(250, 247, 240)), (0, 0), poly_mask((cw, ch), fiber))
+    photo_mask = poly_mask((cw, ch), inner).crop((pad, pad, pad + w, pad + h))
+    piece.paste(content, (pad, pad), photo_mask)
     return piece
 
 
@@ -246,7 +282,7 @@ def make_card(fonts):
         sd.ellipse((rx - rr, ry - rr, rx + rr, ry + rr), fill=rng.randint(15, 35))
     base.paste((200, 180, 150), (0, 0), stains.filter(ImageFilter.GaussianBlur(40)))
     piece = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    piece.paste(base, (0, 0), poly_mask((cw, ch), torn_rect(pad, pad, pad + w, pad + h, 8, rng)))
+    piece.paste(base, (0, 0), poly_mask((cw, ch), torn_rect(pad, pad, pad + w, pad + h, 10, rng, radius=24, bites=4)))
     ink = (48, 36, 28)
     words = ["Good", "People", "Better", "Moments"]
     size = 96
@@ -270,7 +306,7 @@ def main(photos, fonts, out):
         img = Image.open(f"{photos}/{name}.png").convert("RGB")
         img = ImageOps.exif_transpose(img)
         piece = make_piece(img, x1 - x0, y1 - y0, focus, film, name, bright)
-        place(canvas, piece, (x0 + x1) / 2, (y0 + y1) / 2, rot, shadow=0.55 if name == "lac_sarut" else 0.45)
+        place(canvas, piece, (x0 + x1) / 2, (y0 + y1) / 2, rot, shadow=0.55 if name == "copac_rosu" else 0.45)
 
     card, cx, cy, rot = make_card(fonts)
     place(canvas, card, cx, cy, rot, shadow=0.5)
