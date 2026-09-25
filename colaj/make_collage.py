@@ -50,6 +50,7 @@ ROWS = [  # (y0, y1, x0, x1, [(fisier, latime_relativa, focus, banda_film, edita
         ('cal', 1.0, (0.62, 0.4), None, (1.0, 1.04, 0.98, 0.02, 0.05, 1)),
         ('atv_alb', 1.0, (0.5, 0.55), None, (1.0, 1.06, 1.0, 0.03, 0.15, 1)),
         ('lexus_alb', 1.0, (0.45, 0.62), None, (1.02, 1.1, 1.0, -0.02, 0.1, 1)),
+        ('motan_doarme', 1.0, (0.5, 0.45), None, (1.04, 1.05, 1.0, 0.02, 0.08, 1)),
     ]),
     (1830, 2480, -30, 4830, [
         ('cetate_selfie', 1.5, (0.45, 0.4), 'right', (1.02, 1.08, 1.05, 0.04, 0.2, 1)),
@@ -109,9 +110,8 @@ TEXTS = [  # (text, font, marime, (x, y), rotire, ingrosare, umbra_inchisa)
 ]
 STICKERS = [  # (fisier_png_transparent, (cx, cy), latime, rotire)
     ("pisoi_sticker", (2220, 2555), 400, -6.0),
-    ("motan_sapca_sticker", (4540, 1340), 400, 5.0),
-    ("motan_sticker", (1760, 1560), 280, -4.0),
-    ("motan_doarme_sticker", (800, 2590), 360, 6.0),
+    ("motan_sapca_sticker", (4610, 800), 300, 5.0),
+    ("motan_sticker", (690, 2630), 240, -5.0),
 ]
 HEARTS = [  # (cx, cy, marime, culoare, grosime)
     (2960, 850, 70, (255, 255, 255), 4),
