@@ -1,1 +1,6 @@
 *.class
+colaj/poze/
+colaj/fonts/
+colaj/*.jpg
+colaj/*.png
+colaj/*.webp
