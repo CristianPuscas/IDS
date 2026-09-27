@@ -329,7 +329,11 @@
   function posNum(v) { var n = r2(+v); return isFinite(n) && n > 0 ? n : null; }
 
   function migrate(s) {
-    if (!isObj(s)) s = {};
+    if (!isObj(s)) {
+      var meta = s && typeof s === 'object' && isObj(s.meta) ? s.meta : null;
+      s = {};
+      if (meta) s.meta = meta;
+    }
     var base = baseState();
     // categorii: liste de nume unice, nevide
     var hadCats = isObj(s.categories);
