@@ -10,6 +10,14 @@
 
   var TK = (window.TK = window.TK || {});
 
+  /* ----------------------------------------------------------- înregistrare */
+
+  // Trackerele se încarcă înaintea cadrului (app.js), deci doar le punem în coadă aici.
+  TK._registry = TK._registry || [];
+  TK.register = function (def) {
+    TK._registry.push(def);
+  };
+
   /* ------------------------------------------------------------------ DOM */
 
   // h('div', {class: 'x', onclick: fn, dataset: {id: 1}}, 'text', child, [more])

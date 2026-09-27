@@ -13,6 +13,7 @@
   var stores = {};
 
   /*
+   * Trackerele se înregistrează cu TK.register(def) (definit în core.js):
    * def: {
    *   id, slug, name, short, tagline, version,
    *   createDemo() -> state, createEmpty() -> state, migrate?(state) -> state,
@@ -20,9 +21,6 @@
    *   mount(el, api) -> {unmount?()}
    * }
    */
-  TK.register = function (def) {
-    registry.push(def);
-  };
 
   function bySlug(slug) {
     for (var i = 0; i < registry.length; i++) if (registry[i].slug === slug) return registry[i];
@@ -314,7 +312,7 @@
 
   function boot() {
     // Un tracker care nu-și poate crea datele nu trebuie să le blocheze pe celelalte.
-    registry = registry.filter(function (def) {
+    registry = TK._registry.filter(function (def) {
       try {
         stores[def.id] = new TK.Store(def.id, def);
         return true;

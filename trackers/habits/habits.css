@@ -1,0 +1,491 @@
+/* Tracker de obiceiuri — stiluri proprii (toate sub .tk-tracker--habits). Doar tokenii din shared/theme.css. */
+
+/* ---------------------------------------------------------------- general */
+.tk-tracker--habits .hb-topline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.tk-tracker--habits .hb-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.tk-tracker--habits .hb-head .tk-hero { padding-block: 0 var(--space-1); }
+.tk-tracker--habits .hb-kv { grid-template-columns: 70px minmax(0, 1fr); }
+.tk-tracker--habits .hb-kv .tk-kv__v { padding-block: 2px; }
+.tk-tracker--habits .hb-kv .tk-kv__v .tk-cell-input { width: 100%; }
+.tk-tracker--habits .hb-nav {
+  display: flex;
+  gap: var(--space-1);
+}
+.tk-tracker--habits .hb-nav .tk-btn--ghost { flex: 1 1 auto; }
+
+/* ---------------------------------------------------------------- vederea zilnică: aranjare */
+.tk-tracker--habits .hb-daily {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "kpi" "bars" "grid" "prog" "list" "dyn" "sum" "top";
+  align-items: start;
+}
+.tk-tracker--habits .hb-a-head { grid-area: head; }
+.tk-tracker--habits .hb-a-bars { grid-area: bars; }
+.tk-tracker--habits .hb-a-kpi { grid-area: kpi; }
+.tk-tracker--habits .hb-a-list { grid-area: list; }
+.tk-tracker--habits .hb-a-grid { grid-area: grid; }
+.tk-tracker--habits .hb-a-prog { grid-area: prog; }
+.tk-tracker--habits .hb-a-sum { grid-area: sum; }
+.tk-tracker--habits .hb-a-dyn { grid-area: dyn; }
+.tk-tracker--habits .hb-a-top { grid-area: top; }
+
+@media (min-width: 760px) {
+  .tk-tracker--habits .hb-daily {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "head kpi"
+      "bars bars"
+      "grid grid"
+      "list prog"
+      "dyn dyn"
+      "sum top";
+  }
+}
+@media (min-width: 1180px) {
+  .tk-tracker--habits .hb-daily {
+    grid-template-columns: 216px minmax(0, 1fr) 236px;
+    grid-template-areas:
+      "head bars kpi"
+      "list grid prog"
+      "sum dyn top";
+  }
+  .tk-tracker--habits .hb-a-bars,
+  .tk-tracker--habits .hb-a-kpi { align-self: end; }
+  .tk-tracker--habits .hb-a-sum,
+  .tk-tracker--habits .hb-a-dyn,
+  .tk-tracker--habits .hb-a-top { align-self: stretch; }
+}
+
+/* ---------------------------------------------------------------- sus: bare + progres */
+.tk-tracker--habits .hb-a-bars {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+}
+.tk-tracker--habits .hb-a-bars .tk-chart__title { margin-bottom: var(--space-1); }
+@media (min-width: 1180px) {
+  /* marginile interne ale graficului (4px) cad exact pe coloanele grilei de dedesubt */
+  .tk-tracker--habits .hb-bars-chart { margin-inline: -3px; width: auto; }
+}
+
+.tk-tracker--habits .hb-kpi {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+.tk-tracker--habits .hb-kpi .tk-kpi { padding: 4px; }
+.tk-tracker--habits .hb-kpi .tk-kpi__value.tk-pct { font-size: 22px; }
+.tk-tracker--habits .hb-kpi-donut { width: 104px; flex: none; }
+
+/* ---------------------------------------------------------------- tabelele aliniate pe rânduri */
+.tk-tracker--habits .hb-t {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 1.2;
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+.tk-tracker--habits .hb-t th,
+.tk-tracker--habits .hb-t td {
+  height: 26px;
+  padding: 0 6px;
+  border-bottom: 1px solid var(--line-faint);
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+.tk-tracker--habits .hb-t thead .hb-r1 > th { height: 24px; border-bottom: 0; }
+.tk-tracker--habits .hb-t thead .hb-r2 > th { height: 20px; border-bottom: 0; }
+.tk-tracker--habits .hb-t thead .hb-r3 > th {
+  height: 22px;
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.tk-tracker--habits .hb-t tbody tr:last-child > * { border-bottom: 0; }
+
+/* benzile salvie (titlul cardului, ca în foaia de calcul) */
+.tk-tracker--habits .hb-t .hb-band {
+  background: var(--sage);
+  color: var(--rose-ink);
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tk-tracker--habits .hb-t .hb-band b { font-weight: 700; }
+.tk-tracker--habits .hb-t .hb-band--sub {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  vertical-align: top;
+}
+.tk-tracker--habits .hb-list thead .hb-r3 > th,
+.tk-tracker--habits .hb-prog thead .hb-r3 > th { background: var(--sage-soft); color: var(--ink); }
+
+/* lățimile coloanelor (tabelele au table-layout: fixed, iar primul rând e o bandă cu colspan) */
+.tk-tracker--habits .hb-col-idx,
+.tk-tracker--habits .hb-col-act { width: 28px; }
+.tk-tracker--habits .hb-col-goal { width: 52px; }
+.tk-tracker--habits .hb-col-cnt { width: 58px; }
+
+/* lista obiceiurilor */
+.tk-tracker--habits .hb-list .hb-idx {
+  width: 28px;
+  padding: 0;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  border-right: 1px solid var(--line);
+}
+.tk-tracker--habits .hb-list .hb-act { width: 28px; padding: 0 2px; text-align: center; }
+.tk-tracker--habits .hb-list .hb-name { padding-inline: 8px 2px; }
+.tk-tracker--habits .hb-list .hb-name .tk-cell-input {
+  margin-block: 0;
+  padding-block: 2px;
+  text-overflow: ellipsis;
+}
+.tk-tracker--habits .hb-del {
+  width: 22px;
+  height: 22px;
+  font-size: 15px;
+  color: var(--ink-3);
+  opacity: 0;
+}
+.tk-tracker--habits tr:hover .hb-del,
+.tk-tracker--habits .hb-item:hover .hb-del,
+.tk-tracker--habits .hb-del:focus-visible { opacity: 1; }
+@media (hover: none) {
+  .tk-tracker--habits .hb-del { opacity: 0.7; }
+}
+.tk-tracker--habits .hb-add {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.tk-tracker--habits .hb-add .tk-cell-input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding-block: 2px;
+}
+.tk-tracker--habits .hb-add .tk-icon-btn { width: 24px; height: 24px; color: var(--sage-deep); font-weight: 700; }
+.tk-tracker--habits .hb-addrow td { background: color-mix(in srgb, var(--sage-soft) 35%, var(--surface)); }
+.tk-tracker--habits .hb-add-hint { color: var(--ink-3); font-weight: 500; cursor: pointer; }
+.tk-tracker--habits .hb-empty-cell {
+  color: var(--ink-3);
+  font-size: 11.5px;
+  text-align: left;
+  white-space: normal;
+}
+
+/* progres pe obicei */
+.tk-tracker--habits .hb-prog td.hb-goal { border-right: 1px solid var(--line); padding-inline: 4px; }
+.tk-tracker--habits .hb-prog td.hb-goal .tk-cell-input { margin: 0; width: 100%; padding: 2px 4px; }
+.tk-tracker--habits .hb-prog td.hb-cnt {
+  text-align: center;
+  font-size: 11px;
+  color: var(--ink-2);
+  border-left: 1px solid var(--line);
+  white-space: nowrap;
+}
+.tk-tracker--habits .hb-pc { padding-inline: 5px; }
+.tk-tracker--habits .hb-pc__in {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.tk-tracker--habits .hb-pc__v {
+  flex: none;
+  width: 32px;
+  text-align: right;
+  font-size: 10.5px;
+}
+.tk-tracker--habits .hb-bar {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 30px;
+  height: 14px;
+}
+.tk-tracker--habits .hb-bar.has-goal::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--g);
+  width: 2px;
+  margin-left: -1px;
+  background: var(--ink-3);
+  opacity: 0.55;
+}
+
+/* ---------------------------------------------------------------- grila de bifat + dinamica */
+.tk-tracker--habits .hb-grid {
+  width: 100%;
+  min-width: calc(128px + var(--n) * 26px);
+  table-layout: fixed;
+}
+.tk-tracker--habits .hb-grid th,
+.tk-tracker--habits .hb-grid td {
+  min-width: 0;
+  padding: 0 1px;
+  text-align: center;
+}
+.tk-tracker--habits .hb-grid thead .hb-r2 > th,
+.tk-tracker--habits .hb-grid thead .hb-r3 > th {
+  font-size: 9.5px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.tk-tracker--habits .hb-grid thead .hb-r1 > .tk-habit-grid__week {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.tk-tracker--habits .hb-grid .tk-habit-grid__name {
+  width: 128px;
+  min-width: 0;
+  max-width: none;
+  text-align: left;
+  padding-inline: 8px;
+  font-size: 11.5px;
+}
+.tk-tracker--habits .hb-grid thead .tk-habit-grid__name:not(.tk-habit-grid__week) { background: var(--rose-soft); }
+.tk-tracker--habits .hb-grid tbody tr.hb-addrow:hover td { background: color-mix(in srgb, var(--sage-soft) 35%, var(--surface)); }
+.tk-tracker--habits .hb-grid td.is-future .tk-check { opacity: 0.5; }
+.tk-tracker--habits .hb-grid td.is-future .tk-check:hover,
+.tk-tracker--habits .hb-grid td.is-future .tk-check:focus-visible { opacity: 1; }
+.tk-tracker--habits .hb-grid .tk-check { width: 13px; height: 13px; }
+
+/* dinamica pe zile: curba + rânduri cu cifre */
+.tk-tracker--habits .hb-dyn tbody th,
+.tk-tracker--habits .hb-dyn tbody td { height: 21px; font-size: 9.5px; color: var(--ink-2); }
+.tk-tracker--habits .hb-dyn tbody .tk-habit-grid__name { font-size: 10.5px; font-weight: 600; color: var(--ink-2); }
+.tk-tracker--habits .hb-dyn .hb-area-row > td,
+.tk-tracker--habits .hb-dyn .hb-area-row > th { height: auto; padding: 0; border-bottom: 1px solid var(--line); }
+.tk-tracker--habits .hb-dyn .hb-area-row > th { padding-inline: 8px; }
+.tk-tracker--habits .hb-area { margin-inline: -4px; padding-top: 6px; }
+.tk-tracker--habits .hb-dyn .hb-dyn-pct td { font-size: 8.5px; letter-spacing: -0.02em; color: var(--pct); font-weight: 600; background: color-mix(in srgb, var(--rose-soft) 55%, var(--surface)); }
+.tk-tracker--habits .hb-dyn .hb-dyn-pct td.is-full { color: var(--sage-deep); }
+.tk-tracker--habits .hb-dyn td.is-future { color: var(--ink-3); opacity: 0.55; }
+.tk-tracker--habits .hb-dyn tbody tr:hover td { background: transparent; }
+.tk-tracker--habits .hb-dyn .hb-dyn-pct:hover td { background: color-mix(in srgb, var(--rose-soft) 55%, var(--surface)); }
+.tk-tracker--habits .hb-dyn-foot { font-size: 9.5px; font-weight: 600; justify-content: flex-end; }
+.tk-tracker--habits .hb-a-dyn { display: flex; flex-direction: column; }
+.tk-tracker--habits .hb-dyn-scroll { flex: 1 1 auto; }
+
+@media (min-width: 1180px) {
+  /* pe desktop numele stau în lista din stânga, iar rândurile se aliniază pe orizontală */
+  .tk-tracker--habits .hb-grid .tk-habit-grid__name { display: none; }
+  .tk-tracker--habits .hb-grid { min-width: 0; }
+  .tk-tracker--habits .hb-grid-scroll,
+  .tk-tracker--habits .hb-dyn-scroll { overflow-x: visible; }
+}
+@media (max-width: 1179.98px) {
+  .tk-tracker--habits .hb-dyn-foot { display: none; }
+}
+@media (max-width: 599.98px) {
+  .tk-tracker--habits .hb-grid { min-width: calc(112px + var(--n) * 27px); }
+  .tk-tracker--habits .hb-grid .tk-habit-grid__name { width: 112px; font-size: 11px; box-shadow: 1px 0 0 var(--line-strong); }
+  .tk-tracker--habits .hb-grid .tk-check { width: 15px; height: 15px; }
+  .tk-tracker--habits .hb-grid tbody td { height: 30px; }
+}
+
+/* ---------------------------------------------------------------- jos: rezumat + top-10 */
+.tk-tracker--habits .hb-sum-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+}
+.tk-tracker--habits .hb-sum-donut { width: 96px; flex: none; }
+.tk-tracker--habits .hb-sum-lab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.tk-tracker--habits .hb-sum-lab .tk-kpi__label { font-size: 8.5px; letter-spacing: 0.16em; }
+.tk-tracker--habits .hb-sum-count {
+  font-family: var(--font-data);
+  font-size: 15px;
+  color: var(--terra-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tk-tracker--habits .hb-sum-t td { white-space: nowrap; }
+.tk-tracker--habits .hb-top-t { table-layout: fixed; }
+.tk-tracker--habits .hb-top-t th:first-child { width: 34px; }
+.tk-tracker--habits .hb-top-t th:last-child { width: 68px; }
+.tk-tracker--habits .hb-top-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- liste săptămânale / lunare */
+.tk-tracker--habits .hb-lists {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+@media (min-width: 980px) {
+  .tk-tracker--habits .hb-lists { grid-template-columns: 270px minmax(0, 1fr); }
+}
+.tk-tracker--habits .hb-lists__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+@media (min-width: 600px) and (max-width: 979.98px) {
+  .tk-tracker--habits .hb-lists__side {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+.tk-tracker--habits .hb-lists__main { min-width: 0; }
+
+.tk-tracker--habits .hb-stats .tk-kv {
+  grid-template-columns: auto minmax(0, 1fr);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+}
+.tk-tracker--habits .hb-stats .tk-kv__k { background: var(--rose-soft); color: var(--ink); }
+.tk-tracker--habits .hb-stats .tk-kv__v .tk-cell-input { width: 100%; margin: 0; }
+.tk-tracker--habits .hb-stats__chart { padding: var(--space-4) var(--space-3); }
+
+.tk-tracker--habits .hb-weeks {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  align-items: start;
+}
+.tk-tracker--habits .hb-weeks.is-single { grid-template-columns: minmax(0, 440px); }
+@media (max-width: 599.98px) {
+  .tk-tracker--habits .hb-weeks { grid-template-columns: minmax(0, 1fr); }
+}
+.tk-tracker--habits .hb-week__head .tk-card__title b { display: block; }
+.tk-tracker--habits .hb-week__range {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+.tk-tracker--habits .hb-week__pct {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 10px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+}
+.tk-tracker--habits .hb-week__pct .tk-pct { width: 38px; font-size: 11.5px; }
+.tk-tracker--habits .hb-wbar { flex: 1 1 auto; height: 12px; }
+
+.tk-tracker--habits .hb-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tk-tracker--habits .hb-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding: 2px 4px 2px 10px;
+  border-bottom: 1px solid var(--line-faint);
+  font-size: 12.5px;
+  min-width: 0;
+}
+.tk-tracker--habits .hb-item .tk-check-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: flex-start;
+  padding-block: 4px;
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+.tk-tracker--habits .hb-item .tk-check { margin-top: 1px; }
+.tk-tracker--habits .hb-item .tk-check-label__text { overflow-wrap: anywhere; }
+.tk-tracker--habits .hb-item--add { padding-left: 6px; background: color-mix(in srgb, var(--rose-soft) 40%, var(--surface)); }
+.tk-tracker--habits .hb-item--add .hb-add { flex: 1 1 auto; }
+.tk-tracker--habits .hb-item--add .hb-add .tk-icon-btn { color: var(--accent); }
+.tk-tracker--habits .hb-item--empty::before {
+  content: "";
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid var(--check-line);
+  border-radius: 3px;
+  opacity: 0.45;
+}
+.tk-tracker--habits .hb-week .tk-card__foot {
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  padding-inline: 10px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.tk-tracker--habits .hb-week__tools {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 6px;
+  border-top: 1px solid var(--line);
+}
+.tk-tracker--habits .hb-week__tools .tk-btn {
+  justify-content: flex-start;
+  white-space: normal;
+  text-align: left;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.tk-tracker--habits .hb-month .hb-items--month { counter-reset: none; }
+@media (min-width: 760px) {
+  .tk-tracker--habits .hb-items--month {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(14, auto);
+    grid-auto-flow: column;
+    column-gap: 0;
+  }
+  .tk-tracker--habits .hb-items--month > .hb-item:nth-child(n+15) { border-left: 1px solid var(--line); }
+}
+@media (max-width: 599.98px) {
+  .tk-tracker--habits .hb-item--empty { display: none; }
+  .tk-tracker--habits .hb-del { width: 30px; height: 30px; }
+}
