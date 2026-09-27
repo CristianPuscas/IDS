@@ -68,6 +68,16 @@
   --chart-grid: #e8e2dc;    /* gridlines */
   --chart-plan: #7f9a84;    /* plan series (sage, as in photos) */
   --chart-fact: #d8b39f;    /* fact series (peach/rose, as in photos) */
+  /* soft "photo" palette, used ONLY inside pie/donut-slice charts (.tk-chart--pie),
+     where 2px gaps + legend with % give the secondary encoding (see DESIGN.md) */
+  --pie-1: #79947e;         /* sage */
+  --pie-2: #ddb8a5;         /* peach */
+  --pie-3: #ae775b;         /* terracotta */
+  --pie-4: #aec5ae;         /* light sage */
+  --pie-5: #ac7d87;         /* dusty rose */
+  --pie-6: #d6c5a3;         /* sand */
+  --pie-7: #4c6855;         /* deep sage */
+  --pie-8: #e4cecd;         /* blush */
 
   /* type */
   --font-display: "Cormorant Garamond", "Cormorant", "EB Garamond", Garamond, "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Liberation Serif", "Times New Roman", serif;
@@ -171,21 +181,27 @@ button:disabled { cursor: not-allowed; }
   color: var(--ink);
   text-decoration: none;
   font-family: var(--font-display);
+  font-variant-numeric: lining-nums;
   font-weight: 600;
   font-size: 20px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   white-space: nowrap;
 }
-.tk-brand__mark {
-  width: 22px;
-  height: 22px;
+.tk-brand__mark,
+.tk-brand:not(:has(.tk-brand__mark))::before {
+  content: "";
+  width: 24px;
+  height: 24px;
   flex: none;
   border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--surface));
   background:
-    radial-gradient(circle at 50% 50%, var(--surface) 0 3px, transparent 3.5px),
-    conic-gradient(var(--sage) 0 38%, var(--rose) 38% 72%, var(--accent) 72% 100%);
+    radial-gradient(circle at 50% 50%, var(--accent) 0 3.5px, transparent 4px),
+    var(--surface);
+  box-shadow: 0 1px 3px rgba(74, 52, 40, 0.12);
 }
+.tk-brand:hover { color: var(--accent); }
 
 .tk-nav {
   display: flex;
@@ -284,6 +300,7 @@ button:disabled { cursor: not-allowed; }
 }
 .tk-hero__title {
   font-family: var(--font-display);
+  font-variant-numeric: lining-nums;
   font-weight: 500;
   font-size: clamp(26px, 4vw, 44px);
   font-size: clamp(22px, 8.6cqi, 46px); /* fits "SEPTEMBRIE" in a 250px sidebar */
@@ -342,13 +359,13 @@ button:disabled { cursor: not-allowed; }
 
 /* section heading between blocks (serif, bordo) */
 .tk-h2 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: clamp(22px, 3vw, 28px);
-  letter-spacing: 0.04em;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: clamp(19px, 2.2vw, 24px);
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--accent);
-  line-height: 1.15;
+  line-height: 1.2;
 }
 
 /* ---------------------------------------------------------------- cards --- */
@@ -408,6 +425,7 @@ button:disabled { cursor: not-allowed; }
 .tk-card__title strong { font-weight: 700; }
 .tk-card__head--plain .tk-card__title {
   font-family: var(--font-display);
+  font-variant-numeric: lining-nums;
   font-size: 17px;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -1093,6 +1111,7 @@ td.tk-pct.is-over,
 .tk-empty strong,
 .tk-empty b {
   font-family: var(--font-display);
+  font-variant-numeric: lining-nums;
   font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -1100,11 +1119,12 @@ td.tk-pct.is-over,
 }
 
 .tk-demo-banner {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 14px;
-  padding: 8px 14px;
+  padding: 8px 14px 8px 32px;
   background: var(--rose-soft);
   border: 1px solid color-mix(in srgb, var(--rose) 45%, var(--surface));
   border-radius: var(--radius-sm);
@@ -1113,12 +1133,16 @@ td.tk-pct.is-over,
 }
 .tk-demo-banner::before {
   content: "";
+  position: absolute;
+  left: 14px;
+  top: 50%;
   width: 7px;
   height: 7px;
-  flex: none;
+  margin-top: -3.5px;
   border-radius: 50%;
   background: var(--accent);
 }
+.tk-demo-banner > :first-child { flex: 1 1 320px; min-width: 0; }
 .tk-demo-banner > :last-child:not(:first-child) { margin-left: auto; }
 
 /* chart legend + container */
@@ -1230,6 +1254,7 @@ dialog.tk-modal::backdrop { background: transparent; }
 .tk-modal__title {
   margin: 0 0 var(--space-4);
   font-family: var(--font-display);
+  font-variant-numeric: lining-nums;
   font-size: 24px;
   font-weight: 600;
   line-height: 1.15;
@@ -1613,8 +1638,12 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
   .tk-hide-sm { display: none; }
 
   body { font-size: 14px; }
-  .tk-topbar { flex-wrap: wrap; gap: 6px 12px; padding-block: 8px; }
-  .tk-nav { margin-left: 0; width: 100%; }
+  .tk-topbar { flex-wrap: wrap; gap: 4px 12px; padding-block: 8px 0; }
+  .tk-brand { font-size: 18px; }
+  .tk-brand__mark,
+  .tk-brand:not(:has(.tk-brand__mark))::before { width: 22px; height: 22px; }
+  .tk-nav { order: 3; margin-left: -10px; width: calc(100% + 20px); }
+  .tk-topbar > .tk-sync { margin-left: auto; }
   .tk-nav__link { padding: 7px 10px; font-size: 11px; letter-spacing: 0.1em; }
   .tk-nav__link.is-active::after,
   .tk-nav__link[aria-current="page"]::after { left: 10px; right: 10px; }
@@ -1644,6 +1673,7 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
   .tk-modal__box { padding: 18px 16px 14px; }
   .tk-modal__actions .tk-btn { flex: 1 1 auto; }
   .tk-demo-banner > :last-child:not(:first-child) { margin-left: 0; }
+  .tk-demo-banner::before { top: 17px; }
 }
 
 @media print {
@@ -1659,14 +1689,95 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
 
 .tk-home__stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--space-4);
   margin: 0;
 }
-.tk-home__stats > div { min-width: 0; }
-.tk-home__stats dd { margin: 2px 0 0; }
-.tk-home__card .tk-btn { align-self: flex-start; }
+.tk-home__stats > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 4px;
+  padding-block: 10px;
+  border-top: 1px solid var(--line-faint);
+}
+.tk-home__stats dt { line-height: 1.35; letter-spacing: 0.16em; }
+.tk-home__stats dd { margin: 0; font-size: 18px; white-space: normal; }
+.tk-home__card .tk-btn { align-self: flex-start; margin-top: auto; }
 .tk-home__data { margin-top: var(--space-5); }
+
+/* ---- home page (#acasa): promo-slide look ---- */
+.tk-main:has(> .tk-home) {
+  /* thin bordo arcs in the corners, like the promo slides */
+  background:
+    radial-gradient(circle at calc(100% + 60px) -60px, transparent 259px, color-mix(in srgb, var(--accent) 70%, transparent) 260px 261.5px, transparent 262.5px),
+    radial-gradient(circle at -80px calc(100% + 40px), transparent 239px, color-mix(in srgb, var(--accent) 55%, transparent) 240px 241.5px, transparent 242.5px);
+}
+.tk-home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: clamp(28px, 6vw, 64px);
+}
+.tk-home > .tk-hero {
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding-bottom: 0;
+}
+.tk-home > .tk-hero::before {
+  content: "";
+  width: 96px;
+  height: 7px;
+  margin-bottom: 10px;
+  background:
+    radial-gradient(circle at 3.5px 50%, var(--accent) 0 3.5px, transparent 4px),
+    linear-gradient(var(--accent), var(--accent)) 18px 50% / calc(100% - 18px) 2px no-repeat;
+}
+.tk-home .tk-hero__title {
+  font-size: clamp(38px, 7vw, 72px);
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  margin-right: -0.32em;
+  color: var(--ink);
+}
+.tk-home .tk-hero__sub { font-size: 11.5px; letter-spacing: 0.34em; margin-right: -0.34em; color: var(--accent); }
+.tk-home > .tk-note {
+  align-self: center;
+  max-width: 58ch;
+  margin: var(--space-2) 0 var(--space-5);
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.tk-home > .tk-grid { align-items: stretch; counter-reset: tk-home; }
+.tk-home__card {
+  counter-increment: tk-home;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.tk-home__card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.tk-home__card .tk-card__head { min-height: 50px; gap: 12px; }
+.tk-home__card .tk-card__head::before {
+  content: counter(tk-home, decimal-leading-zero);
+  font-family: var(--font-display);
+  font-variant-numeric: lining-nums;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.9;
+}
+.tk-home__card .tk-card__title { flex: 0 1 auto; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; }
+.tk-home__card .tk-card__body { gap: var(--space-3); padding: var(--space-4) var(--space-5) var(--space-5); }
+.tk-home__card .tk-card__body > .tk-muted { font-size: 13.5px; line-height: 1.5; min-height: 3em; }
+@media (max-width: 599.98px) {
+  .tk-main:has(> .tk-home) {
+    background: radial-gradient(circle at calc(100% + 40px) -40px, transparent 139px, color-mix(in srgb, var(--accent) 70%, transparent) 140px 141.5px, transparent 142.5px);
+  }
+  .tk-home .tk-hero__title { letter-spacing: 0.22em; margin-right: -0.22em; }
+  .tk-home .tk-hero__sub { letter-spacing: 0.22em; margin-right: -0.22em; }
+  .tk-home > .tk-note { font-size: 14px; margin-bottom: var(--space-3); }
+  .tk-home__card .tk-card__body { padding: var(--space-3) var(--space-4) var(--space-4); }
+}
 
 .tk-field--inline { flex-direction: row; align-items: center; gap: var(--space-2); }
 .tk-form-error { margin: 0; color: var(--bad); font-size: 13px; }
@@ -1688,3 +1799,17 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
 .tk-chart path.is-hover,
 .tk-chart circle.is-hover { opacity: 0.82; }
 .tk-tip__title { font-weight: 600; margin-bottom: 1px; }
+
+/* pies & slice-donuts: soft photo palette (validated one stays for bars/lines) */
+.tk-chart--pie {
+  --chart-1: var(--pie-1);
+  --chart-2: var(--pie-2);
+  --chart-3: var(--pie-3);
+  --chart-4: var(--pie-4);
+  --chart-5: var(--pie-5);
+  --chart-6: var(--pie-6);
+  --chart-7: var(--pie-7);
+  --chart-8: var(--pie-8);
+}
+.tk-chart__pie .tk-legend { font-size: 11px; color: var(--ink-2); }
+.tk-chart__pie .tk-legend .tk-swatch { border-radius: 50%; }

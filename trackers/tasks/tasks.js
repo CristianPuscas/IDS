@@ -41,8 +41,8 @@
   var STATUSES = [
     { id: 'neinceput', label: 'Neînceput', icon: '○', tone: 'grey', color: 'var(--line-strong)' },
     { id: 'lucru', label: 'În lucru', icon: '🔧', tone: 'terra', color: 'var(--terra)' },
-    { id: 'asteptare', label: 'În așteptare', icon: '⏳', tone: 'blue', color: 'var(--blue-ink)' },
-    { id: 'suspendat', label: 'Suspendat', icon: '⏸', tone: 'gold', color: 'var(--gold)' },
+    { id: 'asteptare', label: 'În așteptare', icon: '⏳', tone: 'blue', color: 'var(--pie-2)' },
+    { id: 'suspendat', label: 'Suspendat', icon: '⏸', tone: 'gold', color: 'var(--pie-6)' },
     { id: 'finalizat', label: 'Finalizat', icon: '✓', tone: 'good', color: 'var(--chart-plan)' },
   ];
   var PRIORITIES = [

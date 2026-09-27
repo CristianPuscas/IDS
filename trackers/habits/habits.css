@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding-top: var(--space-4);
+  padding-top: 0;
   margin-bottom: var(--space-3);
 }
 
@@ -92,7 +92,7 @@
 }
 .tk-tracker--habits .hb-kpi .tk-kpi { padding: 4px; }
 .tk-tracker--habits .hb-kpi .tk-kpi__value.tk-pct { font-size: 22px; }
-.tk-tracker--habits .hb-kpi-donut { width: 104px; flex: none; }
+.tk-tracker--habits .hb-kpi-donut { width: 116px; flex: none; display: flex; justify-content: center; }
 
 /* ---------------------------------------------------------------- tabelele aliniate pe rânduri */
 .tk-tracker--habits .hb-t {

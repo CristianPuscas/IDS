@@ -216,7 +216,9 @@
           '" stroke-width="' + th + '" stroke-dasharray="' + (circ * shown).toFixed(2) + ' ' + circ.toFixed(2) +
           '" transform="rotate(-90 ' + c + ' ' + c + ')" data-tip="' + attrEsc(label) + '"/>';
       }
-      var fs = Math.round(size * 0.14);
+      var inner = size - 2 * th;
+      // textul central se micșorează ca să nu atingă inelul
+      var fs = Math.min(Math.round(size * 0.14), Math.floor(inner * 0.8 / (Math.max(4, String(main).length) * 0.56)));
       var hasTop = !!opts.top, hasSub = !!opts.sub;
       var y = c + fs * 0.35 + (hasTop && !hasSub ? fs * 0.35 : 0) - (hasSub && !hasTop ? fs * 0.3 : 0);
       if (hasTop) {

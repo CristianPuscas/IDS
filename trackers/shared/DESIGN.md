@@ -72,6 +72,16 @@ Validator (`validate_palette.js … --mode light --surface "#fffdf8"`, adjacent 
 
 The photos use greyer tints than this palette. The validator's chroma floor forces a little more saturation, so the palette stays close to the photo hues with more colour. The `--pairs all` check does **not** pass, which is normal for 8 hues. The palette is meant for pies, stacked bars and adjacent series. Do not use it for 8-series scatter plots.
 
+### Soft "photo" palette for pies (`--pie-1 … --pie-8`)
+`#79947e` sage, `#ddb8a5` peach, `#ae775b` terracotta, `#aec5ae` light sage, `#ac7d87` dusty rose, `#d6c5a3` sand, `#4c6855` deep sage, `#e4cecd` blush.
+Inside any `.tk-chart--pie`, which charts.js adds to every pie and ring-pie, `--chart-1…8` are remapped to these tones. Pies therefore look like the photos, while bars and lines keep the validated palette. The finance Settings swatches use the same remap, so each category has one colour everywhere in that tracker.
+Validator results, adjacent pairs:
+- CVD separation PASS (worst ΔE 14.1).
+- Normal-vision PASS (worst ΔE 18.6).
+- Lightness band and chroma floor FAIL. This is deliberate, because the tones are pastel.
+- The contrast WARN is covered by the 2px surface gaps between slices and the legend with %.
+Rules: only use this palette where each slice is separated by a gap and labelled in a legend. Keep a pie to 8 slices or fewer, and group the rest into "Altele".
+
 **Chart rules**
 - Plan vs fact (bars, grouped bars): always `--chart-plan` (sage) followed by `--chart-fact` (peach), in that order, as in the photos.
 - Single-value donuts (progress, completion %): `--chart-plan` on a `--chart-track` ring, with the % in `--terra-ink` in the centre.
@@ -118,7 +128,7 @@ The photos use greyer tints than this palette. The validator's chroma floor forc
   <p class="tk-hero__sub">Dashboard planificator financiar</p>
 </div>
 ```
-The title scales with its container (`cqi`), so it fits a 250px sidebar column. For long titles such as "Tracker sarcini", reduce the letter-spacing inline: `style="letter-spacing:.12em;margin-right:-.12em"`. `.tk-h2` (extra) is a bordo serif section heading.
+The title scales with its container (`cqi`), so it fits a 250px sidebar column. For long titles such as "Tracker sarcini", reduce the letter-spacing inline: `style="letter-spacing:.12em;margin-right:-.12em"`. `.tk-h2` (extra) is the bordo section heading. It is sans uppercase, like "СЧЕТА / ДОЛГИ" on the promo slides.
 
 ### Cards
 ```html
@@ -275,3 +285,9 @@ Suggested mappings:
 
 ## 6. Extras beyond the contract
 `--line-faint`, `--accent-soft`, `--terra-ink`, `--gold-soft`, `--blue-ink`, `--pct`, `--check`, `--check-line`, `--focus`, `--shadow-lg`, `--dur`, `--ease`, `.tk-brand`, `.tk-brand__mark`, `.tk-rule`, `.tk-h2`, `.tk-grid--stretch`, `.tk-spacer`, `.tk-card--sage/--terra/--plain`, `.tk-card__body--flush`, `.chk`, `.idx`, `.cur`, `.num`, `td.is-hl`, `td[data-tone]`, `.tk-table--wrap`, `.tk-progress--bar`, `.tk-donut`, `.tk-donut-wrap`, `.tk-donut__label`, `.tk-kv`, `.tk-kv__k`, `.tk-kv__v`, `.tk-check--lg`, `.tk-check-label`, `.tk-check-label__text`, `.tk-chart__title`, `.tk-kanban__head`, `.tk-kanban__meta`, `.is-over` / `.is-dragging` / `.is-done` states, `.tk-cal__num`, `.tk-cal__item.is-done`, `.tk-habit-grid__week`, `.tk-habit-grid__name`, `.is-today`, `.tk-matrix__title`, `.tk-matrix__sub`, `.tk-matrix__body`, `.tk-rank__name`, `.tk-rank__value`.
+
+## 7. Phase 3 additions
+- **Home (`.tk-home`):** a centred promo-slide hero with a dot-and-rule ornament, and thin bordo corner arcs drawn by `.tk-main:has(> .tk-home)` using gradients only. The note is centred. The cards stretch to equal height, each band shows a serif 01/02/03 counter, the stats sit in a 2-column grid with thin rules, and the button is pinned to the bottom of the card.
+- **Top bar:** `.tk-brand` shows a ring-and-dot mark via `::before` when no `.tk-brand__mark` is present. On phones the brand and `.tk-sync` share row 1 and the nav takes row 2.
+- **Demo banner:** the dot is absolutely positioned, so it never takes its own row.
+- **Serif numbers:** every serif (`--font-display`) rule uses `lining-nums`, because Cormorant's old-style figures read badly as "0ı".

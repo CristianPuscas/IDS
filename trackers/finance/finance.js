@@ -36,7 +36,6 @@
   var PALETTE = [
     'var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)',
     'var(--chart-5)', 'var(--chart-6)', 'var(--chart-7)', 'var(--chart-8)',
-    'var(--rose)', 'var(--chart-plan)', 'var(--blue-ink)', 'var(--accent)',
   ];
   var FLOW_COLOR = { cheltuiala: 'var(--chart-fact)', factura: 'var(--chart-3)', datorie: 'var(--chart-6)', economie: 'var(--chart-1)', ramas: 'var(--chart-4)' };
   var MONTHS = D.MONTHS;
@@ -787,7 +786,7 @@
         grid.appendChild(top20Card(outItems, m.factOut));
         grid.appendChild(chartCard('Unde s-au dus banii', function (box) {
           TK.charts.pie(box, {
-            data: topWithOther(outItems.map(function (d) { return { label: d.label, value: d.value, pref: d.pref }; }), 10),
+            data: topWithOther(outItems.map(function (d) { return { label: d.label, value: d.value, pref: d.pref }; }), 7),
             format: fmt.lei, label: 'Unde s-au dus banii', size: 210, legendBelow: true,
           });
         }, charts, 'fin-where'));

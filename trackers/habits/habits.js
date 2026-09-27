@@ -578,7 +578,7 @@
       var frac = s.total + ' / ' + s.max;
 
       refs.kpi.textContent = pctTxt;
-      TK.charts.donut(refs.kpiDonut, { value: ratio, top: 'Obiceiuri', main: frac, mainColor: 'var(--ink-2)', size: 104, thickness: 11, label: 'Progres lunar: ' + frac + ' bifate (' + pctTxt + ')' });
+      TK.charts.donut(refs.kpiDonut, { value: ratio, top: 'Obiceiuri', main: frac, mainColor: 'var(--ink-2)', size: 116, thickness: 11, label: 'Progres lunar: ' + frac + ' bifate (' + pctTxt + ')' });
       refs.progSub.textContent = frac;
 
       TK.charts.bars(refs.bars, {

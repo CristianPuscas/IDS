@@ -125,7 +125,7 @@
   font-weight: 600;
   line-height: 1.1;
   color: var(--terra-ink);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
   white-space: nowrap;
 }
 .tk-tracker--finance .fin-big .cur { font-family: var(--font-body); font-size: 13px; }
@@ -172,4 +172,17 @@
   .tk-tracker--finance .fin-dash > .fin-kpis .tk-kpi { gap: 9px; }
   .tk-tracker--finance .fin-dash > .fin-kpis .tk-kpi__value { font-size: 25px; }
   .tk-tracker--finance .fin-dash > .fin-kpis .tk-kpi__hint { font-size: 11.5px; }
+}
+
+/* culori de categorie: paleta „foto” (ca în plăcinte) și în legenda din Setări,
+   ca o categorie să aibă aceeași culoare peste tot în tracker */
+.tk-tracker--finance .fin-set-table {
+  --chart-1: var(--pie-1);
+  --chart-2: var(--pie-2);
+  --chart-3: var(--pie-3);
+  --chart-4: var(--pie-4);
+  --chart-5: var(--pie-5);
+  --chart-6: var(--pie-6);
+  --chart-7: var(--pie-7);
+  --chart-8: var(--pie-8);
 }
