@@ -1,0 +1,155 @@
+/* Tracker financiar — stiluri proprii (restul vine din shared/theme.css). */
+
+.tk-tracker--finance .fin-tabs { margin-bottom: var(--space-4); max-width: 100%; }
+.tk-tracker--finance .fin-view { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+
+/* ---- grila dashboard lunar: 3 coloane ca în foaia de calcul ---- */
+.tk-tracker--finance .fin-dash,
+.tk-tracker--finance .fin-year {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+@media (min-width: 760px) {
+  .tk-tracker--finance .fin-dash,
+  .tk-tracker--finance .fin-year { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tk-tracker--finance .fin-span-2,
+  .tk-tracker--finance .fin-span-3,
+  .tk-tracker--finance .fin-span-4 { grid-column: 1 / -1; }
+}
+@media (min-width: 980px) {
+  .tk-tracker--finance .fin-dash { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tk-tracker--finance .fin-dash > .fin-span-2 { grid-column: span 2; }
+}
+@media (min-width: 1200px) {
+  .tk-tracker--finance .fin-year { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .tk-tracker--finance .fin-year > .fin-span-3 { grid-column: span 3; }
+}
+
+.tk-tracker--finance .fin-head { padding-block: 0; gap: 4px; }
+.tk-tracker--finance .fin-kv { margin-top: var(--space-2); }
+.tk-tracker--finance .fin-head__actions { margin-top: var(--space-2); }
+.tk-tracker--finance .fin-kpis { align-self: stretch; align-content: center; }
+.tk-tracker--finance .fin-chart-card { align-self: stretch; }
+.tk-tracker--finance .fin-title-sm { font-size: clamp(22px, 7.2cqi, 40px); letter-spacing: 0.18em; margin-right: -0.18em; }
+.tk-tracker--finance .fin-page-head { padding-bottom: 0; }
+
+/* sub-rută „Facturi, datorii, economii” */
+.tk-tracker--finance .fin-trk-head {
+  display: grid;
+  gap: var(--space-3) var(--space-5);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+}
+@media (min-width: 760px) {
+  .tk-tracker--finance .fin-trk-head { grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); }
+}
+.tk-tracker--finance .fin-trk-block { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.tk-tracker--finance .fin-trk-block > .tk-card { margin-top: 6px; }
+.tk-tracker--finance .fin-trk-save { width: 100%; max-width: 860px; margin-inline: auto; }
+.tk-tracker--finance .fin-trk-save .tk-h2,
+.tk-tracker--finance .fin-trk-save > .tk-muted { text-align: center; }
+
+/* selector lună: ‹ [Luna] [Anul] › */
+.tk-tracker--finance .fin-mpick { display: flex; align-items: center; gap: 2px; width: 100%; min-width: 0; }
+.tk-tracker--finance .fin-mpick > .tk-cell-input { flex: 1 1 auto; width: auto; min-width: 0; margin: 0; }
+.tk-tracker--finance .fin-mpick > .tk-cell-input + .tk-cell-input { flex: 0 1 84px; }
+.tk-tracker--finance .fin-mpick > .tk-icon-btn { flex: none; width: 26px; height: 26px; font-size: 17px; line-height: 1; }
+
+/* ---- tabele ---- */
+.tk-tracker--finance .fin-table th,
+.tk-tracker--finance .fin-table td { padding-inline: 5px; }
+.tk-tracker--finance .fin-table .chk { width: 26px; padding-inline: 4px; }
+.tk-tracker--finance .fin-table thead th { letter-spacing: 0.05em; }
+.tk-tracker--finance .fin-table .tk-icon-btn { width: 24px; height: 24px; }
+.tk-tracker--finance .fin-table td.cur { padding-right: 0; }
+.tk-tracker--finance .fin-table td.num > .tk-cell-input { min-width: 9ch; }
+.tk-tracker--finance .fin-kpis .tk-progress { width: 72%; max-width: 150px; margin-top: 2px; }
+.tk-tracker--finance .fin-sign { width: 18px; padding-inline: 4px; text-align: center; color: var(--ink-3); font-weight: 700; }
+.tk-tracker--finance .fin-flux tbody th { text-align: left; }
+.tk-tracker--finance .fin-due { width: 1%; }
+.tk-tracker--finance .fin-neg { color: var(--bad); font-weight: 700; }
+.tk-tracker--finance tr.fin-cur td { background: color-mix(in srgb, var(--tone-soft, var(--rose-soft)) 60%, transparent); font-weight: 600; }
+.tk-tracker--finance .fin-ellipsis { max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
+.tk-tracker--finance .fin-type-dot--lead { margin: 0 7px 0 0; }
+.tk-tracker--finance .fin-in { color: var(--good); font-weight: 600; }
+.tk-tracker--finance .fin-date { color: var(--ink-2); }
+.tk-tracker--finance .fin-type-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--t-dot);
+  vertical-align: 1px;
+}
+.tk-tracker--finance .fin-legend-types { justify-content: flex-start; gap: 4px 14px; font-weight: 600; letter-spacing: 0.06em; }
+.tk-tracker--finance .fin-legend-types .fin-type-dot { margin: 0 5px 0 0; }
+.tk-tracker--finance .fin-bar-cell { min-width: 90px; }
+.tk-tracker--finance .fin-where .tk-chart__pie .tk-legend { gap: 3px 12px; }
+
+/* ---- registru tranzacții ---- */
+.tk-tracker--finance .fin-addform { align-items: flex-end; }
+.tk-tracker--finance .fin-addform > .tk-field { flex: 1 1 140px; }
+.tk-tracker--finance .fin-addform > .fin-f-date { flex: 0 1 160px; }
+.tk-tracker--finance .fin-addform > .fin-f-type { flex: 0 1 150px; }
+.tk-tracker--finance .fin-addform > .fin-f-cat { flex: 1 1 190px; }
+.tk-tracker--finance .fin-addform > .fin-f-amt { flex: 0 1 140px; }
+.tk-tracker--finance .fin-addform > .fin-f-note { flex: 2 1 200px; }
+.tk-tracker--finance .fin-addform .tk-input,
+.tk-tracker--finance .fin-addform .tk-select { min-height: 34px; }
+.tk-tracker--finance .fin-add-card .tk-form-error { margin-top: var(--space-2); }
+.tk-tracker--finance .fin-filters { border-bottom: 1px solid var(--line); background: var(--surface-2); padding-block: var(--space-3); }
+.tk-tracker--finance .fin-f-search { flex: 1 1 200px; }
+.tk-tracker--finance .fin-tx-table .fin-date { color: var(--ink-2); }
+.tk-tracker--finance .fin-tx-table .fin-amt { font-weight: 600; }
+.tk-tracker--finance .fin-note-cell { max-width: 320px; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
+.tk-tracker--finance .fin-more { display: flex; justify-content: center; padding: var(--space-3); border-top: 1px solid var(--line-faint); }
+.tk-tracker--finance .fin-empty-wrap { padding: var(--space-4); }
+.tk-tracker--finance .fin-tx-foot { justify-content: flex-start; }
+.tk-tracker--finance .fin-totals { display: flex; flex-wrap: wrap; gap: 6px 14px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.tk-tracker--finance .fin-tot { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.tk-tracker--finance .fin-count { margin-right: auto; }
+
+/* ---- rezumat anual ---- */
+.tk-tracker--finance .fin-big-card .tk-card__body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding-block: var(--space-5); text-align: center; }
+.tk-tracker--finance .fin-big-card .tk-chart__title { margin: 0; }
+.tk-tracker--finance .fin-big {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--terra-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tk-tracker--finance .fin-big .cur { font-family: var(--font-body); font-size: 13px; }
+.tk-tracker--finance .fin-big-sub { font-size: 11.5px; }
+.tk-tracker--finance .fin-notes-body { display: flex; flex-direction: column; gap: 4px; }
+.tk-tracker--finance .fin-notes { min-height: 220px; font-size: 13px; line-height: 1.55; }
+.tk-tracker--finance .fin-notes-status { min-height: 1.2em; font-size: 11px; text-align: right; }
+
+/* ---- setări ---- */
+.tk-tracker--finance .fin-set-table td.num { min-width: 96px; }
+.tk-tracker--finance .fin-set-table .idx .tk-swatch { vertical-align: middle; }
+.tk-tracker--finance .fin-actions { width: 1%; white-space: nowrap; text-align: right; }
+.tk-tracker--finance .fin-actions .tk-icon-btn { width: 26px; height: 26px; }
+.tk-tracker--finance .fin-del:hover { color: var(--bad); }
+.tk-tracker--finance .fin-set-foot { padding-block: var(--space-3); border-top: 1px solid var(--line-faint); flex: 0 0 auto; }
+.tk-tracker--finance .fin-set-add { display: flex; gap: var(--space-2); }
+.tk-tracker--finance .fin-set-add .tk-input { flex: 1 1 auto; min-width: 0; min-height: 32px; padding-block: 5px; }
+
+/* ---- telefon ---- */
+@media (max-width: 599.98px) {
+  .tk-tracker--finance tr.is-empty { display: none; }
+  .tk-tracker--finance .fin-tabs .tk-tabs { width: 100%; }
+  .tk-tracker--finance .fin-addform > .tk-field,
+  .tk-tracker--finance .fin-addform > .fin-f-date,
+  .tk-tracker--finance .fin-addform > .fin-f-type,
+  .tk-tracker--finance .fin-addform > .fin-f-amt { flex: 1 1 140px; }
+  .tk-tracker--finance .fin-addform > .fin-f-note { flex: 1 1 100%; }
+  .tk-tracker--finance .fin-addform > .tk-btn { flex: 1 1 100%; }
+  .tk-tracker--finance .fin-big { font-size: 28px; }
+  .tk-tracker--finance .fin-note-cell { max-width: 180px; }
+}

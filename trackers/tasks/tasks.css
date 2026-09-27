@@ -1,0 +1,324 @@
+/* Tracker de sarcini — stiluri proprii (toate prefixate cu .tk-tracker--tasks). */
+
+/* ------------------------------------------------------------ bara de sus */
+.tk-tracker--tasks .tks-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+  min-width: 0;
+}
+.tk-tracker--tasks .tks-tabs { min-width: 0; }
+.tk-tracker--tasks .tks-view { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+
+/* ------------------------------------------------------------ butoane-link */
+.tk-tracker--tasks .tks-link {
+  display: inline;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: inherit;
+  cursor: pointer;
+}
+.tk-tracker--tasks .tks-link:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+
+/* ------------------------------------------------------------ hero */
+.tk-tracker--tasks .tks-hero { padding-block: 0 var(--space-2); }
+.tk-tracker--tasks .tks-hero--sm .tk-hero__title { font-size: clamp(20px, 7cqi, 30px); }
+
+/* ------------------------------------------------------------ dashboard */
+.tk-tracker--tasks .tks-head { align-items: center; }
+.tk-tracker--tasks .tks-kpis { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
+.tk-tracker--tasks .tks-kpis .tk-kpi { padding-inline: 6px; }
+.tk-tracker--tasks .tks-kpis .tk-kpi__label { letter-spacing: 0.14em; }
+.tk-tracker--tasks .tks-kpis .tk-kpi + .tk-kpi { border-left: 1px solid var(--line-faint); }
+.tk-tracker--tasks .tks-kpis .tk-kpi.is-bad .tk-kpi__value { color: var(--bad); font-weight: 600; }
+.tk-tracker--tasks .tks-kpis .tk-kpi__value { font-size: 22px; }
+
+.tk-tracker--tasks .tks-dash { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.tk-tracker--tasks .tks-dash__row { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) {
+  .tk-tracker--tasks .tks-dash__row--a { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .tk-tracker--tasks .tks-widget--deadlines { grid-column: 1 / -1; }
+  .tk-tracker--tasks .tks-dash__row--b { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
+}
+@media (min-width: 1100px) {
+  .tk-tracker--tasks .tks-dash__row--a { grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.8fr) minmax(0, 1.2fr); }
+  .tk-tracker--tasks .tks-widget--deadlines { grid-column: auto; }
+}
+.tk-tracker--tasks .tks-widget .tk-card__body { padding: var(--space-3) var(--space-4); }
+.tk-tracker--tasks .tks-donut { display: flex; justify-content: center; }
+.tk-tracker--tasks .tks-deadlines { background: transparent; }
+.tk-tracker--tasks .tks-deadlines thead th { background: transparent; color: var(--blue-ink); border-bottom-color: var(--line); }
+.tk-tracker--tasks .tks-deadlines td { border-right: 0; text-align: center; }
+.tk-tracker--tasks .tks-deadlines td.tks-ellipsis { text-align: left; }
+.tk-tracker--tasks .tks-ellipsis { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-tracker--tasks .tks-late-text { color: var(--bad); font-weight: 600; }
+
+/* ------------------------------------------------------------ lista generală */
+.tk-tracker--tasks .tks-toolbar { align-items: flex-end; }
+.tk-tracker--tasks .tks-toolbar > .tk-field { flex: 0 1 170px; }
+.tk-tracker--tasks .tks-hide-done { min-height: 32px; }
+.tk-tracker--tasks .tks-count { font-size: 12px; margin-left: auto; }
+
+.tk-tracker--tasks .tks-list thead th { position: sticky; top: 0; z-index: 1; }
+.tk-tracker--tasks .tks-list thead tr + tr th { top: 24px; }
+.tk-tracker--tasks .tks-list__group th {
+  height: 24px;
+  padding-block: 2px;
+  background: var(--surface);
+  color: var(--ink-3);
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  border-bottom: 1px solid var(--line);
+}
+.tk-tracker--tasks .tks-list__group th:not(.tks-list__blank) { background: var(--gold-soft); color: var(--ink-2); }
+@media (min-width: 600px) {
+  .tk-tracker--tasks .tks-listscroll { max-height: 72vh; overflow-y: auto; }
+}
+.tk-tracker--tasks .tks-titlecell { min-width: 190px; }
+.tk-tracker--tasks .tks-titlecell .tks-late { margin-left: 6px; padding-inline: 6px; font-size: 10px; }
+.tk-tracker--tasks .tks-list td.chk .tk-check { vertical-align: middle; }
+.tk-tracker--tasks .tks-list .tks-days { min-width: 96px; }
+.tk-tracker--tasks .tks-days.is-late { color: var(--t-ink); font-weight: 600; }
+.tk-tracker--tasks .tks-days.is-soon { color: var(--accent); font-weight: 600; }
+.tk-tracker--tasks .tks-days.is-done { color: var(--sage-deep); }
+.tk-tracker--tasks tr.is-done .tks-days.is-done { color: var(--ink-3); }
+.tk-tracker--tasks .tks-norows { height: 60px; }
+
+/* select de status în formă de pastilă */
+.tk-tracker--tasks .tks-statuscell { min-width: 150px; }
+.tk-tracker--tasks select.tks-status {
+  margin: 0;
+  width: 100%;
+  border-radius: 999px;
+  padding: 2px 22px 2px 10px;
+  background-color: var(--t-bg, var(--surface-2));
+  color: var(--t-ink, var(--ink-2));
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.tk-tracker--tasks select.tks-status:hover { border-color: var(--line-strong); background-color: var(--t-bg, var(--surface-2)); }
+.tk-tracker--tasks select.tks-status:focus { background-color: var(--surface); }
+.tk-tracker--tasks tr.is-done select.tks-status { filter: grayscale(1); opacity: 0.75; }
+
+/* ------------------------------------------------------------ layout cu panou lateral */
+.tk-tracker--tasks .tks-side {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "hero" "main" "panel";
+  align-items: start;
+  min-width: 0;
+}
+.tk-tracker--tasks .tks-side > .tks-hero { grid-area: hero; }
+.tk-tracker--tasks .tks-side > .tks-side__panel { grid-area: panel; }
+.tk-tracker--tasks .tks-side > .tks-side__main { grid-area: main; }
+@media (min-width: 980px) {
+  .tk-tracker--tasks .tks-side {
+    grid-template-columns: minmax(230px, 270px) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "hero main" "panel main";
+    row-gap: var(--space-2);
+  }
+}
+.tk-tracker--tasks .tks-side__panel,
+.tk-tracker--tasks .tks-side__main { min-width: 0; }
+.tk-tracker--tasks .tks-side__panel { gap: var(--space-3); }
+.tk-tracker--tasks .tks-gap-sm { gap: var(--space-2); }
+.tk-tracker--tasks .tks-small-note { font-size: 12px; line-height: 1.45; }
+.tk-tracker--tasks .tks-small { font-size: 12px; }
+.tk-tracker--tasks .tks-pad { padding: var(--space-3) var(--space-4); }
+.tk-tracker--tasks .tks-notes { min-height: 150px; background: var(--surface); font-size: 13px; }
+.tk-tracker--tasks .tks-checklist { display: flex; flex-direction: column; gap: 6px; }
+.tk-tracker--tasks .tks-checklist--tight { gap: 4px; }
+.tk-tracker--tasks .tks-checklist--tight .tk-check-label { font-size: 12px; align-items: flex-start; }
+.tk-tracker--tasks .tk-kv input.tk-cell-input,
+.tk-tracker--tasks .tk-kv select.tk-cell-input { margin: 0; width: 100%; }
+.tk-tracker--tasks .tk-kv .tk-kv__k { text-align: center; }
+
+/* ------------------------------------------------------------ kanban */
+.tk-tracker--tasks .tks-board { grid-auto-columns: minmax(200px, 1fr); }
+@media (min-width: 1100px) {
+  .tk-tracker--tasks .tks-board { grid-auto-columns: minmax(160px, 1fr); gap: var(--space-2); }
+  .tk-tracker--tasks .tks-board .tk-kanban__col { padding: 8px; }
+  .tk-tracker--tasks .tks-board .tk-kanban__card { padding: 9px 10px; }
+}
+.tk-tracker--tasks .tks-colcount {
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+.tk-tracker--tasks .tks-col__list { display: flex; flex-direction: column; gap: var(--space-2); }
+.tk-tracker--tasks .tks-col__empty {
+  padding: 18px 8px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 11.5px;
+}
+.tk-tracker--tasks .tks-col__add { align-self: flex-start; }
+.tk-tracker--tasks .tks-card__title { font-weight: 600; line-height: 1.3; }
+.tk-tracker--tasks .tk-kanban__card.is-done .tks-card__title { font-weight: 500; }
+.tk-tracker--tasks .tk-kanban__card.is-late { background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface)); }
+.tk-tracker--tasks .tks-card__move {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 5px;
+  border-top: 1px solid var(--line-faint);
+  text-decoration: none;
+}
+.tk-tracker--tasks .tks-card__status { flex: 1; text-align: center; font-size: 10.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tk-tracker--tasks .tks-mini { width: 26px; height: 24px; font-size: 11px; border-color: var(--line); }
+.tk-tracker--tasks .tks-mini:disabled { opacity: 0.35; cursor: default; }
+
+/* ------------------------------------------------------------ matrice */
+.tk-tracker--tasks .tks-matrix .tk-matrix__q { min-height: 300px; transition: outline-color var(--dur) var(--ease); outline: 2px dashed transparent; outline-offset: -4px; }
+.tk-tracker--tasks .tks-matrix .tk-matrix__q.is-over { outline-color: var(--accent); }
+.tk-tracker--tasks .tks-mx-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--line);
+}
+.tk-tracker--tasks .tks-mx-donut { width: 104px; flex: none; }
+.tk-tracker--tasks .tks-mx-stat { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+.tk-tracker--tasks .tks-mx-stat b { font-size: 20px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tk-tracker--tasks .tks-mx-table { background: transparent; }
+.tk-tracker--tasks .tks-mx-table tr[draggable] { cursor: grab; }
+.tk-tracker--tasks .tks-mx-table tr.is-dragging { opacity: 0.5; }
+.tk-tracker--tasks .tks-mx-table .tks-titlecell { min-width: 120px; }
+.tk-tracker--tasks .tks-mx-table td { white-space: normal; }
+.tk-tracker--tasks .tks-mx-table .tk-nowrap,
+.tk-tracker--tasks .tks-mx-table .tks-days { white-space: nowrap; }
+.tk-tracker--tasks .tks-mx-table thead th { white-space: normal; }
+.tk-tracker--tasks .tks-qcell { width: 96px; }
+.tk-tracker--tasks .tks-qcell select { margin: 0; font-size: 11px; color: var(--ink-3); }
+
+/* ------------------------------------------------------------ calendar */
+.tk-tracker--tasks .tks-cal-card .tk-card__head { justify-content: space-between; }
+.tk-tracker--tasks .tks-cal-card .tk-card__title { text-align: center; letter-spacing: 0.2em; font-size: 12px; }
+.tk-tracker--tasks .tks-cal .tk-cal__day { cursor: copy; min-height: 112px; }
+.tk-tracker--tasks .tks-cal .tk-cal__item { cursor: default; }
+.tk-tracker--tasks .tks-cal .tk-cal__item.is-late { box-shadow: inset 2px 0 0 var(--bad); }
+.tk-tracker--tasks .tks-cal__txt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  flex: 1 1 auto;
+}
+.tk-tracker--tasks .tks-today-tag { font-weight: 600; text-transform: uppercase; font-size: 8.5px; letter-spacing: 0.12em; }
+.tk-tracker--tasks .tks-wd-short { display: none; }
+.tk-tracker--tasks .tks-quickadd { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+.tk-tracker--tasks .tks-quickadd .tk-input { min-height: 32px; padding-block: 5px; font-size: 12.5px; }
+.tk-tracker--tasks .tks-quickadd .tk-input:first-child { grid-column: 1 / -1; }
+.tk-tracker--tasks .tks-cal-listwrap { max-height: 360px; overflow-y: auto; }
+.tk-tracker--tasks .tks-cal-list .tks-ellipsis { max-width: 130px; }
+.tk-tracker--tasks .tks-agenda { display: none; }
+.tk-tracker--tasks .tks-agenda__day { padding: 8px 12px; border-bottom: 1px solid var(--line-faint); }
+.tk-tracker--tasks .tks-agenda__day.is-today { background: var(--rose-soft); }
+.tk-tracker--tasks .tks-agenda__date {
+  margin-bottom: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.tk-tracker--tasks .tks-agenda__item { display: flex; flex-wrap: wrap; padding-block: 3px; }
+.tk-tracker--tasks .tks-agenda__who { font-size: 11.5px; margin-left: auto; }
+
+/* ------------------------------------------------------------ planificator */
+.tk-tracker--tasks .tks-modes { align-self: flex-start; }
+.tk-tracker--tasks .tks-planner { min-width: 0; }
+.tk-tracker--tasks .tks-pl-col { gap: var(--space-3); min-width: 0; }
+.tk-tracker--tasks .tks-pl-day,
+.tk-tracker--tasks .tks-pl-wk {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+@media (min-width: 760px) {
+  .tk-tracker--tasks .tks-pl-day { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .tk-tracker--tasks .tks-pl-day > :last-child { grid-column: 1 / -1; }
+}
+@media (min-width: 1100px) {
+  .tk-tracker--tasks .tks-pl-day { grid-template-columns: minmax(240px, 280px) minmax(0, 1.2fr) minmax(0, 1fr); }
+  .tk-tracker--tasks .tks-pl-day > :last-child { grid-column: auto; }
+}
+@media (min-width: 980px) {
+  .tk-tracker--tasks .tks-pl-wk { grid-template-columns: minmax(240px, 280px) minmax(0, 1fr); }
+}
+.tk-tracker--tasks .tks-weekday { text-transform: capitalize; }
+.tk-tracker--tasks .tks-stepper { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; }
+.tk-tracker--tasks .tks-slots .tks-time { width: 1%; color: var(--ink-2); border-right: 0; }
+.tk-tracker--tasks .tks-slots .tks-dash-sep { width: 1%; padding-inline: 0; color: var(--ink-3); border-right: 0; text-align: center; }
+.tk-tracker--tasks .tks-slots .tks-slot { border-left: 1px solid var(--line); }
+.tk-tracker--tasks .tks-slots tr.is-now td { background: var(--rose-soft); }
+.tk-tracker--tasks .tks-slots tr.is-now .tks-time { color: var(--accent); font-weight: 700; }
+.tk-tracker--tasks .tks-top3 {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 700;
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+.tk-tracker--tasks .tks-top3 li { padding: 2px 0; border-bottom: 1px solid var(--line-faint); }
+.tk-tracker--tasks .tks-top3 .tk-cell-input { margin: 0; width: 100%; font-weight: 400; color: var(--ink); }
+
+.tk-tracker--tasks .tks-week { table-layout: fixed; min-width: 1180px; }
+.tk-tracker--tasks .tks-week .tks-wk-time { width: 116px; font-size: 10.5px; color: var(--ink-2); text-align: center; white-space: nowrap; }
+.tk-tracker--tasks .tks-week thead th { text-transform: none; letter-spacing: 0.02em; font-size: 10.5px; }
+.tk-tracker--tasks .tks-week thead th.is-today { background: var(--rose); color: var(--rose-ink); }
+.tk-tracker--tasks .tks-week td.is-today { background: color-mix(in srgb, var(--rose-soft) 55%, transparent); }
+.tk-tracker--tasks .tks-week .tk-cell-input { margin: 0; width: 100%; }
+.tk-tracker--tasks .tks-week .tks-wk-due td { vertical-align: top; white-space: normal; padding-block: 6px; background: var(--sage-soft); }
+.tk-tracker--tasks .tks-week .tks-wk-due th { background: var(--sage-soft); }
+.tk-tracker--tasks .tks-week .tks-wk-due .tk-check-label__text { white-space: normal; }
+.tk-tracker--tasks .tks-wk-scroll { max-height: 78vh; overflow: auto; }
+.tk-tracker--tasks .tks-week thead th { position: sticky; top: 0; z-index: 1; }
+
+/* ------------------------------------------------------------ setări */
+.tk-tracker--tasks .tks-emoji { width: 64px; }
+.tk-tracker--tasks .tks-emoji-in { text-align: center; }
+.tk-tracker--tasks input.tks-emoji-in.tk-input { width: 64px; flex: none; }
+.tk-tracker--tasks .tks-addrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tk-tracker--tasks .tks-addrow .tk-input:not(.tks-emoji-in) { flex: 1 1 160px; min-width: 0; width: auto; }
+
+/* ------------------------------------------------------------ telefon */
+@media (max-width: 599.98px) {
+  .tk-tracker--tasks .tks-top { flex-direction: column; align-items: stretch; }
+  .tk-tracker--tasks .tks-top .tk-spacer { display: none; }
+  .tk-tracker--tasks .tks-tabs { display: flex; }
+  .tk-tracker--tasks .tks-kpis .tk-kpi + .tk-kpi { border-left: 0; }
+  .tk-tracker--tasks .tks-kpis .tk-kpi:first-child { grid-column: 1 / -1; }
+  .tk-tracker--tasks .tks-kpis .tk-kpi__value { font-size: 18px; }
+  .tk-tracker--tasks .tks-toolbar > .tk-field { flex: 1 1 140px; }
+  .tk-tracker--tasks .tks-count { display: none; }
+  .tk-tracker--tasks .tks-wd-long { display: none; }
+  .tk-tracker--tasks .tks-wd-short { display: inline; }
+  .tk-tracker--tasks .tks-cal .tk-cal__day { min-height: 58px; }
+  .tk-tracker--tasks .tks-today-tag { display: none; }
+  .tk-tracker--tasks .tks-agenda { display: flex; }
+  .tk-tracker--tasks .tks-board { grid-auto-columns: minmax(240px, 80vw); }
+  .tk-tracker--tasks .tks-mx-top { justify-content: flex-start; }
+  .tk-tracker--tasks .tks-ellipsis { max-width: 160px; }
+}
