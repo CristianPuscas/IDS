@@ -216,6 +216,21 @@
   white-space: nowrap;
 }
 .tk-tracker--habits .hb-pc { padding-inline: 5px; }
+/* numele obiceiului în tabelul de progres: doar când tabelul nu mai stă aliniat lângă listă */
+.tk-tracker--habits .hb-pc__name {
+  display: block;
+  padding-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--ink);
+}
+.tk-tracker--habits .hb-pc:has(.hb-pc__name) .hb-pc__in { padding-bottom: 4px; }
+@media (min-width: 1180px) {
+  .tk-tracker--habits .hb-pc__name { display: none; }
+  .tk-tracker--habits .hb-pc:has(.hb-pc__name) .hb-pc__in { padding-bottom: 0; }
+}
 .tk-tracker--habits .hb-pc__in {
   display: flex;
   align-items: center;
@@ -279,9 +294,19 @@
 }
 .tk-tracker--habits .hb-grid thead .tk-habit-grid__name:not(.tk-habit-grid__week) { background: var(--rose-soft); }
 .tk-tracker--habits .hb-grid tbody tr.hb-addrow:hover td { background: color-mix(in srgb, var(--sage-soft) 35%, var(--surface)); }
-.tk-tracker--habits .hb-grid td.is-future .tk-check { opacity: 0.5; }
-.tk-tracker--habits .hb-grid td.is-future .tk-check:hover,
-.tk-tracker--habits .hb-grid td.is-future .tk-check:focus-visible { opacity: 1; }
+/* zilele viitoare: nu se pot bifa */
+.tk-tracker--habits .hb-grid td.is-future .tk-check:disabled {
+  opacity: 1;
+  border-style: dashed;
+  border-color: var(--line);
+  background: transparent;
+  cursor: not-allowed;
+}
+/* zile dinaintea startului obiceiului: nu contează, dar pot fi bifate (mută startul) */
+.tk-tracker--habits .hb-grid td.is-pre { background: var(--surface-2); }
+.tk-tracker--habits .hb-grid td.is-pre .tk-check:not(:checked) { opacity: 0.4; }
+.tk-tracker--habits .hb-grid td.is-pre .tk-check:hover,
+.tk-tracker--habits .hb-grid td.is-pre .tk-check:focus-visible { opacity: 1; }
 .tk-tracker--habits .hb-grid .tk-check { width: 13px; height: 13px; }
 
 /* dinamica pe zile: curba + rânduri cu cifre */
@@ -292,7 +317,7 @@
 .tk-tracker--habits .hb-dyn .hb-area-row > th { height: auto; padding: 0; border-bottom: 1px solid var(--line); }
 .tk-tracker--habits .hb-dyn .hb-area-row > th { padding-inline: 8px; }
 .tk-tracker--habits .hb-area { margin-inline: -4px; padding-top: 6px; }
-.tk-tracker--habits .hb-dyn .hb-dyn-pct td { font-size: 8.5px; letter-spacing: -0.02em; color: var(--pct); font-weight: 600; background: color-mix(in srgb, var(--rose-soft) 55%, var(--surface)); }
+.tk-tracker--habits .hb-dyn .hb-dyn-pct td { font-size: 9px; letter-spacing: -0.02em; color: var(--pct); font-weight: 600; background: color-mix(in srgb, var(--rose-soft) 55%, var(--surface)); }
 .tk-tracker--habits .hb-dyn .hb-dyn-pct td.is-full { color: var(--sage-deep); }
 .tk-tracker--habits .hb-dyn td.is-future { color: var(--ink-3); opacity: 0.55; }
 .tk-tracker--habits .hb-dyn tbody tr:hover td { background: transparent; }

@@ -18,11 +18,11 @@
   .tk-tracker--finance .fin-span-3,
   .tk-tracker--finance .fin-span-4 { grid-column: 1 / -1; }
 }
-@media (min-width: 980px) {
+@media (min-width: 1240px) {
   .tk-tracker--finance .fin-dash { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tk-tracker--finance .fin-dash > .fin-span-2 { grid-column: span 2; }
 }
-@media (min-width: 1200px) {
+@media (min-width: 1270px) {
   .tk-tracker--finance .fin-year { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .tk-tracker--finance .fin-year > .fin-span-3 { grid-column: span 3; }
 }
@@ -45,6 +45,10 @@
 @media (min-width: 760px) {
   .tk-tracker--finance .fin-trk-head { grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); }
 }
+.tk-tracker--finance .fin-trk-grid { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1180px) {
+  .tk-tracker--finance .fin-trk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .tk-tracker--finance .fin-trk-block { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .tk-tracker--finance .fin-trk-block > .tk-card { margin-top: 6px; }
 .tk-tracker--finance .fin-trk-save { width: 100%; max-width: 860px; margin-inline: auto; }
@@ -59,21 +63,29 @@
 
 /* ---- tabele ---- */
 .tk-tracker--finance .fin-table th,
-.tk-tracker--finance .fin-table td { padding-inline: 5px; }
-.tk-tracker--finance .fin-table .chk { width: 26px; padding-inline: 4px; }
+.tk-tracker--finance .fin-table td { padding-inline: 4px; }
+.tk-tracker--finance .fin-table .chk { width: 22px; padding-inline: 3px; }
 .tk-tracker--finance .fin-table thead th { letter-spacing: 0.05em; }
 .tk-tracker--finance .fin-table .tk-icon-btn { width: 24px; height: 24px; }
 .tk-tracker--finance .fin-table td.cur { padding-right: 0; }
-.tk-tracker--finance .fin-table td.num > .tk-cell-input { min-width: 9ch; }
+.tk-tracker--finance .fin-table td.num > .tk-cell-input { min-width: calc(9.5ch + 12px); }
 .tk-tracker--finance .fin-kpis .tk-progress { width: 72%; max-width: 150px; margin-top: 2px; }
 .tk-tracker--finance .fin-sign { width: 18px; padding-inline: 4px; text-align: center; color: var(--ink-3); font-weight: 700; }
 .tk-tracker--finance .fin-flux tbody th { text-align: left; }
 .tk-tracker--finance .fin-due { width: 1%; }
 .tk-tracker--finance .fin-neg { color: var(--bad); font-weight: 700; }
 .tk-tracker--finance tr.fin-cur td { background: color-mix(in srgb, var(--tone-soft, var(--rose-soft)) 60%, transparent); font-weight: 600; }
-.tk-tracker--finance .fin-cat { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tk-tracker--finance .fin-cat-cell { max-width: 260px; }
-.tk-tracker--finance .fin-cat .fin-note-sub { overflow: hidden; text-overflow: ellipsis; }
+/* coloana de categorie ia spațiul rămas și trunchiază numele lungi (numele complet e în title) */
+.tk-tracker--finance .fin-table td.fin-cat {
+  width: 100%;
+  max-width: 0;
+  min-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tk-tracker--finance .fin-cat-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.tk-tracker--finance .fin-cat-cell .fin-note-sub { overflow: hidden; text-overflow: ellipsis; }
 .tk-tracker--finance .tk-legend__item { max-width: 100%; overflow-wrap: anywhere; }
 .tk-tracker--finance .fin-type-dot--lead { margin: 0 7px 0 0; }
 .tk-tracker--finance .fin-in { color: var(--good); font-weight: 600; }
@@ -171,7 +183,7 @@
   .tk-tracker--finance .fin-tx-table td { padding-block: 4px; }
 }
 
-@media (min-width: 980px) {
+@media (min-width: 1240px) {
   .tk-tracker--finance .fin-dash > .fin-kpis .tk-kpi { gap: 9px; }
   .tk-tracker--finance .fin-dash > .fin-kpis .tk-kpi__value { font-size: 25px; }
   .tk-tracker--finance .fin-dash > .fin-kpis .tk-kpi__hint { font-size: 11.5px; }

@@ -1191,7 +1191,7 @@
           return h('tr', null,
             h('td', { class: 'fin-date' }, h('span', { class: 'fin-date-long' }, fmt.date(t.date)), h('span', { class: 'fin-date-short', 'aria-hidden': 'true' }, fmt.dateShort(t.date))),
             h('td', null, h('span', { class: 'tk-pill fin-pill', 'data-tone': TONE[t.type], title: LABEL[t.type] }, h('span', { class: 'tk-dot' }), h('span', { class: 'fin-pill-txt' }, LABEL[t.type]))),
-            h('td', { class: 'fin-cat fin-cat-cell', title: t.category }, t.category, t.note ? h('span', { class: 'fin-note-sub', 'aria-hidden': 'true' }, t.note) : null),
+            h('td', { class: 'fin-cat-cell', title: t.category }, t.category, t.note ? h('span', { class: 'fin-note-sub', 'aria-hidden': 'true' }, t.note) : null),
             h('td', { class: 'num fin-amt' }, fmt.num(t.amount), h('span', { class: 'cur' }, ' lei')),
             h('td', { class: 'fin-note-cell tk-hide-sm', title: t.note || null }, t.note || ''),
             h('td', { class: 'chk' }, h('button', {
@@ -1254,7 +1254,7 @@
           h('h2', { class: 'tk-h2' }, 'Datorii'),
           h('p', { class: 'tk-muted' }, 'Urmărește ratele și cât mai ai de plătit.'),
           h('article', { class: 'tk-card' }, cardHead(titleB('Tracker', 'datorii')), billTable(m, 'datorie', 'trk', render, { minRows: 8 })));
-        body.appendChild(h('div', { class: 'tk-grid tk-grid--2' }, bills, debts));
+        body.appendChild(h('div', { class: 'fin-trk-grid' }, bills, debts));
 
         /* economii */
         var monthEnd = D.make(p.y, p.m, D.daysInMonth(p.y, p.m));
