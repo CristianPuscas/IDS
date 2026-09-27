@@ -276,17 +276,21 @@
         TK.ui.toast('Fișierul nu este o copie de rezervă a trackerelor.');
         return;
       }
-      var names = registry.filter(function (d) { return data.trackers[d.id]; }).map(function (d) { return d.name; });
-      if (!names.length) { TK.ui.toast('Copia nu conține niciun tracker cunoscut.'); return; }
+      var isObj = function (v) { return v && typeof v === 'object' && !Array.isArray(v); };
+      var valid = registry.filter(function (d) { return isObj(data.trackers[d.id]); });
+      var skipped = registry.filter(function (d) { return data.trackers[d.id] != null && !isObj(data.trackers[d.id]); });
+      var names = valid.map(function (d) { return d.name; });
+      if (!names.length) { TK.ui.toast('Copia nu conține date valide pentru niciun tracker.'); return; }
       TK.ui.confirm({
         title: 'Importi copia?',
-        text: 'Se vor înlocui datele actuale din: ' + names.join(', ') + '.',
+        text: 'Se vor înlocui datele actuale din: ' + names.join(', ') + '.' +
+          (skipped.length ? ' Datele pentru ' + skipped.map(function (d) { return d.name; }).join(', ') + ' nu sunt valide și vor fi ignorate.' : ''),
         ok: 'Importă',
         danger: true,
       }).then(function (yes) {
         if (!yes) return;
-        registry.forEach(function (def) {
-          if (data.trackers[def.id]) stores[def.id].replace(TK.clone(data.trackers[def.id]));
+        valid.forEach(function (def) {
+          stores[def.id].replace(TK.clone(data.trackers[def.id]));
         });
         TK.ui.toast('Datele au fost importate.');
         route();

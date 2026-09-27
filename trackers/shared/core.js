@@ -160,15 +160,22 @@
       if (ratio == null || !isFinite(ratio)) return '—';
       return num(ratio * 100, dec == null ? 2 : dec) + '%';
     },
-    // "1 500,50" / "1500.5" / "1.500,50" -> 1500.5 ; gol -> null
+    // "1 500,50" / "1.500,50" / "1500.5" / "1,500.50" / "1.500" -> număr ; gol sau invalid -> null
+    // Virgula e zecimală (convenția românească); punctul urmat de grupuri de 3 cifre e separator de mii.
     parseNum: function (str) {
       if (typeof str === 'number') return isFinite(str) ? str : null;
       if (str == null) return null;
-      var s = String(str).replace(/[\s  lei]/gi, '').replace(/−/g, '-');
+      var s = String(str).trim().replace(/\s*lei$/i, '').replace(/[\s  ]/g, '').replace(/−/g, '-');
       if (s === '') return null;
-      if (s.indexOf(',') !== -1) s = s.replace(/\./g, '').replace(',', '.');
-      var v = parseFloat(s);
-      return isFinite(v) ? v : null;
+      var neg = s.charAt(0) === '-';
+      if (neg || s.charAt(0) === '+') s = s.slice(1);
+      var v;
+      if (/^\d+(,\d+)?$/.test(s)) v = Number(s.replace(',', '.'));                                     // 1500,50
+      else if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) v = Number(s.replace(/\./g, '').replace(',', '.')); // 1.500,50
+      else if (/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) v = Number(s.replace(/,/g, ''));                  // 1,500.50
+      else if (/^\d+(\.\d+)?$/.test(s)) v = Number(s);                                                // 1500.5
+      else return null;
+      return isFinite(v) ? (neg ? -v : v) : null;
     },
   };
 
@@ -330,18 +337,32 @@
     var backdrop = h('div', { class: 'tk-modal' }, box);
     var closed = false;
 
+    var appRoot = document.getElementById('app');
     function close() {
       if (closed) return;
       closed = true;
       document.removeEventListener('keydown', onKey, true);
       backdrop.remove();
+      if (appRoot && !document.querySelector('.tk-modal')) appRoot.inert = false;
       if (opts.onClose) opts.onClose();
       if (prevFocus && prevFocus.focus) {
         try { prevFocus.focus(); } catch (e) { /* elementul poate lipsi */ }
       }
     }
     function onKey(e) {
-      if (e.key === 'Escape') { e.preventDefault(); close(); }
+      if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+      if (e.key !== 'Tab') return;
+      // focusul rămâne în fereastră
+      var items = Array.prototype.filter.call(
+        box.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'),
+        function (el) { return !el.disabled && el.offsetParent !== null; });
+      if (!items.length) return;
+      var first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !box.contains(document.activeElement))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !box.contains(document.activeElement))) {
+        e.preventDefault(); first.focus();
+      }
     }
 
     if (opts.title) box.appendChild(h('h2', { class: 'tk-modal__title' }, opts.title));
@@ -364,6 +385,7 @@
     backdrop.addEventListener('mousedown', function (e) { if (e.target === backdrop) close(); });
     document.addEventListener('keydown', onKey, true);
     document.body.appendChild(backdrop);
+    if (appRoot) appRoot.inert = true;
 
     var focusable = box.querySelector('input, select, textarea, button');
     if (focusable) setTimeout(function () { focusable.focus(); }, 0);
@@ -647,6 +669,44 @@
     });
   };
 
+  // Utilizatorul scrie acum într-un câmp al paginii?
+  function isEditing() {
+    var a = document.activeElement;
+    if (!a || !a.closest || !a.closest('#tk-main')) return false;
+    if (a.isContentEditable || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT') return true;
+    return a.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|reset|range|color|file)$/i.test(a.type);
+  }
+
+  // Compară versiunea din cont cu cea locală și o păstrează pe cea mai nouă.
+  Store.prototype._consider = function (remote) {
+    var self = this;
+    var local = this.state.meta || {};
+    var rmeta = (remote && remote.meta) || {};
+    if (rmeta.rev === local.rev) return;
+    if ((local.updatedAt || 0) > (rmeta.updatedAt || 0)) {
+      // Modificări locale mai noi (făcute înainte să se conecteze contul sau în timpul editării).
+      this._pushCloud();
+      return;
+    }
+    if (isEditing()) {
+      // Nu schimbăm datele sub cursor: reîncercăm după ce utilizatorul termină de scris.
+      this._waiting = remote;
+      if (!this._waitTimer) {
+        this._waitTimer = setInterval(function () {
+          if (isEditing()) return;
+          clearInterval(self._waitTimer);
+          self._waitTimer = null;
+          var r = self._waiting;
+          self._waiting = null;
+          // lasă trackerul să-și salveze textul (debounce), apoi decide
+          setTimeout(function () { self._consider(r); TK.emitStatus(); }, 600);
+        }, 800);
+      }
+      return;
+    }
+    this.replace(TK.clone(remote), { fromCloud: true });
+  };
+
   // Leagă depozitul de documentul `trackers/<key>` din baza de date a artifactului.
   Store.prototype.attachCloud = function (db) {
     var self = this;
@@ -660,16 +720,7 @@
         return;
       }
       if (snap.metadata && snap.metadata.hasPendingWrites) return;
-      var remote = snap.data();
-      var local = self.state.meta || {};
-      var rmeta = (remote && remote.meta) || {};
-      if (rmeta.rev === local.rev) { TK.emitStatus(); return; }
-      if ((local.updatedAt || 0) > (rmeta.updatedAt || 0)) {
-        // Modificări locale mai noi (făcute înainte să se conecteze contul).
-        self._pushCloud();
-      } else {
-        self.replace(TK.clone(remote), { fromCloud: true });
-      }
+      self._consider(snap.data());
       TK.emitStatus();
     }, function (e) {
       self.status = 'error';
