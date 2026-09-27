@@ -313,10 +313,18 @@
   /* ----------------------------------------------------------------- start */
 
   function boot() {
+    // Un tracker care nu-și poate crea datele nu trebuie să le blocheze pe celelalte.
+    registry = registry.filter(function (def) {
+      try {
+        stores[def.id] = new TK.Store(def.id, def);
+        return true;
+      } catch (e) {
+        console.error('Trackerul „' + (def.name || def.id) + '” nu a putut porni:', e);
+        return false;
+      }
+    });
     registry.forEach(function (def) {
-      var store = new TK.Store(def.id, def);
-      stores[def.id] = store;
-      store.onReplace(function () {
+      stores[def.id].onReplace(function () {
         // Date noi (alt dispozitiv, import, resetare): redesenăm vederea curentă.
         if (current && (current.slug === def.slug || current.slug === 'acasa')) route();
       });

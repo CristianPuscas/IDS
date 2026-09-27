@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ghid de stil trackere</title>
+<meta name="description" content="Banc de test vizual pentru sistemul de design comun al trackerelor de finanțe, obiceiuri și sarcini.">
+<link rel="stylesheet" href="./theme.css">
+<style>
+  /* styleguide-only helpers (sg-*) - NOT part of the contract */
+  .sg-section { display: flex; flex-direction: column; gap: var(--space-4); padding-top: var(--space-6); }
+  .sg-section > header { display: flex; flex-direction: column; gap: 6px; }
+  .sg-code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace; font-size: 11px; color: var(--ink-3); }
+  .sg-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+  .sg-sw { border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface); font-size: 11px; }
+  .sg-sw i { display: block; height: 42px; background: var(--c); border-bottom: 1px solid var(--line); }
+  .sg-sw span { display: block; padding: 5px 7px 6px; line-height: 1.35; }
+  .sg-type { display: grid; gap: 14px; }
+  .sg-pie { width: 150px; aspect-ratio: 1; border-radius: 50%; flex: none;
+    background: conic-gradient(var(--chart-1) 0 24%, var(--chart-2) 0 41%, var(--chart-3) 0 54%, var(--chart-4) 0 65%, var(--chart-5) 0 75%, var(--chart-6) 0 84%, var(--chart-7) 0 93%, var(--chart-8) 0 100%); }
+  .sg-pie--3 { background: conic-gradient(var(--chart-plan) 0 58%, var(--chart-fact) 0 93%, #c9d6c8 0 100%); }
+  .sg-center { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: center; }
+  .sg-demo-fixed { position: relative; inset: auto; }
+  .sg-modal-demo { position: relative; inset: auto; min-height: 330px; z-index: 0; border-radius: var(--radius); animation: none; }
+  .sg-toast-demo { align-self: flex-start; position: relative; left: auto; bottom: auto; transform: none; animation: none; }
+  .sg-goal { display: grid; grid-template-columns: 44px minmax(0,1fr) 54px; gap: 10px; align-items: center; padding: 5px 12px; border-bottom: 1px solid var(--line-faint); font-size: 11.5px; }
+</style>
+</head>
+<body>
+<div class="tk-app">
+
+  <header class="tk-topbar">
+    <a class="tk-brand" href="#"><span class="tk-brand__mark" aria-hidden="true"></span>Trackere</a>
+    <nav class="tk-nav" aria-label="Trackere">
+      <a class="tk-nav__link is-active" href="#finante" aria-current="page">Finanțe</a>
+      <a class="tk-nav__link" href="#obiceiuri">Obiceiuri</a>
+      <a class="tk-nav__link" href="#sarcini">Sarcini</a>
+      <a class="tk-nav__link" href="#componente">Componente</a>
+    </nav>
+  </header>
+
+  <main class="tk-page">
+    <div class="tk-demo-banner" role="status">
+      <span>Datele afișate sunt <b>exemple</b>. Le poți șterge oricând și începe de la zero.</span>
+      <button class="tk-btn tk-btn--sm" type="button">Șterge datele demo</button>
+    </div>
+
+    <!-- ================================================================ -->
+    <section class="sg-section" id="finante" aria-labelledby="h-fin">
+      <div class="tk-grid tk-grid--sidebar">
+        <div class="tk-hero">
+          <div class="tk-rule" aria-hidden="true"></div>
+          <h1 class="tk-hero__title" id="h-fin">Septembrie</h1>
+          <p class="tk-hero__sub">Dashboard planificator financiar</p>
+          <div class="tk-kv" style="margin-top:10px">
+            <span class="tk-kv__k">Perioada</span>
+            <span class="tk-kv__v"><span class="tk-money">01 sept. 2026 – 30 sept. 2026</span></span>
+            <span class="tk-kv__k">Moneda</span>
+            <span class="tk-kv__v">
+              <select class="tk-cell-input" aria-label="Moneda"><option>lei (RON)</option><option>€ (EUR)</option></select>
+            </span>
+          </div>
+        </div>
+        <div class="tk-kpis" role="list" aria-label="Indicatori lunari">
+          <div class="tk-kpi" role="listitem"><span class="tk-kpi__label">Venituri</span><span class="tk-kpi__value">145 000,00<span class="cur">lei</span></span><span class="tk-kpi__hint">plan 159 000,00</span></div>
+          <div class="tk-kpi" role="listitem"><span class="tk-kpi__label">Cheltuieli și facturi</span><span class="tk-kpi__value">33 420,00<span class="cur">lei</span></span><span class="tk-kpi__hint">21,4% din venit</span></div>
+          <div class="tk-kpi" role="listitem"><span class="tk-kpi__label">Datorii</span><span class="tk-kpi__value">40 000,00<span class="cur">lei</span></span><span class="tk-kpi__hint">3 credite active</span></div>
+          <div class="tk-kpi" role="listitem"><span class="tk-kpi__label">Economii</span><span class="tk-kpi__value">47 000,00<span class="cur">lei</span></span><span class="tk-kpi__hint">+ 7 000,00 față de plan</span></div>
+        </div>
+      </div>
+
+      <!-- charts row -->
+      <div class="tk-grid tk-grid--3 tk-grid--stretch">
+        <div class="tk-card"><div class="tk-card__body">
+          <p class="tk-chart__title">Flux de numerar</p>
+          <ul class="tk-legend" style="justify-content:center;margin-bottom:8px">
+            <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-plan)"></span>Plan</li>
+            <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-fact)"></span>Fapt</li>
+          </ul>
+          <div class="tk-chart">
+            <svg viewBox="0 0 320 170" role="img" aria-label="Plan versus fapt pe categorii">
+              <g stroke="var(--chart-grid)" stroke-width="1">
+                <line x1="92" y1="6" x2="92" y2="150"/><line x1="164" y1="6" x2="164" y2="150"/><line x1="236" y1="6" x2="236" y2="150"/><line x1="308" y1="6" x2="308" y2="150"/>
+              </g>
+              <g text-anchor="end">
+                <text x="86" y="24">Venituri</text><text x="86" y="52">Cheltuieli</text><text x="86" y="80">Facturi</text><text x="86" y="108">Datorii</text><text x="86" y="136">Economii</text>
+              </g>
+              <g>
+                <rect x="92" y="13" width="200" height="7" fill="var(--chart-plan)"/><rect x="92" y="21" width="184" height="7" fill="var(--chart-fact)"/>
+                <rect x="92" y="41" width="58" height="7" fill="var(--chart-plan)"/><rect x="92" y="49" width="34" height="7" fill="var(--chart-fact)"/>
+                <rect x="92" y="69" width="10" height="7" fill="var(--chart-plan)"/><rect x="92" y="77" width="9" height="7" fill="var(--chart-fact)"/>
+                <rect x="92" y="97" width="51" height="7" fill="var(--chart-plan)"/><rect x="92" y="105" width="51" height="7" fill="var(--chart-fact)"/>
+                <rect x="92" y="125" width="70" height="7" fill="var(--chart-plan)"/><rect x="92" y="133" width="60" height="7" fill="var(--chart-fact)"/>
+              </g>
+              <g text-anchor="middle"><text x="92" y="165">0</text><text x="164" y="165">50 000</text><text x="236" y="165">100 000</text><text x="308" y="165">150 000</text></g>
+            </svg>
+          </div>
+        </div></div>
+
+        <div class="tk-card"><div class="tk-card__body">
+          <p class="tk-chart__title">Structura veniturilor</p>
+          <div class="sg-center">
+            <div class="sg-pie sg-pie--3" role="img" aria-label="Salariu 58%, afacere 35%, dobânzi 7%"></div>
+            <ul class="tk-legend" style="flex-direction:column">
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-plan)"></span>Salariu <span class="num">58%</span></li>
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-fact)"></span>Afacere <span class="num">35%</span></li>
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:#c9d6c8"></span>Dobânzi depozit <span class="num">7%</span></li>
+            </ul>
+          </div>
+        </div></div>
+
+        <div class="tk-card"><div class="tk-card__body">
+          <p class="tk-chart__title">Unde s-au dus banii</p>
+          <div class="sg-center">
+            <div class="sg-pie" role="img" aria-label="Categorii de cheltuieli, 8 felii"></div>
+            <ul class="tk-legend" style="flex-direction:column;gap:3px">
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-1)"></span>Ipotecă</li>
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-2)"></span>Nuntă</li>
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-3)"></span>Credit auto</li>
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-4)"></span>Renovare</li>
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-5)"></span>Călătorii</li>
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-6)"></span>Alimente</li>
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-7)"></span>Sănătate</li>
+              <li class="tk-legend__item"><span class="tk-swatch" style="--c:var(--chart-8)"></span>Haine</li>
+            </ul>
+          </div>
+          <div class="tk-tip sg-demo-fixed" style="display:inline-block;margin-top:12px"><span class="tk-swatch" style="--c:var(--chart-1)"></span><b>Ipotecă</b> · 25 000,00 lei · 22,3%</div>
+        </div></div>
+      </div>
+
+      <!-- tables -->
+      <div class="tk-grid tk-grid--sidebar">
+        <div class="tk-stack">
+          <article class="tk-card">
+            <header class="tk-card__head"><h2 class="tk-card__title">Flux <b>de numerar</b></h2></header>
+            <div class="tk-card__body tk-card__body--flush tk-scroll">
+              <table class="tk-table tk-table--dense">
+                <thead><tr><th>Categorie</th><th class="num" colspan="2">Plan</th><th class="num" colspan="2">Fapt</th></tr></thead>
+                <tbody>
+                  <tr><td>Sold reportat</td><td class="cur">lei</td><td class="num">—</td><td class="cur">lei</td><td class="num">11 600,00</td></tr>
+                  <tr><td><b>Total venituri</b></td><td class="cur">lei</td><td class="num">159 000,00</td><td class="cur">lei</td><td class="num">145 000,00</td></tr>
+                  <tr><td>Cheltuieli</td><td class="cur">lei</td><td class="num">45 200,00</td><td class="cur">lei</td><td class="num">26 410,00</td></tr>
+                  <tr><td>Facturi</td><td class="cur">lei</td><td class="num">7 200,00</td><td class="cur">lei</td><td class="num">7 010,00</td></tr>
+                  <tr><td>Datorii</td><td class="cur">lei</td><td class="num">40 000,00</td><td class="cur">lei</td><td class="num">40 000,00</td></tr>
+                  <tr><td>Economii</td><td class="cur">lei</td><td class="num">55 000,00</td><td class="cur">lei</td><td class="num">47 000,00</td></tr>
+                </tbody>
+                <tfoot><tr><th>Sold final</th><td class="cur">lei</td><td class="num">11 600,00</td><td class="cur">lei</td><td class="num">24 580,00</td></tr></tfoot>
+              </table>
+            </div>
+          </article>
+
+          <article class="tk-card">
+            <header class="tk-card__head tk-card__head--sage"><h2 class="tk-card__title">Sumar <b>venituri</b></h2></header>
+            <div class="tk-card__body tk-card__body--flush tk-scroll">
+              <table class="tk-table tk-table--dense">
+                <thead><tr><th>Categorie</th><th class="num" colspan="2">Plan</th><th class="num" colspan="2">Fapt</th></tr></thead>
+                <tbody>
+                  <tr><td>Salariu</td><td class="cur">lei</td><td class="num">100 000,00</td><td class="cur">lei</td><td class="num">80 000,00</td></tr>
+                  <tr><td>Afacere</td><td class="cur">lei</td><td class="num">50 000,00</td><td class="cur">lei</td><td class="num">61 000,00</td></tr>
+                  <tr><td>Proiecte extra</td><td class="cur">lei</td><td class="num">5 000,00</td><td class="cur">lei</td><td class="num">—</td></tr>
+                  <tr><td>Dobânzi depozit</td><td class="cur">lei</td><td class="num">4 000,00</td><td class="cur">lei</td><td class="num">4 000,00</td></tr>
+                  <tr class="is-empty"><td></td><td class="cur">lei</td><td></td><td class="cur">lei</td><td class="num">—</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+
+        <article class="tk-card">
+          <header class="tk-card__head">
+            <h2 class="tk-card__title">Tracker <b>facturi</b></h2>
+            <button class="tk-icon-btn" type="button" aria-label="Adaugă factură">+</button>
+          </header>
+          <div class="tk-card__body tk-card__body--flush tk-scroll">
+            <table class="tk-table">
+              <thead><tr><th class="chk"><span class="tk-sr">Plătit</span></th><th>Categorie</th><th>Termen</th><th class="num" colspan="2">Plan</th><th class="num" colspan="2">Fapt</th><th class="num">Progres</th></tr></thead>
+              <tbody>
+                <tr><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Internet plătit"></td><td>Internet</td><td class="tk-center">1</td><td class="cur">lei</td><td class="num">1 000,00</td><td class="cur">lei</td><td class="num">1 000,00</td><td class="num"><span class="tk-pct is-full">100,00%</span></td></tr>
+                <tr><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Electricitate plătit"></td><td>Electricitate</td><td class="tk-center">3</td><td class="cur">lei</td><td class="num">1 500,00</td><td class="cur">lei</td><td class="num">1 500,00</td><td class="num"><span class="tk-pct is-full">100,00%</span></td></tr>
+                <tr><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Apă plătit"></td><td>Apă</td><td class="tk-center">5</td><td class="cur">lei</td><td class="num">1 000,00</td><td class="cur">lei</td><td class="num">1 000,00</td><td class="num"><span class="tk-pct is-full">100,00%</span></td></tr>
+                <tr><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Telefonie mobilă plătit"></td><td>Telefonie mobilă</td><td class="tk-center">10</td><td class="cur">lei</td><td class="num">700,00</td><td class="cur">lei</td><td class="num">710,00</td><td class="num"><span class="tk-pct is-over">101,43%</span></td></tr>
+                <tr><td class="chk"><input class="tk-check" type="checkbox" aria-label="Gaz plătit"></td><td>Gaz</td><td class="tk-center">15</td><td class="cur">lei</td><td class="num">500,00</td><td class="cur">lei</td><td class="num">800,00</td><td class="num"><span class="tk-pct is-over">160,00%</span></td></tr>
+                <tr><td class="chk"><input class="tk-check" type="checkbox" aria-label="Încălzire plătit"></td><td><input class="tk-cell-input" value="Încălzire" aria-label="Categorie"></td><td class="tk-center">15</td><td class="cur">lei</td><td class="num"><input class="tk-cell-input" value="2 500,00" inputmode="decimal" aria-label="Plan"></td><td class="cur">lei</td><td class="num">2 000,00</td><td class="num"><span class="tk-pct">80,00%</span></td></tr>
+                <tr class="is-empty"><td class="chk"><input class="tk-check" type="checkbox" aria-label="Rând gol"></td><td></td><td></td><td class="cur">lei</td><td></td><td class="cur">lei</td><td class="num">—</td><td></td></tr>
+                <tr class="is-empty"><td class="chk"><input class="tk-check" type="checkbox" aria-label="Rând gol"></td><td></td><td></td><td class="cur">lei</td><td></td><td class="cur">lei</td><td class="num">—</td><td></td></tr>
+                <tr class="is-empty"><td class="chk"><input class="tk-check" type="checkbox" aria-label="Rând gol"></td><td></td><td></td><td class="cur">lei</td><td></td><td class="cur">lei</td><td class="num">—</td><td></td></tr>
+              </tbody>
+              <tfoot><tr><th colspan="3">Total</th><td class="cur">lei</td><td class="num">7 200,00</td><td class="cur">lei</td><td class="num">7 010,00</td><td class="num"><span class="tk-pct">97,36%</span></td></tr></tfoot>
+            </table>
+          </div>
+        </article>
+      </div>
+
+      <div class="tk-grid tk-grid--2">
+        <article class="tk-card">
+          <header class="tk-card__head tk-card__head--sage"><h2 class="tk-card__title">Tracker <b>economii și investiții</b></h2></header>
+          <div class="tk-card__body tk-card__body--flush tk-scroll">
+            <table class="tk-table">
+              <thead><tr><th>Categorie</th><th>Progres</th><th class="num">Fapt</th><th class="num">%</th></tr></thead>
+              <tbody>
+                <tr><td>Călătorie</td><td><span class="tk-progress tk-progress--sage" style="--p:66.67%" role="progressbar" aria-valuenow="67" aria-valuemin="0" aria-valuemax="100" aria-label="Călătorie"></span></td><td class="num tk-money">10 000,00 lei</td><td class="num"><span class="tk-pct">66,67%</span></td></tr>
+                <tr><td>Nuntă</td><td><span class="tk-progress tk-progress--sage" style="--p:100%" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Nuntă"></span></td><td class="num tk-money">20 000,00 lei</td><td class="num"><span class="tk-pct is-full">100,00%</span></td></tr>
+                <tr><td>Acțiuni</td><td><span class="tk-progress" style="--p:70%" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100" aria-label="Acțiuni"></span></td><td class="num tk-money">7 000,00 lei</td><td class="num"><span class="tk-pct">70,00%</span></td></tr>
+                <tr><td>Renovare apartament</td><td><span class="tk-progress tk-progress--rose" style="--p:0%" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Renovare"></span></td><td class="num tk-money">—</td><td class="num"><span class="tk-pct">0,00%</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+        <article class="tk-card">
+          <header class="tk-card__head tk-card__head--terra"><h2 class="tk-card__title">Top-10 <b>categorii de cheltuieli</b></h2></header>
+          <div class="tk-card__body tk-card__body--flush tk-scroll">
+            <table class="tk-table tk-table--dense tk-rank">
+              <thead><tr><th>#</th><th>Categorie</th><th class="num">Fapt</th><th class="num">Procent</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>Ipotecă</td><td class="num">25 000,00 lei</td><td class="num">22,32%</td></tr>
+                <tr><td>2</td><td>Nuntă</td><td class="num">20 000,00 lei</td><td class="num">17,85%</td></tr>
+                <tr><td>3</td><td>Credit auto</td><td class="num">15 000,00 lei</td><td class="num">13,39%</td></tr>
+                <tr><td>4</td><td>Renovare</td><td class="num">15 000,00 lei</td><td class="num">13,39%</td></tr>
+                <tr><td>5</td><td>Călătorii</td><td class="num">10 000,00 lei</td><td class="num">8,93%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+
+      <p class="tk-note">Controlează toate direcțiile financiare într-un singur sistem: venituri, cheltuieli, facturi, datorii și economii.</p>
+    </section>
+
+    <!-- ================================================================ -->
+    <section class="sg-section" id="obiceiuri" aria-labelledby="h-hab">
+      <div class="tk-hero">
+        <p class="tk-eyebrow">Tracker obiceiuri</p>
+        <h1 class="tk-hero__title" id="h-hab">August</h1>
+        <p class="tk-hero__sub">Analiza obiceiurilor</p>
+      </div>
+
+      <div class="tk-grid tk-grid--sidebar tk-grid--stretch">
+        <div class="tk-card"><div class="tk-card__body tk-row" style="justify-content:space-around">
+          <div class="tk-kpi"><span class="tk-kpi__label">Progres</span><span class="tk-kpi__value tk-pct">83,6%</span></div>
+          <div class="tk-donut-wrap">
+            <div class="tk-donut" style="--p:83.6%;--size:112px;--thick:12px" role="img" aria-label="311 din 372 bifate"></div>
+            <div class="tk-donut__label">Obiceiuri<b>311 / 372</b></div>
+          </div>
+        </div></div>
+
+        <article class="tk-card tk-card--sage">
+          <header class="tk-card__head tk-card__head--sage"><h2 class="tk-card__title">Obiceiuri <b>zilnice</b></h2></header>
+          <div class="tk-card__body tk-card__body--flush tk-scroll">
+            <table class="tk-habit-grid">
+              <thead>
+                <tr><th class="tk-habit-grid__week tk-habit-grid__name" rowspan="1">Obicei</th><th class="tk-habit-grid__week" colspan="7">Săptămâna 1</th><th class="tk-habit-grid__week is-week-start" colspan="7">Săptămâna 2</th><th class="tk-habit-grid__week is-week-start">%</th></tr>
+                <tr><th class="tk-habit-grid__name"></th><th>Sâ</th><th>Du</th><th>Lu</th><th>Ma</th><th>Mi</th><th>Jo</th><th>Vi</th><th class="is-week-start">Sâ</th><th>Du</th><th>Lu</th><th class="is-today">Ma</th><th>Mi</th><th>Jo</th><th>Vi</th><th class="is-week-start"></th></tr>
+                <tr><th class="tk-habit-grid__name"></th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th class="is-week-start">8</th><th>9</th><th>10</th><th class="is-today">11</th><th>12</th><th>13</th><th>14</th><th class="is-week-start"></th></tr>
+              </thead>
+              <tbody id="sg-habits"></tbody>
+              <tfoot><tr><td class="tk-habit-grid__name">Zilnic</td><td><span class="tk-pct">75%</span></td><td><span class="tk-pct">83%</span></td><td><span class="tk-pct">67%</span></td><td><span class="tk-pct">42%</span></td><td><span class="tk-pct">75%</span></td><td><span class="tk-pct">67%</span></td><td><span class="tk-pct">75%</span></td><td class="is-week-start"><span class="tk-pct">83%</span></td><td><span class="tk-pct">67%</span></td><td><span class="tk-pct">67%</span></td><td class="is-today"><span class="tk-pct is-full">100%</span></td><td><span class="tk-pct">42%</span></td><td><span class="tk-pct">75%</span></td><td><span class="tk-pct">92%</span></td><td class="is-week-start"></td></tr></tfoot>
+            </table>
+          </div>
+          <footer class="tk-card__foot"><span>Total obiceiuri</span><b>3 / 3</b></footer>
+        </article>
+      </div>
+
+      <div class="tk-grid tk-grid--3">
+        <article class="tk-card tk-card--sage">
+          <header class="tk-card__head tk-card__head--sage"><h2 class="tk-card__title"><b>Top-10 cele mai stabile</b> obiceiuri</h2></header>
+          <div class="tk-card__body tk-card__body--flush">
+            <ol class="tk-rank">
+              <li><span class="tk-rank__name">Fără dulciuri</span><span class="tk-rank__value">97%</span></li>
+              <li><span class="tk-rank__name">Jurnal / reflecție</span><span class="tk-rank__value">94%</span></li>
+              <li><span class="tk-rank__name">Antrenament</span><span class="tk-rank__value">90%</span></li>
+              <li><span class="tk-rank__name">Planificarea zilei</span><span class="tk-rank__value">87%</span></li>
+              <li><span class="tk-rank__name">Studiu engleză</span><span class="tk-rank__value">84%</span></li>
+              <li><span class="tk-rank__name">Fără rețele sociale până la prânz</span><span class="tk-rank__value">84%</span></li>
+            </ol>
+          </div>
+        </article>
+
+        <article class="tk-card tk-card--sage">
+          <header class="tk-card__head tk-card__head--sage"><h2 class="tk-card__title">Progres <b>304 / 372</b></h2></header>
+          <div class="tk-card__body tk-card__body--flush">
+            <div class="sg-goal"><span class="tk-pct">90%</span><span class="tk-progress tk-progress--rose tk-progress--bar" style="--p:90%"></span><span class="tk-num tk-right num">28 / 31</span></div>
+            <div class="sg-goal"><span class="tk-pct">52%</span><span class="tk-progress tk-progress--rose tk-progress--bar" style="--p:52%"></span><span class="num">16 / 31</span></div>
+            <div class="sg-goal"><span class="tk-pct">84%</span><span class="tk-progress tk-progress--rose tk-progress--bar" style="--p:84%"></span><span class="num">26 / 31</span></div>
+            <div class="sg-goal"><span class="tk-pct">81%</span><span class="tk-progress tk-progress--rose tk-progress--bar" style="--p:81%"></span><span class="num">25 / 31</span></div>
+            <div class="sg-goal"><span class="tk-pct is-full">100%</span><span class="tk-progress tk-progress--sage tk-progress--bar" style="--p:100%"></span><span class="num">31 / 31</span></div>
+          </div>
+        </article>
+
+        <article class="tk-card">
+          <header class="tk-card__head"><h2 class="tk-card__title">Obiceiuri <b>săptămânale</b></h2></header>
+          <div class="tk-card__body tk-stack">
+            <div class="sg-center">
+              <div class="tk-donut-wrap">
+                <div class="tk-donut" style="--p:50%;--size:130px;--thick:16px" role="img" aria-label="50% finalizate"></div>
+                <div class="tk-donut__label">Săptămânal<b>50,0%</b></div>
+              </div>
+            </div>
+            <label class="tk-check-label"><input class="tk-check" type="checkbox" checked><span class="tk-check-label__text">Planificarea săptămânii</span></label>
+            <label class="tk-check-label"><input class="tk-check" type="checkbox" checked><span class="tk-check-label__text">Plan de mese</span></label>
+            <label class="tk-check-label"><input class="tk-check" type="checkbox"><span class="tk-check-label__text">Revizuire finanțe</span></label>
+          </div>
+          <footer class="tk-card__foot"><span>Total obiceiuri</span><b>2 / 3</b></footer>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <section class="sg-section" id="sarcini" aria-labelledby="h-task">
+      <div class="tk-grid tk-grid--sidebar">
+        <div class="tk-hero">
+          <h1 class="tk-hero__title" id="h-task" style="letter-spacing:.12em;margin-right:-.12em">Tracker sarcini</h1>
+          <p class="tk-hero__sub">Toate sarcinile într-un singur sistem</p>
+        </div>
+        <div class="tk-kpis">
+          <div class="tk-kpi"><span class="tk-kpi__value">19</span><span class="tk-kpi__label">Total</span></div>
+          <div class="tk-kpi"><span class="tk-kpi__value">9</span><span class="tk-kpi__label">În lucru</span></div>
+          <div class="tk-kpi"><span class="tk-kpi__value">10</span><span class="tk-kpi__label">Finalizate</span></div>
+          <div class="tk-kpi"><span class="tk-kpi__value" style="color:var(--bad)">1</span><span class="tk-kpi__label">Întârziate</span></div>
+          <div class="tk-kpi tk-hide-sm"><span class="tk-kpi__value">7</span><span class="tk-kpi__label">≤ 7 zile</span></div>
+        </div>
+      </div>
+
+      <div class="tk-row" style="justify-content:space-between">
+        <div class="tk-tabs" role="tablist" aria-label="Vizualizare sarcini">
+          <button class="tk-tab is-active" role="tab" aria-selected="true" type="button">Listă</button>
+          <button class="tk-tab" role="tab" aria-selected="false" type="button">Kanban</button>
+          <button class="tk-tab" role="tab" aria-selected="false" type="button">Calendar</button>
+          <button class="tk-tab" role="tab" aria-selected="false" type="button">Matrice</button>
+          <button class="tk-tab" role="tab" aria-selected="false" type="button">Planificator</button>
+        </div>
+        <button class="tk-btn tk-btn--primary" type="button">+ Sarcină nouă</button>
+      </div>
+
+      <div class="tk-toolbar">
+        <div class="tk-field"><label class="tk-label" for="f-who">Responsabil</label><select class="tk-select" id="f-who"><option>Toți</option><option>Andrei</option><option>Ioana</option></select></div>
+        <div class="tk-field"><label class="tk-label" for="f-st">Status</label><select class="tk-select" id="f-st"><option>Toate</option><option>În lucru</option></select></div>
+        <div class="tk-field"><label class="tk-label" for="f-q">Caută</label><input class="tk-input" id="f-q" placeholder="ex. factură"></div>
+        <span class="tk-spacer"></span>
+        <label class="tk-check-label"><input class="tk-toggle" type="checkbox" checked> Ascunde finalizate</label>
+      </div>
+
+      <article class="tk-card">
+        <header class="tk-card__head tk-card__head--plain"><h2 class="tk-card__title">Listă generală</h2><span class="tk-muted" style="font-size:12px">19 sarcini</span></header>
+        <div class="tk-card__body tk-card__body--flush tk-scroll">
+          <table class="tk-table">
+            <thead><tr><th>Sarcină</th><th>Termen</th><th>Responsabil</th><th>Status</th><th>Categorie</th><th>Prioritate</th><th class="chk">Important?</th><th class="chk">Urgent?</th><th class="num">Zile rămase</th></tr></thead>
+            <tbody>
+              <tr class="is-done"><td>Filmare Reels</td><td class="tk-nowrap">05 sept. 2026</td><td>🧑 Andrei</td><td><span class="tk-pill" data-tone="good">✓ Finalizat</span></td><td><span class="tk-pill" data-tone="grey">💼 Muncă/Studiu</span></td><td><span class="tk-pill" data-tone="bad"><span class="tk-dot"></span>Ridicată</span></td><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Important"></td><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Urgent"></td><td class="num">✓</td></tr>
+              <tr><td>Montaj video</td><td class="tk-nowrap">07 sept. 2026</td><td>🧑 Andrei</td><td><span class="tk-pill" data-tone="grey">○ Neînceput</span></td><td><span class="tk-pill" data-tone="grey">💼 Muncă/Studiu</span></td><td><span class="tk-pill" data-tone="bad"><span class="tk-dot"></span>Ridicată</span></td><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Important"></td><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Urgent"></td><td class="num is-hl">3</td></tr>
+              <tr><td>Completare tracker finanțe</td><td class="tk-nowrap">09 sept. 2026</td><td>🧑 Andrei</td><td><span class="tk-pill" data-tone="terra">🔍 În lucru</span></td><td><span class="tk-pill" data-tone="sage">🌱 Dezvoltare</span></td><td><span class="tk-pill" data-tone="gold"><span class="tk-dot"></span>Medie</span></td><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Important"></td><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Urgent"></td><td class="num is-hl">5</td></tr>
+              <tr><td>Răspuns clienților</td><td class="tk-nowrap">09 sept. 2026</td><td>👩 Ioana</td><td><span class="tk-pill" data-tone="blue">⏳ În așteptare</span></td><td><span class="tk-pill" data-tone="gold">📁 Afacere</span></td><td><span class="tk-pill" data-tone="bad"><span class="tk-dot"></span>Ridicată</span></td><td class="chk"><input class="tk-check" type="checkbox" aria-label="Important"></td><td class="chk"><input class="tk-check" type="checkbox" aria-label="Urgent"></td><td class="num is-hl">5</td></tr>
+              <tr><td>Actualizare site</td><td class="tk-nowrap">10 sept. 2026</td><td>🧑 Andrei</td><td><span class="tk-pill" data-tone="gold">⏸ Suspendat</span></td><td><span class="tk-pill" data-tone="gold">📁 Afacere</span></td><td><span class="tk-pill" data-tone="good"><span class="tk-dot"></span>Scăzută</span></td><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Important"></td><td class="chk"><input class="tk-check" type="checkbox" aria-label="Urgent"></td><td class="num is-hl">6</td></tr>
+              <tr class="is-done"><td>Scriere scenariu</td><td class="tk-nowrap">11 sept. 2026</td><td>🧑 Andrei</td><td><span class="tk-pill" data-tone="good">✓ Finalizat</span></td><td><span class="tk-pill" data-tone="grey">💼 Muncă/Studiu</span></td><td><span class="tk-pill" data-tone="rose"><span class="tk-dot" style="--t-dot:var(--accent)"></span>Critică</span></td><td class="chk"><input class="tk-check" type="checkbox" checked aria-label="Important"></td><td class="chk"><input class="tk-check" type="checkbox" aria-label="Urgent"></td><td class="num">✓</td></tr>
+              <tr><td><input class="tk-cell-input" value="Lecție de engleză" aria-label="Sarcină"></td><td class="tk-nowrap">13 sept. 2026</td><td>👩 Ioana</td><td><select class="tk-cell-input" aria-label="Status"><option>○ Neînceput</option><option>🔍 În lucru</option></select></td><td><span class="tk-pill" data-tone="sage">🌱 Dezvoltare</span></td><td></td><td class="chk"><input class="tk-check" type="checkbox" aria-label="Important"></td><td class="chk"><input class="tk-check" type="checkbox" aria-label="Urgent"></td><td class="num is-hl">9</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <div class="tk-kanban" aria-label="Kanban">
+        <div class="tk-kanban__col">
+          <div class="tk-kanban__head"><span class="tk-pill" data-tone="grey">○ Neînceput</span><span>2</span></div>
+          <div class="tk-kanban__card" draggable="true" style="--card-accent:var(--bad)">Montaj video<div class="tk-kanban__meta"><span>📅 07 sept.</span><span>🧑 Andrei</span><span class="tk-pill" data-tone="bad"><span class="tk-dot"></span>Ridicată</span></div></div>
+          <div class="tk-kanban__card" draggable="true">Lecție de engleză<div class="tk-kanban__meta"><span>📅 13 sept.</span><span>👩 Ioana</span></div></div>
+        </div>
+        <div class="tk-kanban__col is-over">
+          <div class="tk-kanban__head"><span class="tk-pill" data-tone="terra">🔍 În lucru</span><span>1</span></div>
+          <div class="tk-kanban__card is-dragging" draggable="true" style="--card-accent:var(--gold)">Completare tracker finanțe<div class="tk-kanban__meta"><span>📅 09 sept.</span><span class="tk-pill" data-tone="gold"><span class="tk-dot"></span>Medie</span></div></div>
+        </div>
+        <div class="tk-kanban__col">
+          <div class="tk-kanban__head"><span class="tk-pill" data-tone="good">✓ Finalizat</span><span>1</span></div>
+          <div class="tk-kanban__card is-done" draggable="true" style="--card-accent:var(--sage)">Filmare Reels<div class="tk-kanban__meta"><span>📅 05 sept.</span></div></div>
+        </div>
+      </div>
+
+      <div class="tk-grid tk-grid--sidebar">
+        <div class="tk-stack">
+          <article class="tk-card tk-card--plain">
+            <header class="tk-card__head tk-card__head--plain"><h2 class="tk-card__title">Setări calendar</h2></header>
+            <div class="tk-card__body">
+              <div class="tk-kv">
+                <span class="tk-kv__k">Luna</span><span class="tk-kv__v"><select class="tk-cell-input" aria-label="Luna"><option>Sept.</option></select></span>
+                <span class="tk-kv__k">Anul</span><span class="tk-kv__v"><input class="tk-cell-input" value="2026" aria-label="Anul"></span>
+                <span class="tk-kv__k">Responsabil</span><span class="tk-kv__v"><select class="tk-cell-input" aria-label="Responsabil"><option>Toți</option></select></span>
+              </div>
+            </div>
+          </article>
+          <div class="tk-empty"><strong>Nicio sarcină aici</strong>Adaugă o sarcină sau schimbă filtrele.<button class="tk-btn tk-btn--sm" type="button">+ Adaugă sarcină</button></div>
+        </div>
+
+        <article class="tk-card">
+          <header class="tk-card__head"><h2 class="tk-card__title"><b>Sept. 2026</b></h2>
+            <button class="tk-icon-btn" type="button" aria-label="Luna anterioară">‹</button><button class="tk-icon-btn" type="button" aria-label="Luna următoare">›</button></header>
+          <div class="tk-card__body tk-card__body--flush">
+            <div class="tk-cal">
+              <div class="tk-cal__head"><span>Luni</span><span>Marți</span><span>Miercuri</span><span>Joi</span><span>Vineri</span><span>Sâmbătă</span><span>Duminică</span></div>
+              <div class="tk-cal__day is-out"><span class="tk-cal__num">31</span></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">1</span><div class="tk-cal__item"><input class="tk-check" type="checkbox" aria-label="Cumpărături"><span>Cumpărături</span></div><div class="tk-cal__item is-done"><input class="tk-check" type="checkbox" checked aria-label="Sună-l pe Radu"><span>Sună-l pe Radu</span></div></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">2</span></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">3</span><div class="tk-cal__item"><span>Plimbare în parc</span></div><div class="tk-cal__item"><span>Medic la 16:00</span></div><div class="tk-cal__item"><span>Sală</span></div></div>
+              <div class="tk-cal__day is-today"><span class="tk-cal__num">4</span><div class="tk-cal__item"><span>Scrie diploma</span></div></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">5</span><div class="tk-cal__item"><span>Filmare Reels</span></div></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">6</span></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">7</span><div class="tk-cal__item"><span>Comandă alimente</span></div></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">8</span></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">9</span><div class="tk-cal__item"><span>Analiza săptămânii</span></div></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">10</span><div class="tk-cal__item"><span>Actualizare site</span></div></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">11</span></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">12</span></div>
+              <div class="tk-cal__day"><span class="tk-cal__num">13</span></div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="tk-matrix">
+        <section class="tk-matrix__q tk-matrix__q--do">
+          <h3 class="tk-matrix__title">Fă acum</h3><p class="tk-matrix__sub">Important și urgent</p>
+          <div class="tk-matrix__body"><div><input class="tk-check" type="checkbox" aria-label="Montaj video"> Montaj video <span class="tk-spacer"></span><span class="tk-muted">3 zile</span></div><div><input class="tk-check" type="checkbox" aria-label="Tracker"> Completare tracker finanțe</div></div>
+        </section>
+        <section class="tk-matrix__q tk-matrix__q--plan">
+          <h3 class="tk-matrix__title">Planifică</h3><p class="tk-matrix__sub">Important, nu urgent</p>
+          <div class="tk-matrix__body"><div><input class="tk-check" type="checkbox" aria-label="Site"> Actualizare site</div></div>
+        </section>
+        <section class="tk-matrix__q tk-matrix__q--delegate">
+          <h3 class="tk-matrix__title">Deleagă</h3><p class="tk-matrix__sub">Urgent, nu important</p>
+          <div class="tk-matrix__body"><div><input class="tk-check" type="checkbox" aria-label="Clienți"> Răspuns clienților</div></div>
+        </section>
+        <section class="tk-matrix__q tk-matrix__q--drop">
+          <h3 class="tk-matrix__title">Elimină</h3><p class="tk-matrix__sub">Nici important, nici urgent</p>
+          <div class="tk-matrix__body"><div class="tk-muted">Nimic de eliminat 🎉</div></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <section class="sg-section" id="componente" aria-labelledby="h-comp">
+      <header><p class="tk-eyebrow">Sistem de design</p><h2 class="tk-h2" id="h-comp">Componente și tokeni</h2></header>
+
+      <div class="tk-card"><div class="tk-card__body tk-stack">
+        <p class="tk-chart__title" style="text-align:left;margin:0">Paletă</p>
+        <div class="sg-swatches" id="sg-swatches"></div>
+        <p class="tk-chart__title" style="text-align:left;margin:12px 0 0">Categorii grafice (ordine fixă)</p>
+        <div class="sg-swatches" id="sg-chart"></div>
+      </div></div>
+
+      <div class="tk-grid tk-grid--2">
+        <div class="tk-card"><div class="tk-card__body sg-type">
+          <div class="tk-hero__title" style="font-size:34px">Octombrie</div>
+          <div class="tk-h2">Titlu de secțiune — ăâîșț</div>
+          <div class="tk-modal__title" style="margin:0">Titlu dialog</div>
+          <p>Text de interfață Inter 14px: Adaugă tranzacția, alege categoria și suma — restul se calculează automat. ĂÂÎȘȚ ăâîșț.</p>
+          <p class="tk-muted">Text secundar (--ink-3) pentru indicii și note.</p>
+          <p><span class="tk-money">1 234 567,89 lei</span> · <span class="tk-pct">66,67%</span> · <span class="tk-pct is-over">160,00%</span> · <span class="tk-pct is-full">100,00%</span></p>
+          <div class="tk-row"><span class="tk-pill" data-tone="sage"><span class="tk-dot"></span>sage</span><span class="tk-pill" data-tone="rose"><span class="tk-dot"></span>rose</span><span class="tk-pill" data-tone="terra"><span class="tk-dot"></span>terra</span><span class="tk-pill" data-tone="gold"><span class="tk-dot"></span>gold</span><span class="tk-pill" data-tone="blue"><span class="tk-dot"></span>blue</span><span class="tk-pill" data-tone="grey"><span class="tk-dot"></span>grey</span><span class="tk-pill" data-tone="bad"><span class="tk-dot"></span>bad</span><span class="tk-pill" data-tone="good"><span class="tk-dot"></span>good</span></div>
+        </div></div>
+
+        <div class="tk-card">
+          <header class="tk-card__head tk-card__head--plain"><h2 class="tk-card__title">Formular</h2></header>
+          <div class="tk-card__body tk-stack">
+            <div class="tk-grid tk-grid--2">
+              <div class="tk-field"><label class="tk-label" for="c-date">Data</label><input class="tk-input" id="c-date" type="date" value="2026-09-01"></div>
+              <div class="tk-field"><label class="tk-label" for="c-type">Tip operațiune</label><select class="tk-select" id="c-type"><option>Cheltuială</option><option>Venit</option><option>Factură</option></select></div>
+              <div class="tk-field"><label class="tk-label" for="c-cat">Categorie</label><input class="tk-input" id="c-cat" placeholder="ex. Alimente"></div>
+              <div class="tk-field"><label class="tk-label" for="c-sum">Sumă (lei)</label><input class="tk-input num" id="c-sum" inputmode="decimal" value="300,00"></div>
+            </div>
+            <div class="tk-field"><label class="tk-label" for="c-note">Notițe</label><textarea class="tk-textarea" id="c-note" placeholder="Opțional"></textarea></div>
+            <div class="tk-row">
+              <label class="tk-check-label"><input class="tk-check" type="checkbox" checked> Plătit</label>
+              <label class="tk-check-label"><input class="tk-check" type="checkbox"> Recurent</label>
+              <label class="tk-check-label"><input class="tk-toggle" type="checkbox"> Notificări</label>
+            </div>
+            <div class="tk-row">
+              <button class="tk-btn tk-btn--primary" type="button">Salvează</button>
+              <button class="tk-btn" type="button">Anulează</button>
+              <button class="tk-btn tk-btn--ghost" type="button">Resetează</button>
+              <button class="tk-btn tk-btn--danger" type="button">Șterge</button>
+              <button class="tk-btn tk-btn--sm" type="button">Mic</button>
+              <button class="tk-btn tk-btn--primary tk-btn--sm" type="button" disabled>Dezactivat</button>
+              <button class="tk-icon-btn" type="button" aria-label="Editează">✎</button>
+              <button class="tk-icon-btn" type="button" aria-label="Șterge">🗑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tk-grid tk-grid--2">
+        <div class="tk-modal sg-modal-demo" role="presentation">
+          <div class="tk-modal__box" role="dialog" aria-modal="false" aria-labelledby="m-demo">
+            <h2 class="tk-modal__title" id="m-demo">Ștergi datele demo?</h2>
+            <p>Toate tranzacțiile, obiceiurile și sarcinile de exemplu vor fi eliminate. Acțiunea nu poate fi anulată.</p>
+            <div class="tk-modal__actions"><button class="tk-btn tk-btn--ghost" type="button">Anulează</button><button class="tk-btn tk-btn--danger" type="button">Șterge tot</button></div>
+          </div>
+        </div>
+        <div class="tk-stack">
+          <div class="tk-toast sg-toast-demo" role="status">Tranzacție salvată <button class="tk-btn tk-btn--ghost tk-btn--sm" type="button">Anulează</button></div>
+          <div class="tk-row">
+            <button class="tk-btn" type="button" id="open-modal">Deschide dialog real</button>
+            <button class="tk-btn" type="button" id="show-toast">Arată toast</button>
+          </div>
+          <p class="tk-note">Toate tranzacțiile se distribuie pe luni și ajung în rapoartele potrivite.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="tk-modal" id="real-modal" hidden>
+  <div class="tk-modal__box" role="dialog" aria-modal="true" aria-labelledby="m-real">
+    <h2 class="tk-modal__title" id="m-real">Tranzacție nouă</h2>
+    <div class="tk-stack">
+      <div class="tk-field"><label class="tk-label" for="r-sum">Sumă (lei)</label><input class="tk-input num" id="r-sum" inputmode="decimal" placeholder="0,00"></div>
+      <div class="tk-field"><label class="tk-label" for="r-cat">Categorie</label><select class="tk-select" id="r-cat"><option>Alimente</option><option>Transport</option></select></div>
+    </div>
+    <div class="tk-modal__actions"><button class="tk-btn tk-btn--ghost" type="button" data-close>Anulează</button><button class="tk-btn tk-btn--primary" type="button" data-close>Salvează</button></div>
+  </div>
+</div>
+<div class="tk-toast" id="real-toast" role="status" hidden>Modificările au fost salvate</div>
+
+<script>
+  // styleguide-only demo wiring
+  (function () {
+    var habits = ['Antrenament', 'Citit 30 de minute', 'Studiu engleză', 'Meditație', 'Fără rețele sociale până la prânz', 'Planificarea zilei'];
+    var tb = document.getElementById('sg-habits');
+    habits.forEach(function (h, r) {
+      var tr = document.createElement('tr');
+      var html = '<th class="tk-habit-grid__name" scope="row">' + h + '</th>';
+      var n = 0;
+      for (var d = 1; d <= 14; d++) {
+        var on = ((d * 7 + r * 5) % 9) > 2 && d <= 11;
+        if (on) n++;
+        var cls = (d === 8 ? 'is-week-start' : '') + (d === 11 ? ' is-today' : '');
+        html += '<td class="' + cls + '"><input class="tk-check" type="checkbox"' + (on ? ' checked' : '') + ' aria-label="' + h + ', ziua ' + d + '"></td>';
+      }
+      var p = Math.round(n / 11 * 100);
+      html += '<td class="is-week-start"><span class="tk-pct' + (p === 100 ? ' is-full' : '') + '">' + p + '%</span></td>';
+      tr.innerHTML = html;
+      tb.appendChild(tr);
+    });
+
+    var cs = getComputedStyle(document.documentElement);
+    function sw(target, names) {
+      var el = document.getElementById(target);
+      names.forEach(function (n) {
+        var v = cs.getPropertyValue('--' + n).trim();
+        el.insertAdjacentHTML('beforeend', '<div class="sg-sw"><i style="--c:var(--' + n + ')"></i><span><b>--' + n + '</b><br><span class="sg-code">' + v + '</span></span></div>');
+      });
+    }
+    sw('sg-swatches', ['bg','surface','surface-2','line','line-strong','ink','ink-2','ink-3','accent','rose','rose-soft','sage','sage-soft','sage-deep','terra','terra-soft','terra-ink','gold','blue-soft','good','warn','bad','pct','check']);
+    sw('sg-chart', ['chart-1','chart-2','chart-3','chart-4','chart-5','chart-6','chart-7','chart-8','chart-plan','chart-fact','chart-track','chart-grid']);
+
+    var modal = document.getElementById('real-modal');
+    var opener = document.getElementById('open-modal');
+    opener.addEventListener('click', function () { modal.hidden = false; modal.querySelector('input').focus(); });
+    modal.addEventListener('click', function (e) { if (e.target === modal || e.target.hasAttribute('data-close')) { modal.hidden = true; opener.focus(); } });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !modal.hidden) { modal.hidden = true; opener.focus(); } });
+    var toast = document.getElementById('real-toast'), t;
+    document.getElementById('show-toast').addEventListener('click', function () { toast.hidden = false; clearTimeout(t); t = setTimeout(function () { toast.hidden = true; }, 2600); });
+  })();
+</script>
+</body>
+</html>
