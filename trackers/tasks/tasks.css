@@ -142,6 +142,10 @@
 .tk-tracker--tasks .tk-kv input.tk-cell-input,
 .tk-tracker--tasks .tk-kv select.tk-cell-input { margin: 0; width: 100%; }
 .tk-tracker--tasks .tk-kv .tk-kv__k { text-align: center; }
+/* inelul de focus rămâne vizibil în celulele .tk-kv (inclusiv câmpurile de dată) */
+.tk-tracker--tasks .tk-kv__v:focus-within { box-shadow: inset 0 0 0 2px var(--focus); }
+.tk-tracker--tasks .tk-kv input.tk-cell-input:focus,
+.tk-tracker--tasks .tk-kv select.tk-cell-input:focus { border-color: var(--accent); box-shadow: none; }
 
 /* ------------------------------------------------------------ kanban */
 .tk-tracker--tasks .tks-board { grid-auto-columns: minmax(200px, 1fr); }
@@ -205,7 +209,9 @@
 .tk-tracker--tasks .tks-mx-table .tk-nowrap,
 .tk-tracker--tasks .tks-mx-table .tks-days { white-space: nowrap; }
 .tk-tracker--tasks .tks-mx-table thead th { white-space: normal; }
-.tk-tracker--tasks .tks-qcell { width: 96px; }
+.tk-tracker--tasks .tks-qcell { width: 92px; }
+.tk-tracker--tasks .tks-mx-table .tks-days { width: 1%; }
+.tk-tracker--tasks .tks-mx-table .tks-qcell select { padding-left: 4px; padding-right: 16px; background-position: calc(100% - 8px) 55%, calc(100% - 4px) 55%; }
 .tk-tracker--tasks .tks-qcell select { margin: 0; font-size: 11px; color: var(--ink-3); }
 
 /* ------------------------------------------------------------ calendar */
@@ -318,7 +324,10 @@
   .tk-tracker--tasks .tks-cal .tk-cal__day { min-height: 58px; }
   .tk-tracker--tasks .tks-today-tag { display: none; }
   .tk-tracker--tasks .tks-agenda { display: flex; }
-  .tk-tracker--tasks .tks-board { grid-auto-columns: minmax(240px, 80vw); }
+  .tk-tracker--tasks .tks-board { grid-auto-columns: minmax(240px, 80vw); align-items: start; }
+  /* coloanele lungi derulează în interior, ca tabla să nu se întindă după cea mai înaltă coloană */
+  .tk-tracker--tasks .tks-board .tk-kanban__col { min-height: 160px; max-height: 72vh; }
+  .tk-tracker--tasks .tks-board .tks-col__list { flex: 1 1 auto; min-height: 60px; overflow-y: auto; overscroll-behavior: contain; }
   .tk-tracker--tasks .tks-mx-top { justify-content: flex-start; }
   .tk-tracker--tasks .tks-ellipsis { max-width: 160px; }
 }

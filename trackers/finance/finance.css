@@ -71,7 +71,10 @@
 .tk-tracker--finance .fin-due { width: 1%; }
 .tk-tracker--finance .fin-neg { color: var(--bad); font-weight: 700; }
 .tk-tracker--finance tr.fin-cur td { background: color-mix(in srgb, var(--tone-soft, var(--rose-soft)) 60%, transparent); font-weight: 600; }
-.tk-tracker--finance .fin-ellipsis { max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
+.tk-tracker--finance .fin-cat { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-tracker--finance .fin-cat-cell { max-width: 260px; }
+.tk-tracker--finance .fin-cat .fin-note-sub { overflow: hidden; text-overflow: ellipsis; }
+.tk-tracker--finance .tk-legend__item { max-width: 100%; overflow-wrap: anywhere; }
 .tk-tracker--finance .fin-type-dot--lead { margin: 0 7px 0 0; }
 .tk-tracker--finance .fin-in { color: var(--good); font-weight: 600; }
 .tk-tracker--finance .fin-date { color: var(--ink-2); }

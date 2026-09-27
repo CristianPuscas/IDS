@@ -4,7 +4,9 @@
  * Forma stării (JSON, compactă):
  * {
  *   habits:  [{ id: 'h1', name: 'Antrenament', goal: 26 | null,   // zile-țintă pe lună (opțional)
- *               createdYm: '2026-01', archivedYm?: '2026-10' }],   // vizibil în lunile createdYm ≤ ym < archivedYm
+ *               createdAt: '2026-01-01',                          // prima zi în care obiceiul contează
+ *               createdYm: '2026-01',                             // = luna lui createdAt (vizibilitate pe luni)
+ *               archivedYm?: '2026-10' }],   // oprit din prima zi a acestei luni; vizibil în lunile createdYm ≤ ym < archivedYm
  *   checks:  { '2026-09': { h1: '0110…' } },   // câte un caracter pe zi a lunii ('1' = bifat), lungime = zilele lunii
  *   weekly:  { '2026-09': [ [ {id, text, done} ], … ] },  // o listă pe fiecare săptămână (TK.date.chunkWeeks: 1–7, 8–14, …)
  *   monthly: { '2026-09': [ {id, text, done} ] },          // maximum 28 de acțiuni pe lună
@@ -12,10 +14,11 @@
  * }
  * Luna afișată și săptămâna aleasă stau în api.prefs ('ym', 'week'), nu în date.
  *
- * Calcule:
- *   % pe zi       = obiceiuri bifate în ziua respectivă / obiceiuri active în lună
- *   % lunar       = total bifate / (obiceiuri active × zilele lunii)       („304 / 372”)
- *   % pe obicei   = zile bifate / zilele lunii
+ * Calcule — o zi „eligibilă” pentru un obicei: ziua ≥ createdAt și ziua ≤ azi (zilele viitoare nu se pot bifa
+ * și nu intră la numitor; lunile trecute se socotesc întregi):
+ *   % pe zi       = obiceiuri bifate în zi / obiceiuri eligibile în acea zi
+ *   % lunar       = total bifate / Σ zile eligibile ale tuturor obiceiurilor   („304 / 372”)
+ *   % pe obicei   = zile bifate / zilele lui eligibile din lună
  */
 (function () {
   'use strict';
@@ -49,6 +52,11 @@
 
   function normalize(st) {
     if (!Array.isArray(st.habits)) st.habits = [];
+    st.habits.forEach(function (hb) {
+      // migrare: obiceiurile vechi aveau doar luna creării
+      if (!hb.createdAt || !/^\d{4}-\d{2}-\d{2}$/.test(hb.createdAt)) hb.createdAt = (validYm(hb.createdYm) ? hb.createdYm : '2000-01') + '-01';
+      hb.createdYm = hb.createdAt.slice(0, 7);
+    });
     if (!st.checks || typeof st.checks !== 'object') st.checks = {};
     if (!st.weekly || typeof st.weekly !== 'object') st.weekly = {};
     if (!st.monthly || typeof st.monthly !== 'object') st.monthly = {};
@@ -79,28 +87,56 @@
     if (!Object.keys(mc).length) delete st.checks[ym];
   }
 
-  // Toate cifrele unei luni.
+  // Prima zi a lunii (1-based) în care obiceiul contează: n + 1 dacă nu contează deloc.
+  function firstDay(hb, ym, n) {
+    var ca = hb.createdAt || '';
+    if (ca.slice(0, 7) < ym) return 1;
+    if (ca.slice(0, 7) > ym) return n + 1;
+    return D.day(ca);
+  }
+
+  // Toate cifrele unei luni. Se numără doar zilele eligibile (≥ createdAt și ≤ azi).
   function monthStats(st, ym, today) {
     var y = ymY(ym), m = ymM(ym), n = D.daysInMonth(y, m);
     var hs = visibleHabits(st, ym);
-    var perDay = zeros(n), perHabit = [], total = 0, goalsMet = 0, goalsSet = 0;
+    var tYm = D.ym(today);
+    var lastDay = ym < tYm ? n : ym === tYm ? D.day(today) : 0; // ultima zi care se poate bifa
+    var perDay = zeros(n), eligible = zeros(n), perHabit = [], denHabit = [], fullHabit = [], starts = [];
+    var total = 0, max = 0, goalsMet = 0, goalsSet = 0;
     hs.forEach(function (hb) {
-      var s = getBits(st, ym, hb.id), c = 0;
-      for (var d = 0; d < n && d < s.length; d++) {
-        if (s.charCodeAt(d) === 49) { c++; perDay[d]++; }
+      var s = getBits(st, ym, hb.id), c = 0, from = firstDay(hb, ym, n);
+      for (var d = from; d <= lastDay; d++) {
+        eligible[d - 1]++;
+        if (s.charCodeAt(d - 1) === 49) { c++; perDay[d - 1]++; }
       }
+      var den = Math.max(0, lastDay - from + 1);
+      starts.push(from);
       perHabit.push(c);
+      denHabit.push(den);
+      fullHabit.push(Math.max(0, n - from + 1));
       total += c;
+      max += den;
       if (hb.goal) { goalsSet++; if (c >= hb.goal) goalsMet++; }
     });
-    var tYm = D.ym(today);
-    var lastDay = ym < tYm ? n : ym === tYm ? D.day(today) : 0;
-    var order = hs.map(function (_, i) { return i; }).sort(function (a, b) { return perHabit[b] - perHabit[a] || a - b; });
+    var rate = perHabit.map(function (c, i) { return TK.ratio(c, denHabit[i]); });
+    var order = hs.map(function (_, i) { return i; }).sort(function (a, b) {
+      return rate[b] - rate[a] || perHabit[b] - perHabit[a] || a - b;
+    });
     return {
-      ym: ym, y: y, m: m, n: n, hs: hs, perDay: perDay, perHabit: perHabit, total: total,
-      max: hs.length * n, goalsMet: goalsMet, goalsSet: goalsSet, lastDay: lastDay, order: order,
-      dayRatio: perDay.map(function (c) { return TK.ratio(c, hs.length); }),
+      ym: ym, y: y, m: m, n: n, hs: hs, perDay: perDay, eligible: eligible, perHabit: perHabit, denHabit: denHabit,
+      fullHabit: fullHabit, starts: starts, rate: rate, total: total, max: max,
+      goalsMet: goalsMet, goalsSet: goalsSet, lastDay: lastDay, order: order,
+      // null = zi fără obiceiuri eligibile (viitoare sau înainte de primul obicei)
+      dayRatio: perDay.map(function (c, i) { return eligible[i] ? c / eligible[i] : null; }),
     };
+  }
+
+  // Data de la care contează un obicei adăugat în timp ce privești luna `ym`:
+  //  - o lună trecută → prima zi a acelei luni (completezi istoricul);
+  //  - luna curentă sau una viitoare → azi (nu scade procentul zilelor deja trecute;
+  //    dacă bifezi totuși o zi anterioară din luna curentă, data de start se mută pe acea zi).
+  function createdAtFor(ym, today) {
+    return ym < D.ym(today) ? ym + '-01' : today;
   }
 
   function listStats(items) {
@@ -150,7 +186,7 @@
     var st = createEmpty();
     var start = ymOf(Y, 0);
     st.habits = DEMO_HABITS.map(function (d, i) {
-      return { id: 'h' + (i + 1), name: d[0], goal: Math.max(18, Math.min(28, Math.round(d[1] * 30) - 1)), createdYm: start };
+      return { id: 'h' + (i + 1), name: d[0], goal: Math.max(18, Math.min(28, Math.round(d[1] * 30) - 1)), createdAt: start + '-01', createdYm: start };
     });
     for (var m = 0; m <= M; m++) {
       var ym = ymOf(Y, m), n = D.daysInMonth(Y, m);
@@ -205,10 +241,11 @@
     normalize(st);
     var today = D.today();
     var s = monthStats(st, D.ym(today), today);
-    var best = s.order.length ? s.hs[s.order[0]].name + ' · ' + pct0(s.perHabit[s.order[0]] / s.n) : '—';
+    var best = s.order.length && s.denHabit[s.order[0]] ? s.hs[s.order[0]].name + ' · ' + pct0(s.rate[s.order[0]]) : '—';
+    var ti = D.day(today) - 1;
     return [
       { label: 'Progres lunar', value: F.pct(TK.ratio(s.total, s.max), 1) },
-      { label: 'Bifate azi', value: s.perDay[D.day(today) - 1] + ' / ' + s.hs.length },
+      { label: 'Bifate azi', value: s.perDay[ti] + ' / ' + s.eligible[ti] },
       { label: 'Cel mai constant obicei', value: best },
     ];
   }
@@ -352,8 +389,8 @@
   function renderDaily(root, c) {
     var st = c.st, api = c.api;
     var days = dayMeta(c);
-    var s = monthStats(st, c.ym, c.today);
-    var hs = s.hs;
+    var s0 = monthStats(st, c.ym, c.today);
+    var hs = s0.hs;
     var refs = { rows: [] };
     var wrap = h('div', { class: 'hb-daily', style: { '--n': String(c.n) } });
     root.appendChild(wrap);
@@ -422,6 +459,10 @@
           api.commit();
           nameCell.textContent = v;
           nameCell.title = v;
+          delBtn.setAttribute('aria-label', 'Elimină obiceiul „' + v + '”');
+          progName.textContent = v;
+          goalIn.setAttribute('aria-label', 'Obiectiv (zile pe lună) pentru ' + v);
+          bar.setAttribute('aria-label', 'Progres ' + v);
           gridBody.querySelectorAll('input[data-h="' + hb.id + '"]').forEach(function (cb) {
             cb.setAttribute('aria-label', v + ', ' + cb.getAttribute('data-d') + ' ' + MONTHS_LOWER[c.m]);
           });
@@ -429,23 +470,25 @@
         },
         onkeydown: function (e) { if (e.key === 'Enter') nameIn.blur(); if (e.key === 'Escape') { nameIn.value = hb.name; nameIn.blur(); } },
       });
+      var delBtn = h('button', {
+        type: 'button', class: 'tk-icon-btn hb-del', id: 'hb-del-' + hb.id,
+        'aria-label': 'Elimină obiceiul „' + hb.name + '”', title: 'Elimină obiceiul',
+        onclick: function () { removeHabit(c, hb); },
+      }, '×');
       listBody.appendChild(h('tr', { dataset: { h: hb.id } },
         h('td', { class: 'hb-idx' }, String(i + 1)),
         h('td', { class: 'hb-name' }, nameIn),
-        h('td', { class: 'hb-act' }, h('button', {
-          type: 'button', class: 'tk-icon-btn hb-del', id: 'hb-del-' + hb.id,
-          'aria-label': 'Elimină obiceiul „' + hb.name + '”', title: 'Elimină obiceiul',
-          onclick: function () { removeHabit(c, hb); },
-        }, '×'))));
+        h('td', { class: 'hb-act' }, delBtn)));
 
       // grilă
       var nameCell = h('th', { class: 'tk-habit-grid__name', scope: 'row', title: hb.name }, hb.name);
       var tr = h('tr', { dataset: { h: hb.id } }, nameCell);
       days.forEach(function (dm) {
-        var on = bits.charCodeAt(dm.d - 1) === 49;
-        tr.appendChild(h('td', { class: dayCellClass(dm) },
+        var on = !dm.future && bits.charCodeAt(dm.d - 1) === 49;
+        tr.appendChild(h('td', { class: dayCellClass(dm) + (dm.d < s0.starts[i] ? ' is-pre' : '') },
           h('input', {
             type: 'checkbox', class: 'tk-check', id: 'hb-c-' + hb.id + '-' + dm.d, checked: on,
+            disabled: dm.future, title: dm.future ? 'Zi viitoare' : null,
             dataset: { h: hb.id, d: String(dm.d) },
             'aria-label': hb.name + ', ' + dm.d + ' ' + MONTHS_LOWER[c.m],
           })));
@@ -470,9 +513,10 @@
       var pctEl = h('span', { class: 'tk-pct hb-pc__v' });
       var bar = h('span', { class: 'tk-progress tk-progress--bar hb-bar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-label': 'Progres ' + hb.name });
       var cnt = h('td', { class: 'num hb-cnt' });
+      var progName = h('span', { class: 'hb-pc__name' }, hb.name);
       progBody.appendChild(h('tr', { dataset: { h: hb.id } },
         h('td', { class: 'num hb-goal' }, goalIn),
-        h('td', { class: 'hb-pc' }, h('div', { class: 'hb-pc__in' }, pctEl, bar)),
+        h('td', { class: 'hb-pc' }, progName, h('div', { class: 'hb-pc__in' }, pctEl, bar)),
         cnt));
       refs.rows.push({ hb: hb, pct: pctEl, bar: bar, cnt: cnt });
     });
@@ -491,12 +535,13 @@
         var v = addIn.value.trim();
         if (!v) { addIn.focus(); return; }
         if (activeCount(st) >= MAX_HABITS) { TK.ui.toast('Poți avea cel mult ' + MAX_HABITS + ' obiceiuri active.'); return; }
-        st.habits.push({ id: uid('h'), name: v, goal: null, createdYm: c.ym });
+        var ca = createdAtFor(c.ym, c.today);
+        st.habits.push({ id: uid('h'), name: v, goal: null, createdAt: ca, createdYm: ca.slice(0, 7) });
         api.commit();
         c.rerender();
         var again = document.getElementById('hb-add-name');
         if (again) again.focus();
-        TK.ui.toast('Obiceiul „' + v + '” a fost adăugat.');
+        TK.ui.toast(ca === c.today ? 'Obiceiul „' + v + '” a fost adăugat și contează de azi.' : 'Obiceiul „' + v + '” a fost adăugat.');
       },
     }, addIn, h('button', { type: 'submit', class: 'tk-icon-btn', id: 'hb-add-btn', 'aria-label': 'Adaugă obiceiul', title: 'Adaugă obiceiul', disabled: !canAdd }, '+'));
     listBody.appendChild(h('tr', { class: 'hb-addrow' }, h('td', { class: 'hb-idx' }, String(hs.length + 1)), h('td', { colspan: 2 }, addForm)));
@@ -513,7 +558,20 @@
     gridBody.addEventListener('change', function (e) {
       var cb = e.target;
       if (!cb || !cb.dataset || !cb.dataset.h) return;
-      setBit(st, c.ym, cb.dataset.h, +cb.dataset.d, cb.checked, c.n);
+      var d = +cb.dataset.d, iso = D.make(c.y, c.m, d);
+      if (iso > c.today) { cb.checked = false; return; }
+      var hb = st.habits.filter(function (x) { return x.id === cb.dataset.h; })[0];
+      if (hb && cb.checked && iso < hb.createdAt) {
+        // bifezi o zi dinaintea startului: obiceiul contează de atunci
+        hb.createdAt = iso;
+        hb.createdYm = iso.slice(0, 7);
+        var cells = cb.closest('tr').querySelectorAll('td.is-pre');
+        Array.prototype.forEach.call(cells, function (td) {
+          var inp = td.querySelector('input');
+          if (inp && +inp.dataset.d >= d) td.classList.remove('is-pre');
+        });
+      }
+      setBit(st, c.ym, cb.dataset.h, d, cb.checked, c.n);
       api.commit();
       update();
     });
@@ -541,7 +599,7 @@
     /* --- jos, centru: dinamica pe zile */
     refs.area = h('div', { class: 'hb-area' });
     refs.dyn = { pct: [], chk: [], un: [], tot: [] };
-    var dynLabels = { pct: '% pe zi', chk: 'Bifate', un: 'Nebifate', tot: 'Total' };
+    var dynLabels = { pct: '% pe zi', chk: 'Bifate', un: 'Nebifate', tot: 'Total' }; // rândul % e fără semnul „%” (coloane înguste)
     var dynBody = h('tbody', null,
       h('tr', { class: 'hb-area-row' }, h('th', { class: 'tk-habit-grid__name', scope: 'row' }, 'Curba lunii'),
         h('td', { colspan: c.n, class: 'hb-area-cell' }, refs.area)));
@@ -583,30 +641,37 @@
 
       TK.charts.bars(refs.bars, {
         labels: days.map(function (dm) { return String(dm.d); }),
-        series: [{ name: 'Progres zilnic', values: s.dayRatio }],
+        series: [{ name: 'Progres zilnic', values: s.dayRatio.map(function (v) { return v || 0; }) }],
         height: 132, axis: false, yMax: 1,
         format: function (v) { return F.pct(v, 0); },
         // sub fiecare bară procentul zilei (doar când e loc: ~20 px pe zi)
-        sublabels: s.hs.length && refs.bars.clientWidth >= c.n * 19 ? days.map(function (dm, i) { return dm.future && !s.perDay[i] ? '' : pct0(s.dayRatio[i]); }) : null,
+        // sub fiecare bară procentul zilei, fără „%” (titlul spune deja „%”), doar când e loc
+        sublabels: s.hs.length && refs.bars.clientWidth >= c.n * 19 ? s.dayRatio.map(function (v) { return v == null ? '' : String(Math.round(v * 100)); }) : null,
         colorFn: function (v) { return v >= 1 ? 'var(--chart-plan)' : 'var(--chart-fact)'; },
-        tipTitle: function (i) { return ' ' + MONTHS_LOWER[c.m] + ', ' + D.WEEKDAYS[days[i].wd].toLowerCase() + ' · ' + s.perDay[i] + ' / ' + s.hs.length; },
+        tipTitle: function (i) {
+          return ' ' + MONTHS_LOWER[c.m] + ', ' + D.WEEKDAYS[days[i].wd].toLowerCase() +
+            (s.dayRatio[i] == null ? ' · ' + (days[i].future ? 'zi viitoare' : 'fără obiceiuri') : ' · ' + s.perDay[i] + ' / ' + s.eligible[i]);
+        },
         label: 'Progres zilnic în ' + D.MONTHS[c.m].toLowerCase() + ', procent de obiceiuri bifate pe zi',
       });
 
       refs.rows.forEach(function (r, i) {
-        var cnt = s.perHabit[i], p = cnt / s.n, goal = r.hb.goal;
-        var met = goal ? cnt >= goal : cnt >= s.n;
+        var cnt = s.perHabit[i], den = s.denHabit[i], full = s.fullHabit[i];
+        var p = TK.ratio(cnt, den), goal = r.hb.goal;
+        var met = goal ? cnt >= goal : den > 0 && cnt >= den;
         r.pct.textContent = pct0(p);
         r.pct.classList.toggle('is-full', p >= 1);
         r.bar.style.setProperty('--p', (p * 100).toFixed(1) + '%');
-        if (goal) r.bar.style.setProperty('--g', (Math.min(goal, s.n) / s.n * 100).toFixed(1) + '%');
+        // reperul obiectivului = ritmul necesar (obiectiv / zilele lunii în care contează obiceiul)
+        if (goal && full) r.bar.style.setProperty('--g', (Math.min(1, goal / full) * 100).toFixed(1) + '%');
         else r.bar.style.removeProperty('--g');
         r.bar.classList.toggle('has-goal', !!goal);
         r.bar.classList.toggle('tk-progress--sage', met);
         r.bar.classList.toggle('tk-progress--rose', !met);
         r.bar.setAttribute('aria-valuenow', String(Math.round(p * 100)));
         r.bar.title = goal ? (met ? 'Obiectiv atins: ' : 'Obiectiv: ') + goal + ' zile' : 'Fără obiectiv';
-        r.cnt.textContent = cnt + ' / ' + s.n;
+        r.cnt.textContent = cnt + ' / ' + den;
+        r.cnt.title = den < s.n ? den + ' zile care contează până acum din ' + s.n : '';
       });
 
       TK.charts.donut(refs.sumDonut, { value: ratio, top: 'Progres', main: F.pct(ratio, 1), size: 96, thickness: 10 });
@@ -616,23 +681,24 @@
       refs.sum.done.textContent = String(s.total);
       refs.sum.left.textContent = String(s.max - s.total);
       refs.sum.total.textContent = String(s.max);
-      refs.sum.avg.textContent = el && s.hs.length ? F.num(TK.sum(s.perDay.slice(0, el)) / el, 1) + ' / ' + s.hs.length : '—';
+      refs.sum.avg.textContent = el && s.max ? F.num(s.total / el, 1) + ' / ' + F.num(s.max / el, s.max % el ? 1 : 0) : '—';
       refs.sum.goals.textContent = s.goalsSet ? s.goalsMet + ' / ' + s.goalsSet : '—';
 
       TK.charts.area(refs.area, {
         labels: days.map(function (dm) { return String(dm.d); }),
-        values: s.dayRatio.map(function (v, i) { return i < s.lastDay ? v : null; }),
+        values: s.dayRatio,
         max: 1, height: 118, axisLabels: false,
-        tips: days.map(function (dm, i) { return dm.d + ' ' + MONTHS_LOWER[c.m] + '\n' + (i < s.lastDay ? pct0(s.dayRatio[i]) + ' · ' + s.perDay[i] + ' / ' + s.hs.length : 'zi viitoare'); }),
+        tips: days.map(function (dm, i) { return dm.d + ' ' + MONTHS_LOWER[c.m] + '\n' + (s.dayRatio[i] != null ? pct0(s.dayRatio[i]) + ' · ' + s.perDay[i] + ' / ' + s.eligible[i] : dm.future ? 'zi viitoare' : 'fără obiceiuri'); }),
         label: 'Dinamica procentului zilnic în ' + D.MONTHS[c.m].toLowerCase(),
       });
       days.forEach(function (dm, i) {
-        var k = s.perDay[i], t = s.hs.length;
-        refs.dyn.pct[i].textContent = t ? pct0(k / t) : '—';
+        // zilele viitoare (și cele fără obiceiuri) rămân goale: nu intră la numitor
+        var k = s.perDay[i], t = s.eligible[i];
+        refs.dyn.pct[i].textContent = t ? String(Math.round(k / t * 100)) : '—';
         refs.dyn.pct[i].className = dayCellClass(dm) + ' hb-dpct' + (t && k >= t ? ' is-full' : '');
-        refs.dyn.chk[i].textContent = String(k);
-        refs.dyn.un[i].textContent = String(t - k);
-        refs.dyn.tot[i].textContent = String(t);
+        refs.dyn.chk[i].textContent = t ? String(k) : '';
+        refs.dyn.un[i].textContent = t ? String(t - k) : '';
+        refs.dyn.tot[i].textContent = t ? String(t) : '';
       });
 
       TK.clear(refs.top);
@@ -642,7 +708,7 @@
           refs.top.appendChild(h('tr', { class: 'is-empty' }, h('td', null, String(r + 1)), h('td'), h('td')));
           continue;
         }
-        var p = s.perHabit[idx] / s.n;
+        var p = s.rate[idx];
         refs.top.appendChild(h('tr', null,
           h('td', null, String(r + 1)),
           h('td', { class: 'hb-top-name', title: s.hs[idx].name }, s.hs[idx].name),
@@ -654,7 +720,7 @@
 
   function removeHabit(c, hb) {
     var st = c.st, api = c.api;
-    var hasPast = hb.createdYm && hb.createdYm < c.ym;
+    var hasPast = (hb.createdAt || '').slice(0, 7) < c.ym;
     var monthName = D.MONTHS[c.m].toLowerCase() + ' ' + c.y;
     function purge() {
       st.habits = st.habits.filter(function (x) { return x !== hb; });
@@ -997,5 +1063,5 @@
   else setTimeout(doRegister, 0);
 
   // expus pentru teste
-  TK._habits = { monthStats: monthStats, listStats: listStats, createDemo: createDemo };
+  TK._habits = { monthStats: monthStats, listStats: listStats, createDemo: createDemo, normalize: normalize, createdAtFor: createdAtFor };
 })();

@@ -315,16 +315,88 @@
     return s;
   }
 
+  // Curăță datele (inclusiv cele importate): nu trebuie să blocheze niciodată trackerul.
+  function isObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function validIso(v) {
+    if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+    var y = +v.slice(0, 4), m = +v.slice(5, 7), d = +v.slice(8, 10);
+    return y >= 1900 && y <= 2200 && m >= 1 && m <= 12 && d >= 1 && d <= D.daysInMonth(y, m - 1);
+  }
+  function catName(v) {
+    if (typeof v !== 'string' && typeof v !== 'number') return '';
+    return String(v).trim().replace(/\s+/g, ' ').slice(0, 120);
+  }
+  function posNum(v) { var n = r2(+v); return isFinite(n) && n > 0 ? n : null; }
+
   function migrate(s) {
-    s = s || {};
+    if (!isObj(s)) s = {};
     var base = baseState();
-    if (!s.categories || typeof s.categories !== 'object') s.categories = base.categories;
-    TYPES.forEach(function (t) { if (!Array.isArray(s.categories[t])) s.categories[t] = []; });
-    if (!Array.isArray(s.transactions)) s.transactions = [];
-    ['plans', 'bills', 'debts', 'goals', 'notes'].forEach(function (k) {
-      if (!s[k] || typeof s[k] !== 'object' || Array.isArray(s[k])) s[k] = {};
+    // categorii: liste de nume unice, nevide
+    var hadCats = isObj(s.categories);
+    var cats = {};
+    TYPES.forEach(function (t) {
+      var src = hadCats && Array.isArray(s.categories[t]) ? s.categories[t] : (hadCats ? [] : base.categories[t]);
+      var out = [];
+      src.forEach(function (c) { c = catName(c); if (c && out.indexOf(c) === -1) out.push(c); });
+      cats[t] = out;
     });
-    if (typeof s.openingBalance !== 'number' || !isFinite(s.openingBalance)) s.openingBalance = 0;
+    s.categories = cats;
+    function ensureCat(t, c) { if (cats[t].indexOf(c) === -1) cats[t].push(c); }
+
+    // tranzacții: dată ISO validă, tip cunoscut, sumă pozitivă
+    var seen = {};
+    s.transactions = (Array.isArray(s.transactions) ? s.transactions : []).filter(function (t) {
+      return isObj(t) && validIso(t.date) && TYPES.indexOf(t.type) !== -1 && posNum(t.amount) != null;
+    }).map(function (t) {
+      var c = catName(t.category) || 'Fără categorie';
+      ensureCat(t.type, c);
+      var id = typeof t.id === 'string' && t.id && !seen[t.id] ? t.id : TK.uid() + Object.keys(seen).length.toString(36);
+      seen[id] = true;
+      return { id: id, date: t.date, type: t.type, category: c, amount: posNum(t.amount), note: typeof t.note === 'string' ? t.note.slice(0, 500) : '' };
+    });
+
+    // planuri: {'YYYY-MM': {tip: {categorie: sumă > 0}}}
+    var plans = {};
+    if (isObj(s.plans)) {
+      Object.keys(s.plans).forEach(function (ym) {
+        var p = s.plans[ym];
+        if (!isYm(ym) || !isObj(p)) return;
+        var outP = {};
+        TYPES.forEach(function (t) {
+          if (!isObj(p[t])) return;
+          var o = {};
+          Object.keys(p[t]).forEach(function (k) {
+            var c = catName(k), v = posNum(p[t][k]);
+            if (c && v != null) { o[c] = v; ensureCat(t, c); }
+          });
+          if (Object.keys(o).length) outP[t] = o;
+        });
+        if (Object.keys(outP).length) plans[ym] = outP;
+      });
+    }
+    s.plans = plans;
+
+    function day(v) { var n = +v; return isFinite(n) && n >= 1 && n <= 31 && n % 1 === 0 ? n : null; }
+    function nonNeg(v) { var n = +v; return isFinite(n) && n > 0 ? r2(n) : 0; }
+    function cleanMap(src, type, fn) {
+      var out = {};
+      if (isObj(src)) Object.keys(src).forEach(function (k) {
+        var c = catName(k);
+        if (c && cats[type].indexOf(c) !== -1) out[c] = fn(isObj(src[k]) ? src[k] : {});
+      });
+      return out;
+    }
+    s.bills = cleanMap(s.bills, 'factura', function (o) { return { dueDay: day(o.dueDay) }; });
+    s.debts = cleanMap(s.debts, 'datorie', function (o) { return { dueDay: day(o.dueDay), total: nonNeg(o.total) }; });
+    s.goals = cleanMap(s.goals, 'economie', function (o) { return { target: nonNeg(o.target) }; });
+
+    var notes = {};
+    if (isObj(s.notes)) Object.keys(s.notes).forEach(function (k) {
+      if (/^\d{4}$/.test(k) && typeof s.notes[k] === 'string') notes[k] = s.notes[k];
+    });
+    s.notes = notes;
+    var ob = +s.openingBalance;
+    s.openingBalance = isFinite(ob) ? r2(ob) : 0;
     return s;
   }
 
@@ -353,6 +425,8 @@
     } else if (rr >= 10000) cls += ' is-full';
     return h('span', { class: cls }, fmt.pct(r));
   }
+  // celulă cu nume de categorie: lățime limitată, trunchiată cu „…”, numele complet în title
+  function catTd(name) { return h('td', { class: 'fin-cat', title: name }, name); }
   function curTd() { return h('td', { class: 'cur' }, 'lei'); }
   function numTd(v, cls) { return h('td', { class: 'num' + (cls ? ' ' + cls : '') }, money(v)); }
   function pctTd(fact, plan, mode) { return h('td', { class: 'num' }, pctSpan(fact, plan, mode)); }
@@ -458,7 +532,39 @@
   function mount(el, api) {
     var S = function () { return api.state; };
     migrate(api.state);
+    fixPrefs();
     var cleanups = [];
+
+    // Preferințe de filtrare care nu mai corespund datelor (categorie redenumită / ștearsă, import) → resetate.
+    function fixPrefs() {
+      var s = S();
+      var f = api.prefs.get('txf', null);
+      if (f != null) {
+        if (!isObj(f)) f = {};
+        var nf = {
+          month: f.month === 'all' || isYm(f.month) ? f.month : undefined,
+          type: TYPES.indexOf(f.type) !== -1 ? f.type : '',
+          cat: '',
+          q: typeof f.q === 'string' ? f.q : '',
+        };
+        if (typeof f.cat === 'string' && f.cat) {
+          var cut = f.cat.indexOf('|');
+          var ct = f.cat.slice(0, cut), cn = f.cat.slice(cut + 1);
+          if (cut > 0 && TYPES.indexOf(ct) !== -1 && s.categories[ct].indexOf(cn) !== -1 && (!nf.type || nf.type === ct)) nf.cat = f.cat;
+        }
+        if (JSON.stringify(nf) !== JSON.stringify(f)) api.prefs.set('txf', nf);
+      }
+      var at = api.prefs.get('addType', 'cheltuiala');
+      if (TYPES.indexOf(at) === -1) { at = 'cheltuiala'; api.prefs.set('addType', at); }
+      var ac = api.prefs.get('addCat', '');
+      if (ac && s.categories[at].indexOf(ac) === -1) api.prefs.set('addCat', '');
+    }
+    // Ține preferințele în pas cu redenumirea / ștergerea unei categorii.
+    function prefsCategoryChanged(type, oldN, newN) {
+      var f = api.prefs.get('txf', null);
+      if (isObj(f) && f.cat === type + '|' + oldN) { f.cat = newN ? type + '|' + newN : ''; api.prefs.set('txf', f); }
+      if (api.prefs.get('addType', '') === type && api.prefs.get('addCat', '') === oldN) api.prefs.set('addCat', newN || '');
+    }
 
     function getYm() {
       var v = api.prefs.get('ym', null);
@@ -679,7 +785,7 @@
         var due = (map[c] || {}).dueDay;
         var cells = [
           h('td', { class: 'chk' }, cb),
-          h('td', null, c),
+          catTd(c),
           h('td', { class: 'tk-center fin-due' }, due ? String(due) : '—'),
           curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, where, rerender)),
           curTd(), numTd(fact),
@@ -859,7 +965,7 @@
       if (withPct) head.push(th('Progres', 'num'));
       var rows = cats.map(function (c, i) {
         var plan = +m.plan[type][c] || 0, fact = m.fact[type][c] || 0;
-        var cells = [h('td', null, c), curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)), curTd(), numTd(fact)];
+        var cells = [catTd(c), curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)), curTd(), numTd(fact)];
         if (withPct) cells.push(pctTd(fact, plan, MODE[type]));
         return h('tr', null, cells);
       });
@@ -886,7 +992,7 @@
             h('tbody', null, top.length ? top.map(function (d, i) {
               return h('tr', null,
                 h('td', null, String(i + 1)),
-                h('td', { title: LABEL[d.type] }, d.label, h('span', { class: 'fin-type-dot', 'data-tone': TONE[d.type], 'aria-label': LABEL[d.type] })),
+                h('td', { class: 'fin-cat', title: d.label + ' · ' + LABEL[d.type] }, h('span', { class: 'fin-type-dot fin-type-dot--lead', 'data-tone': TONE[d.type] }), h('span', { class: 'tk-sr' }, LABEL[d.type] + ': '), d.label),
                 curTd(), numTd(d.value),
                 h('td', { class: 'num' }, fmt.pct(TK.ratio(d.value, total))));
             }) : h('tr', null, h('td', { colspan: 5, class: 'tk-muted tk-center' }, 'Nicio ieșire în luna aceasta.'))),
@@ -909,7 +1015,7 @@
             h('tbody', null, list.length ? list.map(function (t) {
               return h('tr', null,
                 h('td', { class: 'fin-date' }, fmt.dateShort(t.date)),
-                h('td', { class: 'fin-ellipsis', title: LABEL[t.type] + (t.note ? ' · ' + t.note : '') },
+                h('td', { class: 'fin-cat', title: t.category + ' · ' + LABEL[t.type] + (t.note ? ' · ' + t.note : '') },
                   h('span', { class: 'fin-type-dot fin-type-dot--lead', 'data-tone': TONE[t.type] }), h('span', { class: 'tk-sr' }, LABEL[t.type] + ': '), t.category),
                 h('td', { class: 'cur' }, t.type === 'venit' ? '+' : '−'),
                 h('td', { class: 'num' + (t.type === 'venit' ? ' fin-in' : '') }, fmt.num(t.amount)),
@@ -1085,7 +1191,7 @@
           return h('tr', null,
             h('td', { class: 'fin-date' }, h('span', { class: 'fin-date-long' }, fmt.date(t.date)), h('span', { class: 'fin-date-short', 'aria-hidden': 'true' }, fmt.dateShort(t.date))),
             h('td', null, h('span', { class: 'tk-pill fin-pill', 'data-tone': TONE[t.type], title: LABEL[t.type] }, h('span', { class: 'tk-dot' }), h('span', { class: 'fin-pill-txt' }, LABEL[t.type]))),
-            h('td', { class: 'fin-cat-cell' }, t.category, t.note ? h('span', { class: 'fin-note-sub', 'aria-hidden': 'true' }, t.note) : null),
+            h('td', { class: 'fin-cat fin-cat-cell', title: t.category }, t.category, t.note ? h('span', { class: 'fin-note-sub', 'aria-hidden': 'true' }, t.note) : null),
             h('td', { class: 'num fin-amt' }, fmt.num(t.amount), h('span', { class: 'cur' }, ' lei')),
             h('td', { class: 'fin-note-cell tk-hide-sm', title: t.note || null }, t.note || ''),
             h('td', { class: 'chk' }, h('button', {
@@ -1161,7 +1267,7 @@
           var ratio = target ? acc / target : 0;
           var pctv = Math.min(100, ratio * 100);
           return h('tr', null,
-            h('td', null, c),
+            catTd(c),
             curTd(), numTd(target),
             curTd(), numTd(acc),
             curTd(), numTd(inMonth),
@@ -1431,6 +1537,7 @@
         });
         var mk = extraMap(type);
         if (mk && s[mk][oldN]) { s[mk][newN] = s[mk][oldN]; delete s[mk][oldN]; }
+        prefsCategoryChanged(type, oldN, newN);
         api.commit();
       }
       function remove(type, cat) {
@@ -1444,6 +1551,7 @@
         });
         var mk = extraMap(type);
         if (mk) delete s[mk][cat];
+        prefsCategoryChanged(type, cat, null);
         api.commit();
       }
 

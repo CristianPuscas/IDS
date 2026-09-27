@@ -17,7 +17,8 @@
  *     notes: string,
  *     time: 'HH:MM' | '',                 // ora (calendar / planificator)
  *     createdAt: 'YYYY-MM-DD',
- *     doneAt: 'YYYY-MM-DD' | null         // se completează când statusul devine „finalizat”
+ *     doneAt: 'YYYY-MM-DD' | null,        // se completează când statusul devine „finalizat”
+ *     prevStatus?: string                 // doar la sarcinile finalizate: statusul refăcut la debifare
  *   }],
  *   people: [{ name, emoji }],            // executanți
  *   categories: [{ name, emoji }],
@@ -97,9 +98,25 @@
   function isDone(t) { return t.status === 'finalizat'; }
   function isOverdue(t, td) { return !isDone(t) && !!t.due && t.due < (td || today()); }
   function daysLeft(t, td) { return t.due ? D.diffDays(td || today(), t.due) : null; }
+  // Singurul loc care schimbă statusul. Când sarcina devine „finalizat”, ține minte statusul
+  // anterior (prevStatus), ca debifarea din orice vedere să-l poată reface.
   function setStatus(t, s) {
-    t.status = STATUS_BY[s] ? s : 'neinceput';
-    if (t.status === 'finalizat') { if (!t.doneAt) t.doneAt = today(); } else t.doneAt = null;
+    s = STATUS_BY[s] ? s : 'neinceput';
+    if (s === 'finalizat') {
+      if (t.status !== 'finalizat') t.prevStatus = t.status;
+      if (!t.doneAt) t.doneAt = today();
+    } else {
+      delete t.prevStatus;
+      t.doneAt = null;
+    }
+    t.status = s;
+  }
+  // Bifează / debifează „finalizat” (listă, kanban, matrice, calendar, planificator).
+  function markDone(t, on) {
+    if (on) { setStatus(t, 'finalizat'); return; }
+    if (t.status !== 'finalizat') return;
+    var prev = t.prevStatus;
+    setStatus(t, prev && STATUS_BY[prev] && prev !== 'finalizat' ? prev : 'neinceput');
   }
   function quadOf(t) { return t.important ? (t.urgent ? 'do' : 'plan') : (t.urgent ? 'delegate' : 'drop'); }
   function weekdayLong(iso) { return D.WEEKDAYS[D.weekday(iso)].toLowerCase(); }
@@ -161,9 +178,16 @@
     if (dl === 0) return { text: 'Azi', cls: 'tks-days is-soon', hl: true };
     return { text: String(dl), cls: 'tks-days' + (dl <= 3 ? ' is-soon' : ''), hl: dl <= 3 };
   }
-  function daysCell(t, td) {
+  function daysCell(t, td, compact) {
     var i = daysInfo(t, td);
-    return h('td', { class: 'num ' + i.cls + (i.hl ? ' is-hl' : ''), 'data-tone': i.tone || null }, i.text);
+    var text = i.text;
+    if (compact) {
+      var dl = daysLeft(t, td);
+      if (isDone(t)) text = '✓';
+      else if (dl != null && dl < 0) text = '⚠ ' + F.days(dl).replace('-', '−');
+    }
+    return h('td', { class: 'num ' + i.cls + (i.hl ? ' is-hl' : ''), 'data-tone': i.tone || null, title: compact && text !== i.text ? i.text : null },
+      text, compact && text !== i.text ? h('span', { class: 'tk-sr' }, ' (' + i.text + ')') : null);
   }
 
   function opt(value, label, cur) {
@@ -323,6 +347,7 @@
       if (!t.id) t.id = TK.uid();
       t.title = String(t.title || '');
       if (!STATUS_BY[t.status]) t.status = 'neinceput';
+      if (t.status !== 'finalizat' || !STATUS_BY[t.prevStatus] || t.prevStatus === 'finalizat') delete t.prevStatus;
       if (t.priority && !PRIO_BY[t.priority]) t.priority = '';
       t.important = !!t.important;
       t.urgent = !!t.urgent;
@@ -333,6 +358,33 @@
       t.time = t.time || '';
     });
     return s;
+  }
+
+  /* ------------------------------------------------------------ filtre salvate */
+
+  // Preferințele de filtru care rețin un executant / o categorie.
+  var PERSON_PREFS = ['fWho', 'kbWho', 'mxWho', 'calWho'];
+  var CATEGORY_PREFS = ['fCat'];
+
+  // La montare: un filtru care indică un executant / o categorie ce nu mai există revine la „Toți”.
+  function sanitizePrefs(api) {
+    var P = api.prefs, st = api.state;
+    var people = st.people.map(function (p) { return p.name; });
+    var cats = st.categories.map(function (c) { return c.name; });
+    PERSON_PREFS.forEach(function (k) { var v = P.get(k, ''); if (v && people.indexOf(v) === -1) P.set(k, ''); });
+    CATEGORY_PREFS.forEach(function (k) { var v = P.get(k, ''); if (v && cats.indexOf(v) === -1) P.set(k, ''); });
+    var fSt = P.get('fSt', '');
+    if (fSt && fSt !== 'active' && fSt !== 'intarziat' && !STATUS_BY[fSt]) P.set('fSt', '');
+    ['mxHide', 'calHide'].forEach(function (k) {
+      var v = P.get(k, null);
+      if (v != null && !Array.isArray(v)) P.set(k, ['finalizat']);
+    });
+  }
+  // La redenumire (nou = numele nou) sau ștergere (nou = ''): mută filtrele salvate odată cu elementul.
+  function retargetPrefs(api, kind, oldName, newName) {
+    (kind === 'people' ? PERSON_PREFS : CATEGORY_PREFS).forEach(function (k) {
+      if (api.prefs.get(k, '') === oldName) api.prefs.set(k, newName);
+    });
   }
 
   /* ------------------------------------------------------------ calcule */
@@ -881,14 +933,14 @@
             h('td', { class: 'chk' }, h('input', {
               type: 'checkbox', class: 'tk-check', id: 'tks-mx-done-' + t.id, checked: isDone(t), 'aria-label': 'Finalizat: ' + t.title,
               onchange: function (e) {
-                setStatus(t, e.target.checked ? 'finalizat' : (t.status === 'finalizat' ? 'lucru' : t.status));
+                markDone(t, e.target.checked);
                 api.commit();
                 keepFocus(renderGrid);
               },
             })),
             h('td', { class: 'tks-titlecell' }, h('button', { type: 'button', class: 'tks-link', id: 'tks-mx-edit-' + t.id, onclick: function () { openTaskForm(api, t, null, ctx.refresh); } }, t.title)),
             h('td', { class: 'tk-nowrap' }, whoText(st, t.assignee)),
-            daysCell(t, td),
+            daysCell(t, td, true),
             h('td', { class: 'tks-qcell' }, selectEl('tks-mx-q-' + t.id, 'Cadran pentru ' + t.title,
               QUADRANTS.map(function (x) { return { value: x.id, label: x.title }; }), q.id,
               function (e) { moveTo(t, e.target.value); }, 'tk-cell-input')));
@@ -955,7 +1007,7 @@
       return t.due && (!who || t.assignee === who) && hide.indexOf(t.status) === -1;
     }
     function toggle(t, on) {
-      setStatus(t, on ? 'finalizat' : 'neinceput');
+      markDone(t, on);
       api.commit();
       keepFocus(function () { renderSide(); renderMain(); });
     }
@@ -1142,7 +1194,7 @@
       return h('datalist', { id: 'tks-dl-tasks' }, titles.filter(function (t) { if (seen[t]) return false; seen[t] = 1; return true; }).map(function (t) { return h('option', { value: t }); }));
     }
     function toggleTask(t, on) {
-      setStatus(t, on ? 'finalizat' : 'neinceput');
+      markDone(t, on);
       api.commit();
       keepFocus(render);
     }
@@ -1328,6 +1380,7 @@
         item.name = nv;
         var n = 0;
         api.state.tasks.forEach(function (t) { if (t[field] === old) { t[field] = nv; n++; } });
+        retargetPrefs(api, kind, old, nv);
         api.commit();
         TK.ui.toast('Redenumit' + (n ? '; ' + n + (n === 1 ? ' sarcină actualizată.' : ' sarcini actualizate.') : '.'));
         keepFocus(render);
@@ -1355,6 +1408,7 @@
                 if (!yes) return;
                 api.state[kind] = api.state[kind].filter(function (x) { return x !== item; });
                 api.state.tasks.forEach(function (t) { if (t[field] === item.name) t[field] = ''; });
+                retargetPrefs(api, kind, item.name, '');
                 api.commit();
                 TK.ui.toast('„' + item.name + '” a fost șters' + (isPeople ? '.' : 'ă.'));
                 render();
@@ -1450,6 +1504,7 @@
     },
     mount: function (el, api) {
       migrate(api.state);
+      sanitizePrefs(api);
       var route = Object.prototype.hasOwnProperty.call(VIEWS, api.route) ? api.route : '';
       var ctx = { api: api, refresh: function () {}, flushers: [] };
 
