@@ -1054,13 +1054,7 @@
     mount: mount,
   };
 
-  // TK.register e definit în shared/app.js, care se încarcă DUPĂ trackere. Dacă nu există încă,
-  // ne înregistrăm la DOMContentLoaded: ascultătorul nostru e adăugat înaintea celui din app.js,
-  // deci rulează înainte de boot().
-  function doRegister() { TK.register(DEF); }
-  if (typeof TK.register === 'function') doRegister();
-  else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', doRegister);
-  else setTimeout(doRegister, 0);
+  TK.register(DEF);
 
   // expus pentru teste
   TK._habits = { monthStats: monthStats, listStats: listStats, createDemo: createDemo, normalize: normalize, createdAtFor: createdAtFor };
