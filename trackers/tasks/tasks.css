@@ -212,7 +212,7 @@
 .tk-tracker--tasks .tks-qcell { width: 92px; }
 .tk-tracker--tasks .tks-mx-table .tks-days { width: 1%; }
 .tk-tracker--tasks .tks-mx-table .tks-qcell select { padding-left: 4px; padding-right: 16px; background-position: calc(100% - 8px) 55%, calc(100% - 4px) 55%; }
-.tk-tracker--tasks .tks-qcell select { margin: 0; font-size: 11px; color: var(--ink-3); }
+.tk-tracker--tasks .tks-qcell select { margin: 0; width: 100%; min-width: 0; font-size: 11px; color: var(--ink-3); }
 
 /* ------------------------------------------------------------ calendar */
 .tk-tracker--tasks .tks-cal-card .tk-card__head { justify-content: space-between; }
