@@ -307,8 +307,10 @@
           'Gaz': c ? 1000 : (pm === 3 || pm === 9 ? 500 : 200), 'Încălzire': c ? 2200 : (pm === 3 ? 900 : 0),
         },
         datorie: { 'Credit de consum': 3000, 'Ipotecă': 7500, 'Credit auto': 4000 },
-        economie: { 'Vacanță': 2000, 'Nuntă': 1500, 'Mașină': 1000, 'Acțiuni': 1000, 'Criptomonede': 500, 'Renovare apartament': 1000, 'MacBook': 800 },
+        economie: { 'Vacanță': 2000, 'Nuntă': 1500, 'Mașină': 1000, 'Acțiuni': 700, 'Criptomonede': 300, 'Renovare apartament': 500, 'MacBook': 800 },
       };
+      // ținta de vacanță (15 000) se atinge după 7,5 luni de câte 2 000 → din a 9-a lună nu mai e planificată
+      if (pm >= 8) delete s.plans[ymOf(Y, pm)].economie['Vacanță'];
       if (!s.plans[ymOf(Y, pm)].factura['Încălzire']) delete s.plans[ymOf(Y, pm)].factura['Încălzire'];
     }
     return s;
@@ -424,7 +426,7 @@
     if (!el || (scope && !scope.contains(el)) || el === document.activeElement) return;
     try {
       el.focus({ preventScroll: true });
-      if (f.all && el.select) el.select();
+      if (f.all && el.select && document.activeElement === el) el.select();
     } catch (e) { /* ignorăm */ }
   }
 
@@ -524,7 +526,9 @@
         var id2 = nextPlanId();
         if (id2) restoreFocus({ id: id2, all: true }); else inp.blur();
       }
-      inp.addEventListener('focus', function () { setTimeout(function () { try { inp.select(); } catch (e) { /* */ } }, 0); });
+      inp.addEventListener('focus', function () {
+        setTimeout(function () { if (document.activeElement === inp) { try { inp.select(); } catch (e) { /* */ } } }, 0);
+      });
       inp.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') { e.preventDefault(); save(true); }
         else if (e.key === 'Escape') { inp.value = shown; inp.blur(); }
@@ -1254,10 +1258,10 @@
             h('table', { class: 'tk-table tk-table--dense fin-table fin-compact' },
               h('thead', null, h('tr', null, th('Categorie'), th('Plan, lei', 'num'), th('Fapt, lei', 'num'), th('Progres', 'num'))),
               h('tbody', null,
-                h('tr', null, h('td', null, 'Sold la 1 ianuarie'), numTd(Y.opening), numTd(Y.opening), h('td', { class: 'num' }, '')),
+                h('tr', null, h('td', { title: 'Sold la 1 ianuarie' }, 'Sold inițial'), numTd(Y.opening), numTd(Y.opening), h('td', { class: 'num' }, '')),
                 frow('Total venituri', Y.plan.venit, Y.fact.venit, 'in', true),
                 OUT.map(function (t) { return frow(PLURAL[t], Y.plan[t], Y.fact[t], MODE[t]); })),
-              h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Sold final'), h('td', { class: 'num' }, fmt.num(Y.planClosing)), curTd(),
+              h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Sold final'), h('td', { class: 'num' }, fmt.num(Y.planClosing)),
                 h('td', { class: 'num' + (Y.closing < 0 ? ' fin-neg' : '') }, fmt.num(Y.closing)), pctTd(Y.closing, Y.planClosing > 0 ? Y.planClosing : 0, 'in'))))));
         var big = h('article', { class: 'tk-card tk-card--plain fin-big-card' },
           h('div', { class: 'tk-card__body' },
