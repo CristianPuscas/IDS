@@ -384,7 +384,7 @@
     return h('div', { class: 'tk-kpi', role: 'listitem' },
       h('span', { class: 'tk-kpi__label' }, label),
       h('span', { class: 'tk-kpi__value' }, fmt.num(fact), h('span', { class: 'cur' }, 'lei')),
-      h('span', { class: 'tk-kpi__hint' }, plan ? ['plan ' + fmt.num(plan) + ' · ', h('span', { class: 'tk-pct' + (over ? ' is-over' : '') }, fmt.pct(r, 1))] : 'fără plan'),
+      h('span', { class: 'tk-kpi__hint' }, plan ? ['plan ' + fmt.num(plan) + ' · ', pctSpan(fact, plan, mode)] : 'fără plan'),
       plan ? h('span', {
         class: 'tk-progress ' + (over ? '' : mode === 'out' ? 'tk-progress--rose' : 'tk-progress--sage'),
         style: { '--p': Math.min(100, r * 100).toFixed(1) + '%' }, role: 'progressbar',
@@ -428,6 +428,23 @@
       el.focus({ preventScroll: true });
       if (f.all && el.select && document.activeElement === el) el.select();
     } catch (e) { /* ignorăm */ }
+  }
+
+  // grafic cu bare orizontale Plan vs Fapt; fără valori → mesaj în loc de axă goală
+  function flowBars(box, labels, plan, fact, label) {
+    if (!plan.some(Boolean) && !fact.some(Boolean)) {
+      TK.clear(box);
+      box.appendChild(h('p', { class: 'fin-nodata' }, 'Fără date încă. Adaugă un plan sau o tranzacție.'));
+      return;
+    }
+    TK.charts.hbars(box, {
+      labels: labels,
+      series: [
+        { name: 'Plan', values: plan, color: 'var(--chart-plan)' },
+        { name: 'Fapt', values: fact, color: 'var(--chart-fact)' },
+      ],
+      format: fmt.lei, label: label,
+    });
   }
 
   function chartCard(title, draw, charts, cls) {
@@ -732,14 +749,8 @@
 
         /* grafice */
         grid.appendChild(chartCard('Flux de numerar', function (box) {
-          TK.charts.hbars(box, {
-            labels: TYPES.map(function (t) { return PLURAL[t]; }),
-            series: [
-              { name: 'Plan', values: TYPES.map(function (t) { return m.planTot[t]; }), color: 'var(--chart-plan)' },
-              { name: 'Fapt', values: TYPES.map(function (t) { return m.factTot[t]; }), color: 'var(--chart-fact)' },
-            ],
-            format: fmt.lei, label: 'Flux de numerar, plan și fapt',
-          });
+          flowBars(box, TYPES.map(function (t) { return PLURAL[t]; }), TYPES.map(function (t) { return m.planTot[t]; }),
+            TYPES.map(function (t) { return m.factTot[t]; }), 'Flux de numerar, plan și fapt');
         }, charts));
         grid.appendChild(chartCard('Structura veniturilor', function (box) {
           TK.charts.pie(box, {
@@ -871,7 +882,7 @@
       return h('article', { class: 'tk-card tk-card--terra' },
         cardHead(titleB('Top-20', 'categorii de cheltuieli'), 'terra'),
         h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
-          h('table', { class: 'tk-table tk-table--dense tk-rank fin-table' },
+          h('table', { class: 'tk-table tk-table--dense fin-table' + (top.length ? ' tk-rank' : '') },
             h('thead', null, h('tr', null, th('#'), th('Categorie'), th('Fapt', 'num', { colspan: 2 }), th('Procent', 'num'))),
             h('tbody', null, top.length ? top.map(function (d, i) {
               return h('tr', null,
@@ -1073,11 +1084,11 @@
         TK.clear(tableHost);
         var rows = shown.map(function (t) {
           return h('tr', null,
-            h('td', { class: 'fin-date' }, fmt.date(t.date)),
-            h('td', null, h('span', { class: 'tk-pill', 'data-tone': TONE[t.type] }, h('span', { class: 'tk-dot' }), LABEL[t.type])),
-            h('td', null, t.category),
+            h('td', { class: 'fin-date' }, h('span', { class: 'fin-date-long' }, fmt.date(t.date)), h('span', { class: 'fin-date-short', 'aria-hidden': 'true' }, fmt.dateShort(t.date))),
+            h('td', null, h('span', { class: 'tk-pill fin-pill', 'data-tone': TONE[t.type], title: LABEL[t.type] }, h('span', { class: 'tk-dot' }), h('span', { class: 'fin-pill-txt' }, LABEL[t.type]))),
+            h('td', { class: 'fin-cat-cell' }, t.category, t.note ? h('span', { class: 'fin-note-sub', 'aria-hidden': 'true' }, t.note) : null),
             h('td', { class: 'num fin-amt' }, fmt.num(t.amount), h('span', { class: 'cur' }, ' lei')),
-            h('td', { class: 'fin-note-cell', title: t.note || null }, t.note || ''),
+            h('td', { class: 'fin-note-cell tk-hide-sm', title: t.note || null }, t.note || ''),
             h('td', { class: 'chk' }, h('button', {
               type: 'button', class: 'tk-icon-btn', id: 'fin-tx-edit-' + t.id, 'aria-label': 'Editează ' + t.category + ', ' + fmt.date(t.date),
               onclick: function () { txForm(t).then(function (ok) { if (ok) { refreshMonthOptions(); renderTable(); } }); },
@@ -1089,7 +1100,7 @@
             S().transactions.length ? 'Schimbă filtrele sau adaugă o tranzacție mai sus.' : 'Adaugă prima tranzacție cu formularul de mai sus.')));
         } else {
           tableHost.appendChild(h('table', { class: 'tk-table tk-table--dense fin-table fin-tx-table' },
-            h('thead', null, h('tr', null, th('Dată'), th('Tip'), th('Categorie'), th('Sumă', 'num'), th('Notă'), th(h('span', { class: 'tk-sr' }, 'Acțiuni'), 'chk'))),
+            h('thead', null, h('tr', null, th('Dată'), th('Tip'), th('Categorie'), th('Sumă', 'num'), th('Notă', 'tk-hide-sm'), th(h('span', { class: 'tk-sr' }, 'Acțiuni'), 'chk'))),
             h('tbody', null, rows)));
         }
         if (list.length > shown.length) {
@@ -1223,14 +1234,8 @@
           kpi('Economii', Y.fact.economie, Y.plan.economie, 'in')));
 
         grid.appendChild(chartCard('Flux de numerar', function (box) {
-          TK.charts.hbars(box, {
-            labels: TYPES.map(function (t) { return PLURAL[t]; }),
-            series: [
-              { name: 'Plan', values: TYPES.map(function (t) { return Y.plan[t]; }), color: 'var(--chart-plan)' },
-              { name: 'Fapt', values: TYPES.map(function (t) { return Y.fact[t]; }), color: 'var(--chart-fact)' },
-            ],
-            format: fmt.lei, label: 'Flux de numerar anual',
-          });
+          flowBars(box, TYPES.map(function (t) { return PLURAL[t]; }), TYPES.map(function (t) { return Y.plan[t]; }),
+            TYPES.map(function (t) { return Y.fact[t]; }), 'Flux de numerar anual');
         }, charts));
         grid.appendChild(chartCard('Structura veniturilor', function (box) {
           TK.charts.pie(box, {
