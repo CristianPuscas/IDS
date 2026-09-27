@@ -116,7 +116,8 @@
   align-items: start;
   min-width: 0;
 }
-.tk-tracker--tasks .tks-side > .tks-hero { grid-area: hero; }
+.tk-tracker--tasks .tks-side > .tks-hero,
+.tk-tracker--tasks .tks-side > .tks-side__head { grid-area: hero; }
 .tk-tracker--tasks .tks-side > .tks-side__panel { grid-area: panel; }
 .tk-tracker--tasks .tks-side > .tks-side__main { grid-area: main; }
 @media (min-width: 980px) {
@@ -246,8 +247,7 @@
 .tk-tracker--tasks .tks-modes { align-self: flex-start; }
 .tk-tracker--tasks .tks-planner { min-width: 0; }
 .tk-tracker--tasks .tks-pl-col { gap: var(--space-3); min-width: 0; }
-.tk-tracker--tasks .tks-pl-day,
-.tk-tracker--tasks .tks-pl-wk {
+.tk-tracker--tasks .tks-pl-day {
   display: grid;
   gap: var(--space-4);
   grid-template-columns: minmax(0, 1fr);
@@ -262,7 +262,7 @@
   .tk-tracker--tasks .tks-pl-day > :last-child { grid-column: auto; }
 }
 @media (min-width: 980px) {
-  .tk-tracker--tasks .tks-pl-wk { grid-template-columns: minmax(240px, 280px) minmax(0, 1fr); }
+  .tk-tracker--tasks .tks-side.tks-pl-wk { grid-template-columns: minmax(240px, 280px) minmax(0, 1fr); row-gap: var(--space-3); }
 }
 .tk-tracker--tasks .tks-weekday { text-transform: capitalize; }
 .tk-tracker--tasks .tks-stepper { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; }

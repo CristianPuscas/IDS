@@ -565,7 +565,7 @@
         labels: labels,
         series: [{ name: 'Sarcini active', values: vals, color: 'var(--terra)' }],
         format: function (v) { return String(v); },
-        xFormat: function (v) { return F.num(v, 0); },
+        xFormat: function (v) { return Math.abs(v - Math.round(v)) < 1e-9 ? F.num(v, 0) : ''; },
         legend: false, barHeight: 14, rowHeight: 30, labelWidth: 120,
         label: 'Sarcini active pe executanți',
       });
@@ -1207,8 +1207,7 @@
         h('div', { class: 'tks-stepper' },
           h('button', { type: 'button', class: 'tk-btn tk-btn--sm', id: 'tks-pl-prevday', 'aria-label': 'Ziua anterioară', onclick: function () { date = D.addDays(date, -1); P.set('plDate', date); keepFocus(render); } }, '‹'),
           h('button', { type: 'button', class: 'tk-btn tk-btn--sm tk-btn--ghost', id: 'tks-pl-today', onclick: function () { date = T; P.set('plDate', date); keepFocus(render); } }, 'Azi'),
-          h('button', { type: 'button', class: 'tk-btn tk-btn--sm', id: 'tks-pl-nextday', 'aria-label': 'Ziua următoare', onclick: function () { date = D.addDays(date, 1); P.set('plDate', date); keepFocus(render); } }, '›')),
-        settingsCard());
+          h('button', { type: 'button', class: 'tk-btn tk-btn--sm', id: 'tks-pl-nextday', 'aria-label': 'Ziua următoare', onclick: function () { date = D.addDays(date, 1); P.set('plDate', date); keepFocus(render); } }, '›')));
 
       var rows = slots.map(function (sl) {
         var id = 'tks-pl-slot-' + sl.key.replace(':', '');
@@ -1240,7 +1239,8 @@
       var col3 = h('div', { class: 'tk-stack tks-pl-col' },
         card('Top-3 priorități', null, top),
         s.includeDaily ? card('Sarcinile zilei', { tone: 'sage' }, dueList(date, 'tks-pl-due-')) : null,
-        deadlinesCard());
+        deadlinesCard(),
+        settingsCard());
       body.appendChild(h('div', { class: 'tks-pl-day' }, col1, col2, col3));
     }
 
@@ -1250,7 +1250,7 @@
       for (var i = 0; i < 7; i++) days.push(D.addDays(week, i));
       var end = days[6];
       function setWeek(iso) { week = D.startOfWeek(iso); P.set('plWeek', week); keepFocus(render); }
-      var left = h('div', { class: 'tk-stack tks-pl-col' },
+      var left = h('div', { class: 'tk-stack tks-pl-col tks-side__head' },
         hero('Planner săptămânal', 'Tabel tracker sarcini'),
         kv([
           { k: 'Data de început', id: 'tks-pw-start', v: h('input', { id: 'tks-pw-start', class: 'tk-cell-input', type: 'date', value: week, onchange: function (e) { if (validIso(e.target.value)) setWeek(e.target.value); } }) },
@@ -1260,9 +1260,8 @@
         h('div', { class: 'tks-stepper' },
           h('button', { type: 'button', class: 'tk-btn tk-btn--sm', id: 'tks-pw-prev', 'aria-label': 'Săptămâna anterioară', onclick: function () { setWeek(D.addDays(week, -7)); } }, '‹'),
           h('button', { type: 'button', class: 'tk-btn tk-btn--sm tk-btn--ghost', id: 'tks-pw-cur', onclick: function () { setWeek(T); } }, 'Săptămâna curentă'),
-          h('button', { type: 'button', class: 'tk-btn tk-btn--sm', id: 'tks-pw-next', 'aria-label': 'Săptămâna următoare', onclick: function () { setWeek(D.addDays(week, 7)); } }, '›')),
-        settingsCard(),
-        deadlinesCard());
+          h('button', { type: 'button', class: 'tk-btn tk-btn--sm', id: 'tks-pw-next', 'aria-label': 'Săptămâna următoare', onclick: function () { setWeek(D.addDays(week, 7)); } }, '›')));
+      var panel = h('div', { class: 'tk-stack tks-pl-col tks-side__panel' }, settingsCard(), deadlinesCard());
 
       var thead = h('thead', null, h('tr', null,
         h('th', { class: 'tks-wk-time' }, 'Ora'),
@@ -1287,9 +1286,9 @@
             }));
           })));
       });
-      var right = card('Săptămâna ' + F.dateShort(week) + ' – ' + F.date(end), { tone: 'rose', flush: true, cls: 'tks-pl-week' },
+      var right = card('Săptămâna ' + F.dateShort(week) + ' – ' + F.date(end), { tone: 'rose', flush: true, cls: 'tks-pl-week tks-side__main' },
         h('div', { class: 'tk-scroll tks-wk-scroll' }, h('table', { class: 'tk-table tk-table--dense tks-week', id: 'tks-week' }, thead, tbody)));
-      body.appendChild(h('div', { class: 'tks-pl-wk' }, left, right));
+      body.appendChild(h('div', { class: 'tks-side tks-pl-wk' }, left, panel, right));
     }
 
     function render() {
@@ -1478,12 +1477,7 @@
     },
   };
 
-  // TK.register e definit în shared/app.js, care se încarcă DUPĂ trackere. Dacă nu există încă,
-  // ne înregistrăm la DOMContentLoaded (ascultătorul nostru rulează înaintea celui din app.js).
-  function doRegister() { TK.register(DEF); }
-  if (typeof TK.register === 'function') doRegister();
-  else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', doRegister);
-  else setTimeout(doRegister, 0);
+  TK.register(DEF);
 
   // expus pentru teste
   TK._tasks = { stats: stats, createDemo: createDemo, isOverdue: isOverdue, quadOf: quadOf, sortTasks: sortTasks };
