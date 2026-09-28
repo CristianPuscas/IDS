@@ -9,7 +9,7 @@
  *     id: string,
  *     title: string,
  *     due: 'YYYY-MM-DD' | null,           // termenul
- *     assignee: string,                   // numele executantului ('' = fără)
+ *     assignees: [string],                // numele executanților ([] = fără); înainte era `assignee: string`
  *     status: 'neinceput' | 'lucru' | 'asteptare' | 'suspendat' | 'finalizat',
  *     category: string,                   // numele categoriei ('' = fără)
  *     priority: 'critic' | 'ridicat' | 'mediu' | 'scazut' | '',
@@ -145,11 +145,14 @@
     for (var i = 0; i < st.categories.length; i++) if (st.categories[i].name === name) return st.categories[i];
     return null;
   }
+  // un nume sau o listă de nume → „🙂 Ana, 👤 Mihai”
   function whoText(st, name) {
+    if (Array.isArray(name)) return name.length ? name.map(function (n) { return whoText(st, n); }).join(', ') : '—';
     if (!name) return '—';
     var p = personOf(st, name);
     return (p && p.emoji ? p.emoji : '👤') + ' ' + name;
   }
+  function hasWho(t, who) { return !who || t.assignees.indexOf(who) !== -1; }
   function catText(st, name) {
     if (!name) return '—';
     var c = categoryOf(st, name);
@@ -280,7 +283,7 @@
         id: 'demo' + (i + 1),
         title: r[0],
         due: due,
-        assignee: r[2],
+        assignees: r[2] ? [r[2]] : [],
         status: r[3],
         category: r[4],
         priority: r[5],
@@ -352,7 +355,10 @@
       t.important = !!t.important;
       t.urgent = !!t.urgent;
       if (!validIso(t.due)) t.due = null;
-      t.assignee = t.assignee || '';
+      // migrare: un singur executant → listă
+      if (!Array.isArray(t.assignees)) t.assignees = t.assignee ? [String(t.assignee)] : [];
+      t.assignees = t.assignees.filter(function (n, i, a) { return n && typeof n === 'string' && a.indexOf(n) === i; });
+      delete t.assignee;
       t.category = t.category || '';
       t.notes = t.notes || '';
       t.time = t.time || '';
@@ -435,12 +441,12 @@
     var st = api.state;
     var isNew = !task;
     var v = task || {
-      title: '', due: null, assignee: '', status: 'neinceput', category: '', priority: '',
+      title: '', due: null, assignees: [], status: 'neinceput', category: '', priority: '',
       important: false, urgent: false, notes: '', time: '',
     };
     if (isNew && preset) for (var k in preset) v[k] = preset[k];
-    var people = peopleOptions(st, '— fără executant —');
-    if (v.assignee && !personOf(st, v.assignee)) people.push({ value: v.assignee, label: '👤 ' + v.assignee });
+    var people = st.people.map(function (p) { return { value: p.name, label: (p.emoji ? p.emoji + ' ' : '') + p.name }; });
+    (v.assignees || []).forEach(function (n) { if (!personOf(st, n)) people.push({ value: n, label: '👤 ' + n }); });
     var cats = [{ value: '', label: '— fără categorie —' }].concat(st.categories.map(function (c) {
       return { value: c.name, label: (c.emoji ? c.emoji + ' ' : '') + c.name };
     }));
@@ -454,8 +460,8 @@
         { name: 'title', label: 'Sarcină', type: 'text', value: v.title, required: true, placeholder: 'ex. Montaj video' },
         { name: 'due', label: 'Termen', type: 'date', value: v.due || '' },
         { name: 'time', label: 'Ora (opțional)', type: 'time', value: v.time || '', hint: 'Apare în calendar și în planificator.' },
-        { name: 'assignee', label: 'Executant', type: 'select', options: people, value: v.assignee || '' },
-        { name: 'newPerson', label: 'Sau adaugă un executant nou', type: 'text', placeholder: 'ex. Maria', hint: 'Se adaugă în listă și primește sarcina. Executanții se editează sau se șterg în tab-ul „Setări”.' },
+        { name: 'assignees', label: 'Executanți (poți bifa mai mulți)', type: 'checks', options: people, value: v.assignees || [], empty: 'Nu ai încă executanți. Scrie unul mai jos.' },
+        { name: 'newPerson', label: 'Adaugă executanți noi', type: 'text', placeholder: 'ex. Maria, Ion', hint: 'Mai mulți nume se despart prin virgulă. Se adaugă în listă și primesc sarcina. Executanții se editează sau se șterg în tab-ul „Setări”.' },
         { name: 'status', label: 'Status', type: 'select', options: statusOptions(), value: v.status },
         { name: 'category', label: 'Categorie', type: 'select', options: cats, value: v.category || '' },
         { name: 'newCategory', label: 'Sau adaugă o categorie nouă', type: 'text', placeholder: 'ex. Călătorii', hint: 'Categoriile se editează sau se șterg în tab-ul „Setări”.' },
@@ -485,7 +491,13 @@
         t.title = res.title;
         t.due = res.due || null;
         t.time = res.time || '';
-        t.assignee = addListItem(s.people, res.newPerson, '👤') || res.assignee || '';
+        var who = (res.assignees || []).slice();
+        String(res.newPerson || '').split(/[,;]/).forEach(function (nm) {
+          var added = addListItem(s.people, nm, '👤');
+          if (added && who.indexOf(added) === -1) who.push(added);
+        });
+        t.assignees = who;
+        delete t.assignee;
         t.category = addListItem(s.categories, res.newCategory, '🏷️') || res.category || '';
         t.priority = res.priority || '';
         t.important = !!res.important;
@@ -594,7 +606,7 @@
           return h('tr', { class: late ? 'is-late' : null },
             h('td', { class: 'tks-ellipsis' }, t.title),
             h('td', { class: 'tk-nowrap' + (late ? ' tks-late-text' : '') }, F.date(t.due), late ? ' ⚠' : ''),
-            h('td', { class: 'tk-nowrap' }, whoText(st, t.assignee)));
+            h('td', { class: 'tk-nowrap' }, whoText(st, t.assignees)));
         }) : h('tr', null, h('td', { colspan: 3, class: 'tk-muted tk-center' }, 'Niciun termen activ.'))));
       var w1 = h('section', { class: 'tk-card tks-widget tks-widget--deadlines' },
         h('div', { class: 'tk-card__body' }, h('h2', { class: 'tk-chart__title' }, 'Cele mai apropiate deadline-uri'),
@@ -646,11 +658,11 @@
       });
       var names = st.people.map(function (p) { return p.name; });
       var extra = {};
-      st.tasks.forEach(function (t) { if (!isDone(t) && t.assignee && names.indexOf(t.assignee) === -1) extra[t.assignee] = 1; });
+      st.tasks.forEach(function (t) { if (!isDone(t)) t.assignees.forEach(function (n) { if (names.indexOf(n) === -1) extra[n] = 1; }); });
       names = names.concat(Object.keys(extra));
       var labels = names.map(function (n) { return whoText(st, n); });
-      var vals = names.map(function (n) { return st.tasks.filter(function (t) { return !isDone(t) && t.assignee === n; }).length; });
-      var unassigned = st.tasks.filter(function (t) { return !isDone(t) && !t.assignee; }).length;
+      var vals = names.map(function (n) { return st.tasks.filter(function (t) { return !isDone(t) && t.assignees.indexOf(n) !== -1; }).length; });
+      var unassigned = st.tasks.filter(function (t) { return !isDone(t) && !t.assignees.length; }).length;
       if (unassigned) { labels.push('Fără executant'); vals.push(unassigned); }
       TK.charts.hbars(loadEl, {
         labels: labels,
@@ -693,7 +705,7 @@
       var td = today(), q = f.q.trim().toLowerCase();
       return sortTasks(api.state.tasks.filter(function (t) {
         if (f.hide && isDone(t)) return false;
-        if (f.who && t.assignee !== f.who) return false;
+        if (!hasWho(t, f.who)) return false;
         if (f.cat && t.category !== f.cat) return false;
         if (f.st === 'active' && isDone(t)) return false;
         else if (f.st === 'intarziat' && !isOverdue(t, td)) return false;
@@ -724,7 +736,7 @@
           h('button', { type: 'button', class: 'tks-link', id: 'tks-edit-' + t.id, title: 'Editează sarcina', onclick: function () { openTaskForm(api, t, null, onChanged); } }, t.title),
           late ? overduePill(true) : null),
         h('td', { class: 'tk-nowrap' + (late ? ' tks-late-text' : '') }, t.due ? F.date(t.due) : '—', t.time ? h('span', { class: 'tk-muted' }, ' · ' + t.time) : null),
-        h('td', { class: 'tk-nowrap' }, whoText(st, t.assignee)),
+        h('td', { class: 'tk-nowrap' }, whoText(st, t.assignees)),
         h('td', { class: 'tks-statuscell' }, selectEl('tks-st-' + t.id, 'Status: ' + t.title, statusOptions(), t.status, function (e) {
           setStatus(t, e.target.value);
           onChanged();
@@ -840,7 +852,7 @@
       h('div', { class: 'tks-side__main' }, board)));
 
     function matches(t) {
-      if (f.who && t.assignee !== f.who) return false;
+      if (!hasWho(t, f.who)) return false;
       if (f.from && (!t.due || t.due < f.from)) return false;
       if (f.to && (!t.due || t.due > f.to)) return false;
       return true;
@@ -866,7 +878,7 @@
         h('button', { type: 'button', class: 'tks-link tks-card__title', id: 'tks-kb-edit-' + t.id, onclick: function () { openTaskForm(api, t, null, ctx.refresh); } }, t.title),
         h('div', { class: 'tk-kanban__meta' },
           h('span', { class: late ? 'tks-late-text' : null }, '📅 ' + (t.due ? F.dateShort(t.due) : 'fără termen')),
-          t.assignee ? h('span', null, whoText(st, t.assignee)) : null,
+          t.assignees.length ? h('span', null, whoText(st, t.assignees)) : null,
           prioPill(t.priority),
           late ? overduePill() : null),
         h('div', { class: 'tks-card__move' },
@@ -905,7 +917,7 @@
           items.length ? null : h('p', { class: 'tks-col__empty tk-muted' }, 'Trage aici o sarcină'),
           h('button', {
             type: 'button', class: 'tk-btn tk-btn--sm tk-btn--ghost tks-col__add', id: 'tks-kb-add-' + s.id,
-            onclick: function () { openTaskForm(api, null, { status: s.id, assignee: f.who || '' }, ctx.refresh); },
+            onclick: function () { openTaskForm(api, null, { status: s.id, assignees: f.who ? [f.who] : [] }, ctx.refresh); },
           }, '+ Adaugă'));
         col.addEventListener('dragover', function (e) { e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch (x) { /* */ } col.classList.add('is-over'); });
         col.addEventListener('dragleave', function (e) { if (!col.contains(e.relatedTarget)) col.classList.remove('is-over'); });
@@ -974,7 +986,7 @@
       var st = api.state, td = today();
       TK.clear(grid);
       QUADRANTS.forEach(function (q) {
-        var all = st.tasks.filter(function (t) { return quadOf(t) === q.id && (!who || t.assignee === who); });
+        var all = st.tasks.filter(function (t) { return quadOf(t) === q.id && hasWho(t, who); });
         var done = all.filter(isDone).length;
         var shown = sortTasks(all.filter(function (t) { return hide.indexOf(t.status) === -1; }));
         var donutEl = h('div', { class: 'tks-mx-donut', id: 'tks-mx-donut-' + q.id });
@@ -989,7 +1001,7 @@
               },
             })),
             h('td', { class: 'tks-titlecell' }, h('button', { type: 'button', class: 'tks-link', id: 'tks-mx-edit-' + t.id, onclick: function () { openTaskForm(api, t, null, ctx.refresh); } }, t.title)),
-            h('td', { class: 'tk-nowrap' }, whoText(st, t.assignee)),
+            h('td', { class: 'tk-nowrap' }, whoText(st, t.assignees)),
             daysCell(t, td, true),
             h('td', { class: 'tks-qcell' }, selectEl('tks-mx-q-' + t.id, 'Cadran pentru ' + t.title,
               QUADRANTS.map(function (x) { return { value: x.id, label: x.title }; }), q.id,
@@ -1054,7 +1066,7 @@
       keepFocus(function () { renderSide(); renderMain(); });
     }
     function visible(t) {
-      return t.due && (!who || t.assignee === who) && hide.indexOf(t.status) === -1;
+      return t.due && hasWho(t, who) && hide.indexOf(t.status) === -1;
     }
     function toggle(t, on) {
       markDone(t, on);
@@ -1099,7 +1111,7 @@
         var title = titleIn.value.trim();
         if (!title) { titleIn.focus(); TK.ui.toast('Scrie denumirea sarcinii.'); return; }
         var due = validIso(dateIn.value) ? dateIn.value : null;
-        var t = { id: TK.uid(), title: title, due: due, assignee: who || '', status: 'neinceput', category: '', priority: '', important: false, urgent: false, notes: '', time: '', createdAt: T, doneAt: null };
+        var t = { id: TK.uid(), title: title, due: due, assignees: who ? [who] : [], status: 'neinceput', category: '', priority: '', important: false, urgent: false, notes: '', time: '', createdAt: T, doneAt: null };
         api.state.tasks.push(t);
         api.commit();
         TK.ui.toast('Sarcina a fost adăugată' + (due ? ' pe ' + F.date(due) : '') + '.');
@@ -1108,7 +1120,7 @@
         var ti = document.getElementById('tks-cal-new-title');
         if (ti) ti.focus();
       }
-      var monthTasks = sortTasks(st.tasks.filter(function (t) { return t.due && D.year(t.due) === y && D.month(t.due) === m && (!who || t.assignee === who); }));
+      var monthTasks = sortTasks(st.tasks.filter(function (t) { return t.due && D.year(t.due) === y && D.month(t.due) === m && hasWho(t, who); }));
       var list = h('table', { class: 'tk-table tk-table--dense tks-cal-list' },
         h('thead', null, h('tr', null, h('th', { class: 'chk' }, h('span', { class: 'tk-sr' }, 'Finalizat')), h('th', null, 'Denumire'), h('th', null, 'Termen'))),
         h('tbody', null, monthTasks.length ? monthTasks.map(function (t) {
@@ -1150,7 +1162,7 @@
             items.map(function (t) { return itemEl(t, d.iso); }));
           day.addEventListener('click', function (e) {
             if (e.target === day || (e.target.classList && e.target.classList.contains('tk-cal__num'))) {
-              openTaskForm(api, null, { due: d.iso, assignee: who || '' }, ctx.refresh);
+              openTaskForm(api, null, { due: d.iso, assignees: who ? [who] : [] }, ctx.refresh);
             }
           });
           cal.appendChild(day);
@@ -1175,7 +1187,7 @@
               return h('label', { class: 'tk-check-label tks-agenda__item', for: 'tks-ag-chk-' + t.id },
                 h('input', { type: 'checkbox', class: 'tk-check', id: 'tks-ag-chk-' + t.id, checked: isDone(t), onchange: function (e) { toggle(t, e.target.checked); } }),
                 h('span', { class: 'tk-check-label__text' }, (t.time ? t.time + ' · ' : '') + t.title),
-                t.assignee ? h('span', { class: 'tk-muted tks-agenda__who' }, whoText(st, t.assignee)) : null);
+                t.assignees.length ? h('span', { class: 'tk-muted tks-agenda__who' }, whoText(st, t.assignees)) : null);
             }));
         }) : h('p', { class: 'tk-muted tks-pad' }, 'Nicio sarcină vizibilă în această lună.')));
       main.appendChild(agenda);
@@ -1418,10 +1430,18 @@
     function listEditor(kind) {
       var isPeople = kind === 'people';
       var arr = api.state[kind];
-      var field = isPeople ? 'assignee' : 'category';
+      var field = 'category';
+      // executanții stau într-o listă pe sarcină, categoria e un singur nume
+      function has(t, name) { return isPeople ? t.assignees.indexOf(name) !== -1 : t[field] === name; }
+      function swap(t, old, nv) {
+        if (!isPeople) { t[field] = nv; return; }
+        var i = t.assignees.indexOf(old);
+        if (nv && t.assignees.indexOf(nv) === -1) t.assignees[i] = nv;
+        else t.assignees.splice(i, 1);
+      }
       var noun = isPeople ? 'executantul' : 'categoria';
       var prefix = isPeople ? 'tks-set-p' : 'tks-set-c';
-      function usage(name) { return api.state.tasks.filter(function (t) { return t[field] === name; }).length; }
+      function usage(name) { return api.state.tasks.filter(function (t) { return has(t, name); }).length; }
       function rename(item, input) {
         var nv = input.value.trim(), old = item.name;
         if (nv === old) return;
@@ -1429,7 +1449,7 @@
         if (arr.some(function (x) { return x !== item && x.name.toLowerCase() === nv.toLowerCase(); })) { input.value = old; TK.ui.toast('Există deja „' + nv + '”.'); return; }
         item.name = nv;
         var n = 0;
-        api.state.tasks.forEach(function (t) { if (t[field] === old) { t[field] = nv; n++; } });
+        api.state.tasks.forEach(function (t) { if (has(t, old)) { swap(t, old, nv); n++; } });
         retargetPrefs(api, kind, old, nv);
         api.commit();
         TK.ui.toast('Redenumit' + (n ? '; ' + n + (n === 1 ? ' sarcină actualizată.' : ' sarcini actualizate.') : '.'));
@@ -1451,13 +1471,13 @@
             onclick: function () {
               var go = n ? TK.ui.confirm({
                 title: 'Ștergi ' + noun + ' „' + item.name + '”?',
-                text: n + (n === 1 ? ' sarcină rămâne' : ' sarcini rămân') + ' fără ' + (isPeople ? 'executant' : 'categorie') + '.',
+                text: isPeople ? '„' + item.name + '” va fi scos din ' + n + (n === 1 ? ' sarcină' : ' sarcini') + '.' : n + (n === 1 ? ' sarcină rămâne' : ' sarcini rămân') + ' fără categorie.',
                 ok: 'Șterge', danger: true,
               }) : Promise.resolve(true);
               go.then(function (yes) {
                 if (!yes) return;
                 api.state[kind] = api.state[kind].filter(function (x) { return x !== item; });
-                api.state.tasks.forEach(function (t) { if (t[field] === item.name) t[field] = ''; });
+                api.state.tasks.forEach(function (t) { if (has(t, item.name)) swap(t, item.name, ''); });
                 retargetPrefs(api, kind, item.name, '');
                 api.commit();
                 TK.ui.toast('„' + item.name + '” a fost șters' + (isPeople ? '.' : 'ă.'));

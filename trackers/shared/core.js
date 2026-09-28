@@ -412,7 +412,8 @@
   };
 
   // Formular în fereastră modală.
-  // fields: [{name, label, type:'text|number|money|date|select|textarea|checkbox|color', options:[{value,label}]|[string], value, required, placeholder, min, max, step, hint}]
+  // fields: [{name, label, type:'text|number|money|date|select|checks|textarea|checkbox|color', options:[{value,label}]|[string], value, required, placeholder, min, max, step, hint}]
+  //   'checks' = mai multe bife dintr-o listă; value și rezultatul sunt tablouri de valori.
   // -> Promise<object|null>  (null = anulat). Sumele (`money`/`number`) sunt returnate ca număr sau null.
   ui.form = function (opts) {
     return new Promise(function (resolve) {
@@ -432,6 +433,17 @@
               var lab = typeof o === 'object' ? o.label : o;
               return h('option', { value: val, selected: String(val) === String(f.value) }, lab);
             }));
+        } else if (f.type === 'checks') {
+          var sel = Array.isArray(f.value) ? f.value.map(String) : [];
+          ctl = h('div', { id: id, class: 'tk-checks', role: 'group', 'aria-label': f.label },
+            (f.options || []).map(function (o, i) {
+              var val = typeof o === 'object' ? o.value : o;
+              var lab = typeof o === 'object' ? o.label : o;
+              return h('label', { class: 'tk-checks__item' },
+                h('input', { type: 'checkbox', class: 'tk-check', id: id + '-' + i, value: String(val), checked: sel.indexOf(String(val)) !== -1 }),
+                h('span', null, lab));
+            }));
+          if (!(f.options || []).length) ctl.appendChild(h('span', { class: 'tk-muted' }, f.empty || '—'));
         } else if (f.type === 'textarea') {
           ctl = h('textarea', { id: id, class: 'tk-textarea', name: f.name, rows: f.rows || 3, placeholder: f.placeholder }, f.value || '');
         } else if (f.type === 'checkbox') {
@@ -451,7 +463,7 @@
           });
         }
         controls[f.name] = { el: ctl, def: f };
-        var label = h('label', { class: 'tk-label', for: id }, f.label + (f.required ? ' *' : ''));
+        var label = h(f.type === 'checks' ? 'span' : 'label', { class: 'tk-label', for: f.type === 'checks' ? null : id }, f.label + (f.required ? ' *' : ''));
         if (f.type === 'checkbox') {
           form.appendChild(h('div', { class: 'tk-field tk-field--inline' }, ctl, label));
         } else {
@@ -468,11 +480,12 @@
         for (var name in controls) {
           var c = controls[name], f = c.def, v;
           if (f.type === 'checkbox') v = c.el.checked;
+          else if (f.type === 'checks') v = Array.prototype.map.call(c.el.querySelectorAll('input:checked'), function (x) { return x.value; });
           else if (f.type === 'number' || f.type === 'money') {
             v = fmt.parseNum(c.el.value);
             if (c.el.value.trim() !== '' && v == null) bad = bad || ('„' + f.label + '” trebuie să fie un număr.');
           } else v = c.el.value.trim();
-          if (f.required && (v == null || v === '')) bad = bad || ('Completează „' + f.label + '”.');
+          if (f.required && (v == null || v === '' || (Array.isArray(v) && !v.length))) bad = bad || ('Completează „' + f.label + '”.');
           out[name] = v;
         }
         if (!bad && opts.validate) bad = opts.validate(out) || null;
