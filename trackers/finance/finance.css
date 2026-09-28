@@ -301,7 +301,7 @@
 .tk-tracker--finance tr:hover .fin-plus,
 .tk-tracker--finance .fin-paid-wrap:focus-within .fin-plus,
 .tk-tracker--finance .fin-plus:focus-visible { opacity: 1; }
-@media (hover: none) { .tk-tracker--finance .fin-plus { opacity: 0.85; width: 22px; height: 22px; left: -6px; } }
+
 .tk-tracker--finance .fin-locked { color: var(--ink-3); cursor: not-allowed; background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
 /* antete puțin mai strânse ca „Achitat, lei” / „Încasat” să încapă fără derulare */
 .tk-tracker--finance .fin-compact thead th { padding-inline: 3px; letter-spacing: 0.03em; }
@@ -324,3 +324,10 @@
 
 /* resetarea lunii */
 .tk-tracker--finance .fin-reset { color: var(--bad); }
+
+/* pe telefon „+” stă în interiorul câmpului (nu peste „lei” și nici peste cifre) */
+@media (hover: none) {
+  .tk-tracker--finance .fin-plus { opacity: 0.85; width: 20px; height: 20px; left: 1px; }
+  .tk-tracker--finance .fin-table td.num > .fin-paid-wrap > .tk-cell-input { margin-left: 0; padding-left: 23px; min-width: calc(8.5ch + 24px); width: calc(100% + 6px); }
+  .tk-tracker--finance .fin-table td:last-child > .fin-paid-wrap > .tk-cell-input { width: 100%; }
+}
