@@ -777,10 +777,20 @@
       var plan = cat && ym ? +(((s.plans[ym] || {})[type] || {})[cat]) || null : null;
       var p = ym ? ymParts(ym) : null;
       var monthly = perMonth(type) && !!ym;
-      var fields = [{
-        name: 'name', label: 'Nume', type: 'text', value: cat || '', required: true, placeholder: type === 'factura' ? 'ex. Televiziune' : type === 'venit' ? 'ex. Salariu' : '',
-        hint: monthly && !cat ? 'Se adaugă doar în ' + fmt.monthYear(ymParts(ym).y, ymParts(ym).m).toLowerCase() + '. Poți scrie și o sursă folosită în alte luni.' : null,
-      }];
+      // la veniturile pe lună: sursele create deja (în alte luni) care nu apar încă în luna aceasta
+      var existing = monthly && !cat ? s.categories[type].filter(function (c) { return visibleCats(type, ym).indexOf(c) === -1; }) : [];
+      var fields = [];
+      if (existing.length) {
+        fields.push({
+          name: 'pick', label: 'Alege o sursă creată deja', type: 'select', value: '',
+          options: [{ value: '', label: '— sursă nouă (scrie numele mai jos) —' }].concat(existing.map(function (c) { return { value: c, label: c }; })),
+        });
+      }
+      fields.push({
+        name: 'name', label: existing.length ? 'Sau scrie o sursă nouă' : 'Nume', type: 'text', value: cat || '', required: !existing.length,
+        placeholder: type === 'factura' ? 'ex. Televiziune' : type === 'venit' ? 'ex. Salariu' : '',
+        hint: monthly && !cat ? 'Se adaugă doar în ' + fmt.monthYear(ymParts(ym).y, ymParts(ym).m).toLowerCase() + '.' : null,
+      });
       if (type === 'factura' || type === 'datorie') fields.push({ name: 'due', label: 'Termen (ziua din lună)', type: 'number', value: ex.dueDay || null, placeholder: '1–31' });
       if (type === 'datorie') fields.push({ name: 'total', label: 'Total credit (lei)', type: 'money', value: ex.total || null, hint: 'Opțional: pentru „Rămas de plătit”.' });
       if (type === 'economie') fields.push({ name: 'target', label: 'Țintă (lei)', type: 'money', value: ex.target || null });
@@ -797,6 +807,8 @@
         onDelete: !!cat,
         deleteLabel: monthly ? 'Scoate din lună' : 'Șterge',
         validate: function (v) {
+          if (v.pick) v.name = v.pick;
+          if (!v.name) return 'Alege o sursă din listă sau scrie numele uneia noi.';
           var name = v.name.replace(/\s+/g, ' ');
           if (name !== cat && S().categories[type].indexOf(name) !== -1) {
             // la veniturile pe lună, o sursă existentă se poate adăuga într-o lună în care nu apare încă
