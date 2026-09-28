@@ -331,3 +331,10 @@
   .tk-tracker--tasks .tks-mx-top { justify-content: flex-start; }
   .tk-tracker--tasks .tks-ellipsis { max-width: 160px; }
 }
+
+/* ✎ / 🗑 pe carduri și în listă */
+.tk-tracker--tasks .tks-actions { display: inline-flex; gap: 2px; flex: none; }
+.tk-tracker--tasks .tks-act { width: 26px; height: 24px; font-size: 13px; border-color: var(--line); }
+.tk-tracker--tasks .tks-act--del:hover { background: var(--accent-soft); color: var(--bad); }
+.tk-tracker--tasks .tks-card__move .tks-actions { margin-left: 4px; padding-left: 4px; border-left: 1px solid var(--line-faint); }
+.tk-tracker--tasks .tks-actcell { width: 64px; white-space: nowrap; }

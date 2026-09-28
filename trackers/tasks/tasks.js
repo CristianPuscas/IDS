@@ -489,6 +489,34 @@
     });
   }
 
+  // Șterge o sarcină după confirmare.
+  function deleteTask(api, t, after) {
+    TK.ui.confirm({
+      title: 'Ștergi sarcina?',
+      text: '„' + t.title + '” va fi ștearsă definitiv.',
+      ok: 'Șterge sarcina',
+      danger: true,
+    }).then(function (yes) {
+      if (!yes) return;
+      api.state.tasks = api.state.tasks.filter(function (x) { return x !== t; });
+      api.commit();
+      TK.ui.toast('Sarcina „' + t.title + '” a fost ștearsă.');
+      if (after) after();
+    });
+  }
+  // Butoanele ✎ (editează) și 🗑 (șterge) pentru o sarcină.
+  function taskActions(api, t, idp, after) {
+    return h('span', { class: 'tks-actions' },
+      h('button', {
+        type: 'button', class: 'tk-icon-btn tks-act', id: idp + '-edit-' + t.id, title: 'Editează', 'aria-label': 'Editează „' + t.title + '”',
+        onclick: function (e) { e.stopPropagation(); openTaskForm(api, t, null, after); },
+      }, '✎'),
+      h('button', {
+        type: 'button', class: 'tk-icon-btn tks-act tks-act--del', id: idp + '-del-' + t.id, title: 'Șterge', 'aria-label': 'Șterge „' + t.title + '”',
+        onclick: function (e) { e.stopPropagation(); deleteTask(api, t, after); },
+      }, '🗑'));
+  }
+
   /* ============================================================ VEDERI */
 
   var TABS = [
@@ -692,7 +720,8 @@
           type: 'checkbox', class: 'tk-check', id: 'tks-urg-' + t.id, checked: t.urgent, 'aria-label': 'Urgent: ' + t.title,
           onchange: function (e) { t.urgent = e.target.checked; api.commit(); },
         })),
-        daysCell(t, td)
+        daysCell(t, td),
+        h('td', { class: 'chk tks-actcell' }, taskActions(api, t, 'tks-l', onChanged))
       );
     }
 
@@ -706,12 +735,12 @@
         tbody.appendChild(tr);
       });
       if (!list.length) {
-        tbody.appendChild(h('tr', null, h('td', { colspan: 9, class: 'tk-center tk-muted tks-norows' },
+        tbody.appendChild(h('tr', null, h('td', { colspan: 10, class: 'tk-center tk-muted tks-norows' },
           total ? 'Nicio sarcină nu corespunde filtrelor.' : 'Nu ai încă nicio sarcină. Apasă „+ Sarcină nouă”.')));
       }
       for (var i = 0; i < 3; i++) {
         var er = h('tr', { class: 'is-empty tk-hide-sm', 'aria-hidden': 'true' });
-        for (var j = 0; j < 9; j++) er.appendChild(h('td', null, ''));
+        for (var j = 0; j < 10; j++) er.appendChild(h('td', null, ''));
         tbody.appendChild(er);
       }
       var table = h('table', { class: 'tk-table tks-list', id: 'tks-list' },
@@ -719,11 +748,11 @@
           h('tr', { class: 'tks-list__group' },
             h('th', { colspan: 6, class: 'tks-list__blank' }, ''),
             h('th', { colspan: 2 }, 'Matrice Eisenhower'),
-            h('th', { class: 'tks-list__blank' }, '')),
+            h('th', { colspan: 2, class: 'tks-list__blank' }, '')),
           h('tr', null,
             h('th', null, 'Sarcină'), h('th', null, 'Termen'), h('th', null, 'Executant'), h('th', null, 'Status'),
             h('th', null, 'Categorie'), h('th', null, 'Prioritate'), h('th', { class: 'chk' }, 'Important?'),
-            h('th', { class: 'chk' }, 'Urgent?'), h('th', { class: 'num' }, 'Zile rămase'))),
+            h('th', { class: 'chk' }, 'Urgent?'), h('th', { class: 'num' }, 'Zile rămase'), h('th', { class: 'chk' }, h('span', { class: 'tk-sr' }, 'Acțiuni')))),
         tbody);
       keepFocus(function () {
         TK.clear(listEl);
@@ -831,7 +860,8 @@
             type: 'button', class: 'tk-icon-btn tks-mini', id: 'tks-kb-next-' + t.id, disabled: !next,
             'aria-label': next ? 'Mută „' + t.title + '” în ' + next.label : 'Ultima coloană',
             onclick: function () { if (next) move(t, next.id); },
-          }, '▶'))
+          }, '▶'),
+          taskActions(api, t, 'tks-kb', function () { ctx.refresh(); }))
       );
       c.addEventListener('dragstart', function (e) {
         try { e.dataTransfer.setData('text/plain', t.id); e.dataTransfer.effectAllowed = 'move'; } catch (x) { /* ignorăm */ }
