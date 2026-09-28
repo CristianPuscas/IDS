@@ -422,6 +422,15 @@
 
   /* ------------------------------------------------------------ formular */
 
+  // Adaugă un executant / o categorie nouă (dacă nu există deja) și întoarce numele folosit.
+  function addListItem(arr, name, emoji) {
+    name = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+    if (!name) return '';
+    for (var i = 0; i < arr.length; i++) if (arr[i].name.toLowerCase() === name.toLowerCase()) return arr[i].name;
+    arr.push({ name: name, emoji: emoji });
+    return name;
+  }
+
   function openTaskForm(api, task, preset, after) {
     var st = api.state;
     var isNew = !task;
@@ -446,8 +455,10 @@
         { name: 'due', label: 'Termen', type: 'date', value: v.due || '' },
         { name: 'time', label: 'Ora (opțional)', type: 'time', value: v.time || '', hint: 'Apare în calendar și în planificator.' },
         { name: 'assignee', label: 'Executant', type: 'select', options: people, value: v.assignee || '' },
+        { name: 'newPerson', label: 'Sau adaugă un executant nou', type: 'text', placeholder: 'ex. Maria', hint: 'Se adaugă în listă și primește sarcina. Executanții se editează sau se șterg în tab-ul „Setări”.' },
         { name: 'status', label: 'Status', type: 'select', options: statusOptions(), value: v.status },
         { name: 'category', label: 'Categorie', type: 'select', options: cats, value: v.category || '' },
+        { name: 'newCategory', label: 'Sau adaugă o categorie nouă', type: 'text', placeholder: 'ex. Călătorii', hint: 'Categoriile se editează sau se șterg în tab-ul „Setări”.' },
         {
           name: 'priority', label: 'Prioritate', type: 'select', value: v.priority || '',
           options: [{ value: '', label: '— fără prioritate —' }].concat(PRIORITIES.map(function (p) { return { value: p.id, label: p.icon + ' ' + p.label }; })),
@@ -474,8 +485,8 @@
         t.title = res.title;
         t.due = res.due || null;
         t.time = res.time || '';
-        t.assignee = res.assignee || '';
-        t.category = res.category || '';
+        t.assignee = addListItem(s.people, res.newPerson, '👤') || res.assignee || '';
+        t.category = addListItem(s.categories, res.newCategory, '🏷️') || res.category || '';
         t.priority = res.priority || '';
         t.important = !!res.important;
         t.urgent = !!res.urgent;
@@ -700,6 +711,15 @@
     function row(t, td) {
       var st = api.state, done = isDone(t), late = isOverdue(t, td), s = STATUS_BY[t.status];
       return h('tr', { class: done ? 'is-done' : (late ? 'is-late' : null), dataset: { id: t.id } },
+        h('td', { class: 'chk tks-donecell' }, h('input', {
+          type: 'checkbox', class: 'tk-check', id: 'tks-done-' + t.id, checked: done, title: done ? 'Marchează ca nefinalizată' : 'Marchează ca finalizată',
+          'aria-label': 'Finalizat: ' + t.title,
+          onchange: function (e) {
+            markDone(t, e.target.checked);
+            onChanged();
+            TK.ui.toast(e.target.checked ? '„' + t.title + '” e finalizată.' : '„' + t.title + '” a revenit la ' + STATUS_BY[t.status].label + '.');
+          },
+        })),
         h('td', { class: 'tks-titlecell' },
           h('button', { type: 'button', class: 'tks-link', id: 'tks-edit-' + t.id, title: 'Editează sarcina', onclick: function () { openTaskForm(api, t, null, onChanged); } }, t.title),
           late ? overduePill(true) : null),
@@ -735,22 +755,22 @@
         tbody.appendChild(tr);
       });
       if (!list.length) {
-        tbody.appendChild(h('tr', null, h('td', { colspan: 10, class: 'tk-center tk-muted tks-norows' },
+        tbody.appendChild(h('tr', null, h('td', { colspan: 11, class: 'tk-center tk-muted tks-norows' },
           total ? 'Nicio sarcină nu corespunde filtrelor.' : 'Nu ai încă nicio sarcină. Apasă „+ Sarcină nouă”.')));
       }
       for (var i = 0; i < 3; i++) {
         var er = h('tr', { class: 'is-empty tk-hide-sm', 'aria-hidden': 'true' });
-        for (var j = 0; j < 10; j++) er.appendChild(h('td', null, ''));
+        for (var j = 0; j < 11; j++) er.appendChild(h('td', null, ''));
         tbody.appendChild(er);
       }
       var table = h('table', { class: 'tk-table tks-list', id: 'tks-list' },
         h('thead', null,
           h('tr', { class: 'tks-list__group' },
-            h('th', { colspan: 6, class: 'tks-list__blank' }, ''),
+            h('th', { colspan: 7, class: 'tks-list__blank' }, ''),
             h('th', { colspan: 2 }, 'Matrice Eisenhower'),
             h('th', { colspan: 2, class: 'tks-list__blank' }, '')),
           h('tr', null,
-            h('th', null, 'Sarcină'), h('th', null, 'Termen'), h('th', null, 'Executant'), h('th', null, 'Status'),
+            h('th', { class: 'chk', title: 'Finalizat' }, '✓'), h('th', null, 'Sarcină'), h('th', null, 'Termen'), h('th', null, 'Executant'), h('th', null, 'Status'),
             h('th', null, 'Categorie'), h('th', null, 'Prioritate'), h('th', { class: 'chk' }, 'Important?'),
             h('th', { class: 'chk' }, 'Urgent?'), h('th', { class: 'num' }, 'Zile rămase'), h('th', { class: 'chk' }, h('span', { class: 'tk-sr' }, 'Acțiuni')))),
         tbody);
