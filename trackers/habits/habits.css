@@ -189,6 +189,48 @@
   padding-block: 2px;
   text-overflow: ellipsis;
 }
+/* programul obiceiului (lângă nume) */
+.tk-tracker--habits .hb-name__in { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.tk-tracker--habits .hb-name__in .tk-cell-input { flex: 1 1 auto; min-width: 0; width: auto; }
+.tk-tracker--habits .hb-sched {
+  flex: none;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-3);
+  font: inherit;
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0;
+}
+.tk-tracker--habits .hb-sched.is-set { opacity: 1; border-color: var(--sage); background: var(--sage-soft); color: var(--ink); }
+.tk-tracker--habits tr:hover .hb-sched,
+.tk-tracker--habits .hb-sched:focus-visible { opacity: 1; }
+@media (hover: none) { .tk-tracker--habits .hb-sched { opacity: 0.7; } }
+.tk-tracker--habits .hb-grid td.is-rest {
+  background: repeating-linear-gradient(135deg, transparent 0 3px, color-mix(in srgb, var(--line) 55%, transparent) 3px 4px);
+}
+.tk-tracker--habits .hb-grid td.is-rest .tk-check:not(:checked) { opacity: 0.35; }
+.hb-sd__opt { display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
+.hb-sd__days { display: flex; flex-wrap: wrap; gap: 4px; padding-left: 24px; }
+.hb-sd__day {
+  min-width: 36px;
+  padding: 5px 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.hb-sd__day[aria-pressed="true"] { background: var(--sage); border-color: var(--sage-deep); color: var(--rose-ink); font-weight: 700; }
+.hb-sd__week { display: flex; align-items: center; gap: 8px; padding-left: 24px; font-size: 12.5px; color: var(--ink-2); }
+.hb-sd__n { width: auto; }
 .tk-tracker--habits .hb-del {
   width: 22px;
   height: 22px;

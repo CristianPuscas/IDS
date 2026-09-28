@@ -6,6 +6,7 @@
  *   habits:  [{ id: 'h1', name: 'Antrenament', goal: 26 | null,   // zile-țintă pe lună (opțional)
  *               createdAt: '2026-01-01',                          // prima zi în care obiceiul contează
  *               createdYm: '2026-01',                             // = luna lui createdAt (vizibilitate pe luni)
+ *               sched?: { days: [0, 2, 4] } | { perWeek: 3 },   // program: doar în anumite zile (0 = luni) sau de N ori pe săptămână; lipsă = zilnic
  *               archivedYm?: '2026-10' }],   // oprit din prima zi a acestei luni; vizibil în lunile createdYm ≤ ym < archivedYm
  *   checks:  { '2026-09': { h1: '0110…' } },   // câte un caracter pe zi a lunii ('1' = bifat), lungime = zilele lunii
  *   weekly:  { '2026-09': [ [ {id, text, done} ], … ] },  // o listă pe fiecare săptămână (TK.date.chunkWeeks: 1–7, 8–14, …)
@@ -19,6 +20,10 @@
  *   % pe zi       = obiceiuri bifate în zi / obiceiuri eligibile în acea zi
  *   % lunar       = total bifate / Σ zile eligibile ale tuturor obiceiurilor   („304 / 372”)
  *   % pe obicei   = zile bifate / zilele lui eligibile din lună
+ * Programul unui obicei:
+ *   - „doar în anumite zile”: celelalte zile sunt libere (nu intră nici la numitor, nici la numărător);
+ *   - „de N ori pe săptămână” (săptămânile grilei: 1–7, 8–14, …): pe săptămână contează cel mult N bifări, iar ținta
+ *     intră la numitor doar când nu mai poate fi atinsă; în graficul pe zile obiceiul apare doar în zilele bifate.
  */
 (function () {
   'use strict';
@@ -56,11 +61,30 @@
       // migrare: obiceiurile vechi aveau doar luna creării
       if (!hb.createdAt || !/^\d{4}-\d{2}-\d{2}$/.test(hb.createdAt)) hb.createdAt = (validYm(hb.createdYm) ? hb.createdYm : '2000-01') + '-01';
       hb.createdYm = hb.createdAt.slice(0, 7);
+      hb.sched = cleanSched(hb.sched);
+      if (!hb.sched) delete hb.sched;
     });
     if (!st.checks || typeof st.checks !== 'object') st.checks = {};
     if (!st.weekly || typeof st.weekly !== 'object') st.weekly = {};
     if (!st.monthly || typeof st.monthly !== 'object') st.monthly = {};
     return st;
+  }
+
+  // Program valid sau null (= în fiecare zi).
+  function cleanSched(v) {
+    if (!v || typeof v !== 'object') return null;
+    if (Array.isArray(v.days)) {
+      var days = v.days.filter(function (d, i, a) { return d === (d | 0) && d >= 0 && d <= 6 && a.indexOf(d) === i; }).sort();
+      return days.length && days.length < 7 ? { days: days } : null;
+    }
+    var n = +v.perWeek;
+    return n >= 1 && n <= 6 ? { perWeek: Math.round(n) } : null;
+  }
+  function schedLabel(sc, long) {
+    if (!sc) return long ? 'În fiecare zi' : '7/7';
+    if (sc.perWeek) return long ? sc.perWeek + (sc.perWeek === 1 ? ' dată' : ' ori') + ' pe săptămână' : sc.perWeek + '×/săpt.';
+    if (long) return 'Doar ' + sc.days.map(function (d) { return D.WEEKDAYS[d].toLowerCase(); }).join(', ');
+    return sc.days.length <= 3 ? sc.days.map(function (d) { return D.WEEKDAYS_SHORT[d]; }).join(' ') : sc.days.length + ' zile';
   }
 
   function isVisible(hb, ym) {
@@ -95,25 +119,52 @@
     return D.day(ca);
   }
 
-  // Toate cifrele unei luni. Se numără doar zilele eligibile (≥ createdAt și ≤ azi).
+  // Toate cifrele unei luni. Se numără doar zilele eligibile (≥ createdAt și ≤ azi) și, după program, doar zilele care contează.
   function monthStats(st, ym, today) {
     var y = ymY(ym), m = ymM(ym), n = D.daysInMonth(y, m);
     var hs = visibleHabits(st, ym);
     var tYm = D.ym(today);
     var lastDay = ym < tYm ? n : ym === tYm ? D.day(today) : 0; // ultima zi care se poate bifa
+    var wd1 = D.weekday(D.make(y, m, 1));
+    var weeks = D.chunkWeeks(y, m);
     var perDay = zeros(n), eligible = zeros(n), perHabit = [], denHabit = [], fullHabit = [], starts = [];
     var total = 0, max = 0, goalsMet = 0, goalsSet = 0;
     hs.forEach(function (hb) {
-      var s = getBits(st, ym, hb.id), c = 0, from = firstDay(hb, ym, n);
-      for (var d = from; d <= lastDay; d++) {
-        eligible[d - 1]++;
-        if (s.charCodeAt(d - 1) === 49) { c++; perDay[d - 1]++; }
+      var s = getBits(st, ym, hb.id), c = 0, den = 0, full = 0, from = firstDay(hb, ym, n);
+      var sc = cleanSched(hb.sched);
+      function on(d) { return s.charCodeAt(d - 1) === 49; }
+      if (sc && sc.perWeek) {
+        weeks.forEach(function (w) {
+          var len = 0, done = 0, free = 0;
+          w.forEach(function (d) {
+            if (d < from) return;
+            len++;
+            if (d > lastDay) { free++; return; }
+            if (on(d)) { done++; perDay[d - 1]++; eligible[d - 1]++; }
+            else if (d === lastDay && ym === tYm) free++; // azi se mai poate bifa
+          });
+          if (!len) return;
+          var target = len === 7 ? sc.perWeek : Math.min(len, Math.round(sc.perWeek * len / 7));
+          full += target;
+          if (w[0] > lastDay) return; // săptămână viitoare
+          var got = Math.min(done, target);
+          c += got;
+          den += got + Math.max(0, target - got - free); // lipsa intră doar când nu mai poate fi recuperată
+        });
+      } else {
+        for (var d = from; d <= n; d++) {
+          if (sc && sc.days.indexOf((wd1 + d - 1) % 7) === -1) continue; // zi liberă
+          full++;
+          if (d > lastDay) continue;
+          den++;
+          eligible[d - 1]++;
+          if (on(d)) { c++; perDay[d - 1]++; }
+        }
       }
-      var den = Math.max(0, lastDay - from + 1);
       starts.push(from);
       perHabit.push(c);
       denHabit.push(den);
-      fullHabit.push(Math.max(0, n - from + 1));
+      fullHabit.push(full);
       total += c;
       max += den;
       if (hb.goal) { goalsSet++; if (c >= hb.goal) goalsMet++; }
@@ -460,6 +511,7 @@
           nameCell.textContent = v;
           nameCell.title = v;
           delBtn.setAttribute('aria-label', 'Elimină obiceiul „' + v + '”');
+          schedBtn.setAttribute('aria-label', 'Programul obiceiului „' + v + '”: ' + schedLabel(sc, true));
           progName.textContent = v;
           goalIn.setAttribute('aria-label', 'Obiectiv (zile pe lună) pentru ' + v);
           bar.setAttribute('aria-label', 'Progres ' + v);
@@ -487,9 +539,16 @@
         class: 'hb-idx hb-grip', title: 'Trage ca să muți obiceiul (sau Alt + ↑/↓ în nume)',
         onpointerdown: function (e) { startDrag(e, c, hb, idxCell); },
       }, String(i + 1));
+      var sc = cleanSched(hb.sched);
+      var schedBtn = h('button', {
+        type: 'button', class: 'hb-sched' + (sc ? ' is-set' : ''), id: 'hb-sched-' + hb.id,
+        title: 'Program: ' + schedLabel(sc, true) + ' — apasă ca să schimbi',
+        'aria-label': 'Programul obiceiului „' + hb.name + '”: ' + schedLabel(sc, true),
+        onclick: function () { editSchedule(c, hb); },
+      }, schedLabel(sc));
       listBody.appendChild(h('tr', { dataset: { h: hb.id } },
         idxCell,
-        h('td', { class: 'hb-name' }, nameIn),
+        h('td', { class: 'hb-name' }, h('div', { class: 'hb-name__in' }, nameIn, schedBtn)),
         h('td', { class: 'hb-act' }, delBtn)));
 
       // grilă
@@ -497,10 +556,11 @@
       var tr = h('tr', { dataset: { h: hb.id } }, nameCell);
       days.forEach(function (dm) {
         var on = !dm.future && bits.charCodeAt(dm.d - 1) === 49;
-        tr.appendChild(h('td', { class: dayCellClass(dm) + (dm.d < s0.starts[i] ? ' is-pre' : '') },
+        var rest = sc && sc.days && sc.days.indexOf(dm.wd) === -1;
+        tr.appendChild(h('td', { class: dayCellClass(dm) + (dm.d < s0.starts[i] ? ' is-pre' : '') + (rest ? ' is-rest' : '') },
           h('input', {
             type: 'checkbox', class: 'tk-check', id: 'hb-c-' + hb.id + '-' + dm.d, checked: on,
-            disabled: dm.future, title: dm.future ? 'Zi viitoare' : null,
+            disabled: dm.future, title: dm.future ? 'Zi viitoare' : rest ? 'Zi liberă — nu contează la procent' : null,
             dataset: { h: hb.id, d: String(dm.d) },
             'aria-label': hb.name + ', ' + dm.d + ' ' + MONTHS_LOWER[c.m],
           })));
@@ -530,7 +590,7 @@
         h('td', { class: 'num hb-goal' }, goalIn),
         h('td', { class: 'hb-pc' }, progName, h('div', { class: 'hb-pc__in' }, pctEl, bar)),
         cnt));
-      refs.rows.push({ hb: hb, pct: pctEl, bar: bar, cnt: cnt });
+      refs.rows.push({ hb: hb, sc: sc, pct: pctEl, bar: bar, cnt: cnt });
     });
 
     /* rândul de adăugare, aliniat în toate cele trei tabele */
@@ -683,7 +743,8 @@
         r.bar.setAttribute('aria-valuenow', String(Math.round(p * 100)));
         r.bar.title = goal ? (met ? 'Obiectiv atins: ' : 'Obiectiv: ') + goal + ' zile' : 'Fără obiectiv';
         r.cnt.textContent = cnt + ' / ' + den;
-        r.cnt.title = den < s.n ? den + ' zile care contează până acum din ' + s.n : '';
+        r.cnt.title = r.sc && r.sc.perWeek ? 'Țintă: ' + schedLabel(r.sc, true).toLowerCase() + ' · ' + cnt + ' bifări care contează din ' + den + ' datorate până acum (' + full + ' pe toată luna)'
+          : den < s.n ? den + ' zile care contează până acum din ' + s.n + (r.sc ? ' (' + schedLabel(r.sc, true).toLowerCase() + ')' : '') : '';
       });
 
       TK.charts.donut(refs.sumDonut, { value: ratio, top: 'Progres', main: F.pct(ratio, 1), size: 96, thickness: 10 });
@@ -728,6 +789,60 @@
       }
     }
     update();
+  }
+
+  /* programul unui obicei: zilnic, doar în anumite zile sau de N ori pe săptămână */
+  function editSchedule(c, hb) {
+    var sc = cleanSched(hb.sched);
+    var mode = !sc ? 'daily' : sc.perWeek ? 'week' : 'days';
+    var days = sc && sc.days ? sc.days.slice() : [0, 1, 2, 3, 4];
+    var perWeek = sc && sc.perWeek ? sc.perWeek : 3;
+    var err = h('p', { class: 'tk-form-error', role: 'alert', hidden: true });
+    function radio(val, label) {
+      var r = h('input', { type: 'radio', name: 'hb-sched-mode', value: val, checked: mode === val, onchange: function () { mode = val; sync(); } });
+      return h('label', { class: 'hb-sd__opt' }, r, h('span', null, label));
+    }
+    var dayBtns = D.WEEKDAYS_SHORT.map(function (lab, d) {
+      var b = h('button', {
+        type: 'button', class: 'hb-sd__day', title: D.WEEKDAYS[d], 'aria-pressed': String(days.indexOf(d) !== -1),
+        onclick: function () {
+          var k = days.indexOf(d);
+          if (k === -1) days.push(d); else days.splice(k, 1);
+          b.setAttribute('aria-pressed', String(k === -1));
+          mode = 'days'; sync();
+        },
+      }, lab);
+      return b;
+    });
+    var nIn = h('select', { class: 'tk-select hb-sd__n', 'aria-label': 'De câte ori pe săptămână', onchange: function () { perWeek = +nIn.value; mode = 'week'; sync(); } },
+      [1, 2, 3, 4, 5, 6].map(function (k) { return h('option', { value: String(k), selected: k === perWeek }, String(k)); }));
+    var radios = [radio('daily', 'În fiecare zi'), radio('days', 'Doar în anumite zile'), radio('week', 'De un număr de ori pe săptămână')];
+    function sync() {
+      radios.forEach(function (l) { var r = l.querySelector('input'); r.checked = r.value === mode; });
+      err.hidden = true;
+    }
+    var box = h('div', { class: 'tk-stack hb-sd' },
+      h('p', { class: 'tk-muted' }, 'Zilele în care obiceiul nu e programat nu scad procentul. Poți totuși să le bifezi.'),
+      radios[0],
+      radios[1], h('div', { class: 'hb-sd__days', role: 'group', 'aria-label': 'Zilele săptămânii' }, dayBtns),
+      radios[2], h('div', { class: 'hb-sd__week' }, nIn, h('span', null, 'ori pe săptămână (săptămânile grilei: 1–7, 8–14, …)')),
+      err);
+    TK.ui.modal({
+      title: 'Program: ' + hb.name,
+      content: box,
+      actions: [
+        { label: 'Anulează', kind: 'ghost' },
+        { label: 'Salvează', kind: 'primary', onClick: function () {
+          var next = mode === 'daily' ? null : mode === 'week' ? { perWeek: perWeek } : { days: days.slice() };
+          if (mode === 'days' && !days.length) { err.textContent = 'Alege cel puțin o zi.'; err.hidden = false; return false; }
+          next = cleanSched(next);
+          if (next) hb.sched = next; else delete hb.sched;
+          c.api.commit();
+          c.rerender();
+          TK.ui.toast('„' + hb.name + '”: ' + schedLabel(next, true).toLowerCase() + '.');
+        } },
+      ],
+    });
   }
 
   /* mutare prin tragere de numărul din lista „Obiceiuri zilnice” */
