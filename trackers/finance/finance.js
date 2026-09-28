@@ -12,6 +12,7 @@
  *   debts: { [categorie datorie]: { dueDay, total } },      // total = suma inițială a creditului (opțional)
  *   goals: { [categorie economie]: { target } },            // ținta de acumulat
  *   openingBalance: număr,                                   // soldul dinaintea primei luni
+ *   noPlan: { [tip]: true },                                 // tabele fără coloana „Plan” (doar „Achitat”)
  *   notes: { 'YYYY': 'text' }                                // notițele din rezumatul anual
  * }
  * „Sold reportat” al unei luni = openingBalance + (venituri − toate ieșirile) din toate lunile anterioare.
@@ -405,6 +406,9 @@
     s.notes = notes;
     var ob = +s.openingBalance;
     s.openingBalance = isFinite(ob) ? r2(ob) : 0;
+    var np = {};
+    if (isObj(s.noPlan)) TYPES.forEach(function (t) { if (s.noPlan[t] === true) np[t] = true; });
+    s.noPlan = np;
     return s;
   }
 
@@ -681,7 +685,8 @@
       if (type === 'factura' || type === 'datorie') fields.push({ name: 'due', label: 'Termen (ziua din lună)', type: 'number', value: ex.dueDay || null, placeholder: '1–31' });
       if (type === 'datorie') fields.push({ name: 'total', label: 'Total credit (lei)', type: 'money', value: ex.total || null, hint: 'Opțional: pentru „Rămas de plătit”.' });
       if (type === 'economie') fields.push({ name: 'target', label: 'Țintă (lei)', type: 'money', value: ex.target || null });
-      if (p) {
+      var showPlan = !!p && !s.noPlan[type];
+      if (showPlan) {
         fields.push({ name: 'plan', label: 'Plan pentru ' + fmt.monthYear(p.y, p.m).toLowerCase() + ' (lei)', type: 'money', value: plan });
         fields.push({ name: 'allMonths', label: 'Aceeași sumă fixă în toate lunile din ' + p.y, type: 'checkbox', value: !cat });
       }
@@ -711,10 +716,10 @@
           if (type === 'datorie') e.total = v.total ? r2(v.total) : 0;
           if (type === 'economie') e.target = v.target ? r2(v.target) : 0;
         }
-        if (ym && v.allMonths) {
+        if (showPlan && v.allMonths) {
           for (var mm = 0; mm < 12; mm++) setPlanRaw(ymOf(p.y, mm), type, name, v.plan);
           api.commit();
-        } else if (ym) setPlan(ym, type, name, v.plan);
+        } else if (showPlan) setPlan(ym, type, name, v.plan);
         else api.commit();
         TK.ui.toast(cat ? '„' + name + '” a fost salvat.' : '„' + name + '” a fost adăugat.');
         if (after) after();
@@ -837,6 +842,20 @@
         text: 'Categoria trece din ' + PLURAL[type] + ' în ' + PLURAL[to] + ', împreună cu ' + parts.join(' și ') + '. Totalurile lunilor se recalculează.',
         ok: 'Mută în ' + PLURAL[to],
       }).then(function (yes) { if (yes) doMove(); });
+    }
+    // Comutator „Cu plan” pentru un tabel: fără plan rămâne doar coloana Achitat / Încasat.
+    function planToggle(type, after, id) {
+      var on = !S().noPlan[type];
+      return h('label', { class: 'fin-plan-toggle', for: id, title: 'Afișează sau ascunde coloanele Plan și Progres' },
+        h('input', {
+          type: 'checkbox', class: 'tk-toggle', id: id, checked: on,
+          onchange: function (e) {
+            if (e.target.checked) delete S().noPlan[type]; else S().noPlan[type] = true;
+            api.commit();
+            if (after) after();
+          },
+        }),
+        h('span', null, 'Cu plan'));
     }
     function addCatButton(type, ym, after, id) {
       return h('button', { type: 'button', class: 'tk-btn tk-btn--sm tk-btn--ghost fin-add-cat', id: id, onclick: function () { categoryForm(type, null, ym, after); } }, '+ Adaugă ' + NOUN[type]);
@@ -1071,7 +1090,10 @@
       var map = type === 'factura' ? s.bills : s.debts;
       var monthEnd = (function () { var p = ymParts(m.ym); return D.make(p.y, p.m, D.daysInMonth(p.y, p.m)); })();
       var showLeft = type === 'datorie' && cats.some(function (c) { return (map[c] || {}).total > 0; });
-      var head = [th(h('span', { class: 'tk-sr' }, 'Plătit'), 'chk'), th('Categorie'), th('Termen', 'fin-due'), th('Plan', 'num', { colspan: 2 }), th('Achitat', 'num', { colspan: 2 }), th('Progres', 'num')];
+      var usePlan = !s.noPlan[type];
+      var head = usePlan
+        ? [th(h('span', { class: 'tk-sr' }, 'Plătit'), 'chk'), th('Categorie'), th('Termen', 'fin-due'), th('Plan', 'num', { colspan: 2 }), th('Achitat', 'num', { colspan: 2 }), th('Progres', 'num')]
+        : [th('Categorie'), th('Termen', 'fin-due'), th('Achitat', 'num', { colspan: 2 })];
       if (showLeft) head.push(th('Rămas de plătit', 'num', { colspan: 2 }));
       var rows = cats.map(function (c, i) {
         var plan = +m.plan[type][c] || 0, fact = m.fact[type][c] || 0;
@@ -1079,25 +1101,31 @@
         var cb = h('input', { type: 'checkbox', class: 'tk-check', id: 'fin-paid-' + where + '-' + type + '-' + i, checked: paid, 'aria-label': c + ' plătită' });
         cb.addEventListener('change', function () { onTick(cb, type, c, m, rerender); });
         var due = (map[c] || {}).dueDay;
-        var cells = [
+        var cells = usePlan ? [
           h('td', { class: 'chk' }, cb),
           catCell(type, c, m.ym, rerender),
           h('td', { class: 'tk-center fin-due' }, due ? String(due) : '—'),
           curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, where, rerender)),
           curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, where, rerender)),
           pctTd(fact, plan, 'out'),
+        ] : [
+          catCell(type, c, m.ym, rerender),
+          h('td', { class: 'tk-center fin-due' }, due ? String(due) : '—'),
+          curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, where, rerender)),
         ];
         if (showLeft) {
           var tot = +(map[c] || {}).total || 0;
           var left = tot ? Math.max(0, tot - cumulative(s, type, c, monthEnd)) : null;
           cells.push(curTd(), h('td', { class: 'num' }, tot ? fmt.num(left) : '—'));
         }
-        return h('tr', { class: paid ? 'fin-paid' : null }, cells);
+        return h('tr', { class: paid && usePlan ? 'fin-paid' : null }, cells);
       });
-      var cols = ['', '', '', 'cur', 'num', 'cur', 'num', 'num'];
+      var cols = usePlan ? ['', '', '', 'cur', 'num', 'cur', 'num', 'num'] : ['', '', 'cur', 'num'];
       if (showLeft) cols.push('cur', 'num');
       var pad = Math.max(0, (opts.minRows || 0) - cats.length);
-      var foot = [h('th', { colspan: 3, scope: 'row' }, 'Total'), curTd(), numTd(m.planTot[type]), curTd(), numTd(m.factTot[type]), pctTd(m.factTot[type], m.planTot[type], 'out')];
+      var foot = usePlan
+        ? [h('th', { colspan: 3, scope: 'row' }, 'Total'), curTd(), numTd(m.planTot[type]), curTd(), numTd(m.factTot[type]), pctTd(m.factTot[type], m.planTot[type], 'out')]
+        : [h('th', { colspan: 2, scope: 'row' }, 'Total'), curTd(), numTd(m.factTot[type])];
       if (showLeft) {
         var leftTot = TK.sum(cats, function (c) { var tot = +(map[c] || {}).total || 0; return tot ? Math.max(0, tot - cumulative(s, type, c, monthEnd)) : 0; });
         foot.push(curTd(), numTd(leftTot));
@@ -1107,7 +1135,7 @@
           h('thead', null, h('tr', null, head)),
           h('tbody', { dataset: { ftype: type } }, rows, emptyRows(pad, cols)),
           h('tfoot', null, h('tr', null, foot)))),
-        h('div', { class: 'fin-cat-tools' }, addCatButton(type, m.ym, rerender, 'fin-addcat-' + where + '-' + type))];
+        h('div', { class: 'fin-cat-tools' }, addCatButton(type, m.ym, rerender, 'fin-addcat-' + where + '-' + type), planToggle(type, rerender, 'fin-useplan-' + where + '-' + type))];
     }
 
     /* ================================================== LUNA (dashboard) */
@@ -1256,19 +1284,26 @@
     function summaryCard(m, type, rerender, opts) {
       opts = opts || {};
       var cats = S().categories[type];
-      var withPct = type !== 'venit';
+      var usePlan = !S().noPlan[type];
+      var withPct = type !== 'venit' && usePlan;
       var tone = type === 'venit' ? 'sage' : null;
-      var head = [th('Categorie'), th('Plan', 'num', { colspan: 2 }), th(PAID_LABEL[type], 'num', { colspan: 2 })];
+      var head = [th('Categorie')];
+      if (usePlan) head.push(th('Plan', 'num', { colspan: 2 }));
+      head.push(th(PAID_LABEL[type], 'num', { colspan: 2 }));
       if (withPct) head.push(th('Progres', 'num'));
       var rows = cats.map(function (c, i) {
         var plan = +m.plan[type][c] || 0, fact = m.fact[type][c] || 0;
-        var cells = [catCell(type, c, m.ym, rerender), curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)), curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, 'luna', rerender))];
+        var cells = [catCell(type, c, m.ym, rerender)];
+        if (usePlan) cells.push(curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)));
+        cells.push(curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, 'luna', rerender)));
         if (withPct) cells.push(pctTd(fact, plan, MODE[type]));
         return h('tr', null, cells);
       });
-      var cols = ['', 'cur', 'num', 'cur', 'num'];
+      var cols = usePlan ? ['', 'cur', 'num', 'cur', 'num'] : ['', 'cur', 'num'];
       if (withPct) cols.push('num');
-      var foot = [h('th', { scope: 'row' }, 'Total'), curTd(), numTd(m.planTot[type]), curTd(), numTd(m.factTot[type])];
+      var foot = [h('th', { scope: 'row' }, 'Total')];
+      if (usePlan) foot.push(curTd(), numTd(m.planTot[type]));
+      foot.push(curTd(), numTd(m.factTot[type]));
       if (withPct) foot.push(pctTd(m.factTot[type], m.planTot[type], MODE[type]));
       return h('article', { class: 'tk-card' + (tone ? ' tk-card--' + tone : '') },
         cardHead(titleB('Sumar', PLURAL[type].toLowerCase()), tone),
@@ -1277,7 +1312,7 @@
             h('thead', null, h('tr', null, head)),
             h('tbody', { dataset: { ftype: type } }, rows, emptyRows(Math.max(0, (opts.minRows || 0) - cats.length), cols)),
             h('tfoot', null, h('tr', null, foot)))),
-        h('div', { class: 'fin-cat-tools' }, addCatButton(type, m.ym, rerender, 'fin-addcat-luna-' + type)));
+        h('div', { class: 'fin-cat-tools' }, addCatButton(type, m.ym, rerender, 'fin-addcat-luna-' + type), planToggle(type, rerender, 'fin-useplan-luna-' + type)));
     }
 
     function top20Card(items, total) {
