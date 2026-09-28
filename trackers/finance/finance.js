@@ -6,7 +6,7 @@
  *   categories: { venit: [nume…], cheltuiala: […], factura: […], datorie: […], economie: […] },
  *                 // ordinea = ordinea de afișare; culoarea din grafice = indexul în listă
  *   transactions: [{ id, date: 'YYYY-MM-DD', type: 'venit'|'cheltuiala'|'factura'|'datorie'|'economie',
- *                    category, amount (număr pozitiv), note }],
+ *                    category, amount (număr pozitiv), note, auto? }],   // auto: plată introdusă în coloana „Achitat”
  *   plans: { 'YYYY-MM': { venit: {categorie: sumă}, cheltuiala: {…}, factura: {…}, datorie: {…}, economie: {…} } },
  *   bills: { [categorie factură]: { dueDay } },            // TERMEN = ziua din lună
  *   debts: { [categorie datorie]: { dueDay, total } },      // total = suma inițială a creditului (opțional)
@@ -356,7 +356,9 @@
       ensureCat(t.type, c);
       var id = typeof t.id === 'string' && t.id && !seen[t.id] ? t.id : TK.uid() + Object.keys(seen).length.toString(36);
       seen[id] = true;
-      return { id: id, date: t.date, type: t.type, category: c, amount: posNum(t.amount), note: typeof t.note === 'string' ? t.note.slice(0, 500) : '' };
+      var out = { id: id, date: t.date, type: t.type, category: c, amount: posNum(t.amount), note: typeof t.note === 'string' ? t.note.slice(0, 500) : '' };
+      if (t.auto === true) out.auto = true;
+      return out;
     });
 
     // planuri: {'YYYY-MM': {tip: {categorie: sumă > 0}}}
@@ -677,7 +679,10 @@
       if (type === 'factura' || type === 'datorie') fields.push({ name: 'due', label: 'Termen (ziua din lună)', type: 'number', value: ex.dueDay || null, placeholder: '1–31' });
       if (type === 'datorie') fields.push({ name: 'total', label: 'Total credit (lei)', type: 'money', value: ex.total || null, hint: 'Opțional: pentru „Rămas de plătit”.' });
       if (type === 'economie') fields.push({ name: 'target', label: 'Țintă (lei)', type: 'money', value: ex.target || null });
-      if (p) fields.push({ name: 'plan', label: 'Plan pentru ' + fmt.monthYear(p.y, p.m).toLowerCase() + ' (lei)', type: 'money', value: plan });
+      if (p) {
+        fields.push({ name: 'plan', label: 'Plan pentru ' + fmt.monthYear(p.y, p.m).toLowerCase() + ' (lei)', type: 'money', value: plan });
+        fields.push({ name: 'allMonths', label: 'Aceeași sumă fixă în toate lunile din ' + p.y, type: 'checkbox', value: !cat });
+      }
       TK.ui.form({
         title: cat ? 'Editează „' + cat + '”' : 'Adaugă ' + NOUN[type],
         fields: fields,
@@ -704,7 +709,10 @@
           if (type === 'datorie') e.total = v.total ? r2(v.total) : 0;
           if (type === 'economie') e.target = v.target ? r2(v.target) : 0;
         }
-        if (ym) setPlan(ym, type, name, v.plan);
+        if (ym && v.allMonths) {
+          for (var mm = 0; mm < 12; mm++) setPlanRaw(ymOf(p.y, mm), type, name, v.plan);
+          api.commit();
+        } else if (ym) setPlan(ym, type, name, v.plan);
         else api.commit();
         TK.ui.toast(cat ? '„' + name + '” a fost salvat.' : '„' + name + '” a fost adăugat.');
         if (after) after();
@@ -722,6 +730,10 @@
 
     /* ---- plan editabil în celulă ---- */
     function setPlan(ym, type, cat, v) {
+      setPlanRaw(ym, type, cat, v);
+      api.commit();
+    }
+    function setPlanRaw(ym, type, cat, v) {
       var s = S();
       var p = s.plans[ym] || (s.plans[ym] = {});
       var pt = p[type] || (p[type] = {});
@@ -729,7 +741,6 @@
       else pt[cat] = r2(v);
       if (!Object.keys(pt).length) delete p[type];
       if (!Object.keys(p).length) delete s.plans[ym];
-      api.commit();
     }
     function planInput(ym, type, cat, idx, where, rerender) {
       var cur = +(((S().plans[ym] || {})[type] || {})[cat]) || 0;
@@ -775,6 +786,58 @@
         else if (e.key === 'Escape') { inp.value = shown; inp.blur(); }
       });
       inp.addEventListener('change', function () { save(false); });
+      return inp;
+    }
+
+    /* ---- „Achitat” editabil în celulă (facturi, datorii) ----
+     * Suma scrisă devine totalul plătit în lună pentru categorie: plățile din Tranzacții rămân,
+     * iar diferența e o singură plată „auto” (creată, modificată sau ștearsă aici). */
+    function setPaid(ym, type, cat, x) {
+      var s = S();
+      var inMonth = s.transactions.filter(function (t) { return t.type === type && t.category === cat && t.date.slice(0, 7) === ym; });
+      var manual = TK.sum(inMonth, function (t) { return t.auto ? 0 : +t.amount || 0; });
+      var need = r2((x || 0) - manual);
+      if (need < -0.004) {
+        TK.ui.toast('Ai deja plăți de ' + fmt.lei(manual) + ' pentru „' + cat + '” în Tranzacții. Micșorează-le acolo.');
+        return false;
+      }
+      s.transactions = s.transactions.filter(function (t) { return !(t.auto && inMonth.indexOf(t) !== -1); });
+      if (need > 0.004) {
+        s.transactions.push({ id: TK.uid(), date: payDate(type, cat, ym), type: type, category: cat, amount: need, note: 'Achitat din tracker', auto: true });
+      }
+      api.commit();
+      return true;
+    }
+    function paidInput(ym, type, cat, fact, idx, where, rerender) {
+      var id = 'fin-paid-in-' + where + '-' + type + '-' + idx;
+      var shown = fact ? fmt.num(fact) : '';
+      var inp = h('input', {
+        class: 'tk-cell-input', id: id, type: 'text', inputmode: 'decimal', autocomplete: 'off',
+        value: shown, placeholder: '—', 'aria-label': 'Achitat ' + cat + ' (lei)',
+      });
+      var done = false;
+      function save() {
+        if (done) return;
+        var raw = inp.value.trim();
+        var v = fmt.parseNum(raw);
+        if (raw !== '' && (v == null || v < 0)) {
+          TK.ui.toast('Scrie o sumă validă, de exemplu 1 500,00.');
+          inp.value = shown;
+          return;
+        }
+        if (r2(v || 0) === r2(fact)) { inp.value = shown; return; }
+        done = true;
+        if (!setPaid(ym, type, cat, v)) { inp.value = shown; done = false; return; }
+        setTimeout(rerender, 0);
+      }
+      inp.addEventListener('focus', function () {
+        setTimeout(function () { if (document.activeElement === inp) { try { inp.select(); } catch (e) { /* */ } } }, 0);
+      });
+      inp.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); inp.blur(); }
+        else if (e.key === 'Escape') { inp.value = shown; inp.blur(); }
+      });
+      inp.addEventListener('change', save);
       return inp;
     }
 
@@ -880,7 +943,7 @@
         ok: 'Adaugă plata',
       }).then(function (yes) {
         if (!yes) { cb.checked = false; return; }
-        S().transactions.push({ id: TK.uid(), date: date, type: type, category: cat, amount: missing, note: 'Plată marcată din tracker' });
+        S().transactions.push({ id: TK.uid(), date: date, type: type, category: cat, amount: missing, note: 'Achitat din tracker', auto: true });
         api.commit();
         TK.ui.toast('Plata pentru „' + cat + '” a fost adăugată.');
         rerender();
@@ -894,7 +957,7 @@
       var map = type === 'factura' ? s.bills : s.debts;
       var monthEnd = (function () { var p = ymParts(m.ym); return D.make(p.y, p.m, D.daysInMonth(p.y, p.m)); })();
       var showLeft = type === 'datorie' && cats.some(function (c) { return (map[c] || {}).total > 0; });
-      var head = [th(h('span', { class: 'tk-sr' }, 'Plătit'), 'chk'), th('Categorie'), th('Termen', 'fin-due'), th('Plan', 'num', { colspan: 2 }), th('Fapt', 'num', { colspan: 2 }), th('Progres', 'num')];
+      var head = [th(h('span', { class: 'tk-sr' }, 'Plătit'), 'chk'), th('Categorie'), th('Termen', 'fin-due'), th('Plan', 'num', { colspan: 2 }), th('Achitat', 'num', { colspan: 2 }), th('Progres', 'num')];
       if (showLeft) head.push(th('Rămas de plătit', 'num', { colspan: 2 }));
       var rows = cats.map(function (c, i) {
         var plan = +m.plan[type][c] || 0, fact = m.fact[type][c] || 0;
@@ -907,7 +970,7 @@
           catCell(type, c, m.ym, rerender),
           h('td', { class: 'tk-center fin-due' }, due ? String(due) : '—'),
           curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, where, rerender)),
-          curTd(), numTd(fact),
+          curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, where, rerender)),
           pctTd(fact, plan, 'out'),
         ];
         if (showLeft) {
