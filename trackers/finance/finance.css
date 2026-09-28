@@ -310,3 +310,14 @@
 /* în ultima coloană câmpul nu iese din tabel */
 .tk-tracker--finance .fin-table td:last-child > .tk-cell-input,
 .tk-tracker--finance .fin-table td:last-child > .fin-paid-wrap > .tk-cell-input { margin-right: 0; width: calc(100% + 6px); }
+
+/* fereastra „Sume” */
+.tk-tracker--finance ~ .tk-modal .fin-am-list,
+.fin-am-list { max-height: 260px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.fin-am .fin-am-note { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fin-am .fin-actions { width: 1%; white-space: nowrap; text-align: right; }
+.fin-am .fin-actions .tk-icon-btn { width: 26px; height: 26px; }
+.fin-am .fin-del:hover { color: var(--bad); }
+.fin-am-add { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); }
+.fin-am-add > .tk-field { flex: 1 1 120px; }
+.fin-am-add > .fin-am-notef { flex: 2 1 160px; }

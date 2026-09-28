@@ -981,27 +981,73 @@
       S().transactions.push({ id: TK.uid(), date: date || payDate(type, cat, ym), type: type, category: cat, amount: r2(amount), note: note || '' });
       api.commit();
     }
-    function addPaymentForm(ym, type, cat, rerender) {
+    // Fereastra „Sume”: lista sumelor unei categorii (editare / ștergere) + adăugarea uneia noi.
+    // La economii lista cuprinde toate depunerile până la sfârșitul lunii (ca „Acumulat”).
+    function amountsDialog(ym, type, cat, rerender) {
       var p = ymParts(ym);
-      TK.ui.form({
-        title: 'Adaugă la „' + cat + '”',
-        fields: [
-          { name: 'amount', label: 'Suma de adăugat (lei)', type: 'money', required: true, placeholder: 'ex. 50', hint: 'Se adună la ce e deja ' + PAID_LABEL[type].toLowerCase() + ' în ' + fmt.monthYear(p.y, p.m).toLowerCase() + '.' },
-          { name: 'date', label: 'Data', type: 'date', value: payDate(type, cat, ym), required: true },
-          { name: 'note', label: 'Notă', type: 'text', placeholder: 'opțional' },
-        ],
-        submit: 'Adaugă',
-        validate: function (v) {
-          if (!(v.amount > 0)) return 'Suma trebuie să fie mai mare decât zero.';
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(v.date || '')) return 'Alege o dată validă.';
-          return null;
-        },
-      }).then(function (v) {
-        if (!v) return;
-        addPayment(ym, type, cat, v.amount, v.date, v.note);
-        TK.ui.toast('Am adăugat ' + fmt.lei(v.amount) + ' la „' + cat + '”.');
-        rerender();
+      var monthEnd = D.make(p.y, p.m, D.daysInMonth(p.y, p.m));
+      var cumulativeScope = type === 'economie';
+      var list = S().transactions.filter(function (t) {
+        if (t.type !== type || t.category !== cat) return false;
+        return cumulativeScope ? t.date <= monthEnd : t.date.slice(0, 7) === ym;
+      }).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+      var total = TK.sum(list, function (t) { return +t.amount || 0; });
+      var close;
+      function reopen() { amountsDialog(ym, type, cat, rerender); }
+      var rows = list.map(function (t) {
+        return h('tr', null,
+          h('td', { class: 'fin-date' }, fmt.dateShort(t.date)),
+          h('td', { class: 'fin-am-note', title: t.note || '' }, t.note || h('span', { class: 'tk-muted' }, '—')),
+          h('td', { class: 'num' }, fmt.num(t.amount)),
+          h('td', { class: 'fin-actions' },
+            h('button', { type: 'button', class: 'tk-icon-btn', id: 'fin-am-edit-' + t.id, 'aria-label': 'Modifică suma ' + fmt.lei(t.amount) + ' din ' + fmt.date(t.date), title: 'Modifică',
+              onclick: function () { close(); txForm(t).then(function () { rerender(); reopen(); }); } }, '✎'),
+            h('button', { type: 'button', class: 'tk-icon-btn fin-del', id: 'fin-am-del-' + t.id, 'aria-label': 'Șterge suma ' + fmt.lei(t.amount) + ' din ' + fmt.date(t.date), title: 'Șterge',
+              onclick: function () {
+                close();
+                TK.ui.confirm({ title: 'Ștergi suma?', text: fmt.lei(t.amount) + ' din ' + fmt.date(t.date) + ' la „' + cat + '” va fi ștearsă.', ok: 'Șterge suma', danger: true })
+                  .then(function (yes) {
+                    if (yes) {
+                      S().transactions = S().transactions.filter(function (x) { return x !== t; });
+                      api.commit();
+                      TK.ui.toast('Suma a fost ștearsă.');
+                      rerender();
+                    }
+                    reopen();
+                  });
+              } }, '🗑')));
       });
+      var amt = h('input', { class: 'tk-input num', id: 'fin-am-amount', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: '0,00' });
+      var date = h('input', { class: 'tk-input', id: 'fin-am-date', type: 'date', value: payDate(type, cat, ym) });
+      var note = h('input', { class: 'tk-input', id: 'fin-am-note', type: 'text', autocomplete: 'off', placeholder: 'opțional' });
+      var err = h('p', { class: 'tk-form-error', role: 'alert', hidden: true });
+      var form = h('form', { class: 'fin-am-add', novalidate: true },
+        h('div', { class: 'tk-field' }, h('label', { class: 'tk-label', for: 'fin-am-amount' }, 'Sumă nouă (lei)'), amt),
+        h('div', { class: 'tk-field' }, h('label', { class: 'tk-label', for: 'fin-am-date' }, 'Data'), date),
+        h('div', { class: 'tk-field fin-am-notef' }, h('label', { class: 'tk-label', for: 'fin-am-note' }, 'Notă'), note),
+        h('button', { type: 'submit', class: 'tk-btn tk-btn--primary', id: 'fin-am-submit' }, 'Adaugă'));
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var v = fmt.parseNum(amt.value);
+        if (!(v > 0)) { err.textContent = 'Scrie o sumă mai mare decât zero.'; err.hidden = false; amt.focus(); return; }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date.value)) { err.textContent = 'Alege o dată validă.'; err.hidden = false; return; }
+        addPayment(ym, type, cat, v, date.value, note.value.trim());
+        TK.ui.toast('Am adăugat ' + fmt.lei(v) + ' la „' + cat + '”.');
+        rerender();
+        close();
+        reopen();
+      });
+      var content = h('div', { class: 'tk-stack fin-am' },
+        h('p', { class: 'tk-muted' }, (cumulativeScope ? 'Toate depunerile până la ' + fmt.date(monthEnd) : fmt.monthYear(p.y, p.m)) + ' · total ', h('b', null, fmt.lei(total))),
+        list.length
+          ? h('div', { class: 'tk-scroll fin-am-list' }, h('table', { class: 'tk-table tk-table--dense fin-table' },
+              h('thead', null, h('tr', null, th('Data'), th('Notă'), th('Sumă', 'num'), th(h('span', { class: 'tk-sr' }, 'Acțiuni')))),
+              h('tbody', null, rows)))
+          : h('p', { class: 'tk-muted' }, 'Nicio sumă încă.'),
+        form, err);
+      var dlgTitle = { venit: 'Încasări', economie: 'Depuneri' }[type] || 'Plăți';
+      close = TK.ui.modal({ title: dlgTitle + ' · ' + cat, content: content, actions: [{ label: 'Închide', kind: 'ghost' }] });
+      setTimeout(function () { try { amt.focus(); } catch (e2) { /* */ } }, 0);
     }
 
     function paidInput(ym, type, cat, fact, idx, where, rerender) {
@@ -1046,8 +1092,8 @@
       });
       inp.addEventListener('change', save);
       var plusBtn = h('button', {
-        type: 'button', class: 'tk-icon-btn fin-plus', id: id + '-add', title: 'Adaugă o sumă', 'aria-label': 'Adaugă o sumă la ' + cat,
-        onclick: function () { addPaymentForm(ym, type, cat, rerender); },
+        type: 'button', class: 'tk-icon-btn fin-plus', id: id + '-add', title: 'Sume: adaugă, modifică sau șterge', 'aria-label': 'Sumele pentru ' + cat,
+        onclick: function () { amountsDialog(ym, type, cat, rerender); },
       }, '+');
       return h('span', { class: 'fin-paid-wrap' }, inp, plusBtn);
     }
@@ -1693,10 +1739,8 @@
             }) : h('span', { class: 'tk-muted' }, 'fără țintă')),
             pctTd(acc, target, 'in'),
             h('td', { class: 'chk' }, h('button', {
-              type: 'button', class: 'tk-icon-btn', id: 'fin-save-add-' + i, 'aria-label': 'Adaugă depunere la ' + c,
-              onclick: function () {
-                txForm(null, { date: defaultDateFor(ym), type: 'economie', category: c }).then(function (ok) { if (ok) render(); });
-              },
+              type: 'button', class: 'tk-icon-btn', id: 'fin-save-add-' + i, 'aria-label': 'Depunerile pentru ' + c, title: 'Depuneri: adaugă, modifică sau șterge',
+              onclick: function () { amountsDialog(ym, 'economie', c, render); },
             }, '+')));
         });
         body.appendChild(h('section', { class: 'fin-trk-block fin-trk-save' },
