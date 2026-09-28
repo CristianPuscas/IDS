@@ -468,15 +468,27 @@
           });
           update();
         },
-        onkeydown: function (e) { if (e.key === 'Enter') nameIn.blur(); if (e.key === 'Escape') { nameIn.value = hb.name; nameIn.blur(); } },
+        onkeydown: function (e) {
+          if (e.key === 'Enter') nameIn.blur();
+          if (e.key === 'Escape') { nameIn.value = hb.name; nameIn.blur(); }
+          if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+            e.preventDefault();
+            var nb = hs[i + (e.key === 'ArrowUp' ? -1 : 1)];
+            if (nb) moveHabit(c, hb, nb, e.key === 'ArrowDown', true);
+          }
+        },
       });
       var delBtn = h('button', {
         type: 'button', class: 'tk-icon-btn hb-del', id: 'hb-del-' + hb.id,
         'aria-label': 'Elimină obiceiul „' + hb.name + '”', title: 'Elimină obiceiul',
         onclick: function () { removeHabit(c, hb); },
       }, '×');
+      var idxCell = h('td', {
+        class: 'hb-idx hb-grip', title: 'Trage ca să muți obiceiul (sau Alt + ↑/↓ în nume)',
+        onpointerdown: function (e) { startDrag(e, c, hb, idxCell); },
+      }, String(i + 1));
       listBody.appendChild(h('tr', { dataset: { h: hb.id } },
-        h('td', { class: 'hb-idx' }, String(i + 1)),
+        idxCell,
         h('td', { class: 'hb-name' }, nameIn),
         h('td', { class: 'hb-act' }, delBtn)));
 
@@ -716,6 +728,69 @@
       }
     }
     update();
+  }
+
+  /* mutare prin tragere de numărul din lista „Obiceiuri zilnice” */
+  function moveHabit(c, hb, ref, after, refocus) {
+    var arr = c.st.habits;
+    if (hb === ref) return;
+    var from = arr.indexOf(hb);
+    if (from === -1 || arr.indexOf(ref) === -1) return;
+    arr.splice(from, 1);
+    arr.splice(arr.indexOf(ref) + (after ? 1 : 0), 0, hb);
+    c.api.commit();
+    c.rerender();
+    if (refocus) {
+      var el = document.getElementById('hb-name-' + hb.id);
+      if (el) el.focus();
+    }
+  }
+
+  function startDrag(e, c, hb, grip) {
+    if (e.button != null && e.button !== 0) return;
+    e.preventDefault();
+    var row = grip.closest('tr');
+    var body = row.parentNode;
+    var ghost = h('div', { class: 'hb-ghost' }, hb.name);
+    document.body.appendChild(ghost);
+    row.classList.add('is-dragging');
+    var marked = null, target = null;
+    function place(x, y) { ghost.style.left = (x + 12) + 'px'; ghost.style.top = (y - 14) + 'px'; }
+    function clearMark() { if (marked) marked.classList.remove('is-drop-before', 'is-drop-after'); marked = null; }
+    function move(ev) {
+      if (ev.clientY < 60) window.scrollBy(0, -14);
+      else if (ev.clientY > window.innerHeight - 60) window.scrollBy(0, 14);
+      place(ev.clientX, ev.clientY);
+      clearMark();
+      target = null;
+      var el = document.elementFromPoint(ev.clientX, ev.clientY);
+      var tr = el && el.closest ? el.closest('tr') : null;
+      if (!tr || tr.parentNode !== body) return;
+      var onAdd = tr.classList.contains('hb-addrow');
+      if (onAdd) tr = tr.previousElementSibling;
+      if (!tr || !tr.dataset.h) return;
+      var ref = c.st.habits.filter(function (x) { return x.id === tr.dataset.h; })[0];
+      if (!ref) return;
+      var r = tr.getBoundingClientRect();
+      var after = onAdd || ev.clientY > r.top + r.height / 2;
+      target = { ref: ref, after: after };
+      marked = tr;
+      tr.classList.add(after ? 'is-drop-after' : 'is-drop-before');
+    }
+    function end(ev) {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', end);
+      document.removeEventListener('pointercancel', end);
+      ghost.remove();
+      row.classList.remove('is-dragging');
+      clearMark();
+      if (ev.type === 'pointercancel' || !target) return;
+      moveHabit(c, hb, target.ref, target.after);
+    }
+    place(e.clientX, e.clientY);
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', end);
+    document.addEventListener('pointercancel', end);
   }
 
   function removeHabit(c, hb) {
