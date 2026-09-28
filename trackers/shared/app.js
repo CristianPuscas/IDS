@@ -47,22 +47,37 @@
   /* ---------------------------------------------------------------- shell */
 
   var root, main, navLinks = {}, statusEl, current = null;
+  // Deschis ca artefact (vizualizatorul claude.ai) sau ca fișier HTML obișnuit?
+  var inArtifact = !!(window.claude && typeof window.claude.use === 'function');
+  var dbState = inArtifact ? 'pending' : 'none'; // 'pending' | 'ready' | 'none'
 
   function syncLabel() {
+    if (!inArtifact) return { text: 'Fișier HTML', tone: 'grey', hint: 'Datele sunt salvate local, doar în acest browser.' };
     var list = Object.keys(stores).map(function (k) { return stores[k]; });
-    if (list.some(function (s) { return s.status === 'error'; })) return { text: 'Doar local', tone: 'bad', hint: 'Sincronizarea s-a întrerupt. Datele sunt salvate în acest browser.' };
-    if (list.length && list.every(function (s) { return s.status === 'cloud'; })) return { text: 'Sincronizat', tone: 'good', hint: 'Datele sunt salvate în contul tău și apar pe toate dispozitivele.' };
-    return { text: 'Salvat local', tone: 'grey', hint: 'Datele sunt salvate în acest browser.' };
+    if (list.some(function (s) { return s.status === 'error'; })) return { text: 'Doar local', tone: 'bad', hint: 'Salvarea în artefact s-a întrerupt. Datele sunt salvate local, în acest browser.' };
+    if (list.length && list.every(function (s) { return s.status === 'cloud'; })) return { text: 'Salvare în artefact', tone: 'good', hint: 'Datele sunt salvate pe toate dispozitivele.' };
+    if (dbState === 'pending' || dbState === 'ready') return { text: 'Se conectează…', tone: 'grey', hint: 'Se pornește salvarea în artefact.' };
+    return { text: 'Salvat local', tone: 'grey', hint: 'Salvarea în artefact nu e disponibilă aici. Datele sunt salvate local, în acest browser.' };
+  }
+
+  function fillStatus(el, st) {
+    el.textContent = '';
+    el.setAttribute('data-tone', st.tone);
+    el.appendChild(h('span', { class: 'tk-dot' }));
+    el.appendChild(document.createTextNode(st.text));
   }
 
   function renderStatus() {
-    if (!statusEl) return;
     var st = syncLabel();
-    statusEl.textContent = '';
-    statusEl.setAttribute('data-tone', st.tone);
-    statusEl.title = st.hint;
-    statusEl.appendChild(h('span', { class: 'tk-dot' }));
-    statusEl.appendChild(document.createTextNode(st.text));
+    if (statusEl) {
+      fillStatus(statusEl, st);
+      statusEl.title = st.hint;
+    }
+    // cartonașul „Datele tale” de pe pagina principală
+    var pill = document.getElementById('tk-data-pill');
+    var hint = document.getElementById('tk-data-hint');
+    if (pill) fillStatus(pill, st);
+    if (hint) hint.textContent = st.hint;
   }
   TK.onStatus(renderStatus);
 
@@ -222,10 +237,12 @@
 
   function dataCard() {
     var st = syncLabel();
+    var pill = h('span', { class: 'tk-pill', id: 'tk-data-pill' });
+    fillStatus(pill, st);
     return h('section', { class: 'tk-card tk-home__data' },
       h('div', { class: 'tk-card__head tk-card__head--plain' }, h('h2', { class: 'tk-card__title' }, 'Datele tale')),
       h('div', { class: 'tk-card__body tk-stack' },
-        h('p', null, h('span', { class: 'tk-pill', 'data-tone': st.tone }, h('span', { class: 'tk-dot' }), st.text), ' ', st.hint),
+        h('p', { class: 'tk-data-status', 'aria-live': 'polite' }, pill, ' ', h('span', { id: 'tk-data-hint' }, st.hint)),
         h('p', { class: 'tk-muted' }, 'Fă din când în când o copie de rezervă. Cu ea poți muta datele pe alt dispozitiv sau le poți recupera.'),
         h('div', { class: 'tk-row' },
           h('button', { type: 'button', class: 'tk-btn', onclick: exportAll }, 'Exportă copia (JSON)'),
@@ -337,8 +354,8 @@
     route();
 
     TK.capability('db').then(function (db) {
-      if (!db) return;
-      registry.forEach(function (def) { stores[def.id].attachCloud(db); });
+      dbState = db ? 'ready' : 'none';
+      if (db) registry.forEach(function (def) { stores[def.id].attachCloud(db); });
       renderStatus();
     });
   }
