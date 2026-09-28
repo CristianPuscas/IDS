@@ -201,3 +201,27 @@
   --chart-7: var(--pie-7);
   --chart-8: var(--pie-8);
 }
+
+/* nume de categorie editabil direct din tabel + „+ Adaugă …” sub tabel */
+.tk-tracker--finance .fin-cat-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tk-tracker--finance .fin-cat-btn:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.tk-tracker--finance .fin-cat-tools {
+  display: flex;
+  justify-content: flex-start;
+  padding: 4px 8px;
+  border-top: 1px solid var(--line-faint);
+  background: var(--surface);
+}

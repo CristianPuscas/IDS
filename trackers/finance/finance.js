@@ -429,8 +429,6 @@
     } else if (rr >= 10000) cls += ' is-full';
     return h('span', { class: cls }, fmt.pct(r));
   }
-  // celulă cu nume de categorie: lățime limitată, trunchiată cu „…”, numele complet în title
-  function catTd(name) { return h('td', { class: 'fin-cat', title: name }, name); }
   function curTd() { return h('td', { class: 'cur' }, 'lei'); }
   function numTd(v, cls) { return h('td', { class: 'num' + (cls ? ' ' + cls : '') }, money(v)); }
   function pctTd(fact, plan, mode) { return h('td', { class: 'num' }, pctSpan(fact, plan, mode)); }
@@ -604,6 +602,123 @@
       }))));
     var body = h('div', { class: 'fin-view' });
     el.appendChild(body);
+
+    /* ---- categorii: redenumire / ștergere / editare (Setări și direct din tabele) ---- */
+    function usage(type, cat) {
+      var s = S(), n = 0, sum = 0, months = 0;
+      s.transactions.forEach(function (t) { if (t.type === type && t.category === cat) { n++; sum += +t.amount || 0; } });
+      Object.keys(s.plans).forEach(function (k) { var p = s.plans[k][type]; if (p && p[cat]) months++; });
+      return { n: n, sum: sum, months: months };
+    }
+    function extraMap(type) { return type === 'factura' ? 'bills' : type === 'datorie' ? 'debts' : type === 'economie' ? 'goals' : null; }
+
+    function rename(type, oldN, newN) {
+      var s = S();
+      var cats = s.categories[type];
+      cats[cats.indexOf(oldN)] = newN;
+      s.transactions.forEach(function (t) { if (t.type === type && t.category === oldN) t.category = newN; });
+      Object.keys(s.plans).forEach(function (k) {
+        var p = s.plans[k][type];
+        if (p && Object.prototype.hasOwnProperty.call(p, oldN)) { p[newN] = p[oldN]; delete p[oldN]; }
+      });
+      var mk = extraMap(type);
+      if (mk && s[mk][oldN]) { s[mk][newN] = s[mk][oldN]; delete s[mk][oldN]; }
+      prefsCategoryChanged(type, oldN, newN);
+      api.commit();
+    }
+    function remove(type, cat) {
+      var s = S();
+      s.categories[type] = s.categories[type].filter(function (c) { return c !== cat; });
+      s.transactions = s.transactions.filter(function (t) { return !(t.type === type && t.category === cat); });
+      Object.keys(s.plans).forEach(function (k) {
+        var p = s.plans[k];
+        if (p[type]) { delete p[type][cat]; if (!Object.keys(p[type]).length) delete p[type]; }
+        if (!Object.keys(p).length) delete s.plans[k];
+      });
+      var mk = extraMap(type);
+      if (mk) delete s[mk][cat];
+      prefsCategoryChanged(type, cat, null);
+      api.commit();
+    }
+
+    function askRemove(type, cat, after) {
+      var u = usage(type, cat);
+      if (!u.n && !u.months) {
+        remove(type, cat);
+        TK.ui.toast('Categoria „' + cat + '” a fost ștearsă.');
+        if (after) after();
+        return;
+      }
+      var parts = [];
+      if (u.n) parts.push(u.n + (u.n === 1 ? ' tranzacție' : ' tranzacții') + ' în valoare de ' + fmt.lei(u.sum));
+      if (u.months) parts.push('sume planificate în ' + u.months + (u.months === 1 ? ' lună' : ' luni'));
+      TK.ui.confirm({
+        title: 'Ștergi categoria „' + cat + '”?',
+        text: 'Categoria are ' + parts.join(' și ') + '. Dacă o ștergi, se șterg și acestea, iar totalurile lunilor respective vor scădea. Ca să le păstrezi, redenumește categoria în loc s-o ștergi.',
+        ok: 'Șterge categoria și datele ei', danger: true,
+      }).then(function (yes) {
+        if (!yes) return;
+        remove(type, cat);
+        TK.ui.toast('Categoria „' + cat + '” și datele ei au fost șterse.');
+        if (after) after();
+      });
+    }
+
+    var NOUN = { venit: 'sursă de venit', cheltuiala: 'categorie', factura: 'factură', datorie: 'credit', economie: 'obiectiv' };
+
+    // Formular pentru o categorie: nouă (cat = null) sau existentă. ym = luna pentru câmpul „Plan”.
+    function categoryForm(type, cat, ym, after) {
+      var s = S();
+      var mk = extraMap(type);
+      var ex = cat && mk ? (s[mk][cat] || {}) : {};
+      var plan = cat && ym ? +(((s.plans[ym] || {})[type] || {})[cat]) || null : null;
+      var p = ym ? ymParts(ym) : null;
+      var fields = [{ name: 'name', label: 'Nume', type: 'text', value: cat || '', required: true, placeholder: type === 'factura' ? 'ex. Televiziune' : '' }];
+      if (type === 'factura' || type === 'datorie') fields.push({ name: 'due', label: 'Termen (ziua din lună)', type: 'number', value: ex.dueDay || null, placeholder: '1–31' });
+      if (type === 'datorie') fields.push({ name: 'total', label: 'Total credit (lei)', type: 'money', value: ex.total || null, hint: 'Opțional: pentru „Rămas de plătit”.' });
+      if (type === 'economie') fields.push({ name: 'target', label: 'Țintă (lei)', type: 'money', value: ex.target || null });
+      if (p) fields.push({ name: 'plan', label: 'Plan pentru ' + fmt.monthYear(p.y, p.m).toLowerCase() + ' (lei)', type: 'money', value: plan });
+      TK.ui.form({
+        title: cat ? 'Editează „' + cat + '”' : 'Adaugă ' + NOUN[type],
+        fields: fields,
+        submit: cat ? 'Salvează' : 'Adaugă',
+        onDelete: !!cat,
+        deleteLabel: 'Șterge',
+        validate: function (v) {
+          var name = v.name.replace(/\s+/g, ' ');
+          if (name !== cat && S().categories[type].indexOf(name) !== -1) return 'Există deja „' + name + '”.';
+          if (v.due != null && (v.due < 1 || v.due > 31 || v.due % 1)) return 'Termenul este o zi din lună, de la 1 la 31.';
+          if ((v.total != null && v.total < 0) || (v.target != null && v.target < 0) || (v.plan != null && v.plan < 0)) return 'Sumele nu pot fi negative.';
+          return null;
+        },
+      }).then(function (v) {
+        if (!v) return;
+        if (v.__delete) { askRemove(type, cat, after); return; }
+        var name = v.name.replace(/\s+/g, ' ');
+        var s2 = S();
+        if (!cat) s2.categories[type].push(name);
+        else if (name !== cat) rename(type, cat, name);
+        if (mk) {
+          var e = s2[mk][name] || (s2[mk][name] = {});
+          if (type === 'factura' || type === 'datorie') e.dueDay = v.due || null;
+          if (type === 'datorie') e.total = v.total ? r2(v.total) : 0;
+          if (type === 'economie') e.target = v.target ? r2(v.target) : 0;
+        }
+        if (ym) setPlan(ym, type, name, v.plan);
+        else api.commit();
+        TK.ui.toast(cat ? '„' + name + '” a fost salvat.' : '„' + name + '” a fost adăugat.');
+        if (after) after();
+      });
+    }
+
+    // Celula cu numele categoriei: un clic deschide editarea.
+    function catCell(type, cat, ym, after) {
+      return h('td', { class: 'fin-cat', title: cat },
+        h('button', { type: 'button', class: 'fin-cat-btn', 'aria-label': 'Editează ' + cat, onclick: function () { categoryForm(type, cat, ym, after); } }, cat));
+    }
+    function addCatButton(type, ym, after, id) {
+      return h('button', { type: 'button', class: 'tk-btn tk-btn--sm tk-btn--ghost fin-add-cat', id: id, onclick: function () { categoryForm(type, null, ym, after); } }, '+ Adaugă ' + NOUN[type]);
+    }
 
     /* ---- plan editabil în celulă ---- */
     function setPlan(ym, type, cat, v) {
@@ -789,7 +904,7 @@
         var due = (map[c] || {}).dueDay;
         var cells = [
           h('td', { class: 'chk' }, cb),
-          catTd(c),
+          catCell(type, c, m.ym, rerender),
           h('td', { class: 'tk-center fin-due' }, due ? String(due) : '—'),
           curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, where, rerender)),
           curTd(), numTd(fact),
@@ -810,11 +925,12 @@
         var leftTot = TK.sum(cats, function (c) { var tot = +(map[c] || {}).total || 0; return tot ? Math.max(0, tot - cumulative(s, type, c, monthEnd)) : 0; });
         foot.push(curTd(), numTd(leftTot));
       }
-      return h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
+      return [h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
         h('table', { class: 'tk-table tk-table--dense fin-table' },
           h('thead', null, h('tr', null, head)),
           h('tbody', null, rows, emptyRows(pad, cols)),
-          h('tfoot', null, h('tr', null, foot))));
+          h('tfoot', null, h('tr', null, foot)))),
+        h('div', { class: 'fin-cat-tools' }, addCatButton(type, m.ym, rerender, 'fin-addcat-' + where + '-' + type))];
     }
 
     /* ================================================== LUNA (dashboard) */
@@ -969,7 +1085,7 @@
       if (withPct) head.push(th('Progres', 'num'));
       var rows = cats.map(function (c, i) {
         var plan = +m.plan[type][c] || 0, fact = m.fact[type][c] || 0;
-        var cells = [catTd(c), curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)), curTd(), numTd(fact)];
+        var cells = [catCell(type, c, m.ym, rerender), curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)), curTd(), numTd(fact)];
         if (withPct) cells.push(pctTd(fact, plan, MODE[type]));
         return h('tr', null, cells);
       });
@@ -983,7 +1099,8 @@
           h('table', { class: 'tk-table tk-table--dense fin-table' },
             h('thead', null, h('tr', null, head)),
             h('tbody', null, rows, emptyRows(Math.max(0, (opts.minRows || 0) - cats.length), cols)),
-            h('tfoot', null, h('tr', null, foot)))));
+            h('tfoot', null, h('tr', null, foot)))),
+        h('div', { class: 'fin-cat-tools' }, addCatButton(type, m.ym, rerender, 'fin-addcat-luna-' + type)));
     }
 
     function top20Card(items, total) {
@@ -1271,7 +1388,7 @@
           var ratio = target ? acc / target : 0;
           var pctv = Math.min(100, ratio * 100);
           return h('tr', null,
-            catTd(c),
+            catCell('economie', c, null, render),
             curTd(), numTd(target),
             curTd(), numTd(acc),
             curTd(), numTd(inMonth),
@@ -1296,7 +1413,8 @@
               h('table', { class: 'tk-table tk-table--dense fin-table' },
                 h('thead', null, h('tr', null, th('Categorie'), th('Țintă', 'num', { colspan: 2 }), th('Acumulat', 'num', { colspan: 2 }), th('Luna aceasta', 'num', { colspan: 2 }), th('Progres', null, { colspan: 2 }), th(h('span', { class: 'tk-sr' }, 'Adaugă'), 'chk'))),
                 h('tbody', null, rows, emptyRows(Math.max(0, 9 - rows.length), ['', 'cur', 'num', 'cur', 'num', 'cur', 'num', '', 'num', ''])),
-                h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Total'), curTd(), numTd(totT), curTd(), numTd(totA), curTd(), numTd(totM), h('td', null), pctTd(totA, totT, 'in'), h('td', null))))))));
+                h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Total'), curTd(), numTd(totT), curTd(), numTd(totA), curTd(), numTd(totM), h('td', null), pctTd(totA, totT, 'in'), h('td', null))))),
+            h('div', { class: 'fin-cat-tools' }, addCatButton('economie', null, render, 'fin-addcat-trk-economie')))));
         body.appendChild(h('p', { class: 'tk-note' }, 'Controlează toate direcțiile financiare într-un singur sistem.'));
         restoreFocus(focus, body);
       }
@@ -1522,42 +1640,6 @@
         restoreFocus(focus, body);
       }
 
-      function usage(type, cat) {
-        var s = S(), n = 0, sum = 0, months = 0;
-        s.transactions.forEach(function (t) { if (t.type === type && t.category === cat) { n++; sum += +t.amount || 0; } });
-        Object.keys(s.plans).forEach(function (k) { var p = s.plans[k][type]; if (p && p[cat]) months++; });
-        return { n: n, sum: sum, months: months };
-      }
-      function extraMap(type) { return type === 'factura' ? 'bills' : type === 'datorie' ? 'debts' : type === 'economie' ? 'goals' : null; }
-
-      function rename(type, oldN, newN) {
-        var s = S();
-        var cats = s.categories[type];
-        cats[cats.indexOf(oldN)] = newN;
-        s.transactions.forEach(function (t) { if (t.type === type && t.category === oldN) t.category = newN; });
-        Object.keys(s.plans).forEach(function (k) {
-          var p = s.plans[k][type];
-          if (p && Object.prototype.hasOwnProperty.call(p, oldN)) { p[newN] = p[oldN]; delete p[oldN]; }
-        });
-        var mk = extraMap(type);
-        if (mk && s[mk][oldN]) { s[mk][newN] = s[mk][oldN]; delete s[mk][oldN]; }
-        prefsCategoryChanged(type, oldN, newN);
-        api.commit();
-      }
-      function remove(type, cat) {
-        var s = S();
-        s.categories[type] = s.categories[type].filter(function (c) { return c !== cat; });
-        s.transactions = s.transactions.filter(function (t) { return !(t.type === type && t.category === cat); });
-        Object.keys(s.plans).forEach(function (k) {
-          var p = s.plans[k];
-          if (p[type]) { delete p[type][cat]; if (!Object.keys(p[type]).length) delete p[type]; }
-          if (!Object.keys(p).length) delete s.plans[k];
-        });
-        var mk = extraMap(type);
-        if (mk) delete s[mk][cat];
-        prefsCategoryChanged(type, cat, null);
-        api.commit();
-      }
 
       function categoryCard(type) {
         var s = S();
@@ -1610,7 +1692,7 @@
           cells.push(h('td', { class: 'fin-actions' },
             h('button', { type: 'button', class: 'tk-icon-btn', id: base + '-up', 'aria-label': 'Mută „' + c + '” mai sus', disabled: i === 0, onclick: function () { move(type, i, -1); } }, '↑'),
             h('button', { type: 'button', class: 'tk-icon-btn', id: base + '-down', 'aria-label': 'Mută „' + c + '” mai jos', disabled: i === cats.length - 1, onclick: function () { move(type, i, 1); } }, '↓'),
-            h('button', { type: 'button', class: 'tk-icon-btn fin-del', id: base + '-del', 'aria-label': 'Șterge categoria „' + c + '”', onclick: function () { askRemove(type, c); } }, '✕')));
+            h('button', { type: 'button', class: 'tk-icon-btn fin-del', id: base + '-del', 'aria-label': 'Șterge categoria „' + c + '”', onclick: function () { askRemove(type, c, render); } }, '✕')));
           return h('tr', null, cells);
         });
 
@@ -1653,28 +1735,6 @@
         restoreFocus({ id: 'fin-set-' + type + '-' + j + (d < 0 ? '-up' : '-down') });
       }
 
-      function askRemove(type, cat) {
-        var u = usage(type, cat);
-        if (!u.n && !u.months) {
-          remove(type, cat);
-          TK.ui.toast('Categoria „' + cat + '” a fost ștearsă.');
-          render();
-          return;
-        }
-        var parts = [];
-        if (u.n) parts.push(u.n + (u.n === 1 ? ' tranzacție' : ' tranzacții') + ' în valoare de ' + fmt.lei(u.sum));
-        if (u.months) parts.push('sume planificate în ' + u.months + (u.months === 1 ? ' lună' : ' luni'));
-        TK.ui.confirm({
-          title: 'Ștergi categoria „' + cat + '”?',
-          text: 'Categoria are ' + parts.join(' și ') + '. Dacă o ștergi, se șterg și acestea, iar totalurile lunilor respective vor scădea. Ca să le păstrezi, redenumește categoria în loc s-o ștergi.',
-          ok: 'Șterge categoria și datele ei', danger: true,
-        }).then(function (yes) {
-          if (!yes) return;
-          remove(type, cat);
-          TK.ui.toast('Categoria „' + cat + '” și datele ei au fost șterse.');
-          render();
-        });
-      }
 
       render();
     }
