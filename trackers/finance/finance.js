@@ -37,6 +37,8 @@
     'var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)',
     'var(--chart-5)', 'var(--chart-6)', 'var(--chart-7)', 'var(--chart-8)',
   ];
+  // eticheta coloanei cu suma realizată: la venituri „Încasat”, la restul „Achitat”
+  var PAID_LABEL = { venit: 'Încasat', cheltuiala: 'Achitat', factura: 'Achitat', datorie: 'Achitat', economie: 'Achitat' };
   var FLOW_COLOR = { cheltuiala: 'var(--chart-fact)', factura: 'var(--chart-3)', datorie: 'var(--chart-6)', economie: 'var(--chart-1)', ramas: 'var(--chart-4)' };
   var MONTHS = D.MONTHS;
 
@@ -518,7 +520,7 @@
       labels: labels,
       series: [
         { name: 'Plan', values: plan, color: 'var(--chart-plan)' },
-        { name: 'Fapt', values: fact, color: 'var(--chart-fact)' },
+        { name: 'Achitat', values: fact, color: 'var(--chart-fact)' },
       ],
       format: fmt.lei, label: label,
     });
@@ -721,8 +723,120 @@
 
     // Celula cu numele categoriei: un clic deschide editarea.
     function catCell(type, cat, ym, after) {
+      var grip = h('span', { class: 'fin-drag', title: 'Trage ca să muți', 'aria-hidden': 'true', dataset: { type: type, cat: cat } });
+      grip.addEventListener('pointerdown', function (e) { startDrag(e, grip, type, cat, after); });
       return h('td', { class: 'fin-cat', title: cat },
-        h('button', { type: 'button', class: 'fin-cat-btn', 'aria-label': 'Editează ' + cat, onclick: function () { categoryForm(type, cat, ym, after); } }, cat));
+        h('span', { class: 'fin-cat-in' }, grip,
+          h('button', { type: 'button', class: 'fin-cat-btn', 'aria-label': 'Editează ' + cat, onclick: function () { categoryForm(type, cat, ym, after); } }, cat)));
+    }
+
+    /* ---- mutare prin tragere: sus / jos în același tabel sau în alt tabel (alt tip) ---- */
+    function startDrag(e, grip, type, cat, after) {
+      if (e.button != null && e.button !== 0) return;
+      e.preventDefault();
+      var row = grip.closest('tr');
+      var ghost = h('div', { class: 'fin-ghost' }, cat);
+      document.body.appendChild(ghost);
+      row.classList.add('is-dragging');
+      var marked = null, target = null;
+      function place(x, y) { ghost.style.left = (x + 12) + 'px'; ghost.style.top = (y - 14) + 'px'; }
+      function clearMark() { if (marked) marked.classList.remove('is-drop-before', 'is-drop-after', 'is-drop-end'); marked = null; }
+      function find(x, y) {
+        var el = document.elementFromPoint(x, y);
+        var tr = el && el.closest ? el.closest('tr') : null;
+        var tb = el && el.closest ? el.closest('tbody[data-ftype]') : null;
+        if (!tb) return null;
+        var g = tr && tr.querySelector('.fin-drag');
+        if (g) {
+          var r = tr.getBoundingClientRect();
+          return { type: tb.dataset.ftype, before: g.dataset.cat, after: y > r.top + r.height / 2, el: tr };
+        }
+        return { type: tb.dataset.ftype, before: null, el: tr || tb };
+      }
+      function move(ev) {
+        // derulare automată lângă marginile ecranului
+        if (ev.clientY < 60) window.scrollBy(0, -14);
+        else if (ev.clientY > window.innerHeight - 60) window.scrollBy(0, 14);
+        place(ev.clientX, ev.clientY);
+        clearMark();
+        target = find(ev.clientX, ev.clientY);
+        if (target && target.el) {
+          marked = target.el;
+          marked.classList.add(target.before ? (target.after ? 'is-drop-after' : 'is-drop-before') : 'is-drop-end');
+        }
+      }
+      function end(ev) {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', end);
+        document.removeEventListener('pointercancel', end);
+        ghost.remove();
+        row.classList.remove('is-dragging');
+        clearMark();
+        if (ev.type === 'pointercancel' || !target) return;
+        dropCategory(type, cat, target, after);
+      }
+      place(e.clientX, e.clientY);
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', end);
+      document.addEventListener('pointercancel', end);
+    }
+
+    function dropCategory(type, cat, t, after) {
+      var s = S();
+      var to = t.type;
+      if (TYPES.indexOf(to) === -1) return;
+      if (to === type) {
+        var arr = s.categories[type];
+        var from = arr.indexOf(cat);
+        if (from === -1 || t.before === cat) return;
+        arr.splice(from, 1);
+        var at = t.before ? arr.indexOf(t.before) + (t.after ? 1 : 0) : arr.length;
+        arr.splice(at, 0, cat);
+        api.commit();
+        if (after) after();
+        return;
+      }
+      if (s.categories[to].indexOf(cat) !== -1) {
+        TK.ui.toast('În ' + PLURAL[to] + ' există deja „' + cat + '”.');
+        return;
+      }
+      var u = usage(type, cat);
+      var doMove = function () {
+        var s2 = S();
+        s2.categories[type] = s2.categories[type].filter(function (c) { return c !== cat; });
+        var arr2 = s2.categories[to];
+        var at2 = t.before ? arr2.indexOf(t.before) + (t.after ? 1 : 0) : arr2.length;
+        arr2.splice(Math.max(0, at2), 0, cat);
+        s2.transactions.forEach(function (x) { if (x.type === type && x.category === cat) { x.type = to; delete x.auto; } });
+        Object.keys(s2.plans).forEach(function (k) {
+          var p = s2.plans[k];
+          if (p[type] && Object.prototype.hasOwnProperty.call(p[type], cat)) {
+            (p[to] || (p[to] = {}))[cat] = p[type][cat];
+            delete p[type][cat];
+            if (!Object.keys(p[type]).length) delete p[type];
+          }
+        });
+        var mFrom = extraMap(type), mTo = extraMap(to);
+        var old = mFrom ? s2[mFrom][cat] : null;
+        if (mFrom) delete s2[mFrom][cat];
+        if (mTo && !s2[mTo][cat]) {
+          var due = old && old.dueDay ? old.dueDay : null;
+          s2[mTo][cat] = to === 'factura' ? { dueDay: due } : to === 'datorie' ? { dueDay: due, total: 0 } : { target: 0 };
+        }
+        prefsCategoryChanged(type, cat, null);
+        api.commit();
+        TK.ui.toast('„' + cat + '” a fost mutat în ' + PLURAL[to] + '.');
+        if (after) after();
+      };
+      if (!u.n && !u.months) { doMove(); return; }
+      var parts = [];
+      if (u.n) parts.push(u.n + (u.n === 1 ? ' tranzacție' : ' tranzacții'));
+      if (u.months) parts.push('planurile din ' + u.months + (u.months === 1 ? ' lună' : ' luni'));
+      TK.ui.confirm({
+        title: 'Muți „' + cat + '” în ' + PLURAL[to] + '?',
+        text: 'Categoria trece din ' + PLURAL[type] + ' în ' + PLURAL[to] + ', împreună cu ' + parts.join(' și ') + '. Totalurile lunilor se recalculează.',
+        ok: 'Mută în ' + PLURAL[to],
+      }).then(function (yes) { if (yes) doMove(); });
     }
     function addCatButton(type, ym, after, id) {
       return h('button', { type: 'button', class: 'tk-btn tk-btn--sm tk-btn--ghost fin-add-cat', id: id, onclick: function () { categoryForm(type, null, ym, after); } }, '+ Adaugă ' + NOUN[type]);
@@ -798,12 +912,12 @@
       var manual = TK.sum(inMonth, function (t) { return t.auto ? 0 : +t.amount || 0; });
       var need = r2((x || 0) - manual);
       if (need < -0.004) {
-        TK.ui.toast('Ai deja plăți de ' + fmt.lei(manual) + ' pentru „' + cat + '” în Tranzacții. Micșorează-le acolo.');
+        TK.ui.toast('Ai deja ' + fmt.lei(manual) + ' în Tranzacții pentru „' + cat + '” în această lună. Micșorează suma acolo.');
         return false;
       }
       s.transactions = s.transactions.filter(function (t) { return !(t.auto && inMonth.indexOf(t) !== -1); });
       if (need > 0.004) {
-        s.transactions.push({ id: TK.uid(), date: payDate(type, cat, ym), type: type, category: cat, amount: need, note: 'Achitat din tracker', auto: true });
+        s.transactions.push({ id: TK.uid(), date: payDate(type, cat, ym), type: type, category: cat, amount: need, note: PAID_LABEL[type] + ' din tracker', auto: true });
       }
       api.commit();
       return true;
@@ -813,7 +927,7 @@
       var shown = fact ? fmt.num(fact) : '';
       var inp = h('input', {
         class: 'tk-cell-input', id: id, type: 'text', inputmode: 'decimal', autocomplete: 'off',
-        value: shown, placeholder: '—', 'aria-label': 'Achitat ' + cat + ' (lei)',
+        value: shown, placeholder: '—', 'aria-label': PAID_LABEL[type] + ' ' + cat + ' (lei)',
       });
       var done = false;
       function save() {
@@ -919,7 +1033,7 @@
     function payDate(type, cat, ym) {
       if (D.ym(D.today()) === ym) return D.today();
       var p = ymParts(ym);
-      var map = type === 'factura' ? S().bills : S().debts;
+      var map = type === 'factura' ? S().bills : type === 'datorie' ? S().debts : {};
       var dd = +((map[cat] || {}).dueDay) || 1;
       return D.make(p.y, p.m, Math.max(1, Math.min(dd, D.daysInMonth(p.y, p.m))));
     }
@@ -991,7 +1105,7 @@
       return [h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
         h('table', { class: 'tk-table tk-table--dense fin-table' },
           h('thead', null, h('tr', null, head)),
-          h('tbody', null, rows, emptyRows(pad, cols)),
+          h('tbody', { dataset: { ftype: type } }, rows, emptyRows(pad, cols)),
           h('tfoot', null, h('tr', null, foot)))),
         h('div', { class: 'fin-cat-tools' }, addCatButton(type, m.ym, rerender, 'fin-addcat-' + where + '-' + type))];
     }
@@ -1129,7 +1243,7 @@
         cardHead(titleB('Flux', 'de numerar')),
         h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
           h('table', { class: 'tk-table tk-table--dense fin-table fin-flux' },
-            h('thead', null, h('tr', null, th(h('span', { class: 'tk-sr' }, 'Semn'), 'fin-sign'), th('Categorie'), th('Plan', 'num', { colspan: 2 }), th('Fapt', 'num', { colspan: 2 }))),
+            h('thead', null, h('tr', null, th(h('span', { class: 'tk-sr' }, 'Semn'), 'fin-sign'), th('Categorie'), th('Plan', 'num', { colspan: 2 }), th('Achitat', 'num', { colspan: 2 }))),
             h('tbody', null,
               row('+', 'Sold reportat', m.opening, m.opening),
               row('+', 'Total venituri', m.planTot.venit, m.factTot.venit, true),
@@ -1144,11 +1258,11 @@
       var cats = S().categories[type];
       var withPct = type !== 'venit';
       var tone = type === 'venit' ? 'sage' : null;
-      var head = [th('Categorie'), th('Plan', 'num', { colspan: 2 }), th('Fapt', 'num', { colspan: 2 })];
+      var head = [th('Categorie'), th('Plan', 'num', { colspan: 2 }), th(PAID_LABEL[type], 'num', { colspan: 2 })];
       if (withPct) head.push(th('Progres', 'num'));
       var rows = cats.map(function (c, i) {
         var plan = +m.plan[type][c] || 0, fact = m.fact[type][c] || 0;
-        var cells = [catCell(type, c, m.ym, rerender), curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)), curTd(), numTd(fact)];
+        var cells = [catCell(type, c, m.ym, rerender), curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)), curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, 'luna', rerender))];
         if (withPct) cells.push(pctTd(fact, plan, MODE[type]));
         return h('tr', null, cells);
       });
@@ -1161,7 +1275,7 @@
         h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
           h('table', { class: 'tk-table tk-table--dense fin-table' },
             h('thead', null, h('tr', null, head)),
-            h('tbody', null, rows, emptyRows(Math.max(0, (opts.minRows || 0) - cats.length), cols)),
+            h('tbody', { dataset: { ftype: type } }, rows, emptyRows(Math.max(0, (opts.minRows || 0) - cats.length), cols)),
             h('tfoot', null, h('tr', null, foot)))),
         h('div', { class: 'fin-cat-tools' }, addCatButton(type, m.ym, rerender, 'fin-addcat-luna-' + type)));
     }
@@ -1172,7 +1286,7 @@
         cardHead(titleB('Top-20', 'categorii de cheltuieli'), 'terra'),
         h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
           h('table', { class: 'tk-table tk-table--dense fin-table' + (top.length ? ' tk-rank' : '') },
-            h('thead', null, h('tr', null, th('#'), th('Categorie'), th('Fapt', 'num', { colspan: 2 }), th('Procent', 'num'))),
+            h('thead', null, h('tr', null, th('#'), th('Categorie'), th('Achitat', 'num', { colspan: 2 }), th('Procent', 'num'))),
             h('tbody', null, top.length ? top.map(function (d, i) {
               return h('tr', null,
                 h('td', null, String(i + 1)),
@@ -1475,7 +1589,7 @@
             h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
               h('table', { class: 'tk-table tk-table--dense fin-table' },
                 h('thead', null, h('tr', null, th('Categorie'), th('Țintă', 'num', { colspan: 2 }), th('Acumulat', 'num', { colspan: 2 }), th('Luna aceasta', 'num', { colspan: 2 }), th('Progres', null, { colspan: 2 }), th(h('span', { class: 'tk-sr' }, 'Adaugă'), 'chk'))),
-                h('tbody', null, rows, emptyRows(Math.max(0, 9 - rows.length), ['', 'cur', 'num', 'cur', 'num', 'cur', 'num', '', 'num', ''])),
+                h('tbody', { dataset: { ftype: 'economie' } }, rows, emptyRows(Math.max(0, 9 - rows.length), ['', 'cur', 'num', 'cur', 'num', 'cur', 'num', '', 'num', ''])),
                 h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Total'), curTd(), numTd(totT), curTd(), numTd(totA), curTd(), numTd(totM), h('td', null), pctTd(totA, totT, 'in'), h('td', null))))),
             h('div', { class: 'fin-cat-tools' }, addCatButton('economie', null, render, 'fin-addcat-trk-economie')))));
         body.appendChild(h('p', { class: 'tk-note' }, 'Controlează toate direcțiile financiare într-un singur sistem.'));
@@ -1551,7 +1665,7 @@
           cardHead(titleB('Prezentare', 'flux de numerar')),
           h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
             h('table', { class: 'tk-table tk-table--dense fin-table fin-compact' },
-              h('thead', null, h('tr', null, th('Categorie'), th('Plan, lei', 'num'), th('Fapt, lei', 'num'), th('Progres', 'num'))),
+              h('thead', null, h('tr', null, th('Categorie'), th('Plan, lei', 'num'), th('Achitat, lei', 'num'), th('Progres', 'num'))),
               h('tbody', null,
                 h('tr', null, h('td', { title: 'Sold la 1 ianuarie' }, 'Sold inițial'), numTd(Y.opening), numTd(Y.opening), h('td', { class: 'num' }, '')),
                 frow('Total venituri', Y.plan.venit, Y.fact.venit, 'in', true),
@@ -1567,7 +1681,7 @@
           cardHead(titleB('Sumar', 'finanțe')),
           h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
             h('table', { class: 'tk-table tk-table--dense fin-table fin-compact' },
-              h('thead', null, h('tr', null, th('Categorie'), th('Plan, lei', 'num'), th('Fapt, lei', 'num'), th('Progres', 'num'))),
+              h('thead', null, h('tr', null, th('Categorie'), th('Plan, lei', 'num'), th('Achitat, lei', 'num'), th('Progres', 'num'))),
               h('tbody', null, TYPES.map(function (t) { return frow(PLURAL[t], Y.plan[t], Y.fact[t], MODE[t], t === 'venit'); })),
               h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Total ieșiri'), numTd(Y.planOut), numTd(Y.factOut), pctTd(Y.factOut, Y.planOut, 'out'))))));
 
@@ -1583,7 +1697,7 @@
             cardHead(titleB('Sumar', PLURAL[type].toLowerCase()), tone),
             h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
               h('table', { class: 'tk-table tk-table--dense fin-table fin-compact' },
-                h('thead', null, h('tr', null, th('Lună'), th('Plan, lei', 'num'), th('Fapt, lei', 'num'), th('Progres', 'num'))),
+                h('thead', null, h('tr', null, th('Lună'), th('Plan, lei', 'num'), th(PAID_LABEL[type] + ', lei', 'num'), th('Progres', 'num'))),
                 h('tbody', null, rows),
                 h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Total'), numTd(Y.plan[type]), numTd(Y.fact[type]), pctTd(Y.fact[type], Y.plan[type], MODE[type]))))));
         }

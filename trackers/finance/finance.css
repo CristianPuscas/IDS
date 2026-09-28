@@ -225,3 +225,41 @@
   border-top: 1px solid var(--line-faint);
   background: var(--surface);
 }
+
+/* mutare prin tragere */
+.tk-tracker--finance .fin-cat-in { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.tk-tracker--finance .fin-cat-in .fin-cat-btn { flex: 1 1 auto; min-width: 0; }
+.tk-tracker--finance .fin-drag {
+  flex: none;
+  width: 14px;
+  color: var(--ink-3);
+  opacity: 0.45;
+  font-size: 12px;
+  line-height: 1;
+  text-align: center;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.tk-tracker--finance .fin-drag::before { content: "⠿"; }
+.tk-tracker--finance tr:hover .fin-drag { opacity: 1; }
+@media (hover: none) { .tk-tracker--finance .fin-drag { opacity: 0.8; width: 18px; font-size: 15px; } }
+.tk-tracker--finance tr.is-dragging { opacity: 0.4; }
+.tk-tracker--finance tr.is-drop-before > td { box-shadow: inset 0 2px 0 var(--accent); }
+.tk-tracker--finance tr.is-drop-after > td { box-shadow: inset 0 -2px 0 var(--accent); }
+.tk-tracker--finance tr.is-drop-end > td,
+.tk-tracker--finance tbody.is-drop-end { box-shadow: inset 0 2px 0 var(--accent); }
+.fin-ghost {
+  position: fixed;
+  z-index: 500;
+  pointer-events: none;
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  font-size: 12.5px;
+  color: var(--ink);
+  white-space: nowrap;
+}
