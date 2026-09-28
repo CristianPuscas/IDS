@@ -14,6 +14,9 @@
  *   openingBalance: număr,                                   // soldul dinaintea primei luni
  *   noPlan: { [tip]: true },                                 // tabele fără coloana „Plan” (doar „Achitat”)
  *   noPlanCats: { [tip]: { [categorie]: true } },            // categorii fără plan (sumă fixă): Plan „—”, needitabil
+ *   monthCats: { 'YYYY-MM': { venit: [nume…] } },           // sursele de venit adăugate explicit într-o lună
+ *                 // Veniturile sunt pe lună: o sursă apare într-o lună doar dacă a fost adăugată acolo sau are plan / sume
+ *                 // în acea lună; ștergerea dintr-o lună nu atinge celelalte luni (lista globală rămâne în Setări).
  *   notes: { 'YYYY': 'text' }                                // notițele din rezumatul anual
  * }
  * „Sold reportat” al unei luni = openingBalance + (venituri − toate ieșirile) din toate lunile anterioare.
@@ -29,6 +32,9 @@
   var D = TK.date;
 
   var TYPES = ['venit', 'cheltuiala', 'factura', 'datorie', 'economie'];
+  // tipurile ale căror categorii se aleg separat în fiecare lună
+  var PER_MONTH = ['venit'];
+  function perMonth(type) { return PER_MONTH.indexOf(type) !== -1; }
   var OUT = ['cheltuiala', 'factura', 'datorie', 'economie'];
   var LABEL = { venit: 'Venit', cheltuiala: 'Cheltuială', factura: 'Factură', datorie: 'Datorie', economie: 'Economie' };
   var PLURAL = { venit: 'Venituri', cheltuiala: 'Cheltuieli', factura: 'Facturi', datorie: 'Datorii', economie: 'Economii' };
@@ -418,6 +424,18 @@
       });
     });
     s.noPlanCats = npc;
+    var mc = {};
+    if (isObj(s.monthCats)) Object.keys(s.monthCats).forEach(function (ym) {
+      if (!isYm(ym) || !isObj(s.monthCats[ym])) return;
+      PER_MONTH.forEach(function (t) {
+        var src = s.monthCats[ym][t];
+        if (!Array.isArray(src)) return;
+        var out = [];
+        src.forEach(function (c) { c = catName(c); if (c && cats[t].indexOf(c) !== -1 && out.indexOf(c) === -1) out.push(c); });
+        if (out.length) (mc[ym] || (mc[ym] = {}))[t] = out;
+      });
+    });
+    s.monthCats = mc;
     return s;
   }
 
@@ -627,6 +645,60 @@
       Object.keys(s.plans).forEach(function (k) { var p = s.plans[k][type]; if (p && p[cat]) months++; });
       return { n: n, sum: sum, months: months };
     }
+    // Categoriile afișate într-o lună. La veniturile pe lună: cele adăugate explicit în lună sau cu plan / sume în lună.
+    function visibleCats(type, ym) {
+      var s = S();
+      if (!perMonth(type) || !ym) return s.categories[type];
+      var added = ((s.monthCats[ym] || {})[type]) || [];
+      var plan = (s.plans[ym] || {})[type] || {};
+      var used = {};
+      s.transactions.forEach(function (t) { if (t.type === type && t.date.slice(0, 7) === ym) used[t.category] = 1; });
+      return s.categories[type].filter(function (c) { return added.indexOf(c) !== -1 || plan[c] || used[c]; });
+    }
+    // Fixează categoria în lună (rămâne vizibilă și după ce îi golești sumele).
+    function pinCat(ym, type, cat) {
+      if (!perMonth(type) || !ym) return;
+      var s = S();
+      var m = s.monthCats[ym] || (s.monthCats[ym] = {});
+      var arr = m[type] || (m[type] = []);
+      if (arr.indexOf(cat) === -1) arr.push(cat);
+    }
+    function unpinCat(ym, type, cat) {
+      var s = S(), m = s.monthCats[ym];
+      if (!m || !m[type]) return;
+      m[type] = m[type].filter(function (c) { return c !== cat; });
+      if (!m[type].length) delete m[type];
+      if (!Object.keys(m).length) delete s.monthCats[ym];
+    }
+    // Scoate o categorie dintr-o singură lună: planul, sumele și fixarea din acea lună. Celelalte luni rămân.
+    function removeFromMonth(type, cat, ym) {
+      var s = S();
+      unpinCat(ym, type, cat);
+      setPlanRaw(ym, type, cat, null);
+      s.transactions = s.transactions.filter(function (t) { return !(t.type === type && t.category === cat && t.date.slice(0, 7) === ym); });
+      api.commit();
+    }
+    function askRemoveFromMonth(type, cat, ym, after) {
+      var s = S();
+      var p = ymParts(ym), label = fmt.monthYear(p.y, p.m).toLowerCase();
+      var tx = s.transactions.filter(function (t) { return t.type === type && t.category === cat && t.date.slice(0, 7) === ym; });
+      var plan = +(((s.plans[ym] || {})[type] || {})[cat]) || 0;
+      var done = function () {
+        removeFromMonth(type, cat, ym);
+        TK.ui.toast('„' + cat + '” a fost scos din ' + label + '. Celelalte luni au rămas neschimbate.');
+        if (after) after();
+      };
+      if (!tx.length && !plan) { done(); return; }
+      var parts = [];
+      if (plan) parts.push('planul de ' + fmt.lei(plan));
+      if (tx.length) parts.push(tx.length + (tx.length === 1 ? ' sumă încasată' : ' sume încasate') + ' (' + fmt.lei(TK.sum(tx, function (t) { return +t.amount || 0; })) + ')');
+      TK.ui.confirm({
+        title: 'Scoți „' + cat + '” din ' + label + '?',
+        text: 'Se șterg doar din ' + label + ': ' + parts.join(' și ') + '. În celelalte luni „' + cat + '” rămâne neschimbat.',
+        ok: 'Scoate din ' + label, danger: true,
+      }).then(function (yes) { if (yes) done(); });
+    }
+
     function extraMap(type) { return type === 'factura' ? 'bills' : type === 'datorie' ? 'debts' : type === 'economie' ? 'goals' : null; }
 
     function isNoPlanCat(type, cat) { return !!(S().noPlanCats[type] || {})[cat]; }
@@ -648,6 +720,10 @@
       });
       var mk = extraMap(type);
       if (mk && s[mk][oldN]) { s[mk][newN] = s[mk][oldN]; delete s[mk][oldN]; }
+      Object.keys(s.monthCats).forEach(function (k) {
+        var arr = s.monthCats[k][type];
+        if (arr && arr.indexOf(oldN) !== -1) arr[arr.indexOf(oldN)] = newN;
+      });
       prefsCategoryChanged(type, oldN, newN);
       api.commit();
     }
@@ -663,6 +739,7 @@
       });
       var mk = extraMap(type);
       if (mk) delete s[mk][cat];
+      Object.keys(s.monthCats).forEach(function (k) { unpinCat(k, type, cat); });
       prefsCategoryChanged(type, cat, null);
       api.commit();
     }
@@ -699,7 +776,11 @@
       var ex = cat && mk ? (s[mk][cat] || {}) : {};
       var plan = cat && ym ? +(((s.plans[ym] || {})[type] || {})[cat]) || null : null;
       var p = ym ? ymParts(ym) : null;
-      var fields = [{ name: 'name', label: 'Nume', type: 'text', value: cat || '', required: true, placeholder: type === 'factura' ? 'ex. Televiziune' : '' }];
+      var monthly = perMonth(type) && !!ym;
+      var fields = [{
+        name: 'name', label: 'Nume', type: 'text', value: cat || '', required: true, placeholder: type === 'factura' ? 'ex. Televiziune' : type === 'venit' ? 'ex. Salariu' : '',
+        hint: monthly && !cat ? 'Se adaugă doar în ' + fmt.monthYear(ymParts(ym).y, ymParts(ym).m).toLowerCase() + '. Poți scrie și o sursă folosită în alte luni.' : null,
+      }];
       if (type === 'factura' || type === 'datorie') fields.push({ name: 'due', label: 'Termen (ziua din lună)', type: 'number', value: ex.dueDay || null, placeholder: '1–31' });
       if (type === 'datorie') fields.push({ name: 'total', label: 'Total credit (lei)', type: 'money', value: ex.total || null, hint: 'Opțional: pentru „Rămas de plătit”.' });
       if (type === 'economie') fields.push({ name: 'target', label: 'Țintă (lei)', type: 'money', value: ex.target || null });
@@ -707,28 +788,32 @@
       if (showPlan) {
         fields.push({ name: 'noPlanCat', label: 'Fără plan (sumă fixă): completez doar „' + PAID_LABEL[type] + '”', type: 'checkbox', value: cat ? isNoPlanCat(type, cat) : false });
         fields.push({ name: 'plan', label: 'Plan pentru ' + fmt.monthYear(p.y, p.m).toLowerCase() + ' (lei)', type: 'money', value: plan });
-        fields.push({ name: 'allMonths', label: 'Același plan în toate lunile din ' + p.y, type: 'checkbox', value: !cat });
+        fields.push({ name: 'allMonths', label: monthly ? 'Adaugă-l cu același plan în toate lunile din ' + p.y : 'Același plan în toate lunile din ' + p.y, type: 'checkbox', value: !cat && !monthly });
       }
       TK.ui.form({
         title: cat ? 'Editează „' + cat + '”' : 'Adaugă ' + NOUN[type],
         fields: fields,
         submit: cat ? 'Salvează' : 'Adaugă',
         onDelete: !!cat,
-        deleteLabel: 'Șterge',
+        deleteLabel: monthly ? 'Scoate din lună' : 'Șterge',
         validate: function (v) {
           var name = v.name.replace(/\s+/g, ' ');
-          if (name !== cat && S().categories[type].indexOf(name) !== -1) return 'Există deja „' + name + '”.';
+          if (name !== cat && S().categories[type].indexOf(name) !== -1) {
+            // la veniturile pe lună, o sursă existentă se poate adăuga într-o lună în care nu apare încă
+            if (!(monthly && !cat && visibleCats(type, ym).indexOf(name) === -1)) return 'Există deja „' + name + '”' + (monthly ? ' în această lună.' : '.');
+          }
           if (v.due != null && (v.due < 1 || v.due > 31 || v.due % 1)) return 'Termenul este o zi din lună, de la 1 la 31.';
           if ((v.total != null && v.total < 0) || (v.target != null && v.target < 0) || (v.plan != null && v.plan < 0)) return 'Sumele nu pot fi negative.';
           return null;
         },
       }).then(function (v) {
         if (!v) return;
-        if (v.__delete) { askRemove(type, cat, after); return; }
+        if (v.__delete) { if (monthly) askRemoveFromMonth(type, cat, ym, after); else askRemove(type, cat, after); return; }
         var name = v.name.replace(/\s+/g, ' ');
         var s2 = S();
-        if (!cat) s2.categories[type].push(name);
-        else if (name !== cat) rename(type, cat, name);
+        if (!cat && s2.categories[type].indexOf(name) === -1) s2.categories[type].push(name);
+        else if (cat && name !== cat) rename(type, cat, name);
+        if (monthly) pinCat(ym, type, name);
         if (mk) {
           var e = s2[mk][name] || (s2[mk][name] = {});
           if (type === 'factura' || type === 'datorie') e.dueDay = v.due || null;
@@ -896,6 +981,7 @@
     }
     function setPlanRaw(ym, type, cat, v) {
       var s = S();
+      if (v) pinCat(ym, type, cat);
       var p = s.plans[ym] || (s.plans[ym] = {});
       var pt = p[type] || (p[type] = {});
       if (v == null || v === 0) delete pt[cat];
@@ -962,6 +1048,7 @@
      * iar diferența e o singură plată „auto” (creată, modificată sau ștearsă aici). */
     function setPaid(ym, type, cat, x) {
       var s = S();
+      pinCat(ym, type, cat);
       var inMonth = s.transactions.filter(function (t) { return t.type === type && t.category === cat && t.date.slice(0, 7) === ym; });
       var manual = TK.sum(inMonth, function (t) { return t.auto ? 0 : +t.amount || 0; });
       var need = r2((x || 0) - manual);
@@ -978,6 +1065,7 @@
     }
     // Adaugă o sumă peste ce e deja achitat în lună (o tranzacție nouă, vizibilă în Tranzacții).
     function addPayment(ym, type, cat, amount, date, note) {
+      pinCat(ym, type, cat);
       S().transactions.push({ id: TK.uid(), date: date || payDate(type, cat, ym), type: type, category: cat, amount: r2(amount), note: note || '' });
       api.commit();
     }
@@ -1118,6 +1206,7 @@
         if (!yes) return;
         s.transactions = s.transactions.filter(function (t) { return t.date.slice(0, 7) !== ym; });
         delete s.plans[ym];
+        delete s.monthCats[ym];
         api.commit();
         after();
         TK.ui.toast(label + ' a fost resetată.');
@@ -1388,6 +1477,8 @@
         if (!src || !Object.keys(src).length) { TK.ui.toast('Luna ' + MONTHS[ymParts(prev).m].toLowerCase() + ' nu are plan de copiat.'); return; }
         var doCopy = function () {
           s.plans[ym] = TK.clone(src);
+          // sursele de venit ale lunii trecute vin și ele
+          PER_MONTH.forEach(function (t) { visibleCats(t, prev).forEach(function (c) { pinCat(ym, t, c); }); });
           // categoriile fără plan (sumă fixă) rămân fără plan
           Object.keys(s.noPlanCats).forEach(function (t) {
             Object.keys(s.noPlanCats[t]).forEach(function (c) { setPlanRaw(ym, t, c, null); });
@@ -1439,7 +1530,7 @@
 
     function summaryCard(m, type, rerender, opts) {
       opts = opts || {};
-      var cats = S().categories[type];
+      var cats = visibleCats(type, m.ym);
       var usePlan = !S().noPlan[type];
       var withPct = type !== 'venit' && usePlan;
       var tone = type === 'venit' ? 'sage' : null;
