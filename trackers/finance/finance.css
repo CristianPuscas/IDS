@@ -280,3 +280,33 @@
 .tk-tracker--finance .fin-plan-toggle .tk-toggle { width: 30px; height: 18px; }
 .tk-tracker--finance .fin-plan-toggle .tk-toggle::before { width: 14px; height: 14px; }
 .tk-tracker--finance .fin-plan-toggle .tk-toggle:checked::before { transform: translateX(12px); }
+
+/* „Achitat”: câmp + butonul „+” (suprapus în stânga celulei, fără să lățească tabelul) */
+.tk-tracker--finance .fin-paid-wrap { position: relative; display: block; }
+.tk-tracker--finance .fin-plus {
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sage-deep);
+  opacity: 0;
+}
+.tk-tracker--finance tr:hover .fin-plus,
+.tk-tracker--finance .fin-paid-wrap:focus-within .fin-plus,
+.tk-tracker--finance .fin-plus:focus-visible { opacity: 1; }
+@media (hover: none) { .tk-tracker--finance .fin-plus { opacity: 0.85; width: 22px; height: 22px; left: -6px; } }
+.tk-tracker--finance .fin-locked { color: var(--ink-3); cursor: not-allowed; background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
+/* antete puțin mai strânse ca „Achitat, lei” / „Încasat” să încapă fără derulare */
+.tk-tracker--finance .fin-compact thead th { padding-inline: 3px; letter-spacing: 0.03em; }
+.tk-tracker--finance .fin-table thead th.num { letter-spacing: 0.03em; }
+.tk-tracker--finance .fin-table td.num > .fin-paid-wrap > .tk-cell-input { min-width: calc(8.5ch + 10px); }
+/* în ultima coloană câmpul nu iese din tabel */
+.tk-tracker--finance .fin-table td:last-child > .tk-cell-input,
+.tk-tracker--finance .fin-table td:last-child > .fin-paid-wrap > .tk-cell-input { margin-right: 0; width: calc(100% + 6px); }

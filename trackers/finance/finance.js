@@ -13,6 +13,7 @@
  *   goals: { [categorie economie]: { target } },            // ținta de acumulat
  *   openingBalance: număr,                                   // soldul dinaintea primei luni
  *   noPlan: { [tip]: true },                                 // tabele fără coloana „Plan” (doar „Achitat”)
+ *   noPlanCats: { [tip]: { [categorie]: true } },            // categorii fără plan (sumă fixă): Plan „—”, needitabil
  *   notes: { 'YYYY': 'text' }                                // notițele din rezumatul anual
  * }
  * „Sold reportat” al unei luni = openingBalance + (venituri − toate ieșirile) din toate lunile anterioare.
@@ -409,6 +410,14 @@
     var np = {};
     if (isObj(s.noPlan)) TYPES.forEach(function (t) { if (s.noPlan[t] === true) np[t] = true; });
     s.noPlan = np;
+    var npc = {};
+    if (isObj(s.noPlanCats)) TYPES.forEach(function (t) {
+      if (!isObj(s.noPlanCats[t])) return;
+      Object.keys(s.noPlanCats[t]).forEach(function (c) {
+        if (s.noPlanCats[t][c] === true && cats[t].indexOf(c) !== -1) (npc[t] || (npc[t] = {}))[c] = true;
+      });
+    });
+    s.noPlanCats = npc;
     return s;
   }
 
@@ -620,8 +629,16 @@
     }
     function extraMap(type) { return type === 'factura' ? 'bills' : type === 'datorie' ? 'debts' : type === 'economie' ? 'goals' : null; }
 
+    function isNoPlanCat(type, cat) { return !!(S().noPlanCats[type] || {})[cat]; }
+    function setNoPlanCat(type, cat, on) {
+      var s = S();
+      var m = s.noPlanCats[type] || (s.noPlanCats[type] = {});
+      if (on) m[cat] = true; else delete m[cat];
+      if (!Object.keys(m).length) delete s.noPlanCats[type];
+    }
     function rename(type, oldN, newN) {
       var s = S();
+      if (isNoPlanCat(type, oldN)) { setNoPlanCat(type, oldN, false); setNoPlanCat(type, newN, true); }
       var cats = s.categories[type];
       cats[cats.indexOf(oldN)] = newN;
       s.transactions.forEach(function (t) { if (t.type === type && t.category === oldN) t.category = newN; });
@@ -636,6 +653,7 @@
     }
     function remove(type, cat) {
       var s = S();
+      setNoPlanCat(type, cat, false);
       s.categories[type] = s.categories[type].filter(function (c) { return c !== cat; });
       s.transactions = s.transactions.filter(function (t) { return !(t.type === type && t.category === cat); });
       Object.keys(s.plans).forEach(function (k) {
@@ -687,8 +705,9 @@
       if (type === 'economie') fields.push({ name: 'target', label: 'Țintă (lei)', type: 'money', value: ex.target || null });
       var showPlan = !!p && !s.noPlan[type];
       if (showPlan) {
+        fields.push({ name: 'noPlanCat', label: 'Fără plan (sumă fixă): completez doar „' + PAID_LABEL[type] + '”', type: 'checkbox', value: cat ? isNoPlanCat(type, cat) : false });
         fields.push({ name: 'plan', label: 'Plan pentru ' + fmt.monthYear(p.y, p.m).toLowerCase() + ' (lei)', type: 'money', value: plan });
-        fields.push({ name: 'allMonths', label: 'Aceeași sumă fixă în toate lunile din ' + p.y, type: 'checkbox', value: !cat });
+        fields.push({ name: 'allMonths', label: 'Același plan în toate lunile din ' + p.y, type: 'checkbox', value: !cat });
       }
       TK.ui.form({
         title: cat ? 'Editează „' + cat + '”' : 'Adaugă ' + NOUN[type],
@@ -716,11 +735,19 @@
           if (type === 'datorie') e.total = v.total ? r2(v.total) : 0;
           if (type === 'economie') e.target = v.target ? r2(v.target) : 0;
         }
-        if (showPlan && v.allMonths) {
+        if (showPlan && v.noPlanCat) {
+          // fără plan: ștergem planurile categoriei din toate lunile
+          setNoPlanCat(type, name, true);
+          Object.keys(s2.plans).forEach(function (k) { setPlanRaw(k, type, name, null); });
+          api.commit();
+        } else if (showPlan && v.allMonths) {
+          setNoPlanCat(type, name, false);
           for (var mm = 0; mm < 12; mm++) setPlanRaw(ymOf(p.y, mm), type, name, v.plan);
           api.commit();
-        } else if (showPlan) setPlan(ym, type, name, v.plan);
-        else api.commit();
+        } else if (showPlan) {
+          setNoPlanCat(type, name, false);
+          setPlan(ym, type, name, v.plan);
+        } else api.commit();
         TK.ui.toast(cat ? '„' + name + '” a fost salvat.' : '„' + name + '” a fost adăugat.');
         if (after) after();
       });
@@ -828,6 +855,7 @@
           var due = old && old.dueDay ? old.dueDay : null;
           s2[mTo][cat] = to === 'factura' ? { dueDay: due } : to === 'datorie' ? { dueDay: due, total: 0 } : { target: 0 };
         }
+        if (isNoPlanCat(type, cat)) { setNoPlanCat(type, cat, false); setNoPlanCat(to, cat, true); }
         prefsCategoryChanged(type, cat, null);
         api.commit();
         TK.ui.toast('„' + cat + '” a fost mutat în ' + PLURAL[to] + '.');
@@ -874,6 +902,13 @@
       else pt[cat] = r2(v);
       if (!Object.keys(pt).length) delete p[type];
       if (!Object.keys(p).length) delete s.plans[ym];
+    }
+    // Totalul realizat fără categoriile fără plan (pentru procentul din rândul Total).
+    function factWithPlan(m, type) {
+      return TK.sum(S().categories[type], function (c) { return isNoPlanCat(type, c) ? 0 : (m.fact[type][c] || 0); });
+    }
+    function lockedPlanTd() {
+      return h('td', { class: 'num fin-locked', title: 'Fără plan (sumă fixă). Se schimbă din fereastra categoriei.' }, '—');
     }
     function planInput(ym, type, cat, idx, where, rerender) {
       var cur = +(((S().plans[ym] || {})[type] || {})[cat]) || 0;
@@ -941,17 +976,56 @@
       api.commit();
       return true;
     }
+    // Adaugă o sumă peste ce e deja achitat în lună (o tranzacție nouă, vizibilă în Tranzacții).
+    function addPayment(ym, type, cat, amount, date, note) {
+      S().transactions.push({ id: TK.uid(), date: date || payDate(type, cat, ym), type: type, category: cat, amount: r2(amount), note: note || '' });
+      api.commit();
+    }
+    function addPaymentForm(ym, type, cat, rerender) {
+      var p = ymParts(ym);
+      TK.ui.form({
+        title: 'Adaugă la „' + cat + '”',
+        fields: [
+          { name: 'amount', label: 'Suma de adăugat (lei)', type: 'money', required: true, placeholder: 'ex. 50', hint: 'Se adună la ce e deja ' + PAID_LABEL[type].toLowerCase() + ' în ' + fmt.monthYear(p.y, p.m).toLowerCase() + '.' },
+          { name: 'date', label: 'Data', type: 'date', value: payDate(type, cat, ym), required: true },
+          { name: 'note', label: 'Notă', type: 'text', placeholder: 'opțional' },
+        ],
+        submit: 'Adaugă',
+        validate: function (v) {
+          if (!(v.amount > 0)) return 'Suma trebuie să fie mai mare decât zero.';
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(v.date || '')) return 'Alege o dată validă.';
+          return null;
+        },
+      }).then(function (v) {
+        if (!v) return;
+        addPayment(ym, type, cat, v.amount, v.date, v.note);
+        TK.ui.toast('Am adăugat ' + fmt.lei(v.amount) + ' la „' + cat + '”.');
+        rerender();
+      });
+    }
+
     function paidInput(ym, type, cat, fact, idx, where, rerender) {
       var id = 'fin-paid-in-' + where + '-' + type + '-' + idx;
       var shown = fact ? fmt.num(fact) : '';
       var inp = h('input', {
         class: 'tk-cell-input', id: id, type: 'text', inputmode: 'decimal', autocomplete: 'off',
         value: shown, placeholder: '—', 'aria-label': PAID_LABEL[type] + ' ' + cat + ' (lei)',
+        title: 'Scrie totalul sau +50 ca să adaugi 50 la suma existentă',
       });
       var done = false;
       function save() {
         if (done) return;
         var raw = inp.value.trim();
+        // „+50” sau „+ 50” = adaugă peste suma existentă
+        var plus = /^\+/.test(raw) ? fmt.parseNum(raw.slice(1)) : null;
+        if (/^\+/.test(raw)) {
+          if (!(plus > 0)) { TK.ui.toast('După „+” scrie suma de adăugat, de exemplu +50.'); inp.value = shown; return; }
+          done = true;
+          addPayment(ym, type, cat, plus);
+          TK.ui.toast('Am adăugat ' + fmt.lei(plus) + ' la „' + cat + '”.');
+          setTimeout(rerender, 0);
+          return;
+        }
         var v = fmt.parseNum(raw);
         if (raw !== '' && (v == null || v < 0)) {
           TK.ui.toast('Scrie o sumă validă, de exemplu 1 500,00.');
@@ -971,7 +1045,11 @@
         else if (e.key === 'Escape') { inp.value = shown; inp.blur(); }
       });
       inp.addEventListener('change', save);
-      return inp;
+      var plusBtn = h('button', {
+        type: 'button', class: 'tk-icon-btn fin-plus', id: id + '-add', title: 'Adaugă o sumă', 'aria-label': 'Adaugă o sumă la ' + cat,
+        onclick: function () { addPaymentForm(ym, type, cat, rerender); },
+      }, '+');
+      return h('span', { class: 'fin-paid-wrap' }, inp, plusBtn);
     }
 
     /* ---- selector de lună ---- */
@@ -1101,11 +1179,12 @@
         var cb = h('input', { type: 'checkbox', class: 'tk-check', id: 'fin-paid-' + where + '-' + type + '-' + i, checked: paid, 'aria-label': c + ' plătită' });
         cb.addEventListener('change', function () { onTick(cb, type, c, m, rerender); });
         var due = (map[c] || {}).dueDay;
+        var locked = isNoPlanCat(type, c);
         var cells = usePlan ? [
-          h('td', { class: 'chk' }, cb),
+          h('td', { class: 'chk' }, locked ? null : cb),
           catCell(type, c, m.ym, rerender),
           h('td', { class: 'tk-center fin-due' }, due ? String(due) : '—'),
-          curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, where, rerender)),
+          curTd(), locked ? lockedPlanTd() : h('td', { class: 'num' }, planInput(m.ym, type, c, i, where, rerender)),
           curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, where, rerender)),
           pctTd(fact, plan, 'out'),
         ] : [
@@ -1124,7 +1203,7 @@
       if (showLeft) cols.push('cur', 'num');
       var pad = Math.max(0, (opts.minRows || 0) - cats.length);
       var foot = usePlan
-        ? [h('th', { colspan: 3, scope: 'row' }, 'Total'), curTd(), numTd(m.planTot[type]), curTd(), numTd(m.factTot[type]), pctTd(m.factTot[type], m.planTot[type], 'out')]
+        ? [h('th', { colspan: 3, scope: 'row' }, 'Total'), curTd(), numTd(m.planTot[type]), curTd(), numTd(m.factTot[type]), pctTd(factWithPlan(m, type), m.planTot[type], 'out')]
         : [h('th', { colspan: 2, scope: 'row' }, 'Total'), curTd(), numTd(m.factTot[type])];
       if (showLeft) {
         var leftTot = TK.sum(cats, function (c) { var tot = +(map[c] || {}).total || 0; return tot ? Math.max(0, tot - cumulative(s, type, c, monthEnd)) : 0; });
@@ -1236,6 +1315,10 @@
         if (!src || !Object.keys(src).length) { TK.ui.toast('Luna ' + MONTHS[ymParts(prev).m].toLowerCase() + ' nu are plan de copiat.'); return; }
         var doCopy = function () {
           s.plans[ym] = TK.clone(src);
+          // categoriile fără plan (sumă fixă) rămân fără plan
+          Object.keys(s.noPlanCats).forEach(function (t) {
+            Object.keys(s.noPlanCats[t]).forEach(function (c) { setPlanRaw(ym, t, c, null); });
+          });
           api.commit();
           render();
           TK.ui.toast('Planul a fost copiat din ' + MONTHS[ymParts(prev).m].toLowerCase() + '.');
@@ -1294,7 +1377,7 @@
       var rows = cats.map(function (c, i) {
         var plan = +m.plan[type][c] || 0, fact = m.fact[type][c] || 0;
         var cells = [catCell(type, c, m.ym, rerender)];
-        if (usePlan) cells.push(curTd(), h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)));
+        if (usePlan) cells.push(curTd(), isNoPlanCat(type, c) ? lockedPlanTd() : h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)));
         cells.push(curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, 'luna', rerender)));
         if (withPct) cells.push(pctTd(fact, plan, MODE[type]));
         return h('tr', null, cells);
@@ -1304,7 +1387,7 @@
       var foot = [h('th', { scope: 'row' }, 'Total')];
       if (usePlan) foot.push(curTd(), numTd(m.planTot[type]));
       foot.push(curTd(), numTd(m.factTot[type]));
-      if (withPct) foot.push(pctTd(m.factTot[type], m.planTot[type], MODE[type]));
+      if (withPct) foot.push(pctTd(factWithPlan(m, type), m.planTot[type], MODE[type]));
       return h('article', { class: 'tk-card' + (tone ? ' tk-card--' + tone : '') },
         cardHead(titleB('Sumar', PLURAL[type].toLowerCase()), tone),
         h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
