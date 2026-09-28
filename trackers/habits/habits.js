@@ -397,8 +397,42 @@
       h('div', { class: 'hb-nav' },
         h('button', { type: 'button', id: 'hb-prev', class: 'tk-btn tk-btn--sm', 'aria-label': 'Luna anterioară', title: 'Luna anterioară', onclick: function () { c.setYm(shiftYm(c.ym, -1)); } }, '‹'),
         h('button', { type: 'button', id: 'hb-now', class: 'tk-btn tk-btn--sm tk-btn--ghost', disabled: isNow, onclick: function () { c.setYm(D.ym(c.today)); } }, 'Luna curentă'),
-        h('button', { type: 'button', id: 'hb-next', class: 'tk-btn tk-btn--sm', 'aria-label': 'Luna următoare', title: 'Luna următoare', onclick: function () { c.setYm(shiftYm(c.ym, 1)); } }, '›'))
+        h('button', { type: 'button', id: 'hb-next', class: 'tk-btn tk-btn--sm', 'aria-label': 'Luna următoare', title: 'Luna următoare', onclick: function () { c.setYm(shiftYm(c.ym, 1)); } }, '›')),
+      h('button', {
+        type: 'button', id: 'hb-reset', class: 'tk-btn tk-btn--sm tk-btn--ghost hb-reset',
+        title: 'Șterge bifele și listele lunii ' + D.MONTHS[c.m].toLowerCase() + ' ' + c.y,
+        onclick: function () { resetMonth(c); },
+      }, '↺ Resetează luna')
     );
+  }
+
+  // Golește luna văzută: bifele din grilă, listele săptămânale și lista lunară. Obiceiurile rămân.
+  function resetMonth(c) {
+    var st = c.st, ym = c.ym;
+    var monthName = D.MONTHS[c.m].toLowerCase() + ' ' + c.y;
+    var checks = st.checks[ym] || {};
+    var nChecks = Object.keys(checks).reduce(function (a, k) { return a + (checks[k].match(/1/g) || []).length; }, 0);
+    var nWeekly = (st.weekly[ym] || []).reduce(function (a, w) { return a + (w ? w.length : 0); }, 0);
+    var nMonthly = (st.monthly[ym] || []).length;
+    if (!nChecks && !nWeekly && !nMonthly) { TK.ui.toast('Luna ' + monthName + ' este deja goală.'); return; }
+    var parts = [];
+    if (nChecks) parts.push(nChecks + (nChecks === 1 ? ' bifă' : ' bife') + ' din grilă');
+    if (nWeekly) parts.push(nWeekly + (nWeekly === 1 ? ' sarcină săptămânală' : ' sarcini săptămânale'));
+    if (nMonthly) parts.push(nMonthly + (nMonthly === 1 ? ' acțiune lunară' : ' acțiuni lunare'));
+    TK.ui.confirm({
+      title: 'Resetezi ' + monthName + '?',
+      text: 'Se șterg ' + parts.join(', ') + '. Obiceiurile, programul lor și celelalte luni rămân neschimbate.',
+      ok: 'Resetează luna',
+      danger: true,
+    }).then(function (yes) {
+      if (!yes) return;
+      delete st.checks[ym];
+      delete st.weekly[ym];
+      delete st.monthly[ym];
+      c.api.commit();
+      c.rerender();
+      TK.ui.toast('Luna ' + monthName + ' a fost resetată.');
+    });
   }
 
   /* ------------------------------------------------------------ vederea Zilnic */

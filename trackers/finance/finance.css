@@ -321,3 +321,6 @@
 .fin-am-add { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); }
 .fin-am-add > .tk-field { flex: 1 1 120px; }
 .fin-am-add > .fin-am-notef { flex: 2 1 160px; }
+
+/* resetarea lunii */
+.tk-tracker--finance .fin-reset { color: var(--bad); }

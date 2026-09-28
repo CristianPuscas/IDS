@@ -24,6 +24,7 @@
   gap: var(--space-1);
 }
 .tk-tracker--habits .hb-nav .tk-btn--ghost { flex: 1 1 auto; }
+.tk-tracker--habits .hb-reset { align-self: stretch; color: var(--bad); }
 
 /* ---------------------------------------------------------------- vederea zilnică: aranjare */
 .tk-tracker--habits .hb-daily {

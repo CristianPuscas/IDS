@@ -1103,6 +1103,32 @@
       return h('span', { class: 'fin-paid-wrap' }, inp, plusBtn);
     }
 
+    /* ---- resetarea unei luni: tranzacțiile și planul ei; categoriile, setările și celelalte luni rămân ---- */
+    function resetMonth(ym, after) {
+      var s = S();
+      var p = ymParts(ym);
+      var label = fmt.monthYear(p.y, p.m);
+      var nTx = s.transactions.filter(function (t) { return t.date.slice(0, 7) === ym; }).length;
+      var hasPlan = !!(s.plans[ym] && Object.keys(s.plans[ym]).some(function (t) { return Object.keys(s.plans[ym][t] || {}).length; }));
+      if (!nTx && !hasPlan) { TK.ui.toast(label + ' este deja goală.'); return; }
+      var parts = [];
+      if (nTx) parts.push(nTx + (nTx === 1 ? ' tranzacție (sumă)' : ' tranzacții (sume)'));
+      if (hasPlan) parts.push('planul lunii');
+      TK.ui.confirm({
+        title: 'Resetezi ' + label + '?',
+        text: 'Se șterg ' + parts.join(' și ') + '. Categoriile, facturile, datoriile, țintele de economii și celelalte luni rămân neschimbate.',
+        ok: 'Resetează luna',
+        danger: true,
+      }).then(function (yes) {
+        if (!yes) return;
+        s.transactions = s.transactions.filter(function (t) { return t.date.slice(0, 7) !== ym; });
+        delete s.plans[ym];
+        api.commit();
+        after();
+        TK.ui.toast(label + ' a fost resetată.');
+      });
+    }
+
     /* ---- selector de lună ---- */
     function monthPicker(ym, onChange, idp) {
       var p = ymParts(ym);
@@ -1297,7 +1323,8 @@
             h('button', { type: 'button', class: 'tk-btn tk-btn--primary tk-btn--sm', id: 'fin-luna-add', onclick: function () {
               txForm(null, { date: defaultDateFor(ym), type: 'cheltuiala', category: s.categories.cheltuiala[0] }).then(function (ok) { if (ok) render(); });
             } }, '+ Adaugă tranzacție'),
-            h('button', { type: 'button', class: 'tk-btn tk-btn--sm', id: 'fin-luna-copy', onclick: copyPlan }, 'Copiază planul din luna trecută'))
+            h('button', { type: 'button', class: 'tk-btn tk-btn--sm', id: 'fin-luna-copy', onclick: copyPlan }, 'Copiază planul din luna trecută'),
+            h('button', { type: 'button', class: 'tk-btn tk-btn--sm tk-btn--ghost fin-reset', id: 'fin-luna-reset', onclick: function () { resetMonth(ym, render); } }, '↺ Resetează luna'))
         ));
 
         /* KPI */
