@@ -73,13 +73,15 @@
 .tk-tracker--finance .fin-sign { width: 18px; padding-inline: 4px; text-align: center; color: var(--ink-3); font-weight: 700; }
 .tk-tracker--finance .fin-flux tbody th { text-align: left; }
 .tk-tracker--finance .fin-due { width: 1%; }
+.tk-tracker--finance .fin-table th.fin-due,
+.tk-tracker--finance .fin-table td.fin-due { padding-inline: 2px; letter-spacing: 0.02em; }
 .tk-tracker--finance .fin-neg { color: var(--bad); font-weight: 700; }
 .tk-tracker--finance tr.fin-cur td { background: color-mix(in srgb, var(--tone-soft, var(--rose-soft)) 60%, transparent); font-weight: 600; }
 /* coloana de categorie ia spațiul rămas și trunchiază numele lungi (numele complet e în title) */
 .tk-tracker--finance .fin-table td.fin-cat {
   width: 100%;
   max-width: 0;
-  min-width: 76px;
+  min-width: 66px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -281,11 +283,11 @@
 .tk-tracker--finance .fin-plan-toggle .tk-toggle::before { width: 14px; height: 14px; }
 .tk-tracker--finance .fin-plan-toggle .tk-toggle:checked::before { transform: translateX(12px); }
 
-/* „Achitat”: câmp + butonul „+” (suprapus în stânga celulei, fără să lățească tabelul) */
+/* „Achitat”: câmp + butonul „+” în interiorul câmpului, în stânga (nu acoperă „lei” și nici cifrele) */
 .tk-tracker--finance .fin-paid-wrap { position: relative; display: block; }
 .tk-tracker--finance .fin-plus {
   position: absolute;
-  left: -4px;
+  left: 1px;
   top: 50%;
   z-index: 1;
   width: 18px;
@@ -306,10 +308,11 @@
 /* antete puțin mai strânse ca „Achitat, lei” / „Încasat” să încapă fără derulare */
 .tk-tracker--finance .fin-compact thead th { padding-inline: 3px; letter-spacing: 0.03em; }
 .tk-tracker--finance .fin-table thead th.num { letter-spacing: 0.03em; }
-.tk-tracker--finance .fin-table td.num > .fin-paid-wrap > .tk-cell-input { min-width: calc(8.5ch + 10px); }
+.tk-tracker--finance .fin-table td.num > .fin-paid-wrap > .tk-cell-input { margin-left: 0; padding-left: 20px; min-width: calc(9.5ch + 22px); width: calc(100% + 6px); }
 /* în ultima coloană câmpul nu iese din tabel */
 .tk-tracker--finance .fin-table td:last-child > .tk-cell-input,
 .tk-tracker--finance .fin-table td:last-child > .fin-paid-wrap > .tk-cell-input { margin-right: 0; width: calc(100% + 6px); }
+.tk-tracker--finance .fin-table td:last-child > .fin-paid-wrap > .tk-cell-input { width: 100%; }
 
 /* fereastra „Sume” */
 .tk-tracker--finance ~ .tk-modal .fin-am-list,
@@ -325,9 +328,8 @@
 /* resetarea lunii */
 .tk-tracker--finance .fin-reset { color: var(--bad); }
 
-/* pe telefon „+” stă în interiorul câmpului (nu peste „lei” și nici peste cifre) */
+/* pe telefon butonul „+” e mereu vizibil și puțin mai mare */
 @media (hover: none) {
-  .tk-tracker--finance .fin-plus { opacity: 0.85; width: 20px; height: 20px; left: 1px; }
-  .tk-tracker--finance .fin-table td.num > .fin-paid-wrap > .tk-cell-input { margin-left: 0; padding-left: 23px; min-width: calc(8.5ch + 24px); width: calc(100% + 6px); }
-  .tk-tracker--finance .fin-table td:last-child > .fin-paid-wrap > .tk-cell-input { width: 100%; }
+  .tk-tracker--finance .fin-plus { opacity: 0.85; width: 20px; height: 20px; }
+  .tk-tracker--finance .fin-table td.num > .fin-paid-wrap > .tk-cell-input { padding-left: 23px; min-width: calc(9.5ch + 26px); }
 }
