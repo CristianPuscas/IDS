@@ -1813,3 +1813,29 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
 }
 .tk-chart__pie .tk-legend { font-size: 11px; color: var(--ink-2); }
 .tk-chart__pie .tk-legend .tk-swatch { border-radius: 50%; }
+
+/* ---- carduri minimizabile: butonul „–” din antet ---- */
+.tk-card__head.has-min { position: relative; padding-right: 42px; }
+.tk-card__min {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 18%, transparent);
+  color: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.75;
+  transition: opacity var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+.tk-card__min:hover { opacity: 1; background: color-mix(in srgb, var(--surface) 35%, transparent); }
+.tk-card.is-collapsed > :not(.tk-card__head) { display: none; }
+.tk-card.is-collapsed { align-self: start; }

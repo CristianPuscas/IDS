@@ -101,6 +101,48 @@
     root.appendChild(bar);
     root.appendChild(main);
     renderStatus();
+    // cardurile noi (orice redesenare) primesc butonul de minimizare
+    if (typeof MutationObserver !== 'undefined') {
+      new MutationObserver(function () { decorateCards(main); }).observe(main, { childList: true, subtree: true });
+    }
+  }
+
+  /* ------------------------------------------ carduri minimizabile (ca o fereastră) */
+
+  // Fiecare card cu antet primește butonul „–”: minimizat rămâne doar antetul.
+  // Starea se ține per vizitator, pe pagină (hash) și titlul cardului.
+  var collapsed = TK.prefs.get('collapsed', {}) || {};
+  function cardKey(head) {
+    var t = head.querySelector('.tk-card__title');
+    return (location.hash || '#acasa') + '|' + ((t || head).textContent || '').trim().slice(0, 80);
+  }
+  function setCollapsed(card, head, btn, on) {
+    card.classList.toggle('is-collapsed', on);
+    btn.textContent = on ? '+' : '–';
+    btn.setAttribute('aria-expanded', on ? 'false' : 'true');
+    var title = ((head.querySelector('.tk-card__title') || head).textContent || '').trim();
+    btn.setAttribute('aria-label', (on ? 'Deschide ' : 'Minimizează ') + title);
+    btn.title = on ? 'Deschide' : 'Minimizează';
+  }
+  function decorateCards(scope) {
+    var heads = scope.querySelectorAll('.tk-card > .tk-card__head:not([data-min])');
+    Array.prototype.forEach.call(heads, function (head) {
+      var card = head.parentNode;
+      if (card.classList.contains('tk-home__card')) return;
+      head.setAttribute('data-min', '1');
+      head.classList.add('has-min');
+      var key = cardKey(head);
+      var btn = h('button', { type: 'button', class: 'tk-card__min' });
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var on = !card.classList.contains('is-collapsed');
+        setCollapsed(card, head, btn, on);
+        if (on) collapsed[key] = true; else delete collapsed[key];
+        TK.prefs.set('collapsed', collapsed);
+      });
+      head.appendChild(btn);
+      setCollapsed(card, head, btn, !!collapsed[key]);
+    });
   }
 
   function setActiveNav(slug) {
