@@ -16,9 +16,7 @@
  *   noPlanCats: { [tip]: { [categorie]: true } },            // categorii fără plan (sumă fixă): Plan „—”, needitabil
  *   notes: { 'YYYY': 'text' }                                // notițele din rezumatul anual
  * }
- * „Sold reportat” al unei luni = openingBalance + (venituri − cheltuieli − facturi − datorii) din lunile anterioare.
- * Economiile nu scad din soldul lunar și nu apar pe pagina „Luna”; apar în „Facturi, datorii, economii” și în rezumatul anual,
- * unde „Sold final” al anului le scade (ca la început).
+ * „Sold reportat” al unei luni = openingBalance + (venituri − toate ieșirile) din toate lunile anterioare.
  * „Acumulat” la economii = suma tuturor tranzacțiilor „economie” ale categoriei până la sfârșitul lunii văzute.
  * Luna / anul selectate și filtrele stau în api.prefs (nu în stare).
  */
@@ -32,9 +30,6 @@
 
   var TYPES = ['venit', 'cheltuiala', 'factura', 'datorie', 'economie'];
   var OUT = ['cheltuiala', 'factura', 'datorie', 'economie'];
-  // Economiile nu scad din sold (banii puși deoparte rămân ai tăi) și nu apar pe pagina „Luna”.
-  var SPEND = ['cheltuiala', 'factura', 'datorie'];
-  var FLOW = ['venit', 'cheltuiala', 'factura', 'datorie'];
   var LABEL = { venit: 'Venit', cheltuiala: 'Cheltuială', factura: 'Factură', datorie: 'Datorie', economie: 'Economie' };
   var PLURAL = { venit: 'Venituri', cheltuiala: 'Cheltuieli', factura: 'Facturi', datorie: 'Datorii', economie: 'Economii' };
   var TONE = { venit: 'good', cheltuiala: 'rose', factura: 'terra', datorie: 'gold', economie: 'blue' };
@@ -106,7 +101,7 @@
   }
 
   function netOf(tot) {
-    return tot.venit - tot.cheltuiala - tot.factura - tot.datorie;
+    return tot.venit - tot.cheltuiala - tot.factura - tot.datorie - tot.economie;
   }
 
   function openingFor(idx, ym) {
@@ -129,8 +124,8 @@
       m.planTot[t] = sumObj(p[t]);
       m.factTot[t] = b.tot[t];
     });
-    m.factOut = m.factTot.cheltuiala + m.factTot.factura + m.factTot.datorie;
-    m.planOut = m.planTot.cheltuiala + m.planTot.factura + m.planTot.datorie;
+    m.factOut = m.factTot.cheltuiala + m.factTot.factura + m.factTot.datorie + m.factTot.economie;
+    m.planOut = m.planTot.cheltuiala + m.planTot.factura + m.planTot.datorie + m.planTot.economie;
     m.opening = openingFor(idx, ym);
     m.closing = m.opening + m.factTot.venit - m.factOut;
     m.planClosing = m.opening + m.planTot.venit - m.planOut;
@@ -155,7 +150,6 @@
     Y.planOut = Y.plan.cheltuiala + Y.plan.factura + Y.plan.datorie + Y.plan.economie;
     Y.factOut = Y.fact.cheltuiala + Y.fact.factura + Y.fact.datorie + Y.fact.economie;
     Y.opening = Y.months[0].opening;
-    // în rezumatul anual economiile scad din soldul final (ca la început)
     Y.closing = Y.opening + Y.fact.venit - Y.factOut;
     Y.planClosing = Y.opening + Y.plan.venit - Y.planOut;
     return Y;
@@ -1332,12 +1326,13 @@
         grid.appendChild(h('div', { class: 'tk-kpis fin-kpis fin-span-2', role: 'list', 'aria-label': 'Indicatori ' + MONTHS[p.m] + ' ' + p.y },
           kpi('Venituri', m.factTot.venit, m.planTot.venit, 'in'),
           kpi('Cheltuieli și facturi', m.factTot.cheltuiala + m.factTot.factura, m.planTot.cheltuiala + m.planTot.factura, 'out'),
-          kpi('Datorii', m.factTot.datorie, m.planTot.datorie, 'out')));
+          kpi('Datorii', m.factTot.datorie, m.planTot.datorie, 'out'),
+          kpi('Economii', m.factTot.economie, m.planTot.economie, 'in')));
 
         /* grafice */
         grid.appendChild(chartCard('Flux de numerar', function (box) {
-          flowBars(box, FLOW.map(function (t) { return PLURAL[t]; }), FLOW.map(function (t) { return m.planTot[t]; }),
-            FLOW.map(function (t) { return m.factTot[t]; }), 'Flux de numerar, plan și fapt');
+          flowBars(box, TYPES.map(function (t) { return PLURAL[t]; }), TYPES.map(function (t) { return m.planTot[t]; }),
+            TYPES.map(function (t) { return m.factTot[t]; }), 'Flux de numerar, plan și fapt');
         }, charts));
         grid.appendChild(chartCard('Structura veniturilor', function (box) {
           TK.charts.pie(box, {
@@ -1346,7 +1341,7 @@
           });
         }, charts));
         grid.appendChild(chartCard('Distribuția reală', function (box) {
-          TK.charts.pie(box, { data: realDistribution(m.factTot, SPEND), format: fmt.lei, label: 'Distribuția reală a veniturilor' });
+          TK.charts.pie(box, { data: realDistribution(m.factTot), format: fmt.lei, label: 'Distribuția reală a veniturilor' });
         }, charts));
 
         /* coloana 1: flux + sumar venituri */
@@ -1363,7 +1358,7 @@
         /* top-20, unde s-au dus banii, ultimele tranzacții */
         var outItems = [];
         var offset = 0;
-        SPEND.forEach(function (t) {
+        OUT.forEach(function (t) {
           s.categories[t].forEach(function (c, i) {
             var v = m.fact[t][c] || 0;
             if (v > 0) outItems.push({ label: c, value: v, type: t, pref: offset + i });
@@ -1414,10 +1409,9 @@
       render();
     }
 
-    function realDistribution(tot, types) {
-      types = types || OUT;
-      var data = types.map(function (t) { return { label: PLURAL[t], value: tot[t], color: FLOW_COLOR[t] }; });
-      var left = tot.venit - TK.sum(types, function (t) { return tot[t]; });
+    function realDistribution(tot) {
+      var data = OUT.map(function (t) { return { label: PLURAL[t], value: tot[t], color: FLOW_COLOR[t] }; });
+      var left = tot.venit - (tot.cheltuiala + tot.factura + tot.datorie + tot.economie);
       if (left > 0) data.push({ label: 'Rămas', value: left, color: FLOW_COLOR.ramas });
       return data;
     }
@@ -1437,7 +1431,7 @@
             h('tbody', null,
               row('+', 'Sold reportat', m.opening, m.opening),
               row('+', 'Total venituri', m.planTot.venit, m.factTot.venit, true),
-              SPEND.map(function (t) { return row('−', PLURAL[t], m.planTot[t], m.factTot[t]); })),
+              OUT.map(function (t) { return row('−', PLURAL[t], m.planTot[t], m.factTot[t]); })),
             h('tfoot', null, h('tr', null,
               h('th', { colspan: 2, scope: 'row' }, 'Sold final'),
               curTd(), h('td', { class: 'num' }, fmt.num(m.planClosing)), curTd(), h('td', { class: 'num' + (m.closing < 0 ? ' fin-neg' : '') }, fmt.num(m.closing)))))));
@@ -1492,13 +1486,13 @@
                 h('td', { class: 'num' }, fmt.pct(TK.ratio(d.value, total))));
             }) : h('tr', null, h('td', { colspan: 5, class: 'tk-muted tk-center' }, 'Nicio ieșire în luna aceasta.'))),
             h('tfoot', null, h('tr', null, h('th', { colspan: 2, scope: 'row' }, 'Total ieșiri'), curTd(), numTd(total), h('td', { class: 'num' }, total ? '100,00%' : '—'))))),
-        h('div', { class: 'tk-card__foot fin-legend-types' }, SPEND.map(function (t) {
+        h('div', { class: 'tk-card__foot fin-legend-types' }, OUT.map(function (t) {
           return h('span', null, h('span', { class: 'fin-type-dot', 'data-tone': TONE[t] }), PLURAL[t]);
         })));
     }
 
     function recentCard(ym, rerender) {
-      var list = S().transactions.filter(function (t) { return t.date.slice(0, 7) === ym && t.type !== 'economie'; });
+      var list = S().transactions.filter(function (t) { return t.date.slice(0, 7) === ym; });
       list = list.map(function (t, i) { return { t: t, i: i }; }).sort(function (a, b) {
         return a.t.date < b.t.date ? 1 : a.t.date > b.t.date ? -1 : b.i - a.i;
       }).slice(0, 12).map(function (x) { return x.t; });
@@ -1519,11 +1513,11 @@
                   onclick: function () { txForm(t).then(function (ok) { if (ok) rerender(); }); },
                 }, '✎')));
             }) : h('tr', null, h('td', { colspan: 5, class: 'tk-muted tk-center' }, 'Încă nu ai tranzacții în luna aceasta.'))))),
-        h('div', { class: 'tk-card__foot fin-legend-types' }, FLOW.map(function (t) {
+        h('div', { class: 'tk-card__foot fin-legend-types' }, TYPES.map(function (t) {
           return h('span', null, h('span', { class: 'fin-type-dot', 'data-tone': TONE[t] }), PLURAL[t]);
         })),
         h('div', { class: 'tk-card__foot' },
-          h('span', null, 'În lună: ', h('b', null, String(S().transactions.filter(function (t) { return t.date.slice(0, 7) === ym && t.type !== 'economie'; }).length))),
+          h('span', null, 'În lună: ', h('b', null, String(S().transactions.filter(function (t) { return t.date.slice(0, 7) === ym; }).length))),
           h('button', { type: 'button', class: 'tk-btn tk-btn--sm tk-btn--ghost', id: 'fin-recent-all', onclick: function () {
             var f = api.prefs.get('txf', {}) || {};
             f.month = ym;
