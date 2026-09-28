@@ -17,7 +17,8 @@
  *   notes: { 'YYYY': 'text' }                                // notițele din rezumatul anual
  * }
  * „Sold reportat” al unei luni = openingBalance + (venituri − cheltuieli − facturi − datorii) din lunile anterioare.
- * Economiile nu scad din sold (banii puși deoparte rămân ai tăi); apar în „Facturi, datorii, economii” și în rezumatul anual.
+ * Economiile nu scad din soldul lunar și nu apar pe pagina „Luna”; apar în „Facturi, datorii, economii” și în rezumatul anual,
+ * unde „Sold final” al anului le scade (ca la început).
  * „Acumulat” la economii = suma tuturor tranzacțiilor „economie” ale categoriei până la sfârșitul lunii văzute.
  * Luna / anul selectate și filtrele stau în api.prefs (nu în stare).
  */
@@ -154,9 +155,9 @@
     Y.planOut = Y.plan.cheltuiala + Y.plan.factura + Y.plan.datorie + Y.plan.economie;
     Y.factOut = Y.fact.cheltuiala + Y.fact.factura + Y.fact.datorie + Y.fact.economie;
     Y.opening = Y.months[0].opening;
-    // soldul nu scade economiile (ca pe pagina „Luna”)
-    Y.closing = Y.opening + Y.fact.venit - (Y.factOut - Y.fact.economie);
-    Y.planClosing = Y.opening + Y.plan.venit - (Y.planOut - Y.plan.economie);
+    // în rezumatul anual economiile scad din soldul final (ca la început)
+    Y.closing = Y.opening + Y.fact.venit - Y.factOut;
+    Y.planClosing = Y.opening + Y.plan.venit - Y.planOut;
     return Y;
   }
 
@@ -1863,7 +1864,7 @@
               h('tbody', null,
                 h('tr', null, h('td', { title: 'Sold la 1 ianuarie' }, 'Sold inițial'), numTd(Y.opening), numTd(Y.opening), h('td', { class: 'num' }, '')),
                 frow('Total venituri', Y.plan.venit, Y.fact.venit, 'in', true),
-                OUT.map(function (t) { return frow(t === 'economie' ? h('span', { title: 'Economiile nu scad din sold: banii puși deoparte rămân ai tăi.' }, 'Economii ⓘ') : PLURAL[t], Y.plan[t], Y.fact[t], MODE[t]); })),
+                OUT.map(function (t) { return frow(PLURAL[t], Y.plan[t], Y.fact[t], MODE[t]); })),
               h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Sold final'), h('td', { class: 'num' }, fmt.num(Y.planClosing)),
                 h('td', { class: 'num' + (Y.closing < 0 ? ' fin-neg' : '') }, fmt.num(Y.closing)), pctTd(Y.closing, Y.planClosing > 0 ? Y.planClosing : 0, 'in'))))));
         var big = h('article', { class: 'tk-card tk-card--plain fin-big-card' },
