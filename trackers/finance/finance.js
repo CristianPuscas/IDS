@@ -123,41 +123,47 @@
   function monthModel(state, idx, ym) {
     var b = idx.months[ym] || emptyBucket();
     var p = (state.plans || {})[ym] || {};
-    var m = { ym: ym, fact: {}, plan: {}, planTot: {}, factTot: {}, n: b.n };
+    var m = { ym: ym, fact: {}, plan: {}, planTot: {}, planEff: {}, factTot: {}, n: b.n };
+    var noPlan = state.noPlan || {}, noPlanCats = state.noPlanCats || {};
     TYPES.forEach(function (t) {
       m.fact[t] = b[t];
       m.plan[t] = p[t] || {};
       m.planTot[t] = sumObj(p[t]);
       m.factTot[t] = b.tot[t];
+      // sumele fixe (tabel fără plan sau categorie „fără plan”) contează în plan cu cât s-a plătit
+      var fixed = noPlan[t] ? b.tot[t] : sumObj(Object.keys(noPlanCats[t] || {}).reduce(function (o, c) { o[c] = b[t][c] || 0; return o; }, {}));
+      m.planEff[t] = m.planTot[t] + fixed;
     });
     m.factOut = m.factTot.cheltuiala + m.factTot.factura + m.factTot.datorie + m.factTot.economie;
-    m.planOut = m.planTot.cheltuiala + m.planTot.factura + m.planTot.datorie + m.planTot.economie;
+    m.planOut = m.planEff.cheltuiala + m.planEff.factura + m.planEff.datorie + m.planEff.economie;
     m.opening = openingFor(idx, ym);
     m.closing = m.opening + m.factTot.venit - m.factOut;
-    m.planClosing = m.opening + m.planTot.venit - m.planOut;
+    m.planClosing = m.opening + m.planEff.venit - m.planOut;
     m.hasPlan = TYPES.some(function (t) { return Object.keys(m.plan[t]).length > 0; });
     return m;
   }
 
   function yearModel(state, idx, y) {
-    var Y = { y: y, months: [], plan: {}, fact: {}, planCat: {}, factCat: {} };
-    TYPES.forEach(function (t) { Y.plan[t] = 0; Y.fact[t] = 0; Y.planCat[t] = {}; Y.factCat[t] = {}; });
+    var Y = { y: y, months: [], plan: {}, planEff: {}, fact: {}, planCat: {}, factCat: {}, hasPlan: false };
+    TYPES.forEach(function (t) { Y.plan[t] = 0; Y.planEff[t] = 0; Y.fact[t] = 0; Y.planCat[t] = {}; Y.factCat[t] = {}; });
     for (var m = 0; m < 12; m++) {
       var mm = monthModel(state, idx, ymOf(y, m));
       Y.months.push(mm);
       TYPES.forEach(function (t) {
         Y.plan[t] += mm.planTot[t];
+        Y.planEff[t] += mm.planEff[t];
         Y.fact[t] += mm.factTot[t];
         var k;
         for (k in mm.plan[t]) Y.planCat[t][k] = (Y.planCat[t][k] || 0) + (+mm.plan[t][k] || 0);
         for (k in mm.fact[t]) Y.factCat[t][k] = (Y.factCat[t][k] || 0) + mm.fact[t][k];
       });
     }
-    Y.planOut = Y.plan.cheltuiala + Y.plan.factura + Y.plan.datorie + Y.plan.economie;
+    Y.hasPlan = Y.months.some(function (mm) { return mm.hasPlan; });
+    Y.planOut = Y.planEff.cheltuiala + Y.planEff.factura + Y.planEff.datorie + Y.planEff.economie;
     Y.factOut = Y.fact.cheltuiala + Y.fact.factura + Y.fact.datorie + Y.fact.economie;
     Y.opening = Y.months[0].opening;
     Y.closing = Y.opening + Y.fact.venit - Y.factOut;
-    Y.planClosing = Y.opening + Y.plan.venit - Y.planOut;
+    Y.planClosing = Y.opening + Y.planEff.venit - Y.planOut;
     return Y;
   }
 
@@ -1520,24 +1526,26 @@
     }
 
     function fluxCard(m) {
+      // fără niciun plan în lună coloana „Plan” nu are sens; altfel sumele fixe intră în plan cu cât s-a plătit
+      var P = m.hasPlan;
       function row(sign, label, plan, fact, strong) {
         return h('tr', null,
           h('td', { class: 'fin-sign', 'aria-hidden': 'true' }, sign),
           h(strong ? 'th' : 'td', strong ? { scope: 'row' } : null, label),
-          curTd(), numTd(plan), curTd(), numTd(fact));
+          P ? curTd() : null, P ? numTd(plan) : null, curTd(), numTd(fact));
       }
       return h('article', { class: 'tk-card' },
         cardHead(titleB('Flux', 'de numerar')),
         h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
           h('table', { class: 'tk-table tk-table--dense fin-table fin-flux' },
-            h('thead', null, h('tr', null, th(h('span', { class: 'tk-sr' }, 'Semn'), 'fin-sign'), th('Categorie'), th('Plan', 'num', { colspan: 2 }), th('Achitat', 'num', { colspan: 2 }))),
+            h('thead', null, h('tr', null, th(h('span', { class: 'tk-sr' }, 'Semn'), 'fin-sign'), th('Categorie'), P ? th('Plan', 'num', { colspan: 2 }) : null, th('Achitat', 'num', { colspan: 2 }))),
             h('tbody', null,
               row('+', 'Sold reportat', m.opening, m.opening),
-              row('+', 'Total venituri', m.planTot.venit, m.factTot.venit, true),
-              OUT.map(function (t) { return row('−', PLURAL[t], m.planTot[t], m.factTot[t]); })),
+              row('+', 'Total venituri', m.planEff.venit, m.factTot.venit, true),
+              OUT.map(function (t) { return row('−', PLURAL[t], m.planEff[t], m.factTot[t]); })),
             h('tfoot', null, h('tr', null,
               h('th', { colspan: 2, scope: 'row' }, 'Sold final'),
-              curTd(), h('td', { class: 'num' }, fmt.num(m.planClosing)), curTd(), h('td', { class: 'num' + (m.closing < 0 ? ' fin-neg' : '') }, fmt.num(m.closing)))))));
+              P ? curTd() : null, P ? h('td', { class: 'num' }, fmt.num(m.planClosing)) : null, curTd(), h('td', { class: 'num' + (m.closing < 0 ? ' fin-neg' : '') }, fmt.num(m.closing)))))));
     }
 
     function summaryCard(m, type, rerender, opts) {
@@ -1950,20 +1958,23 @@
         }, charts));
 
         /* coloana 1: prezentare flux + total */
+        // fără niciun plan în an: doar coloana „Achitat”; altfel sumele fixe intră în plan cu cât s-a plătit
+        var YP = Y.hasPlan;
         function frow(label, plan, fact, mode, strong) {
-          return h('tr', null, h(strong ? 'th' : 'td', strong ? { scope: 'row' } : null, label), numTd(plan), numTd(fact), pctTd(fact, plan, mode));
+          return h('tr', null, h(strong ? 'th' : 'td', strong ? { scope: 'row' } : null, label), YP ? numTd(plan) : null, numTd(fact), YP ? pctTd(fact, plan, mode) : null);
         }
+        function fhead() { return h('thead', null, h('tr', null, th('Categorie'), YP ? th('Plan, lei', 'num') : null, th('Achitat, lei', 'num'), YP ? th('Progres', 'num') : null)); }
         var flux = h('article', { class: 'tk-card' },
           cardHead(titleB('Prezentare', 'flux de numerar')),
           h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
             h('table', { class: 'tk-table tk-table--dense fin-table fin-compact' },
-              h('thead', null, h('tr', null, th('Categorie'), th('Plan, lei', 'num'), th('Achitat, lei', 'num'), th('Progres', 'num'))),
+              fhead(),
               h('tbody', null,
-                h('tr', null, h('td', { title: 'Sold la 1 ianuarie' }, 'Sold inițial'), numTd(Y.opening), numTd(Y.opening), h('td', { class: 'num' }, '')),
-                frow('Total venituri', Y.plan.venit, Y.fact.venit, 'in', true),
-                OUT.map(function (t) { return frow(PLURAL[t], Y.plan[t], Y.fact[t], MODE[t]); })),
-              h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Sold final'), h('td', { class: 'num' }, fmt.num(Y.planClosing)),
-                h('td', { class: 'num' + (Y.closing < 0 ? ' fin-neg' : '') }, fmt.num(Y.closing)), pctTd(Y.closing, Y.planClosing > 0 ? Y.planClosing : 0, 'in'))))));
+                h('tr', null, h('td', { title: 'Sold la 1 ianuarie' }, 'Sold inițial'), YP ? h('td', { class: 'num' }, fmt.num(Y.opening)) : null, h('td', { class: 'num' }, fmt.num(Y.opening)), YP ? h('td', { class: 'num' }, '') : null),
+                frow('Total venituri', Y.planEff.venit, Y.fact.venit, 'in', true),
+                OUT.map(function (t) { return frow(PLURAL[t], Y.planEff[t], Y.fact[t], MODE[t]); })),
+              h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Sold final'), YP ? h('td', { class: 'num' }, fmt.num(Y.planClosing)) : null,
+                h('td', { class: 'num' + (Y.closing < 0 ? ' fin-neg' : '') }, fmt.num(Y.closing)), YP ? pctTd(Y.closing, Y.planClosing > 0 ? Y.planClosing : 0, 'in') : null)))));
         var big = h('article', { class: 'tk-card tk-card--plain fin-big-card' },
           h('div', { class: 'tk-card__body' },
             h('p', { class: 'tk-chart__title' }, 'Total cheltuieli și facturi'),
@@ -1973,9 +1984,9 @@
           cardHead(titleB('Sumar', 'finanțe')),
           h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
             h('table', { class: 'tk-table tk-table--dense fin-table fin-compact' },
-              h('thead', null, h('tr', null, th('Categorie'), th('Plan, lei', 'num'), th('Achitat, lei', 'num'), th('Progres', 'num'))),
-              h('tbody', null, TYPES.map(function (t) { return frow(PLURAL[t], Y.plan[t], Y.fact[t], MODE[t], t === 'venit'); })),
-              h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Total ieșiri'), numTd(Y.planOut), numTd(Y.factOut), pctTd(Y.factOut, Y.planOut, 'out'))))));
+              fhead(),
+              h('tbody', null, TYPES.map(function (t) { return frow(PLURAL[t], Y.planEff[t], Y.fact[t], MODE[t], t === 'venit'); })),
+              h('tfoot', null, h('tr', null, h('th', { scope: 'row' }, 'Total ieșiri'), YP ? numTd(Y.planOut) : null, numTd(Y.factOut), YP ? pctTd(Y.factOut, Y.planOut, 'out') : null)))));
 
         function monthTable(type, tone) {
           var rows = Y.months.map(function (mm, i) {
