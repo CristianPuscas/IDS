@@ -137,7 +137,36 @@ Body
 - Script an dinamic în HtmlEmbed (`[data-year]`).
 - Culori legate de variabile Semantic; responsive: 991 → coloane 2 + newsletter dedesubt; 767 → top și bottom pe coloană; 479 → linkuri pe o coloană.
 
+## Pasul 05 — Secțiunile paginii About ✅
+
+Toate în `main.main-wrapper#main`, în ordine. Structură Client-First: `section_[nume]` › `padding-global` › `container-large` › `padding-section-medium` (Metrics: `padding-bottom padding-xxlarge`, fără padding-top, conform Figma).
+
+| Secțiune | Clasă | Conținut |
+|---|---|---|
+| Hero | `section_about-hero` | Tagline „Our story”, H1 „About / *LunaJets*”, 2 paragrafe (2025, €180m), link „Read our history”, imagine placeholder 64:45 (eager) |
+| Metrics | `section_about-metrics` | header „A European leader / *since 2007*”, `stats_list` 4 statistici (12,000+ · €180m · 7 · 4,800+), 3 × `split_component` (al 2-lea cu imaginea în stânga), 7 linkuri oraș `text-style-link`, butoane outline cu săgeată |
+| Services | `section_about-services` | fundal navy + gradient, H2 „High-end / *quality service*”, `ul.services_list` cu 5 `li.services_card` (h3), iconuri SVG din site-ul vechi în HtmlEmbed (`services_icon-embed`, currentColor) |
+| Group | `section_about-group` | header + paragraf, `group_list` cu 3 `group_card` (imagine 3:2, h3, text, link „Discover” cu text sr-only). LunaGroup Charter = `group_card-title is-accent` (orange, D4) |
+| Standards | `section_about-standards` | `split_component is-standards` (11fr/9fr), `split_lead`, buton „Discover more” (sr: „about our commitments”), imagine 5:4 |
+| Press | `section_about-press` | H2 „As featured in”, 3 `press_card` (imagine fundal decorativă alt="", overlay navy 85%, logo placeholder cu alt = publicația, excerpt/dată **[PLACEHOLDER]**, „Read more” → `/en/media-centre`), buton „All media coverage” |
+
+Clase noi partajate: `tagline_component/line/text`, `spacer-custom1` (1.25rem; 767: 1rem), `button_sr-text` (sr-only), `split_*`, `stats_*`.
+
+Spațiere: s-a folosit scala Relume existentă (`spacer-xxsmall` 0.5, `xsmall` 1, `small` 1.5, `medium` 2, `xlarge` 4rem) + `spacer-custom1`. Nu a fost nevoie de `spacer-custom2` (24px = `spacer-small`).
+
+Toate culorile/bordurile/radius-urile legate de variabile (Semantic + Radius/Small); fonturile statisticilor → `Font Styles/Heading`; titlurile cardurilor Services → `Font Styles/Body`. Singurele valori brute rămase (one-off, conform Client-First v2.1): gradientul Services și overlay-ul presă `rgba(6,29,56,0.85)`.
+
+Responsive: 991 → hero/split pe o coloană, imaginea deasupra (`order:-1`), stats 2×2, services 3+2, group/press 2+1; 767 → services 2 coloane, group/press 1 coloană (max 28rem); 479 → stats 1 coloană.
+
+### Ce NU e încă făcut (de decis)
+
+- Componentele cu props **Tagline, Stat Item, Group Card, Press Card, Button Arrow** sunt deocamdată **pattern-uri de clase** (nu componente Webflow). Transformarea în componente cu props se poate face ca pas separat.
+- Embed-ul Global Styles nu a fost aliniat (focus ring, `!important` pe utilitare).
+- Press: text placeholder, linkuri spre `/en/media-centre` (D5).
+- JSON-LD (AboutPage + Organization) nu e adăugat încă (pas SEO).
+
 ## Următorul pas
 
 - 03.1 — Upload fonturi (manual, user): Vanitas 700 normal + italic; Gilroy 400, 600, 700.
-- 05 — Secțiunile paginii About (Hero, Metrics, Services, Group, Standards, Press), cu componentele Tagline, Stat Item, Group Card, Press Card create pe parcurs.
+- 06 — QA vizual în Designer + ajustări responsive.
+- 07 — SEO (JSON-LD, OG image după asset-uri).

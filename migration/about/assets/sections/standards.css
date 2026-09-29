@@ -1,0 +1,5 @@
+.section_about-standards{position:relative;}
+.split_component.is-standards{grid-template-columns:11fr 9fr;grid-column-gap:5rem;}
+.split_lead{font-size:1.5rem;font-weight:600;line-height:1.3;letter-spacing:0.02em;}
+@media screen and (max-width: 991px){.split_component.is-standards{grid-template-columns:1fr;}}
+@media screen and (max-width: 767px){.split_lead{font-size:1.25rem;}}
