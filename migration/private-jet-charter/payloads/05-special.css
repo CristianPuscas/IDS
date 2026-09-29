@@ -1,0 +1,8 @@
+.section_pjc-special{position:relative;}
+.charter-type_list{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;grid-column-gap:2rem;grid-row-gap:2rem;margin-top:0rem;margin-bottom:0rem;padding-left:0rem;list-style-type:none;}
+.charter-type_card{display:flex;flex-direction:column;overflow:hidden;border:1px solid #E1E5E8;border-radius:0.125rem;background-color:#FFFFFF;text-align:center;}
+.charter-type_image-wrapper{position:relative;overflow:hidden;width:100%;aspect-ratio:13/8;}
+.charter-type_content{display:flex;flex-direction:column;flex-grow:1;align-items:center;grid-row-gap:1rem;padding:1.5rem 1.25rem 2rem;}
+@media screen and (max-width: 991px){.charter-type_list{grid-template-columns:1fr 1fr;}}
+@media screen and (max-width: 767px){.charter-type_list{grid-column-gap:1.5rem;grid-row-gap:1.5rem;}}
+@media screen and (max-width: 479px){.charter-type_list{grid-template-columns:1fr;}}

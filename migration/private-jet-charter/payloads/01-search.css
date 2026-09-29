@@ -1,0 +1,22 @@
+.section_pjc-search{position:relative;overflow:hidden;background-color:#061D38;}
+.pjc-search_image-wrapper{position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;}
+.pjc-search_overlay{position:absolute;top:0;left:0;right:0;bottom:0;background-color:rgba(6,29,56,0.45);}
+.quote-search_component{position:relative;z-index:1;padding:2.5rem 3rem;border-radius:0.125rem;background-color:rgba(255,255,255,0.55);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:#061D38;}
+.quote-search_form{display:flex;flex-direction:column;grid-row-gap:1rem;margin-bottom:0rem;}
+.quote-search_tabs{display:flex;flex-wrap:wrap;grid-column-gap:0.25rem;grid-row-gap:0.25rem;}
+.quote-search_tab{position:relative;display:flex;margin-bottom:0rem;font-weight:400;cursor:pointer;}
+.quote-search_radio{position:absolute;width:1px;height:1px;margin:0rem;opacity:0;}
+.quote-search_tab-text{display:block;padding:0.875rem 1.25rem;border-radius:0.125rem;color:#061D38;font-size:0.6875rem;font-weight:700;line-height:1.2;letter-spacing:0.15em;text-transform:uppercase;}
+.quote-search_fields{display:flex;min-width:0rem;align-items:stretch;grid-column-gap:0.5rem;grid-row-gap:0.5rem;}
+.quote-search_route{position:relative;display:flex;flex-grow:1;flex-shrink:1;flex-basis:0%;grid-column-gap:0.5rem;grid-row-gap:0.5rem;min-width:0rem;}
+.quote-search_field{position:relative;flex-grow:1;flex-shrink:1;flex-basis:0%;min-width:0rem;}
+.quote-search_field.is-date{flex-grow:0;flex-shrink:0;flex-basis:14rem;}
+.quote-search_field.is-passengers{flex-grow:0;flex-shrink:0;flex-basis:6.5rem;}
+.quote-search_field-icon{position:absolute;top:50%;left:1rem;display:flex;width:1.25rem;height:1.25rem;color:#6B7684;pointer-events:none;transform:translateY(-50%);}
+.quote-search_input{width:100%;min-width:0rem;height:4.125rem;margin-bottom:0rem;padding:0 1.75rem 0 1.25rem;border:1px solid #FFFFFF;border-radius:0.125rem;background-color:#FFFFFF;color:#061D38;font-size:0.875rem;font-weight:600;line-height:1.2;}
+.quote-search_input.is-with-icon{padding-left:2.75rem;padding-right:0.75rem;}
+.quote-search_swap{position:absolute;top:50%;left:50%;z-index:1;display:flex;justify-content:center;align-items:center;width:2.75rem;height:2.75rem;padding:0.75rem;border-radius:50%;background-color:#061D38;color:#FFFFFF;transform:translate(-50%,-50%);cursor:pointer;}
+.button.is-search{justify-content:center;min-width:11.5rem;}
+@media screen and (max-width: 991px){.quote-search_component{padding:2rem;}.quote-search_fields{flex-wrap:wrap;}.quote-search_route{flex-basis:100%;}.quote-search_field.is-date{flex-grow:1;flex-basis:12rem;}}
+@media screen and (max-width: 767px){.quote-search_component{padding:1.5rem;}.quote-search_fields{flex-direction:column;flex-wrap:nowrap;}.quote-search_route{flex-direction:column;flex-basis:auto;}.quote-search_field{flex-basis:auto;}.quote-search_field.is-date{flex-basis:auto;}.quote-search_field.is-passengers{flex-basis:auto;}.quote-search_input{padding-right:4.25rem;}.quote-search_swap{left:auto;right:1rem;transform:translateY(-50%) rotate(90deg);}.button.is-search{min-width:0rem;min-height:3.5rem;}}
+@media screen and (max-width: 479px){.quote-search_component{padding:1.25rem;}.quote-search_tab-text{padding:0.75rem 0.625rem;letter-spacing:0.1em;}}

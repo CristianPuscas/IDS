@@ -1,0 +1,8 @@
+.section_pjc-booking{position:relative;}
+.booking_header{display:grid;grid-template-columns:1fr 1fr;grid-column-gap:4rem;grid-row-gap:1.5rem;align-items:end;}
+.booking_header-content{position:relative;}
+.booking_list{display:grid;grid-template-columns:1fr 1fr 1fr;grid-column-gap:2rem;grid-row-gap:2rem;margin-top:0rem;margin-bottom:0rem;padding-left:0rem;list-style-type:none;}
+.booking_card{display:flex;flex-direction:column;align-items:flex-start;grid-row-gap:1.5rem;padding:2.25rem;border:1px solid #E1E5E8;border-radius:0.125rem;}
+.booking_card-icon{display:flex;width:3rem;height:3rem;color:#061D38;}
+@media screen and (max-width: 991px){.booking_card{padding:1.75rem;}}
+@media screen and (max-width: 767px){.booking_header{grid-template-columns:1fr;}.booking_list{grid-template-columns:1fr;grid-row-gap:1.5rem;}.booking_card{padding:1.5rem;}}

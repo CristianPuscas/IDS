@@ -1,0 +1,16 @@
+.section_pjc-comparison{position:relative;}
+.comparison_component{overflow:hidden;border:1px solid #E1E5E8;border-radius:0.125rem;}
+.comparison_table{width:100%;border-collapse:collapse;table-layout:fixed;}
+.comparison_corner{width:30%;padding:0rem;}
+.comparison_head-cell{padding:1.25rem 1rem;border-left:1px solid #E1E5E8;background-color:#F5F8FB;color:#6B7684;font-size:0.6875rem;font-weight:700;line-height:1.3;letter-spacing:0.15em;text-align:center;text-transform:uppercase;vertical-align:middle;}
+.comparison_head-cell.is-lunajets{border-left-color:#061D38;background-color:#061D38;color:#FFFFFF;}
+.comparison_logo{display:flex;width:8rem;height:1.6rem;margin-left:auto;margin-right:auto;}
+.comparison_label-cell{padding:1.125rem 1.75rem;border-top:1px solid #E1E5E8;color:#6B7684;font-size:0.6875rem;font-weight:700;line-height:1.3;letter-spacing:0.15em;text-align:left;text-transform:uppercase;vertical-align:middle;}
+.comparison_cell{padding:0.875rem 1rem;border-top:1px solid #E1E5E8;border-left:1px solid #E1E5E8;color:#6B7684;font-size:0.875rem;line-height:1.4;text-align:center;vertical-align:middle;}
+.comparison_cell.is-highlight{background-color:#F5F8FB;}
+.comparison_chip{display:inline-flex;justify-content:center;align-items:center;min-height:1.8125rem;padding:0.25rem 0.875rem;border-radius:0.25rem;background-color:#061D38;color:#FFFFFF;font-size:0.8125rem;font-weight:600;line-height:1.2;}
+.comparison_legend{display:none;justify-content:center;grid-column-gap:2rem;margin-top:1rem;font-size:0.75rem;line-height:1.2;}
+.comparison_legend-item{display:flex;align-items:center;grid-column-gap:0.5rem;}
+.comparison_legend-swatch{width:0.5rem;height:0.8125rem;border:1px solid #061D38;background-color:#061D38;}
+.comparison_legend-swatch.is-other{border-color:#E1E5E8;background-color:#FFFFFF;}
+@media screen and (max-width: 767px){.comparison_table{display:block;}.comparison_head{display:block;}.comparison_body{display:block;}.comparison_row{display:grid;grid-template-columns:1fr 1fr 1fr;}.comparison_corner{display:none;}.comparison_head-cell{padding:0.75rem 0.5rem;letter-spacing:0.08em;}.comparison_head-cell.is-lunajets{border-left-width:0px;}.comparison_logo{width:5.25rem;height:1.05rem;}.comparison_label-cell{grid-column-start:1;grid-column-end:4;padding:0.5rem 0.75rem;background-color:#F5F8FB;}.comparison_cell{padding:0.75rem 0.5rem;font-size:0.8125rem;}.comparison_cell.is-highlight{border-left-width:0px;background-color:#FFFFFF;}.comparison_chip{min-height:1.3125rem;padding:0.125rem 0.4375rem;font-size:0.75rem;}.comparison_legend{display:flex;}}

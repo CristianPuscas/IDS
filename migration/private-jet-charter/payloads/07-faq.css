@@ -1,0 +1,7 @@
+.section_pjc-faq{position:relative;}
+.faq_list{border-top:1px solid rgba(6,29,56,0.5);}
+.faq_item{border-bottom:1px solid rgba(6,29,56,0.5);}
+.faq_question{display:flex;justify-content:space-between;align-items:center;grid-column-gap:1.5rem;padding-top:1.5rem;padding-bottom:1.5rem;list-style-type:none;cursor:pointer;}
+.faq_icon{display:flex;flex-grow:0;flex-shrink:0;width:1.5rem;height:1.5rem;transition:transform 200ms ease;}
+.faq_answer{padding-bottom:1.5rem;padding-right:3rem;}
+@media screen and (max-width: 767px){.faq_question{padding-top:1.25rem;padding-bottom:1.25rem;}.faq_answer{padding-right:0rem;}}

@@ -1,0 +1,4 @@
+.section_pjc-hero{position:relative;}
+.pjc-hero_divider{width:3.75rem;height:1px;background-color:#061D38;}
+.split_image-wrapper.is-hero{aspect-ratio:7/5;}
+@media screen and (max-width: 991px){.split_image-wrapper.is-hero{order:0;}}
