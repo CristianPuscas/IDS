@@ -46,3 +46,8 @@ Combo-uri noi (verificate): `services_card.is-third`, `tagline_component.is-reve
 - Întrebările pentru client din plan (H1/title, „nearly 20 years”, deposit account vs Frequent Charter Program, licențe imagini Adobe Stock Preview / ChatGPT / hangar, cardul „Music & entertainment”, eliminarea blocului app, exporturi SVG Figma, handle X).
 - JSON-LD (WebPage + speakable + BreadcrumbList) și meta head (og:url, twitter:*) — pas SEO.
 - Verificarea în Dev Mode Figma a valorilor estimate (≈) din secțiunile 2–5 când se resetează limita planului Starter.
+
+## Revizie 29.09 — „doar ce e în Figma”
+
+- **Scos:** paragraful de sub „Tailored for every need” (W5, text de pe site-ul vechi, absent în Figma) și `spacer-small` de deasupra lui. Linkurile contextuale din el dispar odată cu el.
+- **Text Figma restaurat:** eyebrow Tailored = „Ways to fly” (W6 anulat).

@@ -63,3 +63,11 @@ Toate cele 45 de legări din `payloads/bindings.md`, pe proprietăți longhand (
 - Imagini: placeholdere `<img src="">` cu alt text (fără upload, cum s-a cerut).
 - `og:url` / `twitter:*` în head (manual), starea activă în navbar, QA (Lighthouse, tastatură, contrast), valorile ≈ din Figma Dev Mode.
 - Coexistența slug-ului static `private-jet-charter` cu paginile CMS `fly-to-*` / `fly-between-*`: de rezolvat când se face CMS-ul de destinații (Webflow nu permite o pagină statică și o colecție cu același slug).
+
+## Revizie 29.09 — „doar ce e în Figma”
+
+La cererea clientului, pe paginile noi rămâne doar conținutul vizibil din Figma:
+- **Scos:** secțiunea FAQ (`section_pjc-faq`) și nodul `FAQPage` din JSON-LD (rămân WebPage + BreadcrumbList); butonul „View all destinations” și spacer-ul de deasupra lui.
+- **Text Figma restaurat:** eyebrow Special = „Ways to fly”; H2 = „Special private jet charter” (fără italic, fără rând nou).
+- Clasele `faq_*`, `destination_button-wrapper` rămân în site (regula: nu se șterg clase), nefolosite.
+- Payload-ul `07-faq` rămâne în repo doar ca referință.
