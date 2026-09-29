@@ -78,6 +78,30 @@ Notă: variabila de font nu acceptă o listă de fallback (`Vanitas, Georgia, se
 | Color Scheme 1/Border | Neutral Darkest (black) | Border Color/primary (#E1E5E8) |
 | Color Scheme 1/Accent | Neutral Darkest (black) | Text Color/accent (orange) |
 
+## Pasul 03.2 — Stiluri globale (aprobat) ✅
+
+Doar actualizări de valori + o clasă nouă. Nimic șters.
+
+| Stil | Modificare |
+|---|---|
+| `h1`–`h6` (tag) și `heading-style-h1`–`h6` | font-family → `Font Styles/Heading` (Vanitas), 700; mărimi base/991/767/479: H1 3.375/3/2.5/2.25rem, H2 2.5/2.25/2/1.75rem, H3 1.5/1.5/1.25/1.25rem, H4 1.25/1.25/1.125/1.125rem, H5 1.125/1.125/1/1rem, H6 1/1/0.875/0.875rem; line-height H1–H2 1.1, H3 1.2, H4 1.3, H5–H6 1.4; letter-spacing H1–H3 0.03em, H4–H6 0.02em |
+| `body` | + letter-spacing 0.025em (restul era deja legat de variabile: Gilroy, Color Scheme 1 → navy/alb, 1rem/1.5) |
+| `padding-global` | 5% → 2.5rem (767 și 479: 1.25rem) |
+| `container-large` | neschimbat (era deja 80rem) |
+| `text-size-large` | 1.5rem (767/479: 1.25rem) |
+| `text-size-medium` | 1.25rem (767/479: 1.125rem) |
+| `text-size-regular` / `small` / `tiny` | 1rem / 0.875rem / 0.75rem |
+| `button` | inline-flex, gap 0.625rem, padding 1.125rem 2rem, bg `Background Color/primary`, text `Text Color/alternate`, border `Border Color/alternate`, radius `Radius/Small`, Gilroy 600 0.75rem/1.2, ls 0.1em, uppercase, transition 200ms; hover opacity 0.9 |
+| `button.is-secondary` | outline: bg transparent, text `Text Color/primary`, border navy; hover → bg navy, text alb |
+| `button.is-alternate` | bg alb, text navy, border alb |
+| `button.is-small` | padding 0.75rem 1.25rem, 0.8125rem, ls 0.12em |
+| `button.is-link` | padding 0, bg transparent, `Link Color/primary`, gap 0.5rem, lh 1.2 |
+| `button.is-icon` | inline-flex, gap 0.625rem |
+| **nou** `button_icon` | 0.875rem × 0.875rem, flex none, transition transform 200ms |
+
+Notă: operația de titluri a dat timeout (60s) dar verificarea ulterioară a confirmat toate valorile aplicate.
+
 ## Următorul pas
 
-03 — Fonturi (upload manual de user) + stiluri globale (§4.4, §5 din `03-plan-about.md`).
+- 03.1 — Upload fonturi (manual, user): Vanitas 700 normal + italic; Gilroy 400, 600, 700.
+- 04 — Componente (Navbar, Footer, Tagline, Button Arrow, Stat Item, Group Card, Press Card). Necesită Webflow Designer deschis cu aplicația MCP Bridge.
