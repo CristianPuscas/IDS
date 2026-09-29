@@ -1,0 +1,65 @@
+[
+  {
+    "section": "01-hero",
+    "dataIcon": "lock-open",
+    "label": "No commitment",
+    "source": "new (Figma 264:6198 lacat deschis, redesenat)",
+    "svg": "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 32 32\" fill=\"none\" aria-hidden=\"true\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"7\" y=\"14\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M11 14V9.5a5 5 0 0 1 9.6-1.9\"/><circle cx=\"16\" cy=\"20.5\" r=\"1.75\"/><path d=\"M16 22.25v2.25\"/></svg>"
+  },
+  {
+    "section": "01-hero",
+    "dataIcon": "receipt",
+    "label": "No hidden costs",
+    "source": "new (Figma 264:6208 chitanta, redesenat; inlocuieste ceasul vechi 03-clock)",
+    "svg": "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 32 32\" fill=\"none\" aria-hidden=\"true\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 3.5h16v25l-2.67-2-2.66 2-2.67-2-2.67 2-2.66-2L8 28.5z\"/><path d=\"M12 10h8M12 14.5h8M12 19h5\"/></svg>"
+  },
+  {
+    "section": "01-hero",
+    "dataIcon": "focus-diamond",
+    "label": "Curated selection of aircraft",
+    "source": "new (Figma 264:6184 romb in cadru de focalizare, redesenat)",
+    "svg": "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 32 32\" fill=\"none\" aria-hidden=\"true\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 10V4h6M22 4h6v6M28 22v6h-6M10 28H4v-6\"/><path d=\"M16 9.5l6.5 6.5-6.5 6.5L9.5 16z\"/></svg>"
+  },
+  {
+    "section": "03-advantages",
+    "dataIcon": "star",
+    "label": "Access to top operators’ fleet",
+    "source": "new (Figma 264:6264 stea; inlocuieste telefonul vechi 06-phone)",
+    "svg": "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 32 32\" fill=\"none\" aria-hidden=\"true\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M16 4l3.53 7.16 7.9 1.15-5.72 5.57 1.35 7.87L16 22.04l-7.06 3.71 1.35-7.87-5.72-5.57 7.9-1.15z\"/></svg>"
+  },
+  {
+    "section": "03-advantages",
+    "dataIcon": "smartphone",
+    "label": "App and loyalty program",
+    "source": "old 07-smartphone.svg, fill -> currentColor",
+    "svg": "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 33 33\" fill=\"none\" aria-hidden=\"true\"><path d=\"M21.6562 0.515625H11.3438C10.2501 0.516853 9.20161 0.951845 8.42829 1.72517C7.65497 2.49849 7.21998 3.54698 7.21875 4.64062V28.3594C7.21998 29.453 7.65497 30.5015 8.42829 31.2748C9.20161 32.0482 10.2501 32.4831 11.3438 32.4844H21.6562C22.7499 32.4831 23.7984 32.0482 24.5717 31.2748C25.345 30.5015 25.78 29.453 25.7812 28.3594V4.64062C25.78 3.54698 25.345 2.49849 24.5717 1.72517C23.7984 0.951845 22.7499 0.516853 21.6562 0.515625ZM8.25 5.67188H24.75V25.2656H8.25V5.67188ZM11.3438 1.54688H21.6562C22.4765 1.54769 23.2629 1.8739 23.843 2.45392C24.423 3.03393 24.7492 3.82036 24.75 4.64062H8.25C8.25082 3.82036 8.57703 3.03393 9.15704 2.45392C9.73706 1.8739 10.5235 1.54769 11.3438 1.54688ZM21.6562 31.4531H11.3438C10.5235 31.4523 9.73706 31.1261 9.15704 30.5461C8.57703 29.9661 8.25082 29.1796 8.25 28.3594V26.2969H24.75V28.3594C24.7492 29.1796 24.423 29.9661 23.843 30.5461C23.2629 31.1261 22.4765 31.4523 21.6562 31.4531Z\" fill=\"currentColor\"/><path d=\"M16.5 27.3281C16.1941 27.3281 15.895 27.4188 15.6406 27.5888C15.3862 27.7588 15.188 28.0004 15.0709 28.283C14.9538 28.5657 14.9232 28.8767 14.9828 29.1768C15.0425 29.4768 15.1899 29.7525 15.4062 29.9688C15.6225 30.1851 15.8982 30.3325 16.1982 30.3922C16.4983 30.4518 16.8093 30.4212 17.092 30.3041C17.3746 30.187 17.6162 29.9888 17.7862 29.7344C17.9562 29.48 18.0469 29.1809 18.0469 28.875C18.0469 28.4647 17.8839 28.0713 17.5938 27.7812C17.3037 27.4911 16.9103 27.3281 16.5 27.3281ZM16.5 29.3906C16.398 29.3906 16.2983 29.3604 16.2135 29.3037C16.1287 29.2471 16.0627 29.1665 16.0236 29.0723C15.9846 28.9781 15.9744 28.8744 15.9943 28.7744C16.0142 28.6744 16.0633 28.5825 16.1354 28.5104C16.2075 28.4383 16.2994 28.3892 16.3994 28.3693C16.4994 28.3494 16.6031 28.3596 16.6973 28.3986C16.7915 28.4377 16.8721 28.5037 16.9287 28.5885C16.9854 28.6733 17.0156 28.773 17.0156 28.875C17.0156 29.0118 16.9613 29.1429 16.8646 29.2396C16.7679 29.3363 16.6368 29.3906 16.5 29.3906ZM18.0469 2.57812H14.9531C14.8164 2.57812 14.6852 2.63245 14.5885 2.72915C14.4918 2.82585 14.4375 2.957 14.4375 3.09375C14.4375 3.2305 14.4918 3.36165 14.5885 3.45835C14.6852 3.55505 14.8164 3.60938 14.9531 3.60938H18.0469C18.1836 3.60938 18.3148 3.55505 18.4115 3.45835C18.5082 3.36165 18.5625 3.2305 18.5625 3.09375C18.5625 2.957 18.5082 2.82585 18.4115 2.72915C18.3148 2.63245 18.1836 2.57812 18.0469 2.57812Z\" fill=\"currentColor\"/></svg>"
+  },
+  {
+    "section": "03-advantages",
+    "dataIcon": "alarm-clock",
+    "label": "Empty legs & last-minute flights",
+    "source": "new (Figma 264:6276 ceas desteptator, 46x38 normalizat la 32x32; inlocuieste 08-empty-leg)",
+    "svg": "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 32 32\" fill=\"none\" aria-hidden=\"true\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"16\" cy=\"17.5\" r=\"9\"/><path d=\"M16 12.5v5l3.5 2\"/><path d=\"M4.5 8.5l4-3.5M27.5 8.5l-4-3.5\"/><path d=\"M9.5 26l-1.5 2.5M22.5 26l1.5 2.5\"/></svg>"
+  },
+  {
+    "section": "03-advantages",
+    "dataIcon": "trend-down",
+    "label": "Lower rates in the market",
+    "source": "new (Figma 264:6306 grafic descendent, linie; 09-trend-down vechi era plin)",
+    "svg": "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 32 32\" fill=\"none\" aria-hidden=\"true\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4.5 4.5v23h23\"/><path d=\"M9 10l6 6 4-4 7.5 7.5\"/><path d=\"M21.5 19.5h5v-5\"/></svg>"
+  },
+  {
+    "section": "03-advantages",
+    "dataIcon": "calendar-x",
+    "label": "Most flexible cancellation terms",
+    "source": "new (Figma 264:6290 calendar cu x; inlocuieste 10-split-arrows)",
+    "svg": "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 32 32\" fill=\"none\" aria-hidden=\"true\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4.5\" y=\"6.5\" width=\"23\" height=\"21\" rx=\"2\"/><path d=\"M4.5 12.5h23M10.5 4v5M21.5 4v5\"/><path d=\"M13 16.5l6 6M19 16.5l-6 6\"/></svg>"
+  },
+  {
+    "section": "03-advantages",
+    "dataIcon": "credit-card",
+    "label": "All-inclusive rates",
+    "source": "old 11-credit-card.svg, fill -> currentColor",
+    "svg": "<svg width=\"100%\" height=\"100%\" viewBox=\"0 0 33 33\" fill=\"none\" aria-hidden=\"true\"><path d=\"M31.02 5.28027H1.98C0.888357 5.28027 0 6.16863 0 7.26027V25.7403C0 26.8319 0.888357 27.7203 1.98 27.7203H31.02C32.1116 27.7203 33 26.8319 33 25.7403V7.26027C33 6.16863 32.1116 5.28027 31.02 5.28027ZM31.68 25.7403C31.68 26.1033 31.383 26.4003 31.02 26.4003H1.98C1.61571 26.4003 1.32 26.1033 1.32 25.7403V7.26027C1.32 6.89592 1.61571 6.60027 1.98 6.60027H31.02C31.383 6.60027 31.68 6.89592 31.68 7.26027V25.7403Z\" fill=\"currentColor\"/><path d=\"M0.660156 11.2197H32.3402V13.8597H0.660156V11.2197Z\" fill=\"currentColor\"/><path d=\"M32.34 10.5596H0.66C0.295711 10.5596 0 10.8552 0 11.2196V13.8596C0 14.2239 0.295711 14.5196 0.66 14.5196H32.34C32.7043 14.5196 33 14.2239 33 13.8596V11.2196C33 10.8552 32.7043 10.5596 32.34 10.5596ZM31.68 13.1996H1.32V11.8796H31.68V13.1996ZM17.82 18.4796H5.94C5.57571 18.4796 5.28 18.7753 5.28 19.1396C5.28 19.5039 5.57571 19.7996 5.94 19.7996H17.82C18.1843 19.7996 18.48 19.5039 18.48 19.1396C18.48 18.7752 18.1843 18.4796 17.82 18.4796ZM12.54 21.1196H5.94C5.57571 21.1196 5.28 21.4153 5.28 21.7796C5.28 22.1439 5.57571 22.4396 5.94 22.4396H12.54C12.9043 22.4396 13.2 22.1439 13.2 21.7796C13.2 21.4153 12.9043 21.1196 12.54 21.1196Z\" fill=\"currentColor\"/></svg>"
+  }
+]

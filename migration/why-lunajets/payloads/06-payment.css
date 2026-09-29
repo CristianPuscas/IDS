@@ -1,0 +1,8 @@
+.section_why-payment{position:relative;}
+.why-payment_header{display:flex;flex-direction:column;align-items:flex-end;text-align:right;}
+.tagline_component.is-reverse{flex-direction:row-reverse;}
+.card-split_content.is-right{text-align:right;}
+.card-split_chip-list{position:absolute;top:50%;right:1.5rem;z-index:1;display:flex;flex-direction:column;grid-row-gap:0.625rem;margin-top:0rem;margin-bottom:0rem;padding-left:0rem;list-style-type:none;transform:translateY(-50%);}
+.card-split_chip{padding:0.75rem 0.375rem;border:1px solid rgba(255,255,255,0.6);border-radius:62.5rem;background-color:rgba(6,29,56,0.4);color:#ffffff;font-size:0.75rem;font-weight:600;line-height:1;letter-spacing:0.1em;writing-mode:vertical-rl;transform:rotate(180deg);}
+@media screen and (max-width: 991px){.why-payment_header{align-items:flex-start;text-align:left;}.tagline_component.is-reverse{flex-direction:row;}.card-split_content.is-right{text-align:left;}}
+@media screen and (max-width: 767px){.card-split_chip-list{top:auto;right:auto;bottom:1rem;left:1rem;flex-direction:row;grid-column-gap:0.5rem;transform:none;}.card-split_chip{padding:0.375rem 0.75rem;writing-mode:horizontal-tb;transform:none;}}
