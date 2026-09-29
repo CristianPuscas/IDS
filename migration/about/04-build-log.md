@@ -101,7 +101,43 @@ Doar actualizări de valori + o clasă nouă. Nimic șters.
 
 Notă: operația de titluri a dat timeout (60s) dar verificarea ulterioară a confirmat toate valorile aplicate.
 
+## Pagina About (draft) ✅
+
+- Creată prin Data API: id `6abbdc32e0166bd4870e4b1b`, slug `about-us`, **draft**.
+- SEO title `About LunaJets - Private Jet Charter Broker`; meta description (145 car.) din plan §10; OG copiat din SEO.
+
+Structură construită:
+
+```
+Body
+└─ div.page-wrapper
+   ├─ Global Styles (instanță componentă existentă)
+   ├─ Navbar (componentă nouă, grup Global)
+   ├─ main.main-wrapper#main
+   └─ Footer (componentă nouă, grup Global)
+```
+
+## Pasul 04 — Componente globale ✅ (Navbar + Footer)
+
+### Navbar (`a95837dc-1dfb-ce9e-392f-dd7a7c2cdf92`)
+
+- **Custom** (div-uri), pentru că API-ul nu poate crea elementul nativ Webflow Navbar (testat; elementul de test a fost șters, fără clase reziduale).
+- Arbore: `navbar_component[data-navbar][role=banner]` › `navbar_skip-link` (→ #main, vizibil la focus) + `navbar_container` › `navbar_logo-link` (SVG logo inline, currentColor) · `nav.navbar_menu#navbar-menu` (5 linkuri + `navbar_menu-extras` cu Login și `button is-alternate` Request quote, vizibil doar ≤767) · `navbar_buttons` (Login icon, dropdown contact cu email + 13 telefoane + WhatsApp, `navbar_cta` › `button is-small is-alternate` ascuns ≤767, `button.navbar_menu-button` hamburger vizibil ≤991) + HtmlEmbed cu script.
+- Script (embed): toggle `is-open` pe `navbar_menu` și `navbar_dropdown-list`, actualizează `aria-expanded`, închide la click în afară și la Escape.
+- Combo-uri: `navbar_menu.is-open`, `navbar_dropdown-list.is-open`, `navbar_icon-button.is-dropdown`.
+- Toate culorile legate de variabile Semantic; radius → `Radius/Small`.
+- Selectorul de limbă nu e inclus (D20: doar EN deocamdată).
+- Linkurile interne folosesc căile vechi `/en/...` (paginile nu există încă pe site-ul nou).
+
+### Footer (`439f049e-eaf9-3b51-27e5-c8c0db853891`)
+
+- `footer.footer_component` › `padding-global` › `container-large` › `padding-section-medium` › top (logo, 5 social cu aria-label, 2 app badges) · spacer · middle (grid 4 coloane linkuri `ul[role=list]` + newsletter) · spacer · divider · spacer · bottom (steag CH + „A Swiss-based company.”, 5 asociații, legal links Terms/Privacy/Legal Notice, © an dinamic, disclaimer).
+- Imaginile (app badges, logo-uri asociații) sunt **placeholdere fără asset**, cu alt text setat (conform cerinței: nu se urcă imagini).
+- Newsletter: `form` HTML simplu cu label sr-only, input email, buton submit cu săgeată. **Provider neales** — nu trimite nicăieri până la integrare (D13).
+- Script an dinamic în HtmlEmbed (`[data-year]`).
+- Culori legate de variabile Semantic; responsive: 991 → coloane 2 + newsletter dedesubt; 767 → top și bottom pe coloană; 479 → linkuri pe o coloană.
+
 ## Următorul pas
 
 - 03.1 — Upload fonturi (manual, user): Vanitas 700 normal + italic; Gilroy 400, 600, 700.
-- 04 — Componente (Navbar, Footer, Tagline, Button Arrow, Stat Item, Group Card, Press Card). Necesită Webflow Designer deschis cu aplicația MCP Bridge.
+- 05 — Secțiunile paginii About (Hero, Metrics, Services, Group, Standards, Press), cu componentele Tagline, Stat Item, Group Card, Press Card create pe parcurs.

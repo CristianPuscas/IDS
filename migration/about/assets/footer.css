@@ -1,0 +1,44 @@
+.footer_component{background-color:#061D38;color:#ffffff;}
+.footer_top{display:flex;justify-content:space-between;align-items:flex-start;grid-column-gap:2rem;grid-row-gap:2rem;}
+.footer_brand{display:flex;flex-direction:column;grid-row-gap:1.5rem;}
+.footer_logo-link{display:flex;color:#ffffff;}
+.footer_logo{display:flex;width:10.1875rem;height:2rem;}
+.footer_social-list{display:flex;grid-column-gap:0.75rem;}
+.footer_social-link{display:flex;justify-content:center;align-items:center;width:2.5rem;height:2.5rem;color:#ffffff;transition:opacity 200ms ease;}
+.footer_social-link:hover{opacity:0.7;}
+.footer_social-icon{display:flex;width:1.25rem;height:1.25rem;}
+.footer_app-list{display:flex;grid-column-gap:1rem;}
+.footer_app-link{display:flex;}
+.footer_app-image-wrapper{position:relative;overflow:hidden;width:7.5rem;height:2.5rem;}
+.footer_app-image{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;}
+.footer_middle{display:grid;grid-template-columns:1fr 22.5rem;grid-column-gap:3rem;grid-row-gap:3rem;}
+.footer_link-grid{display:grid;grid-template-columns:auto auto auto auto;grid-column-gap:3rem;grid-row-gap:2.5rem;justify-content:start;}
+.footer_link-column{display:flex;flex-direction:column;}
+.footer_column-title{font-size:0.875rem;font-weight:600;line-height:1.43;letter-spacing:0.02em;text-transform:uppercase;}
+.footer_link-list{display:flex;flex-direction:column;grid-row-gap:0.75rem;margin-top:0;margin-bottom:0;padding-left:0;list-style-type:none;}
+.footer_link-item{margin-top:0;margin-bottom:0;padding-left:0;}
+.footer_link{color:#ffffff;font-size:0.875rem;font-weight:700;line-height:1.43;letter-spacing:0.02em;text-decoration:none;transition:opacity 200ms ease;}
+.footer_link:hover{opacity:0.7;}
+.footer_newsletter{display:flex;flex-direction:column;}
+.footer_newsletter-form{position:relative;display:flex;margin-bottom:0;}
+.footer_newsletter-label{position:absolute;width:1px;height:1px;overflow:hidden;white-space:nowrap;margin:-1px;padding:0;border-style:none;}
+.footer_newsletter-input{width:100%;min-height:4.125rem;margin-bottom:0;padding:0.75rem 3.75rem 0.75rem 1.25rem;background-color:rgba(255,255,255,0.12);border-style:none;border-radius:0.25rem;color:#ffffff;font-size:1rem;font-weight:700;letter-spacing:0.05em;}
+.footer_newsletter-submit{position:absolute;top:50%;right:0.75rem;display:flex;justify-content:center;align-items:center;width:2.75rem;height:2.75rem;margin-top:-1.375rem;padding:0;background-color:#ffffff;border-style:none;border-radius:0.125rem;color:#061D38;cursor:pointer;}
+.footer_divider{height:1px;background-color:rgba(255,255,255,0.24);}
+.footer_bottom{display:flex;flex-direction:column;grid-row-gap:2rem;}
+.footer_bottom-row{display:flex;justify-content:space-between;align-items:center;grid-column-gap:2rem;grid-row-gap:2rem;}
+.footer_swiss{display:flex;align-items:center;grid-column-gap:0.75rem;}
+.footer_flag{display:flex;width:1.5rem;height:1.5rem;}
+.footer_swiss-text{font-size:0.75rem;font-weight:700;letter-spacing:0.02em;}
+.footer_association-list{display:flex;flex-wrap:wrap;align-items:center;grid-column-gap:2rem;grid-row-gap:1rem;}
+.footer_association-link{display:flex;}
+.footer_association-image-wrapper{position:relative;overflow:hidden;width:5rem;height:2.5rem;}
+.footer_association-image{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;}
+.footer_legal-links{display:flex;flex-wrap:wrap;grid-column-gap:1.5rem;grid-row-gap:0.5rem;}
+.footer_legal-link{color:#979BA1;font-size:0.75rem;font-weight:700;letter-spacing:0.02em;text-decoration:none;transition:color 200ms ease;}
+.footer_legal-link:hover{color:#ffffff;}
+.footer_legal{display:flex;flex-direction:column;grid-row-gap:0.375rem;}
+.footer_legal-text{color:#979BA1;font-size:0.75rem;font-weight:700;line-height:1.33;letter-spacing:0.02em;}
+@media screen and (max-width: 991px){.footer_middle{grid-template-columns:1fr;}.footer_link-grid{grid-template-columns:auto auto;}}
+@media screen and (max-width: 767px){.footer_top{flex-direction:column;}.footer_bottom-row{flex-direction:column;align-items:flex-start;}}
+@media screen and (max-width: 479px){.footer_link-grid{grid-template-columns:1fr;}}
