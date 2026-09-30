@@ -2211,6 +2211,28 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
   .tk-tracker--finance .fin-table td.num > .fin-paid-wrap > .tk-cell-input { padding-left: 23px; min-width: calc(9.5ch + 26px); }
 }
 
+/* grupe și subcategorii (ex. Mașină → Ulei, Combustibil) */
+.tk-tracker--finance .fin-table td.fin-sub .fin-cat-in { padding-left: 16px; position: relative; }
+.tk-tracker--finance .fin-table td.fin-sub .fin-cat-in::before,
+.tk-tracker--finance .fin-set-table td.fin-sub::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -6px;
+  border-left: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+.tk-tracker--finance .fin-set-table td.fin-sub { position: relative; padding-left: 20px; }
+.tk-tracker--finance .fin-set-table td.fin-sub::before { left: 7px; }
+.tk-tracker--finance .fin-table td.fin-sub .fin-cat-btn { color: var(--ink-2); }
+.tk-tracker--finance .fin-table td.fin-group .fin-cat-btn,
+.tk-tracker--finance .fin-set-table td.fin-group > .tk-cell-input { font-weight: 700; }
+.tk-tracker--finance .fin-table td.fin-group-v { font-weight: 700; }
+.tk-tracker--finance .fin-table tr.fin-group-row > td { background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
+
 </style>
 <style>
 /* Tracker de obiceiuri — stiluri proprii (toate sub .tk-tracker--habits). Doar tokenii din shared/theme.css. */
@@ -4407,6 +4429,8 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
  *   openingBalance: număr,                                   // soldul dinaintea primei luni
  *   noPlan: { [tip]: true },                                 // tabele fără coloana „Plan” (doar „Achitat”)
  *   noPlanCats: { [tip]: { [categorie]: true } },            // categorii fără plan (sumă fixă): Plan „—”, needitabil
+ *   parents: { [tip]: { [subcategorie]: categorie-grupă } }, // subcategorii (un singur nivel): ex. Mașină → Ulei, Combustibil
+ *                 // Rândul grupei arată suma subcategoriilor (plus sumele puse direct pe grupă); se editează subcategoriile.
  *   monthCats: { 'YYYY-MM': { venit: [nume…] } },           // sursele de venit adăugate explicit într-o lună
  *                 // Veniturile sunt pe lună: o sursă apare într-o lună doar dacă a fost adăugată acolo sau are plan / sume
  *                 // în acea lună; ștergerea dintr-o lună nu atinge celelalte luni (lista globală rămâne în Setări).
@@ -4835,6 +4859,21 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
       });
     });
     s.monthCats = mc;
+    // subcategorii: un singur nivel, ambele nume în același tip, fără grupă care e ea însăși subcategorie
+    var par = {};
+    if (isObj(s.parents)) TYPES.forEach(function (t) {
+      var src = s.parents[t];
+      if (!isObj(src)) return;
+      var o = {};
+      Object.keys(src).forEach(function (k) {
+        var c = catName(k), pp = catName(src[k]);
+        if (c && pp && c !== pp && cats[t].indexOf(c) !== -1 && cats[t].indexOf(pp) !== -1) o[c] = pp;
+      });
+      Object.keys(o).forEach(function (c) { if (o[o[c]]) delete o[c]; });
+      Object.keys(o).forEach(function (c) { if (Object.keys(o).some(function (k) { return o[k] === c; })) delete o[c]; });
+      if (Object.keys(o).length) par[t] = o;
+    });
+    s.parents = par;
     return s;
   }
 
@@ -5044,6 +5083,45 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
       Object.keys(s.plans).forEach(function (k) { var p = s.plans[k][type]; if (p && p[cat]) months++; });
       return { n: n, sum: sum, months: months };
     }
+    /* ---- grupe: categorie → subcategorii (un singur nivel) ---- */
+    function parentMap(type) { return (S().parents || {})[type] || {}; }
+    function parentOf(type, c) { return parentMap(type)[c] || null; }
+    function kidsOf(type, c) { var pm = parentMap(type); return S().categories[type].filter(function (k) { return pm[k] === c; }); }
+    function setParent(type, c, parent) {
+      var s = S();
+      var pm = s.parents[type] || (s.parents[type] = {});
+      if (parent && parent !== c) pm[c] = parent; else delete pm[c];
+      if (!Object.keys(pm).length) delete s.parents[type];
+    }
+    // Rândurile în ordinea de afișare: fiecare grupă urmată de subcategoriile ei (vizibile).
+    // cats = categoriile de afișat (ex. doar cele din lună); grupa apare dacă are măcar o subcategorie afișată.
+    function grouped(type, cats) {
+      var all = S().categories[type], pm = parentMap(type), show = {};
+      cats.forEach(function (c) { show[c] = 1; if (pm[c]) show[pm[c]] = 1; });
+      var out = [];
+      all.forEach(function (c) {
+        if (!show[c] || pm[c]) return;
+        var kids = all.filter(function (k) { return pm[k] === c; });
+        out.push({ c: c, depth: 0, kids: kids });
+        kids.forEach(function (k) { if (show[k]) out.push({ c: k, depth: 1, kids: [] }); });
+      });
+      // subcategorii cu grupa lipsă din listă (n-ar trebui să existe) — le afișăm la sfârșit
+      cats.forEach(function (c) { if (!out.some(function (g) { return g.c === c; })) out.push({ c: c, depth: 0, kids: [] }); });
+      return out;
+    }
+    // valoarea unei grupe = a ei + a subcategoriilor
+    function withKids(g, map) { var v = +map[g.c] || 0; g.kids.forEach(function (k) { v += +map[k] || 0; }); return v; }
+    // date pentru plăcinte: pe grupe (subcategoriile se adună la grupă)
+    function rollup(type, map) {
+      return grouped(type, S().categories[type]).filter(function (g) { return g.depth === 0; }).map(function (g, i) { return { label: g.c, value: withKids(g, map), pref: i }; });
+    }
+    function markRow(td, g) {
+      if (g.depth) td.classList.add('fin-sub');
+      if (g.kids.length) td.classList.add('fin-group');
+      return td;
+    }
+    function groupTitle(g) { return g.kids.length ? 'Grupă: suma subcategoriilor (' + g.kids.join(', ') + ')' : null; }
+
     // Categoriile afișate într-o lună. La veniturile pe lună: cele adăugate explicit în lună sau cu plan / sume în lună.
     function visibleCats(type, ym) {
       var s = S();
@@ -5123,6 +5201,11 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
         var arr = s.monthCats[k][type];
         if (arr && arr.indexOf(oldN) !== -1) arr[arr.indexOf(oldN)] = newN;
       });
+      var pm = s.parents[type];
+      if (pm) {
+        if (pm[oldN]) { pm[newN] = pm[oldN]; delete pm[oldN]; }
+        Object.keys(pm).forEach(function (k) { if (pm[k] === oldN) pm[k] = newN; });
+      }
       prefsCategoryChanged(type, oldN, newN);
       api.commit();
     }
@@ -5139,6 +5222,9 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
       var mk = extraMap(type);
       if (mk) delete s[mk][cat];
       Object.keys(s.monthCats).forEach(function (k) { unpinCat(k, type, cat); });
+      // subcategoriile unei grupe șterse devin categorii principale
+      setParent(type, cat, null);
+      kidsOf(type, cat).forEach(function (k) { setParent(type, k, null); });
       prefsCategoryChanged(type, cat, null);
       api.commit();
     }
@@ -5190,10 +5276,20 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
         placeholder: type === 'factura' ? 'ex. Televiziune' : type === 'venit' ? 'ex. Salariu' : '',
         hint: monthly && !cat ? 'Se adaugă doar în ' + fmt.monthYear(ymParts(ym).y, ymParts(ym).m).toLowerCase() + '.' : null,
       });
+      // grupa: orice categorie principală de același tip (o grupă nu poate fi pusă într-o altă grupă)
+      var isGroup = !!cat && kidsOf(type, cat).length > 0;
+      var groupOpts = s.categories[type].filter(function (c) { return c !== cat && !parentOf(type, c); });
+      if (!isGroup && groupOpts.length) {
+        fields.push({
+          name: 'parent', label: 'Face parte din grupa', type: 'select', value: cat ? (parentOf(type, cat) || '') : '',
+          options: [{ value: '', label: '— niciuna (categorie principală) —' }].concat(groupOpts.map(function (c) { return { value: c, label: c }; })),
+          hint: 'Alege o categorie ca să o transformi în grupă, iar aceasta devine subcategoria ei (ex. Mașină → Ulei).',
+        });
+      }
       if (type === 'factura' || type === 'datorie') fields.push({ name: 'due', label: 'Termen (ziua din lună)', type: 'number', value: ex.dueDay || null, placeholder: '1–31' });
       if (type === 'datorie') fields.push({ name: 'total', label: 'Total credit (lei)', type: 'money', value: ex.total || null, hint: 'Opțional: pentru „Rămas de plătit”.' });
       if (type === 'economie') fields.push({ name: 'target', label: 'Țintă (lei)', type: 'money', value: ex.target || null });
-      var showPlan = !!p && !s.noPlan[type];
+      var showPlan = !!p && !s.noPlan[type] && !isGroup;
       if (showPlan) {
         fields.push({ name: 'noPlanCat', label: 'Fără plan (sumă fixă): completez doar „' + PAID_LABEL[type] + '”', type: 'checkbox', value: cat ? isNoPlanCat(type, cat) : false });
         fields.push({ name: 'plan', label: 'Plan pentru ' + fmt.monthYear(p.y, p.m).toLowerCase() + ' (lei)', type: 'money', value: plan });
@@ -5225,6 +5321,9 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
         if (!cat && s2.categories[type].indexOf(name) === -1) s2.categories[type].push(name);
         else if (cat && name !== cat) rename(type, cat, name);
         if (monthly) pinCat(ym, type, name);
+        if (Object.prototype.hasOwnProperty.call(v, 'parent')) {
+          setParent(type, name, v.parent || null);
+        }
         if (mk) {
           var e = s2[mk][name] || (s2[mk][name] = {});
           if (type === 'factura' || type === 'datorie') e.dueDay = v.due || null;
@@ -5352,6 +5451,8 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
           s2[mTo][cat] = to === 'factura' ? { dueDay: due } : to === 'datorie' ? { dueDay: due, total: 0 } : { target: 0 };
         }
         if (isNoPlanCat(type, cat)) { setNoPlanCat(type, cat, false); setNoPlanCat(to, cat, true); }
+        setParent(type, cat, null);
+        kidsOf(type, cat).forEach(function (k) { setParent(type, k, null); });
         prefsCategoryChanged(type, cat, null);
         api.commit();
         TK.ui.toast('„' + cat + '” a fost mutat în ' + PLURAL[to] + '.');
@@ -5645,7 +5746,7 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
     function kindOptions() {
       var out = [];
       TYPES.forEach(function (t) {
-        S().categories[t].forEach(function (c) { out.push({ value: t + '|' + c, label: LABEL[t] + ' · ' + c }); });
+        S().categories[t].forEach(function (c) { var pc = parentOf(t, c); out.push({ value: t + '|' + c, label: LABEL[t] + ' · ' + (pc ? pc + ' › ' : '') + c }); });
       });
       return out;
     }
@@ -5745,8 +5846,29 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
         ? [th(h('span', { class: 'tk-sr' }, 'Plătit'), 'chk'), th('Categorie'), th('Termen', 'fin-due'), th('Plan', 'num', { colspan: 2 }), th('Achitat', 'num', { colspan: 2 }), th('Progres', 'num')]
         : [th('Categorie'), th('Termen', 'fin-due'), th('Achitat', 'num', { colspan: 2 })];
       if (showLeft) head.push(th('Rămas de plătit', 'num', { colspan: 2 }));
-      var rows = cats.map(function (c, i) {
+      var rows = grouped(type, cats).map(function (g, i) {
+        var c = g.c;
         var plan = +m.plan[type][c] || 0, fact = m.fact[type][c] || 0;
+        if (g.kids.length) {
+          var gp = withKids(g, m.plan[type]), gf = withKids(g, m.fact[type]);
+          var gcells = usePlan ? [
+            h('td', { class: 'chk' }),
+            markRow(catCell(type, c, m.ym, rerender), g),
+            h('td', { class: 'tk-center fin-due' }, '—'),
+            curTd(), h('td', { class: 'num fin-group-v' }, money(gp)),
+            curTd(), h('td', { class: 'num fin-group-v', title: groupTitle(g) }, money(gf)),
+            pctTd(gf, gp, 'out'),
+          ] : [
+            markRow(catCell(type, c, m.ym, rerender), g),
+            h('td', { class: 'tk-center fin-due' }, '—'),
+            curTd(), h('td', { class: 'num fin-group-v', title: groupTitle(g) }, money(gf)),
+          ];
+          if (showLeft) {
+            var gl = TK.sum([c].concat(g.kids), function (k) { var tt = +(map[k] || {}).total || 0; return tt ? Math.max(0, tt - cumulative(s, type, k, monthEnd)) : 0; });
+            gcells.push(curTd(), h('td', { class: 'num fin-group-v' }, gl ? fmt.num(gl) : '—'));
+          }
+          return h('tr', { class: 'fin-group-row' }, gcells);
+        }
         var paid = plan > 0 && fact >= plan - 0.004;
         var cb = h('input', { type: 'checkbox', class: 'tk-check', id: 'fin-paid-' + where + '-' + type + '-' + i, checked: paid, 'aria-label': c + ' plătită' });
         cb.addEventListener('change', function () { onTick(cb, type, c, m, rerender); });
@@ -5754,13 +5876,13 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
         var locked = isNoPlanCat(type, c);
         var cells = usePlan ? [
           h('td', { class: 'chk' }, locked ? null : cb),
-          catCell(type, c, m.ym, rerender),
+          markRow(catCell(type, c, m.ym, rerender), g),
           h('td', { class: 'tk-center fin-due' }, due ? String(due) : '—'),
           curTd(), locked ? lockedPlanTd() : h('td', { class: 'num' }, planInput(m.ym, type, c, i, where, rerender)),
           curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, where, rerender)),
           pctTd(fact, plan, 'out'),
         ] : [
-          catCell(type, c, m.ym, rerender),
+          markRow(catCell(type, c, m.ym, rerender), g),
           h('td', { class: 'tk-center fin-due' }, due ? String(due) : '—'),
           curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, where, rerender)),
         ];
@@ -5769,11 +5891,11 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
           var left = tot ? Math.max(0, tot - cumulative(s, type, c, monthEnd)) : null;
           cells.push(curTd(), h('td', { class: 'num' }, tot ? fmt.num(left) : '—'));
         }
-        return h('tr', { class: paid && usePlan ? 'fin-paid' : null }, cells);
+        return h('tr', { class: [paid && usePlan ? 'fin-paid' : '', g.depth ? 'fin-sub-row' : ''].join(' ').trim() || null }, cells);
       });
       var cols = usePlan ? ['', '', '', 'cur', 'num', 'cur', 'num', 'num'] : ['', '', 'cur', 'num'];
       if (showLeft) cols.push('cur', 'num');
-      var pad = Math.max(0, (opts.minRows || 0) - cats.length);
+      var pad = Math.max(0, (opts.minRows || 0) - rows.length);
       var foot = usePlan
         ? [h('th', { colspan: 3, scope: 'row' }, 'Total'), curTd(), numTd(m.planTot[type]), curTd(), numTd(m.factTot[type]), pctTd(factWithPlan(m, type), m.planTot[type], 'out')]
         : [h('th', { colspan: 2, scope: 'row' }, 'Total'), curTd(), numTd(m.factTot[type])];
@@ -5836,7 +5958,7 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
         }, charts));
         grid.appendChild(chartCard('Structura veniturilor', function (box) {
           TK.charts.pie(box, {
-            data: assignColors(s.categories.venit.map(function (c, i) { return { label: c, value: m.fact.venit[c] || 0, pref: i }; }).filter(function (d) { return d.value > 0; })),
+            data: assignColors(rollup('venit', m.fact.venit).filter(function (d) { return d.value > 0; })),
             format: fmt.lei, label: 'Structura veniturilor',
           });
         }, charts));
@@ -5951,13 +6073,22 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
       if (usePlan) head.push(th('Plan', 'num', { colspan: 2 }));
       head.push(th(PAID_LABEL[type], 'num', { colspan: 2 }));
       if (withPct) head.push(th('Progres', 'num'));
-      var rows = cats.map(function (c, i) {
+      var rows = grouped(type, cats).map(function (g, i) {
+        var c = g.c;
         var plan = +m.plan[type][c] || 0, fact = m.fact[type][c] || 0;
-        var cells = [catCell(type, c, m.ym, rerender)];
+        var cells = [markRow(catCell(type, c, m.ym, rerender), g)];
+        if (g.kids.length) {
+          // grupa: totalul subcategoriilor, needitabil
+          var gp = withKids(g, m.plan[type]), gf = withKids(g, m.fact[type]);
+          if (usePlan) cells.push(curTd(), h('td', { class: 'num fin-group-v' }, money(gp)));
+          cells.push(curTd(), h('td', { class: 'num fin-group-v', title: groupTitle(g) }, money(gf)));
+          if (withPct) cells.push(pctTd(gf, gp, MODE[type]));
+          return h('tr', { class: 'fin-group-row' }, cells);
+        }
         if (usePlan) cells.push(curTd(), isNoPlanCat(type, c) ? lockedPlanTd() : h('td', { class: 'num' }, planInput(m.ym, type, c, i, 'luna', rerender)));
         cells.push(curTd(), h('td', { class: 'num' }, paidInput(m.ym, type, c, fact, i, 'luna', rerender)));
         if (withPct) cells.push(pctTd(fact, plan, MODE[type]));
-        return h('tr', null, cells);
+        return h('tr', { class: g.depth ? 'fin-sub-row' : null }, cells);
       });
       var cols = usePlan ? ['', 'cur', 'num', 'cur', 'num'] : ['', 'cur', 'num'];
       if (withPct) cols.push('num');
@@ -5970,7 +6101,7 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
         h('div', { class: 'tk-card__body tk-card__body--flush tk-scroll' },
           h('table', { class: 'tk-table tk-table--dense fin-table' },
             h('thead', null, h('tr', null, head)),
-            h('tbody', { dataset: { ftype: type } }, rows, emptyRows(Math.max(0, (opts.minRows || 0) - cats.length), cols)),
+            h('tbody', { dataset: { ftype: type } }, rows, emptyRows(Math.max(0, (opts.minRows || 0) - rows.length), cols)),
             h('tfoot', null, h('tr', null, foot)))),
         h('div', { class: 'fin-cat-tools' }, addCatButton(type, m.ym, rerender, 'fin-addcat-luna-' + type), planToggle(type, rerender, 'fin-useplan-luna-' + type)));
     }
@@ -6252,16 +6383,23 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
         /* economii */
         var monthEnd = D.make(p.y, p.m, D.daysInMonth(p.y, p.m));
         var totT = 0, totA = 0, totM = 0;
-        var rows = s.categories.economie.map(function (c, i) {
-          var target = +((s.goals[c] || {}).target) || 0;
-          var acc = cumulative(s, 'economie', c, monthEnd);
+        var accOf = {}, targetOf = {};
+        s.categories.economie.forEach(function (c) { accOf[c] = cumulative(s, 'economie', c, monthEnd); targetOf[c] = +((s.goals[c] || {}).target) || 0; });
+        var rows = grouped('economie', s.categories.economie).map(function (g, i) {
+          var c = g.c;
+          var target = targetOf[c];
+          var acc = accOf[c];
           var inMonth = m.fact.economie[c] || 0;
           totT += target; totA += acc; totM += inMonth;
+          if (g.kids.length) {
+            // grupa: sumele subcategoriilor (totalurile de jos le numără o singură dată)
+            target = withKids(g, targetOf); acc = withKids(g, accOf); inMonth = withKids(g, m.fact.economie);
+          }
           var ratio = target ? acc / target : 0;
           var pctv = Math.min(100, ratio * 100);
-          return h('tr', null,
-            catCell('economie', c, null, render),
-            curTd(), numTd(target),
+          return h('tr', { class: g.kids.length ? 'fin-group-row' : g.depth ? 'fin-sub-row' : null },
+            markRow(catCell('economie', c, null, render), g),
+            curTd(), numTd(target, g.kids.length ? 'fin-group-v' : null),
             curTd(), numTd(acc),
             curTd(), numTd(inMonth),
             h('td', { class: 'fin-bar-cell' }, target ? h('span', {
@@ -6269,7 +6407,7 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
               'aria-valuenow': String(Math.round(pctv)), 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-label': 'Progres ' + c,
             }) : h('span', { class: 'tk-muted' }, 'fără țintă')),
             pctTd(acc, target, 'in'),
-            h('td', { class: 'chk' }, h('button', {
+            h('td', { class: 'chk' }, g.kids.length ? null : h('button', {
               type: 'button', class: 'tk-icon-btn', id: 'fin-save-add-' + i, 'aria-label': 'Depunerile pentru ' + c, title: 'Depuneri: adaugă, modifică sau șterge',
               onclick: function () { amountsDialog(ym, 'economie', c, render); },
             }, '+')));
@@ -6336,13 +6474,13 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
         }, charts));
         grid.appendChild(chartCard('Structura veniturilor', function (box) {
           TK.charts.pie(box, {
-            data: topWithOther(s.categories.venit.map(function (c, i) { return { label: c, value: Y.factCat.venit[c] || 0, pref: i }; }), 7),
+            data: topWithOther(rollup('venit', Y.factCat.venit), 7),
             format: fmt.lei, label: 'Structura veniturilor pe an', legendBelow: true,
           });
         }, charts));
         grid.appendChild(chartCard('Structura cheltuielilor', function (box) {
           TK.charts.pie(box, {
-            data: topWithOther(s.categories.cheltuiala.map(function (c, i) { return { label: c, value: Y.factCat.cheltuiala[c] || 0, pref: i }; }), 7),
+            data: topWithOther(rollup('cheltuiala', Y.factCat.cheltuiala), 7),
             format: fmt.lei, label: 'Structura cheltuielilor pe an', legendBelow: true,
           });
         }, charts));
@@ -6542,7 +6680,8 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
           return inp;
         }
 
-        var rows = cats.map(function (c, i) {
+        var rows = grouped(type, cats).map(function (g, i) {
+          var c = g.c;
           var base = 'fin-set-' + type + '-' + i;
           var name = h('input', { class: 'tk-cell-input', id: base + '-name', type: 'text', value: c, autocomplete: 'off', 'aria-label': 'Nume categorie ' + c });
           name.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); name.blur(); } if (e.key === 'Escape') { name.value = c; name.blur(); } });
@@ -6555,7 +6694,8 @@ table.tk-rank tbody tr:nth-child(-n+3) td:first-child { color: var(--accent); }
             TK.ui.toast('Categoria a fost redenumită în „' + v + '”. Tranzacțiile și planurile au fost actualizate.');
             setTimeout(render, 0);
           });
-          var cells = [h('td', { class: 'idx' }, h('span', { class: 'tk-swatch', style: { '--c': PALETTE[i % PALETTE.length] }, 'aria-hidden': 'true' })), h('td', null, name)];
+          var ci = cats.indexOf(c);
+          var cells = [h('td', { class: 'idx' }, h('span', { class: 'tk-swatch', style: { '--c': PALETTE[ci % PALETTE.length] }, 'aria-hidden': 'true' })), markRow(h('td', { title: g.depth ? 'Subcategorie a grupei „' + parentOf(type, c) + '”' : groupTitle(g) }, name), g)];
           var ex = mk ? (s[mk][c] || (s[mk][c] = type === 'factura' ? { dueDay: 1 } : type === 'datorie' ? { dueDay: 1, total: 0 } : { target: 0 })) : null;
           if (type === 'factura' || type === 'datorie') {
             cells.push(h('td', { class: 'num' }, numInput(base + '-due', 'Termen ' + c + ' (ziua din lună)', ex.dueDay, function (v) { ex.dueDay = v || null; }, true)));

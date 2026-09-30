@@ -333,3 +333,25 @@
   .tk-tracker--finance .fin-plus { opacity: 0.85; width: 20px; height: 20px; }
   .tk-tracker--finance .fin-table td.num > .fin-paid-wrap > .tk-cell-input { padding-left: 23px; min-width: calc(9.5ch + 26px); }
 }
+
+/* grupe și subcategorii (ex. Mașină → Ulei, Combustibil) */
+.tk-tracker--finance .fin-table td.fin-sub .fin-cat-in { padding-left: 16px; position: relative; }
+.tk-tracker--finance .fin-table td.fin-sub .fin-cat-in::before,
+.tk-tracker--finance .fin-set-table td.fin-sub::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -6px;
+  border-left: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+.tk-tracker--finance .fin-set-table td.fin-sub { position: relative; padding-left: 20px; }
+.tk-tracker--finance .fin-set-table td.fin-sub::before { left: 7px; }
+.tk-tracker--finance .fin-table td.fin-sub .fin-cat-btn { color: var(--ink-2); }
+.tk-tracker--finance .fin-table td.fin-group .fin-cat-btn,
+.tk-tracker--finance .fin-set-table td.fin-group > .tk-cell-input { font-weight: 700; }
+.tk-tracker--finance .fin-table td.fin-group-v { font-weight: 700; }
+.tk-tracker--finance .fin-table tr.fin-group-row > td { background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
