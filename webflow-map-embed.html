@@ -2,10 +2,10 @@
      SALTBOX MAP (dark) — Webflow Code Embed
      Lipeste tot codul intr-un element "Code Embed" in Webflow.
      Editeaza doar lista LOCATIONS din <script>.
-     Harta: Leaflet + CARTO Dark Matter (fara API key).
+     Harta: MapLibre GL + OpenFreeMap "dark" (gratuit, fara API key).
      ============================================================ -->
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
 
 <style>
   .sbx-map-wrap {
@@ -17,35 +17,36 @@
     background: #1e1e1e;
     isolation: isolate;
   }
-  .sbx-map { position: absolute; inset: 0; background: #1e1e1e; font-family: inherit; }
-
-  .sbx-map .leaflet-control-attribution { background: rgba(0,0,0,.45); color: #888; font-size: 10px; }
-  .sbx-map .leaflet-control-attribution a { color: #aaa; }
-  .sbx-map .leaflet-control-zoom { border: none; margin: 16px; }
-  .sbx-map .leaflet-control-zoom a {
-    background: #2b2f2d; color: #fff; border: none;
-    width: 36px; height: 36px; line-height: 36px;
-  }
-  .sbx-map .leaflet-control-zoom a:hover { background: #3a3f3c; }
+  .sbx-map { position: absolute; inset: 0; }
 
   /* pin galben */
-  .sbx-pin { background: none; border: none; }
+  .sbx-pin { width: 28px; height: 28px; cursor: pointer; }
   .sbx-pin span {
     display: block; width: 100%; height: 100%;
     background: #f9e46b;
     border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
     box-shadow: 0 4px 14px rgba(0,0,0,.5);
+    transform: rotate(-45deg);
     transition: transform .2s ease;
   }
   .sbx-pin:hover span { transform: rotate(-45deg) scale(1.15); }
 
   /* eticheta la hover */
-  .sbx-map .leaflet-tooltip.sbx-tip {
-    background: #2b2f2d; color: #fff; border: none; border-radius: 8px;
-    padding: 6px 10px; font-size: 14px; box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  .sbx-tip .maplibregl-popup-content {
+    background: #2b2f2d; color: #fff; border-radius: 8px;
+    padding: 6px 10px; font-family: inherit; font-size: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.4);
   }
-  .sbx-map .leaflet-tooltip.sbx-tip::before { border-top-color: #2b2f2d; }
+  .sbx-tip.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: #2b2f2d; }
+
+  /* controale zoom + atribuire */
+  .sbx-map .maplibregl-ctrl-group { background: #2b2f2d; box-shadow: none; }
+  .sbx-map .maplibregl-ctrl-group button + button { border-top-color: #3a3f3c; }
+  .sbx-map .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
+  .sbx-map .maplibregl-ctrl-group button:hover { background: #3a3f3c; }
+  .sbx-map .maplibregl-ctrl-attrib { background: rgba(0,0,0,.45); font-size: 10px; }
+  .sbx-map .maplibregl-ctrl-attrib, .sbx-map .maplibregl-ctrl-attrib a { color: #999; }
+  .sbx-map .maplibregl-ctrl-attrib-button { filter: invert(1); background-color: transparent; }
 
   @media (max-width: 991px) { .sbx-map-wrap { height: 600px; } }
   @media (max-width: 767px) { .sbx-map-wrap { height: 460px; border-radius: 16px; } }
@@ -55,27 +56,28 @@
   <div class="sbx-map" id="sbx-map"></div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
 <script>
 (function () {
   /* ================= EDITEAZA AICI =================
      lat/lng: click dreapta pe locatie in Google Maps -> click pe coordonate (se copiaza)
      ================================================= */
   var LOCATIONS = [
-    { name: 'Atlanta – Upper Westside',       lat: 33.8005, lng: -84.4310 },
-    { name: 'Atlanta – Westside Park',        lat: 33.7890, lng: -84.4470 },
-    { name: 'Atlanta – Chamblee',             lat: 33.8920, lng: -84.2990 },
-    { name: 'Washington DC – Alexandria',     lat: 38.8048, lng: -77.0469 },
-    { name: 'Miami',                          lat: 25.8100, lng: -80.3200 },
+    { name: 'Atlanta – Upper Westside',         lat: 33.8005, lng: -84.4310 },
+    { name: 'Atlanta – Westside Park',          lat: 33.7890, lng: -84.4470 },
+    { name: 'Atlanta – Chamblee',               lat: 33.8920, lng: -84.2990 },
+    { name: 'Washington DC – Alexandria',       lat: 38.8048, lng: -77.0469 },
+    { name: 'Miami',                            lat: 25.8100, lng: -80.3200 },
     { name: 'Los Angeles – San Gabriel Valley', lat: 34.0686, lng: -118.0276 },
-    { name: 'Los Angeles – Torrance',         lat: 33.8417, lng: -118.3160 },
-    { name: 'Phoenix – Tempe',                lat: 33.4150, lng: -111.9400 },
-    { name: 'Seattle',                        lat: 47.5500, lng: -122.3200 },
-    { name: 'Chicago',                        lat: 41.9000, lng: -87.7000 },
-    { name: 'Denver',                         lat: 39.7700, lng: -104.9800 },
-    { name: 'Dallas – Carrollton',            lat: 32.9756, lng: -96.8900 },
-    { name: 'Dallas – Farmers Branch',        lat: 32.9265, lng: -96.8961 }
+    { name: 'Los Angeles – Torrance',           lat: 33.8417, lng: -118.3160 },
+    { name: 'Phoenix – Tempe',                  lat: 33.4150, lng: -111.9400 },
+    { name: 'Seattle',                          lat: 47.5500, lng: -122.3200 },
+    { name: 'Chicago',                          lat: 41.9000, lng: -87.7000 },
+    { name: 'Denver',                           lat: 39.7700, lng: -104.9800 },
+    { name: 'Dallas – Carrollton',              lat: 32.9756, lng: -96.8900 },
+    { name: 'Dallas – Farmers Branch',          lat: 32.9265, lng: -96.8961 }
   ];
+  var MAP_STYLE = 'https://tiles.openfreemap.org/styles/dark';
   /* ================= STOP EDIT ===================== */
 
   function init() {
@@ -83,33 +85,63 @@
     if (!el || el.dataset.ready) return;
     el.dataset.ready = '1';
 
-    var map = L.map(el, { scrollWheelZoom: false });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 19
-    }).addTo(map);
+    var bounds = new maplibregl.LngLatBounds();
+    LOCATIONS.forEach(function (l) { bounds.extend([l.lng, l.lat]); });
+    var pad = function () { return Math.min(80, el.clientWidth / 8); };
 
-    var icon = L.divIcon({ className: 'sbx-pin', html: '<span></span>', iconSize: [28, 28], iconAnchor: [14, 28] });
-    var bounds = [];
+    var map = new maplibregl.Map({
+      container: el,
+      style: MAP_STYLE,
+      bounds: bounds,
+      fitBoundsOptions: { padding: pad() },
+      scrollZoom: false,
+      dragRotate: false,
+      pitchWithRotate: false,
+      touchPitch: false,
+      attributionControl: { compact: true }
+    });
+    map.touchZoomRotate.disableRotation();
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
 
     LOCATIONS.forEach(function (l) {
-      L.marker([l.lat, l.lng], { icon: icon, title: l.name })
-        .bindTooltip(l.name, { className: 'sbx-tip', direction: 'top', offset: [0, -30] })
-        .on('click', function () { map.flyTo([l.lat, l.lng], 12, { duration: 1.2 }); })
+      var pin = document.createElement('div');
+      pin.className = 'sbx-pin';
+      pin.innerHTML = '<span></span>';
+      pin.title = l.name;
+
+      var tip = new maplibregl.Popup({ className: 'sbx-tip', closeButton: false, closeOnClick: false, offset: 30 })
+        .setText(l.name);
+
+      new maplibregl.Marker({ element: pin, anchor: 'bottom' })
+        .setLngLat([l.lng, l.lat])
         .addTo(map);
-      bounds.push([l.lat, l.lng]);
+
+      pin.addEventListener('mouseenter', function () { tip.setLngLat([l.lng, l.lat]).addTo(map); });
+      pin.addEventListener('mouseleave', function () { tip.remove(); });
+      pin.addEventListener('click', function (e) {
+        e.stopPropagation();
+        touched = true;
+        map.flyTo({ center: [l.lng, l.lat], zoom: 12, speed: 1.4 });
+      });
     });
 
-    map.fitBounds(bounds, { padding: [50, 50] });
+    // reincadreaza toate locatiile cand se schimba marimea (pana cand userul misca harta)
+    var touched = false;
+    map.on('dragstart', function () { touched = true; });
+    map.on('zoomstart', function (e) { if (e.originalEvent) touched = true; });
+    var refit = function () {
+      map.resize();
+      if (!touched) map.fitBounds(bounds, { padding: pad(), duration: 0 });
+    };
+    if ('ResizeObserver' in window) new ResizeObserver(refit).observe(el);
+    window.addEventListener('load', refit);
 
     // zoom cu scroll doar dupa click pe harta (nu blocheaza scroll-ul paginii)
-    map.on('click', function () { map.scrollWheelZoom.enable(); });
-    el.addEventListener('mouseleave', function () { map.scrollWheelZoom.disable(); });
-    window.addEventListener('resize', function () { map.invalidateSize(); });
+    map.on('click', function () { map.scrollZoom.enable(); });
+    el.addEventListener('mouseleave', function () { map.scrollZoom.disable(); });
   }
 
-  if (window.L) init();
+  if (window.maplibregl) init();
   else window.addEventListener('load', init);
 })();
 </script>
