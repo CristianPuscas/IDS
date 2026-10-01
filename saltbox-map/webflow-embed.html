@@ -1,4 +1,4 @@
-<!-- SALTBOX MAP – Webflow Embed. Completeaza cele 2 valori de mai jos. -->
+<!-- LOCATIONS MAP – Webflow Embed. Completeaza cele 2 valori de mai jos. -->
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" rel="stylesheet">
 <style>
   .sbx-app,.sbx-app *{box-sizing:border-box}
@@ -42,9 +42,9 @@
 
 <div class="sbx-app">
   <aside class="sbx-sidebar">
-    <div class="sbx-brand">SALTBOX</div>
+    <div class="sbx-brand">TEXT</div>
     <div class="sbx-eyebrow">Locations</div>
-    <div class="sbx-title">Find a Saltbox near you.</div>
+    <div class="sbx-title">Text titlu aici.</div>
     <div class="sbx-list" id="sbxList"></div>
   </aside>
   <div class="sbx-mapwrap">
@@ -67,7 +67,7 @@
   // 2) Style URL din Mapbox Studio > Share (ex: "mapbox://styles/numele-tau/abc123")
   var MAPBOX_STYLE_URL = "PASTE_YOUR_STUDIO_STYLE_URL_HERE";
 
-  var locations = [{"id": "los-angeles", "city": "Los Angeles", "state": "CA", "area": "Boyle Heights", "address": "3040 E 12th St", "description": "Boyle Heights, east of the river. Near the Arts District and three freeways.", "lng": -118.2058, "lat": 34.0355, "url": "#"}, {"id": "phoenix", "city": "Phoenix", "state": "AZ", "area": "Phoenix", "address": "Coming Soon", "description": "Saltbox location coming soon.", "lng": -112.074, "lat": 33.4484, "comingSoon": true, "url": "#"}, {"id": "salt-lake-city", "city": "Salt Lake City", "state": "UT", "area": "Salt Lake City", "address": "Test address", "description": "Test Saltbox location in Salt Lake City.", "lng": -111.891, "lat": 40.7608, "url": "#"}, {"id": "denver", "city": "Denver", "state": "CO", "area": "Denver", "address": "Test address", "description": "Test Saltbox location in Denver.", "lng": -104.9903, "lat": 39.7392, "url": "#"}, {"id": "plano", "city": "Plano", "state": "TX", "area": "Plano", "address": "Test address", "description": "Test Saltbox location in Plano.", "lng": -96.6989, "lat": 33.0198, "url": "#"}, {"id": "nashville", "city": "Nashville", "state": "TN", "area": "Nashville", "address": "Test address", "description": "Test Saltbox location in Nashville.", "lng": -86.7816, "lat": 36.1627, "url": "#"}, {"id": "charlotte", "city": "Charlotte", "state": "NC", "area": "Charlotte", "address": "Test address", "description": "Test Saltbox location in Charlotte.", "lng": -80.8431, "lat": 35.2271, "url": "#"}];
+  var locations = [{"id": "los-angeles", "city": "Los Angeles", "state": "CA", "area": "Boyle Heights", "address": "3040 E 12th St", "description": "Text descriere.", "lng": -118.2058, "lat": 34.0355, "url": "#"}, {"id": "phoenix", "city": "Phoenix", "state": "AZ", "area": "Phoenix", "address": "Coming Soon", "description": "Text descriere.", "lng": -112.074, "lat": 33.4484, "comingSoon": true, "url": "#"}, {"id": "salt-lake-city", "city": "Salt Lake City", "state": "UT", "area": "Salt Lake City", "address": "Text adresa", "description": "Text descriere.", "lng": -111.891, "lat": 40.7608, "url": "#"}, {"id": "denver", "city": "Denver", "state": "CO", "area": "Denver", "address": "Text adresa", "description": "Text descriere.", "lng": -104.9903, "lat": 39.7392, "url": "#"}, {"id": "plano", "city": "Plano", "state": "TX", "area": "Plano", "address": "Text adresa", "description": "Text descriere.", "lng": -96.6989, "lat": 33.0198, "url": "#"}, {"id": "nashville", "city": "Nashville", "state": "TN", "area": "Nashville", "address": "Text adresa", "description": "Text descriere.", "lng": -86.7816, "lat": 36.1627, "url": "#"}, {"id": "charlotte", "city": "Charlotte", "state": "NC", "area": "Charlotte", "address": "Text adresa", "description": "Text descriere.", "lng": -80.8431, "lat": 35.2271, "url": "#"}];
 
   mapboxgl.accessToken = MAPBOX_TOKEN;
   var map = new mapboxgl.Map({
