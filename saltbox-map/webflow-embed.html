@@ -1,0 +1,115 @@
+<!-- SALTBOX MAP – Webflow Embed. Completeaza cele 2 valori de mai jos. -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" rel="stylesheet">
+<style>
+  .sbx-app,.sbx-app *{box-sizing:border-box}
+  .sbx-app{display:grid;grid-template-columns:380px 1fr;width:100%;height:720px;font-family:Inter,Arial,sans-serif;color:#173c35;background:#f5f6f2;overflow:hidden}
+  .sbx-sidebar{background:#173c35;color:#fff;padding:38px 28px;overflow:auto;z-index:5}
+  .sbx-brand{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-bottom:42px}
+  .sbx-eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin-bottom:12px}
+  .sbx-title{font-size:42px;line-height:1.02;letter-spacing:-.04em;margin:0 0 34px;color:#fff;font-weight:600}
+  .sbx-list{display:flex;flex-direction:column}
+  .sbx-btn{appearance:none;border:0;border-top:1px solid rgba(255,255,255,.18);background:transparent;color:#fff;text-align:left;padding:20px 4px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:15px;font:inherit;width:100%}
+  .sbx-btn:last-child{border-bottom:1px solid rgba(255,255,255,.18)}
+  .sbx-btn:hover,.sbx-btn.is-active{background:rgba(255,255,255,.06)}
+  .sbx-name{font-size:19px;font-weight:600}
+  .sbx-state{font-size:14px;opacity:.65;margin-top:4px}
+  .sbx-coming{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.55;white-space:nowrap}
+  .sbx-mapwrap{position:relative;min-width:0}
+  .sbx-map{position:absolute;inset:0}
+  .sbx-app .mapboxgl-ctrl-logo,.sbx-app .mapboxgl-ctrl-attrib{opacity:.65}
+  .sbx-marker{width:18px;height:18px;border-radius:50%;background:#173c35;border:3px solid #fff;box-shadow:0 3px 12px rgba(0,0,0,.2);cursor:pointer}
+  .sbx-marker.is-coming{background:#aab3ae}
+  .sbx-card{position:absolute;left:42px;bottom:42px;width:min(430px,calc(100% - 84px));background:#fff;padding:30px;box-shadow:0 18px 60px rgba(20,45,40,.16);z-index:4}
+  .sbx-kicker{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#71807b;margin-bottom:9px}
+  .sbx-card h2{font-size:32px;line-height:1.05;letter-spacing:-.035em;margin:0 0 12px;color:#173c35}
+  .sbx-card p{font-size:15px;line-height:1.55;color:#56645f;margin:0 0 18px}
+  .sbx-address{font-size:14px;font-weight:600;color:#173c35;margin-bottom:22px}
+  .sbx-view{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;background:#173c35;color:#fff;text-decoration:none;font-size:13px;font-weight:600}
+  @media(max-width:800px){
+    .sbx-app{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:820px}
+    .sbx-sidebar{padding:22px 20px;max-height:340px}
+    .sbx-brand{margin-bottom:18px}
+    .sbx-title{font-size:30px;margin-bottom:18px}
+    .sbx-list{display:grid;grid-template-columns:1fr 1fr}
+    .sbx-btn{padding:12px 4px}
+    .sbx-btn:nth-child(odd){border-right:1px solid rgba(255,255,255,.18);padding-right:12px}
+    .sbx-name{font-size:15px}
+    .sbx-state{font-size:12px}
+    .sbx-card{left:18px;bottom:18px;width:calc(100% - 36px);padding:22px}
+    .sbx-card h2{font-size:27px}
+  }
+</style>
+
+<div class="sbx-app">
+  <aside class="sbx-sidebar">
+    <div class="sbx-brand">SALTBOX</div>
+    <div class="sbx-eyebrow">Locations</div>
+    <div class="sbx-title">Find a Saltbox near you.</div>
+    <div class="sbx-list" id="sbxList"></div>
+  </aside>
+  <div class="sbx-mapwrap">
+    <div class="sbx-map" id="sbxMap"></div>
+    <div class="sbx-card">
+      <div class="sbx-kicker" id="sbxKicker"></div>
+      <h2 id="sbxTitle"></h2>
+      <p id="sbxDesc"></p>
+      <div class="sbx-address" id="sbxAddress"></div>
+      <a class="sbx-view" id="sbxLink" href="#" target="_blank" rel="noopener">View Location</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js"></script>
+<script>
+(function(){
+  // 1) Tokenul public Mapbox (incepe cu "pk.")
+  var MAPBOX_TOKEN = "PASTE_YOUR_MAPBOX_ACCESS_TOKEN_HERE";
+  // 2) Style URL din Mapbox Studio > Share (ex: "mapbox://styles/numele-tau/abc123")
+  var MAPBOX_STYLE_URL = "PASTE_YOUR_STUDIO_STYLE_URL_HERE";
+
+  var locations = [{"id": "los-angeles", "city": "Los Angeles", "state": "CA", "area": "Boyle Heights", "address": "3040 E 12th St", "description": "Boyle Heights, east of the river. Near the Arts District and three freeways.", "lng": -118.2058, "lat": 34.0355, "url": "#"}, {"id": "phoenix", "city": "Phoenix", "state": "AZ", "area": "Phoenix", "address": "Coming Soon", "description": "Saltbox location coming soon.", "lng": -112.074, "lat": 33.4484, "comingSoon": true, "url": "#"}, {"id": "salt-lake-city", "city": "Salt Lake City", "state": "UT", "area": "Salt Lake City", "address": "Test address", "description": "Test Saltbox location in Salt Lake City.", "lng": -111.891, "lat": 40.7608, "url": "#"}, {"id": "denver", "city": "Denver", "state": "CO", "area": "Denver", "address": "Test address", "description": "Test Saltbox location in Denver.", "lng": -104.9903, "lat": 39.7392, "url": "#"}, {"id": "plano", "city": "Plano", "state": "TX", "area": "Plano", "address": "Test address", "description": "Test Saltbox location in Plano.", "lng": -96.6989, "lat": 33.0198, "url": "#"}, {"id": "nashville", "city": "Nashville", "state": "TN", "area": "Nashville", "address": "Test address", "description": "Test Saltbox location in Nashville.", "lng": -86.7816, "lat": 36.1627, "url": "#"}, {"id": "charlotte", "city": "Charlotte", "state": "NC", "area": "Charlotte", "address": "Test address", "description": "Test Saltbox location in Charlotte.", "lng": -80.8431, "lat": 35.2271, "url": "#"}];
+
+  mapboxgl.accessToken = MAPBOX_TOKEN;
+  var map = new mapboxgl.Map({
+    container: "sbxMap",
+    style: MAPBOX_STYLE_URL,
+    center: [-96.5, 37.8],
+    zoom: 3.4,
+    cooperativeGestures: true
+  });
+  map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+
+  var $ = function(id){ return document.getElementById(id); };
+  var list = $("sbxList");
+
+  function show(loc, fly){
+    document.querySelectorAll(".sbx-btn").forEach(function(b){ b.classList.toggle("is-active", b.dataset.id === loc.id); });
+    $("sbxKicker").textContent = loc.comingSoon ? loc.state + " • Coming Soon" : loc.area + ", " + loc.state;
+    $("sbxTitle").textContent = loc.city;
+    $("sbxDesc").textContent = loc.description;
+    $("sbxAddress").textContent = loc.address;
+    $("sbxLink").href = loc.url || "#";
+    if (fly) map.flyTo({center:[loc.lng, loc.lat], zoom:10.5, speed:.9, curve:1.4});
+  }
+
+  locations.forEach(function(loc){
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sbx-btn";
+    btn.dataset.id = loc.id;
+    btn.innerHTML = '<span><div class="sbx-name"></div><div class="sbx-state"></div></span>' + (loc.comingSoon ? '<span class="sbx-coming">Coming Soon</span>' : '');
+    btn.querySelector(".sbx-name").textContent = loc.city;
+    btn.querySelector(".sbx-state").textContent = loc.state;
+    btn.addEventListener("click", function(){ show(loc, true); });
+    list.appendChild(btn);
+
+    var el = document.createElement("div");
+    el.className = "sbx-marker" + (loc.comingSoon ? " is-coming" : "");
+    el.title = loc.city;
+    el.addEventListener("click", function(e){ e.stopPropagation(); show(loc, true); });
+    new mapboxgl.Marker({element: el, anchor: "center"}).setLngLat([loc.lng, loc.lat]).addTo(map);
+  });
+
+  show(locations[0], false);
+})();
+</script>
