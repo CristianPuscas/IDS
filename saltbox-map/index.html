@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Saltbox Locations Map</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;font-family:Inter,Arial,sans-serif;color:#173c35}
+  body{overflow:hidden;background:#f5f6f2}
+  .app{display:grid;grid-template-columns:380px 1fr;width:100%;height:100%}
+  .sidebar{background:#173c35;color:#fff;padding:38px 28px;overflow:auto;z-index:5}
+  .brand{font-size:25px;font-weight:700;letter-spacing:-.03em;margin-bottom:42px}
+  .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.65;margin-bottom:12px}
+  .title{font-size:42px;line-height:1.02;letter-spacing:-.04em;margin:0 0 34px}
+  .location-list{display:flex;flex-direction:column}
+  .location-btn{appearance:none;border:0;border-top:1px solid rgba(255,255,255,.18);background:transparent;color:#fff;text-align:left;padding:20px 4px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:15px;font:inherit}
+  .location-btn:last-child{border-bottom:1px solid rgba(255,255,255,.18)}
+  .location-btn:hover,.location-btn.active{background:rgba(255,255,255,.06)}
+  .location-name{font-size:19px;font-weight:600}
+  .location-state{font-size:14px;opacity:.65;margin-top:4px}
+  .coming{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.55;white-space:nowrap}
+  .map-wrap{position:relative;min-width:0}
+  #map{position:absolute;inset:0}
+  .mapboxgl-ctrl-logo,.mapboxgl-ctrl-attrib{opacity:.65}
+  .marker{width:18px;height:18px;border-radius:50%;background:#173c35;border:3px solid #fff;box-shadow:0 3px 12px rgba(0,0,0,.2);cursor:pointer}
+  .marker.coming{background:#aab3ae}
+  .card{position:absolute;left:42px;bottom:42px;width:min(430px,calc(100% - 84px));background:#fff;padding:30px;box-shadow:0 18px 60px rgba(20,45,40,.16);z-index:4}
+  .card-kicker{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#71807b;margin-bottom:9px}
+  .card h2{font-size:32px;line-height:1.05;letter-spacing:-.035em;margin:0 0 12px;color:#173c35}
+  .card p{font-size:15px;line-height:1.55;color:#56645f;margin:0 0 18px}
+  .address{font-size:14px;font-weight:600;color:#173c35;margin-bottom:22px}
+  .view{display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;background:#173c35;color:#fff;text-decoration:none;font-size:13px;font-weight:600}
+  .empty{display:none}
+  @media(max-width:800px){
+    .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+    .sidebar{padding:22px 20px;max-height:42vh}
+    .brand{margin-bottom:18px}
+    .title{font-size:30px;margin-bottom:18px}
+    .location-list{display:grid;grid-template-columns:1fr 1fr}
+    .location-btn{padding:12px 4px}
+    .location-btn:nth-child(odd){border-right:1px solid rgba(255,255,255,.18);padding-right:12px}
+    .location-name{font-size:15px}
+    .location-state{font-size:12px}
+    .card{left:18px;bottom:18px;width:calc(100% - 36px);padding:22px}
+    .card h2{font-size:27px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">SALTBOX</div>
+    <div class="eyebrow">Locations</div>
+    <h1 class="title">Find a Saltbox near you.</h1>
+    <div id="locationList" class="location-list"></div>
+  </aside>
+  <main class="map-wrap">
+    <div id="map"></div>
+    <section class="card" id="card">
+      <div class="card-kicker" id="cardKicker"></div>
+      <h2 id="cardTitle"></h2>
+      <p id="cardDescription"></p>
+      <div class="address" id="cardAddress"></div>
+      <a class="view" id="cardLink" href="#" target="_blank" rel="noopener">View Location</a>
+    </section>
+  </main>
+</div>
+
+<script>
+const MAPBOX_TOKEN = "PASTE_YOUR_MAPBOX_ACCESS_TOKEN_HERE";
+// After uploading saltbox-style.json in Mapbox Studio, paste its Style URL here
+// (Studio > Share > Style URL, e.g. "mapbox://styles/your-username/abc123").
+const MAPBOX_STYLE_URL = "mapbox://styles/mapbox/light-v11";
+const locations = [{"id": "los-angeles", "city": "Los Angeles", "state": "CA", "area": "Boyle Heights", "address": "3040 E 12th St", "description": "Boyle Heights, east of the river. Near the Arts District and three freeways.", "lng": -118.2058, "lat": 34.0355, "url": "#"}, {"id": "phoenix", "city": "Phoenix", "state": "AZ", "area": "Phoenix", "address": "Coming Soon", "description": "Saltbox location coming soon.", "lng": -112.074, "lat": 33.4484, "comingSoon": true, "url": "#"}, {"id": "salt-lake-city", "city": "Salt Lake City", "state": "UT", "area": "Salt Lake City", "address": "Test address", "description": "Test Saltbox location in Salt Lake City.", "lng": -111.891, "lat": 40.7608, "url": "#"}, {"id": "denver", "city": "Denver", "state": "CO", "area": "Denver", "address": "Test address", "description": "Test Saltbox location in Denver.", "lng": -104.9903, "lat": 39.7392, "url": "#"}, {"id": "plano", "city": "Plano", "state": "TX", "area": "Plano", "address": "Test address", "description": "Test Saltbox location in Plano.", "lng": -96.6989, "lat": 33.0198, "url": "#"}, {"id": "nashville", "city": "Nashville", "state": "TN", "area": "Nashville", "address": "Test address", "description": "Test Saltbox location in Nashville.", "lng": -86.7816, "lat": 36.1627, "url": "#"}, {"id": "charlotte", "city": "Charlotte", "state": "NC", "area": "Charlotte", "address": "Test address", "description": "Test Saltbox location in Charlotte.", "lng": -80.8431, "lat": 35.2271, "url": "#"}];
+
+mapboxgl.accessToken = MAPBOX_TOKEN;
+
+const map = new mapboxgl.Map({
+  container: "map",
+  style: MAPBOX_STYLE_URL,
+  center: [-96.5, 37.8],
+  zoom: 3.4,
+  attributionControl: true
+});
+
+map.addControl(new mapboxgl.NavigationControl({showCompass:false}), "top-right");
+
+const list = document.getElementById("locationList");
+const card = document.getElementById("card");
+const cardKicker = document.getElementById("cardKicker");
+const cardTitle = document.getElementById("cardTitle");
+const cardDescription = document.getElementById("cardDescription");
+const cardAddress = document.getElementById("cardAddress");
+const cardLink = document.getElementById("cardLink");
+
+function showLocation(loc, shouldFly=true){
+  document.querySelectorAll(".location-btn").forEach(b => b.classList.toggle("active", b.dataset.id === loc.id));
+  cardKicker.textContent = loc.comingSoon ? `${loc.state} • Coming Soon` : `${loc.area}, ${loc.state}`;
+  cardTitle.textContent = loc.city;
+  cardDescription.textContent = loc.description;
+  cardAddress.textContent = loc.address;
+  cardLink.href = loc.url || "#";
+  if (shouldFly) {
+    map.flyTo({center:[loc.lng,loc.lat], zoom:10.5, speed:.9, curve:1.4});
+  }
+}
+
+locations.forEach(loc => {
+  const btn = document.createElement("button");
+  btn.className = "location-btn";
+  btn.dataset.id = loc.id;
+  btn.innerHTML = `<span><div class="location-name">${loc.city}</div><div class="location-state">${loc.state}</div></span>${loc.comingSoon ? '<span class="coming">Coming Soon</span>' : ''}`;
+  btn.addEventListener("click", () => showLocation(loc));
+  list.appendChild(btn);
+
+  const el = document.createElement("div");
+  el.className = "marker" + (loc.comingSoon ? " coming" : "");
+  el.title = loc.city;
+  el.addEventListener("click", e => {
+    e.stopPropagation();
+    showLocation(loc);
+  });
+  new mapboxgl.Marker({element:el, anchor:"center"})
+    .setLngLat([loc.lng,loc.lat])
+    .addTo(map);
+});
+
+map.on("load", () => {
+  showLocation(locations[0], false);
+  map.flyTo({center:[-96.5,37.8], zoom:3.4, duration:0});
+});
+</script>
+</body>
+</html>

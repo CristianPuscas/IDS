@@ -1,0 +1,152 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 0,
+      "properties": {
+        "id": "los-angeles",
+        "city": "Los Angeles",
+        "state": "CA",
+        "area": "Boyle Heights",
+        "address": "3040 E 12th St",
+        "description": "Boyle Heights, east of the river. Near the Arts District and three freeways.",
+        "url": "#",
+        "comingSoon": false
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.2058,
+          34.0355
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 1,
+      "properties": {
+        "id": "phoenix",
+        "city": "Phoenix",
+        "state": "AZ",
+        "area": "Phoenix",
+        "address": "Coming Soon",
+        "description": "Saltbox location coming soon.",
+        "comingSoon": true,
+        "url": "#"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -112.074,
+          33.4484
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 2,
+      "properties": {
+        "id": "salt-lake-city",
+        "city": "Salt Lake City",
+        "state": "UT",
+        "area": "Salt Lake City",
+        "address": "Test address",
+        "description": "Test Saltbox location in Salt Lake City.",
+        "url": "#",
+        "comingSoon": false
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -111.891,
+          40.7608
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 3,
+      "properties": {
+        "id": "denver",
+        "city": "Denver",
+        "state": "CO",
+        "area": "Denver",
+        "address": "Test address",
+        "description": "Test Saltbox location in Denver.",
+        "url": "#",
+        "comingSoon": false
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -104.9903,
+          39.7392
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 4,
+      "properties": {
+        "id": "plano",
+        "city": "Plano",
+        "state": "TX",
+        "area": "Plano",
+        "address": "Test address",
+        "description": "Test Saltbox location in Plano.",
+        "url": "#",
+        "comingSoon": false
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -96.6989,
+          33.0198
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 5,
+      "properties": {
+        "id": "nashville",
+        "city": "Nashville",
+        "state": "TN",
+        "area": "Nashville",
+        "address": "Test address",
+        "description": "Test Saltbox location in Nashville.",
+        "url": "#",
+        "comingSoon": false
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -86.7816,
+          36.1627
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 6,
+      "properties": {
+        "id": "charlotte",
+        "city": "Charlotte",
+        "state": "NC",
+        "area": "Charlotte",
+        "address": "Test address",
+        "description": "Test Saltbox location in Charlotte.",
+        "url": "#",
+        "comingSoon": false
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -80.8431,
+          35.2271
+        ]
+      }
+    }
+  ]
+}
