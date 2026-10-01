@@ -18,6 +18,11 @@
     isolation: isolate;
   }
   .sbx-map { position: absolute; inset: 0; }
+  /* text vizibil doar in Webflow Designer (acolo scripturile nu ruleaza) */
+  .sbx-ph {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    color: #777; font-size: 16px; text-align: center; padding: 20px;
+  }
 
   /* pin galben */
   .sbx-pin { width: 28px; height: 28px; cursor: pointer; }
@@ -53,6 +58,7 @@
 </style>
 
 <div class="sbx-map-wrap">
+  <div class="sbx-ph">Harta apare in Preview / pe site-ul publicat</div>
   <div class="sbx-map" id="sbx-map"></div>
 </div>
 
@@ -84,6 +90,8 @@
     var el = document.getElementById('sbx-map');
     if (!el || el.dataset.ready) return;
     el.dataset.ready = '1';
+    var ph = el.parentNode.querySelector('.sbx-ph');
+    if (ph) ph.remove();
 
     var bounds = new maplibregl.LngLatBounds();
     LOCATIONS.forEach(function (l) { bounds.extend([l.lng, l.lat]); });
