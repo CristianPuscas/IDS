@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Related Blog Section</title>
+<meta name="description" content="Unified Client-First version of the Saltbox careers blog section (section_blog42 + section_blog42-tablet merged into section_related-blog).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700">
+<style>
+/* =========================================================
+   1. FONTS (same files the live Webflow site uses)
+   ========================================================= */
+@font-face{font-family:"Inter Tight";src:url(https://cdn.prod.website-files.com/667d148040fe70ed2317d980/672a4556970bd06ab08d0199_inter-tight-v7-latin-regular.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Inter Tight";src:url(https://cdn.prod.website-files.com/667d148040fe70ed2317d980/672a457a4d70b845d67d9029_inter-tight-v7-latin-500.woff2) format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"Inter Tight";src:url(https://cdn.prod.website-files.com/667d148040fe70ed2317d980/672a46ae5473d4dc250e3ba0_inter-tight-v7-latin-700.woff2) format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:Besley;src:url(https://cdn.prod.website-files.com/667d148040fe70ed2317d980/672b9cf69ec9581716b01fbf_besley-v20-latin-500italic.woff2) format("woff2");font-weight:500;font-style:italic;font-display:swap}
+
+/* =========================================================
+   2. VARIABLES (subset of the site's Webflow variables)
+   ========================================================= */
+:root{
+  --color-brand--black:#242b2b;
+  --color-brand--secondary-black:#41434f;
+  --color--brand--black--primary-black:#242b2b;
+  --color--brand--white--primary-white:#fcfcfc;
+  --color--brand--grey--700:#868b89;
+  --color--brand--green--secondary-sage:#cadcd5;
+  --color--brand--light-grey--light-grey-base500:#ecefeb;
+  --base-color-neutral--black:black;
+  --base-color-neutral--black-rich:#010b13;
+  --background-color--background-primary:var(--color--brand--white--primary-white);
+  --background-color--background-secondary:var(--color--brand--light-grey--light-grey-base500);
+  --text-color--text-primary:var(--color-brand--black);
+  --text-color--text-secondary:var(--color--brand--white--primary-white);
+  --text-color--text-tertiary:var(--color--brand--grey--700);
+  --link-color--link-primary:var(--color--brand--black--primary-black);
+  --radii--radius-medium:16px;
+  --radii--radius-large:20px;
+  --radii--radius-xsmall:5px;
+  --radii--radius-xxlarge:48px;
+  --radii--radius-full:999px;
+  --radii--radius-button-animate:999px;
+  --spacing--padding--page--padding-horizontal:2.75rem;
+  --spacing--padding--page--padding-horizontal-mobile:1.25rem;
+  --spacing--padding--page--padding-vertical:7rem;
+  --spacing--padding--component--padding-normal:1.38rem;
+  --spacing--padding--component--padding-normal-mobile:.75rem;
+  --spacing--gap--content-small:1.38rem;
+}
+
+/* =========================================================
+   3. BASE (Webflow normalize subset + site tag styles)
+   ========================================================= */
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;height:100%}
+body{margin:0;min-height:100%;background-color:var(--background-color--background-primary);color:var(--text-color--text-tertiary);font-family:"Inter Tight",sans-serif;font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased}
+img{max-width:100%;vertical-align:middle;display:inline-block;border:0}
+h2{color:var(--text-color--text-primary);margin-top:0;margin-bottom:0;font-family:"Inter Tight",sans-serif;font-size:3rem;font-weight:500;line-height:1.2}
+h3{color:var(--text-color--text-primary);margin-top:0;margin-bottom:0;font-family:"Inter Tight",sans-serif;font-size:2.5rem;font-weight:500;line-height:1.2}
+p{margin-top:0;margin-bottom:0}
+a{background-color:transparent;color:var(--link-color--link-primary);text-decoration:none}
+button{font:inherit}
+[tabindex]:focus-visible,a:focus-visible,button:focus-visible{outline:.125rem solid #4d65ff;outline-offset:.125rem}
+
+/* =========================================================
+   4. CLIENT-FIRST UTILITIES used by this section (site values)
+   ========================================================= */
+.padding-global{padding-left:var(--spacing--padding--page--padding-horizontal);padding-right:var(--spacing--padding--page--padding-horizontal)}
+.container-large{width:100%;max-width:84.5rem;margin-left:auto!important;margin-right:auto!important}
+.padding-section-large{padding-top:var(--spacing--padding--page--padding-vertical);padding-bottom:var(--spacing--padding--page--padding-vertical)}
+.spacer-xsmall{width:100%;padding-top:1rem}
+.spacer-small{width:100%;padding-top:1.5rem}
+.spacer-large{width:100%;padding-top:3rem}
+.spacer-xlarge{width:100%;padding-top:4rem}
+.spacer-huge{width:100%;padding-top:6rem}
+.text-size-medium{color:var(--color--brand--black--primary-black);font-size:1.125rem}
+.heading-style-h2-x{font-family:Besley,sans-serif;font-style:italic;font-weight:500;line-height:1.2}
+.button{display:inline-block;border:1px solid var(--color-brand--black);background-color:var(--color-brand--black);color:var(--color--brand--white--primary-white);text-align:center;letter-spacing:-.02em;cursor:pointer;border-radius:5px;padding:.75rem 1.375rem;font-family:Inter,sans-serif;font-size:1rem;font-weight:500;line-height:100%;text-decoration:none;transition:all .2s}
+.button:hover{background-color:var(--color-brand--secondary-black)}
+
+/* Shared "Tag" component (unchanged, used site-wide) */
+.tag-container{color:var(--text-color--text-primary);flex-flow:column;display:flex}
+.tag-wrapper{grid-column-gap:.35rem;grid-row-gap:.35rem;justify-content:flex-start;align-items:center;font-weight:500;display:flex}
+.tag_text{color:var(--base-color-neutral--black-rich);text-transform:uppercase;font-size:.875rem;font-weight:500}
+._1rem-spacer{width:100%;padding-top:1rem}
+
+/* =========================================================
+   5. CUSTOM: section_related-blog  (desktop / base)
+   ========================================================= */
+.related-blog_component{z-index:0;position:relative;padding:var(--spacing--padding--component--padding-normal);border-radius:var(--radii--radius-large);background-color:var(--color--brand--green--secondary-sage)}
+.related-blog_header{display:flex;flex-direction:column;align-items:flex-start;grid-row-gap:1rem}
+.related-blog_heading{width:100%;max-width:35rem}
+.related-blog_button-row{display:flex;flex-direction:column;align-items:flex-start}
+.related-blog_mobile-button-wrapper{display:none}
+.related-blog_list{display:grid;grid-template-columns:1fr 1fr 1fr;grid-column-gap:var(--spacing--gap--content-small);grid-row-gap:var(--spacing--gap--content-small);align-items:start}
+.related-blog_item{min-width:0}
+.related-blog_controls{display:none}
+
+/* =========================================================
+   6. CUSTOM: blog-card  (desktop / base = original .blog-card)
+   ========================================================= */
+.blog-card{position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;width:100%;min-width:18rem;height:21.875rem;padding:var(--spacing--padding--component--padding-normal);border-radius:var(--radii--radius-large);background-color:#0000001a;overflow:hidden;color:var(--link-color--link-primary)}
+.blog-card_header{display:flex;justify-content:space-between;align-items:flex-start;width:100%}
+.blog-card_tag{display:flex;align-items:center;grid-column-gap:.35rem;grid-row-gap:.35rem}
+.blog-card_tag-icon{filter:invert(0%)}
+.blog-card_tag-text{color:var(--text-color--text-secondary);text-transform:uppercase;font-size:1rem;font-weight:500}
+.blog-card_read-time{display:flex;grid-column-gap:.3rem;grid-row-gap:.3rem;color:var(--text-color--text-secondary);text-transform:uppercase}
+.blog-card_image-wrapper{position:absolute;inset:0%;z-index:-1;width:100%;overflow:hidden;background-color:var(--background-color--background-primary)}
+.blog-card_image{width:100%;height:100%;aspect-ratio:1;object-fit:cover}
+.blog-card_image-overlay{position:absolute;inset:0%;z-index:1;background-color:#0003}
+.spacer_blog-card{display:none;width:100%;padding-top:1.5rem}
+.blog-card_title{color:var(--text-color--text-secondary);font-family:"Inter Tight",sans-serif;font-size:1.5rem;font-weight:500;line-height:1.4}
+.blog-card_bottom{display:flex;flex-direction:column;align-self:flex-start;font-family:Inter,sans-serif;font-weight:300;transform:translate3d(0,8.8125rem,0)}
+.blog-card_description-wrapper{opacity:0}
+.blog-card_button-row{display:flex;flex-direction:column;align-items:flex-end}
+.blog-card_button{display:flex;justify-content:flex-end;align-items:center;width:2.75rem;height:2.75rem;padding:.75rem;border-radius:var(--radii--radius-button-animate) var(--radii--radius-full) var(--radii--radius-full) var(--radii--radius-button-animate);background-color:var(--color-brand--black);color:var(--color--brand--white--primary-white)}
+.blog-card_button-text{opacity:0;flex:none;align-self:center;position:relative;width:5rem;font-size:.875rem}
+.blog-card_button-icon{display:flex;flex:none;flex-direction:column;justify-content:center;align-items:center;position:relative;width:1.5rem;height:1.5rem}
+
+/* Desktop hover (replaces IX2 "a-57 / a-58"; desktop only) */
+@media screen and (min-width:992px){
+  .blog-card_bottom{transition:transform .5s ease}
+  .blog-card_description-wrapper{transition:opacity .5s ease}
+  .blog-card_image{transition:opacity .5s ease}
+  .blog-card_image-overlay{transition:opacity .3s ease}
+  .blog-card_tag-icon{transition:filter .5s ease}
+  .blog-card_tag-text,.blog-card_read-time,.blog-card_title{transition:color .5s ease}
+  .blog-card:hover .blog-card_bottom{transform:translate3d(0,0,0)}
+  .blog-card:hover .blog-card_description-wrapper{opacity:1}
+  .blog-card:hover .blog-card_image{opacity:0}
+  .blog-card:hover .blog-card_image-overlay{opacity:0}
+  .blog-card:hover .blog-card_tag-icon{filter:invert(100%)}
+  .blog-card:hover .blog-card_tag-text,
+  .blog-card:hover .blog-card_read-time,
+  .blog-card:hover .blog-card_title{color:var(--text-color--text-primary)}
+}
+
+/* =========================================================
+   7. TABLET  (<= 991px)  -> looks like .blog-card-section-tablet
+   ========================================================= */
+@media screen and (max-width:991px){
+  .padding-section-large{padding-top:6rem;padding-bottom:6rem}
+  .spacer-large{padding-top:2.5rem}
+  .spacer-xlarge{padding-top:3.5rem}
+  .spacer-huge{padding-top:5rem}
+  h2{font-size:2.75rem}
+  h3{font-size:2.25rem}
+  .heading-style-h2-x{font-size:2.75rem}
+
+  .related-blog_component{overflow:hidden}
+  .related-blog_heading{max-width:48rem}
+  .related-blog_list{display:flex;grid-column-gap:var(--spacing--gap--content-small);overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none}
+  .related-blog_list::-webkit-scrollbar{display:none}
+  .related-blog_item{flex:0 0 100%;scroll-snap-align:start}
+  .related-blog_controls{display:block;position:relative;height:6rem}
+  .related-blog_dots{position:absolute;left:0;bottom:0;display:flex;align-items:flex-start;height:1.75rem;padding-top:.625rem}
+  .related-blog_dot{width:.5rem;height:.5rem;margin:0 .1875rem .25rem;padding:0;border:0;border-radius:100%;background-color:#2226;cursor:pointer;transition:background-color .1s}
+  .related-blog_dot.is-active{background-color:#222}
+  .related-blog_arrows{position:absolute;right:2rem;bottom:0;display:flex;grid-column-gap:1.5rem}
+  .related-blog_arrow{display:flex;justify-content:center;align-items:center;width:2.5rem;height:2.5rem;padding:0;border:0;background-color:transparent;color:var(--base-color-neutral--black);cursor:pointer;transition:transform .2s}
+  .related-blog_arrow:hover{transform:scale(1.05)}
+
+  .blog-card{justify-content:flex-start;min-width:0;height:40rem;background-color:var(--background-color--background-primary)}
+  .blog-card_tag-icon{filter:invert(100%)}
+  .blog-card_tag-text{color:var(--text-color--text-primary);font-family:Inter,sans-serif;font-weight:400}
+  .blog-card_read-time{color:var(--text-color--text-tertiary)}
+  .blog-card_image-wrapper{position:relative;inset:auto;z-index:auto;height:15rem;border-radius:var(--radii--radius-medium);background-color:transparent}
+  .blog-card_image{max-width:none;aspect-ratio:auto}
+  .blog-card_image-overlay{display:none}
+  .spacer_blog-card{display:block}
+  .blog-card_title{color:var(--text-color--text-primary)}
+  .blog-card_bottom{flex:1;justify-content:space-between;align-self:stretch;font-family:"Inter Tight",sans-serif;font-weight:400;transform:none}
+  .blog-card_description-wrapper{opacity:1}
+  .blog-card_description{color:var(--text-color--text-tertiary)}
+  .blog-card_button{width:auto;height:auto;justify-content:center;grid-column-gap:.75rem;padding:.5rem 1.25rem;border:1px solid var(--color-brand--black);border-radius:var(--radii--radius-xsmall) var(--radii--radius-xxlarge) var(--radii--radius-xxlarge) var(--radii--radius-xsmall);font-family:Inter,sans-serif;font-size:1rem;font-weight:500;line-height:100%;letter-spacing:-.02em;transition:all .2s}
+  .blog-card:hover .blog-card_button{background-color:var(--color-brand--secondary-black)}
+  .blog-card_button-text{opacity:1;width:auto;font-size:1rem}
+}
+
+/* =========================================================
+   8. MOBILE LANDSCAPE  (<= 767px)
+   ========================================================= */
+@media screen and (max-width:767px){
+  .padding-global{padding-left:var(--spacing--padding--page--padding-horizontal-mobile);padding-right:var(--spacing--padding--page--padding-horizontal-mobile)}
+  .padding-section-large{padding-top:4rem;padding-bottom:4rem}
+  .spacer-xsmall{padding-top:.75rem}
+  .spacer-small{padding-top:1.25rem}
+  .spacer-large{padding-top:2rem}
+  .spacer-xlarge{padding-top:2.5rem}
+  .spacer-huge{padding-top:3.5rem}
+  h2{font-size:2.25rem}
+  h3{font-size:2rem}
+  .text-size-medium{font-size:1rem}
+  .heading-style-h2-x{font-size:2rem}
+  .max-width-full-mobile-landscape{width:100%;max-width:none}
+
+  .section_related-blog{background-color:var(--background-color--background-secondary)}
+  .related-blog_button-row{display:none}
+  .related-blog_mobile-button-wrapper{display:block}
+  .related-blog_dots{width:100%;justify-content:center;align-items:center}
+  .related-blog_arrows{grid-column-gap:.5rem}
+
+  .blog-card{height:auto;min-height:25rem;padding:var(--spacing--padding--component--padding-normal-mobile)}
+  .spacer_blog-card{padding-top:1.25rem}
+  .blog-card_title{font-size:1.25rem}
+}
+
+/* =========================================================
+   9. MOBILE PORTRAIT  (<= 479px)
+   ========================================================= */
+@media screen and (max-width:479px){
+  .heading-style-h2-x{font-size:2.5rem}
+  .blog-card_tag-text{font-weight:500}
+  .blog-card_read-time,
+  .blog-card_description{color:var(--color-brand--black)}
+}
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+<main class="main-wrapper">
+
+<section class="section_related-blog">
+  <div class="padding-global">
+    <div class="container-large">
+      <div class="padding-section-large">
+        <div class="related-blog_component">
+
+          <div class="related-blog_header">
+            <div class="related-blog_heading">
+              <div class="tag-container">
+                <div class="tag-wrapper">
+                  <img src="https://cdn.prod.website-files.com/667d148040fe70ed2317d980/683f156ecec21938e3dec40e_saltbox.svg" loading="lazy" alt="" class="tag-icon">
+                  <div class="tag_text">Saltbox blog</div>
+                </div>
+                <div class="_1rem-spacer"></div>
+              </div>
+              <h2>Saltbox <span class="heading-style-h2-x">stories</span></h2>
+              <div class="spacer-xsmall"></div>
+              <p class="text-size-medium">Inspiring stories from fellow entrepreneurs, practical advice on logistics and operations, and the latest tips in ecommerce.</p>
+            </div>
+            <div class="related-blog_button-row">
+              <div class="spacer-small"></div>
+              <a href="https://www.saltbox.com/resources/blog-overview" class="button">View all</a>
+            </div>
+          </div>
+
+          <div class="spacer-large"></div>
+
+          <div class="related-blog_mobile-button-wrapper">
+            <div class="spacer-huge"></div>
+            <a href="https://www.saltbox.com/resources/blog-overview" class="button max-width-full-mobile-landscape">View all</a>
+            <div class="spacer-xlarge"></div>
+          </div>
+
+          <!-- Webflow: Collection List Wrapper / Collection List / Collection Item -->
+          <div class="related-blog_list-wrapper">
+            <div role="list" class="related-blog_list">
+
+              <div role="listitem" class="related-blog_item">
+                <a href="https://www.saltbox.com/blog/3pl-companies-in-los-angeles-ca" class="blog-card">
+                  <div class="blog-card_top">
+                    <div class="blog-card_header">
+                      <div class="blog-card_tag">
+                        <img src="https://cdn.prod.website-files.com/667d148040fe70ed2317d980/6841adeb92aedbeee5dd2841_category-icon.svg" loading="lazy" alt="" class="blog-card_tag-icon">
+                        <div class="blog-card_tag-text">Locations</div>
+                      </div>
+                      <div class="blog-card_read-time"><div>14</div><div>min read</div></div>
+                    </div>
+                    <div class="spacer-xsmall"></div>
+                    <div class="blog-card_image-wrapper">
+                      <img src="https://cdn.prod.website-files.com/668bfa23e6d693902feb7de2/6acde5075f600cf0b943b8e8_3pl%20(2).jpg" loading="lazy" alt="" class="blog-card_image">
+                      <div class="blog-card_image-overlay"></div>
+                    </div>
+                    <div class="spacer_blog-card"></div>
+                    <h3 class="blog-card_title">10 best 3PL companies in Los Angeles, CA (2026)</h3>
+                  </div>
+                  <div class="blog-card_bottom">
+                    <div class="blog-card_description-wrapper">
+                      <div class="spacer-small"></div>
+                      <p class="blog-card_description">A look at 10 LA-area 3PL providers, what each one is set up to handle, and when running fulfillment from your own suite wins.</p>
+                    </div>
+                    <div class="blog-card_button-row">
+                      <div class="spacer_blog-card"></div>
+                      <div class="blog-card_button">
+                        <div class="blog-card_button-text">Read more</div>
+                        <div class="blog-card_button-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5.06238 14.9998L3.99988 13.9373L12.4374 5.49976H4.99988V3.99976H14.9999V13.9998H13.4999V6.56226L5.06238 14.9998Z" fill="currentColor"/></svg></div>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+
+              <div role="listitem" class="related-blog_item">
+                <a href="https://www.saltbox.com/blog/3pl-companies-in-seattle-wa" class="blog-card">
+                  <div class="blog-card_top">
+                    <div class="blog-card_header">
+                      <div class="blog-card_tag">
+                        <img src="https://cdn.prod.website-files.com/667d148040fe70ed2317d980/6841adeb92aedbeee5dd2841_category-icon.svg" loading="lazy" alt="" class="blog-card_tag-icon">
+                        <div class="blog-card_tag-text">Locations</div>
+                      </div>
+                      <div class="blog-card_read-time"><div>15</div><div>min read</div></div>
+                    </div>
+                    <div class="spacer-xsmall"></div>
+                    <div class="blog-card_image-wrapper">
+                      <img src="https://cdn.prod.website-files.com/668bfa23e6d693902feb7de2/6acde14647bd0dd62b5134b0_3pl.jpg" loading="lazy" alt="" class="blog-card_image">
+                      <div class="blog-card_image-overlay"></div>
+                    </div>
+                    <div class="spacer_blog-card"></div>
+                    <h3 class="blog-card_title">10 best 3PL companies in Seattle, WA (2026)</h3>
+                  </div>
+                  <div class="blog-card_bottom">
+                    <div class="blog-card_description-wrapper">
+                      <div class="spacer-small"></div>
+                      <p class="blog-card_description">A side-by-side look at 10 Seattle 3PL providers, what each one publishes, and when keeping fulfillment in your own suite is the stronger call.</p>
+                    </div>
+                    <div class="blog-card_button-row">
+                      <div class="spacer_blog-card"></div>
+                      <div class="blog-card_button">
+                        <div class="blog-card_button-text">Read more</div>
+                        <div class="blog-card_button-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5.06238 14.9998L3.99988 13.9373L12.4374 5.49976H4.99988V3.99976H14.9999V13.9998H13.4999V6.56226L5.06238 14.9998Z" fill="currentColor"/></svg></div>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+
+              <div role="listitem" class="related-blog_item">
+                <a href="https://www.saltbox.com/blog/3pl-companies-in-atlanta-ga" class="blog-card">
+                  <div class="blog-card_top">
+                    <div class="blog-card_header">
+                      <div class="blog-card_tag">
+                        <img src="https://cdn.prod.website-files.com/667d148040fe70ed2317d980/6841adeb92aedbeee5dd2841_category-icon.svg" loading="lazy" alt="" class="blog-card_tag-icon">
+                        <div class="blog-card_tag-text">Locations</div>
+                      </div>
+                      <div class="blog-card_read-time"><div>14</div><div>min read</div></div>
+                    </div>
+                    <div class="spacer-xsmall"></div>
+                    <div class="blog-card_image-wrapper">
+                      <img src="https://cdn.prod.website-files.com/668bfa23e6d693902feb7de2/6aa7ddedf4c9e7bd42dd3296_3pl%20atlanta.webp" loading="lazy" alt="" class="blog-card_image">
+                      <div class="blog-card_image-overlay"></div>
+                    </div>
+                    <div class="spacer_blog-card"></div>
+                    <h3 class="blog-card_title">10 best 3PL companies in Atlanta, GA (2026)</h3>
+                  </div>
+                  <div class="blog-card_bottom">
+                    <div class="blog-card_description-wrapper">
+                      <div class="spacer-small"></div>
+                      <p class="blog-card_description">Ten Atlanta 3PL providers compared on buildings and certifications, plus the case for keeping fulfillment in a suite you control.</p>
+                    </div>
+                    <div class="blog-card_button-row">
+                      <div class="spacer_blog-card"></div>
+                      <div class="blog-card_button">
+                        <div class="blog-card_button-text">Read more</div>
+                        <div class="blog-card_button-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5.06238 14.9998L3.99988 13.9373L12.4374 5.49976H4.99988V3.99976H14.9999V13.9998H13.4999V6.56226L5.06238 14.9998Z" fill="currentColor"/></svg></div>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Tablet/mobile carousel controls (hidden on desktop) -->
+          <div class="related-blog_controls">
+            <div class="related-blog_dots" aria-label="Choose article"></div>
+            <div class="related-blog_arrows">
+              <button type="button" class="related-blog_arrow" data-related-blog="prev" aria-label="Previous article">
+                <svg width="40" height="41" viewBox="0 0 40 41" fill="none" aria-hidden="true"><path d="M20 27.4406L22.1 25.3406L18.4 21.6406H27.5V18.6406H18.4L22.1 14.9406L20 12.8406L12.7 20.1406L20 27.4406ZM20 40.1406C17.2667 40.1406 14.6833 39.6156 12.25 38.5656C9.81667 37.5156 7.69167 36.0823 5.875 34.2656C4.05833 32.449 2.625 30.324 1.575 27.8906C0.525 25.4573 0 22.874 0 20.1406C0 17.374 0.525 14.774 1.575 12.3406C2.625 9.90729 4.05833 7.79063 5.875 5.99062C7.69167 4.19062 9.81667 2.76562 12.25 1.71563C14.6833 0.665625 17.2667 0.140625 20 0.140625C22.7667 0.140625 25.3667 0.665625 27.8 1.71563C30.2333 2.76562 32.35 4.19062 34.15 5.99062C35.95 7.79063 37.375 9.90729 38.425 12.3406C39.475 14.774 40 17.374 40 20.1406C40 22.874 39.475 25.4573 38.425 27.8906C37.375 30.324 35.95 32.449 34.15 34.2656C32.35 36.0823 30.2333 37.5156 27.8 38.5656C25.3667 39.6156 22.7667 40.1406 20 40.1406Z" fill="currentColor"/></svg>
+              </button>
+              <button type="button" class="related-blog_arrow" data-related-blog="next" aria-label="Next article">
+                <svg width="40" height="41" viewBox="0 0 40 41" fill="none" aria-hidden="true"><path d="M20 27.4406L27.3 20.1406L20 12.8406L17.9 14.9406L21.6 18.6406H12.5V21.6406H21.6L17.9 25.3406L20 27.4406ZM20 40.1406C17.2667 40.1406 14.6833 39.6156 12.25 38.5656C9.81667 37.5156 7.69167 36.0823 5.875 34.2656C4.05833 32.449 2.625 30.324 1.575 27.8906C0.525 25.4573 0 22.874 0 20.1406C0 17.374 0.525 14.774 1.575 12.3406C2.625 9.90729 4.05833 7.79063 5.875 5.99062C7.69167 4.19062 9.81667 2.76562 12.25 1.71563C14.6833 0.665625 17.2667 0.140625 20 0.140625C22.7667 0.140625 25.3667 0.665625 27.8 1.71563C30.2333 2.76562 32.35 4.19062 34.15 5.99062C35.95 7.79063 37.375 9.90729 38.425 12.3406C39.475 14.774 40 17.374 40 20.1406C40 22.874 39.475 25.4573 38.425 27.8906C37.375 30.324 35.95 32.449 34.15 34.2656C32.35 36.0823 30.2333 37.5156 27.8 38.5656C25.3667 39.6156 22.7667 40.1406 20 40.1406Z" fill="currentColor"/></svg>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+/* Tablet/mobile carousel for .related-blog_list (scroll-snap + arrows + dots).
+   Replaces the Webflow Slider + Finsweet CMS Slider used by section_blog42-tablet. */
+(function () {
+  document.querySelectorAll('.related-blog_component').forEach(function (component) {
+    var list = component.querySelector('.related-blog_list');
+    var dots = component.querySelector('.related-blog_dots');
+    if (!list || !dots) return;
+    var items = list.querySelectorAll('.related-blog_item');
+
+    function step() {
+      var gap = parseFloat(getComputedStyle(list).columnGap) || 0;
+      return items.length ? items[0].getBoundingClientRect().width + gap : list.clientWidth;
+    }
+    function current() { return Math.round(list.scrollLeft / step()); }
+    function goTo(i) {
+      i = Math.max(0, Math.min(items.length - 1, i));
+      list.scrollTo({ left: i * step(), behavior: 'smooth' });
+    }
+
+    items.forEach(function (_, i) {
+      var dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'related-blog_dot' + (i === 0 ? ' is-active' : '');
+      dot.setAttribute('aria-label', 'Show article ' + (i + 1) + ' of ' + items.length);
+      dot.addEventListener('click', function () { goTo(i); });
+      dots.appendChild(dot);
+    });
+
+    function update() {
+      var c = current();
+      dots.querySelectorAll('.related-blog_dot').forEach(function (d, i) {
+        d.classList.toggle('is-active', i === c);
+        d.setAttribute('aria-pressed', i === c ? 'true' : 'false');
+      });
+    }
+    list.addEventListener('scroll', function () { window.requestAnimationFrame(update); }, { passive: true });
+
+    component.querySelectorAll('[data-related-blog]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        goTo(current() + (btn.getAttribute('data-related-blog') === 'next' ? 1 : -1));
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
