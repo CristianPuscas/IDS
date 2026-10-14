@@ -32,6 +32,7 @@
       text-decoration: none;
       transform: translateY(-200%);
       transition: transform 0.25s ease;
+      box-sizing: border-box;
     }
     .skip-link:focus {
       transform: translateY(0);
@@ -41,6 +42,7 @@
     .padding-global {
       padding-left: 2.5rem;
       padding-right: 2.5rem;
+      box-sizing: border-box;
     }
     .container-large {
       width: 100%;
@@ -51,6 +53,7 @@
     .padding-section-large {
       padding-top: 7rem;
       padding-bottom: 7rem;
+      box-sizing: border-box;
     }
     .eyebrow {
       display: inline-flex;
@@ -102,6 +105,7 @@
       white-space: nowrap;
       cursor: pointer;
       transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+      box-sizing: border-box;
     }
     .button:hover {
       background-color: #6ef0a6;
@@ -146,6 +150,7 @@
       border-bottom: 1px solid rgba(23, 74, 48, 0);
       background-color: rgba(4, 20, 12, 0);
       transition: background-color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
+      box-sizing: border-box;
     }
     .nav_bg.is-scrolled {
       border-bottom-color: #174a30;
@@ -161,6 +166,7 @@
       margin-left: auto;
       margin-right: auto;
       padding: 1.1rem 2.5rem;
+      box-sizing: border-box;
     }
     .nav_logo {
       position: relative;
@@ -196,6 +202,7 @@
       display: flex;
       align-items: center;
       gap: 2rem;
+      box-sizing: border-box;
     }
     .nav_list {
       display: flex;
@@ -207,6 +214,7 @@
     }
     .nav_item {
       margin: 0;
+      box-sizing: border-box;
     }
     .nav_link {
       display: block;
@@ -219,6 +227,7 @@
       line-height: 1.2;
       text-decoration: none;
       transition: color 0.25s ease, background-color 0.25s ease;
+      box-sizing: border-box;
     }
     .nav_link:hover {
       color: #ecfff3;
@@ -256,6 +265,7 @@
       background-color: #082015;
       cursor: pointer;
       transition: border-color 0.25s ease;
+      box-sizing: border-box;
     }
     .nav_toggle:hover {
       border-color: #3ddc84;
@@ -267,7 +277,7 @@
     .nav_toggle-top {
       display: block;
       width: 100%;
-      height: 2px;
+      height: 0.125rem;
       border-radius: 62.5rem;
       background-color: #3ddc84;
       transition: transform 0.3s ease;
@@ -278,7 +288,7 @@
     .nav_toggle-middle {
       display: block;
       width: 100%;
-      height: 2px;
+      height: 0.125rem;
       border-radius: 62.5rem;
       background-color: #3ddc84;
       transition: opacity 0.2s ease;
@@ -289,7 +299,7 @@
     .nav_toggle-bottom {
       display: block;
       width: 100%;
-      height: 2px;
+      height: 0.125rem;
       border-radius: 62.5rem;
       background-color: #3ddc84;
       transition: transform 0.3s ease;
@@ -308,6 +318,7 @@
       align-items: center;
       background-color: #04140c;
       background-image: radial-gradient(circle at 75% 35%, rgba(61, 220, 132, 0.18), rgba(4, 20, 12, 0) 55%);
+      box-sizing: border-box;
     }
     .hero_grid-lines {
       position: absolute;
@@ -315,7 +326,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background-image: linear-gradient(rgba(61, 220, 132, 0.06) 1px, rgba(61, 220, 132, 0) 1px), linear-gradient(90deg, rgba(61, 220, 132, 0.06) 1px, rgba(61, 220, 132, 0) 1px);
+      background-image: linear-gradient(rgba(61, 220, 132, 0.06) 0.0625rem, rgba(61, 220, 132, 0) 0.0625rem), linear-gradient(90deg, rgba(61, 220, 132, 0.06) 0.0625rem, rgba(61, 220, 132, 0) 0.0625rem);
       background-size: 4.5rem 4.5rem;
       pointer-events: none;
     }
@@ -367,7 +378,9 @@
     .hero_title-line {
       display: block;
       overflow: hidden;
-      padding-bottom: 0.04em;
+      padding-top: 0.1em;
+      padding-bottom: 0.06em;
+      box-sizing: border-box;
     }
     .hero_title-inner {
       display: block;
@@ -396,6 +409,7 @@
       padding: 1.75rem 0 0;
       border-top: 1px solid #174a30;
       list-style: none;
+      box-sizing: border-box;
     }
     .hero_stat {
       display: flex;
@@ -423,6 +437,7 @@
       border: 1px solid #174a30;
       border-radius: 1.5rem;
       background-color: #082015;
+      box-sizing: border-box;
     }
     .hero_image {
       display: block;
@@ -454,6 +469,7 @@
       background-color: rgba(8, 32, 21, 0.75);
       backdrop-filter: blur(0.875rem);
       box-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.35);
+      box-sizing: border-box;
     }
     .hero_card-dot {
       flex: none;
@@ -505,6 +521,7 @@
       color: #03140a;
       text-align: center;
       box-shadow: 0 1rem 3rem rgba(61, 220, 132, 0.35);
+      box-sizing: border-box;
     }
     .hero_badge-number {
       font-family: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
@@ -524,6 +541,7 @@
       padding-top: 2.5rem;
       padding-bottom: 2.5rem;
       background-color: #04140c;
+      box-sizing: border-box;
     }
     .marquee_band {
       width: 104%;
@@ -533,6 +551,7 @@
       padding-bottom: 1.1rem;
       background-color: #3ddc84;
       transform: rotate(-2deg);
+      box-sizing: border-box;
     }
     .marquee_track {
       display: flex;
@@ -546,6 +565,7 @@
       margin: 0;
       padding: 0 1.25rem;
       list-style: none;
+      box-sizing: border-box;
     }
     .marquee_item {
       color: #03140a;
@@ -584,6 +604,7 @@
     }
     .features_header-right {
       padding-bottom: 1.25rem;
+      box-sizing: border-box;
     }
     .features_grid {
       display: grid;
@@ -601,6 +622,7 @@
       border-radius: 1.25rem;
       background-color: #082015;
       transition: border-color 0.3s ease, transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+      box-sizing: border-box;
     }
     .features_card:hover {
       border-color: #3ddc84;
@@ -633,6 +655,7 @@
       font-family: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
       font-size: 3rem;
       line-height: 1;
+      box-sizing: border-box;
     }
     .features_card-title {
       position: relative;
@@ -695,6 +718,7 @@
       border: 1px solid #174a30;
       border-radius: 62.5rem;
       background-color: #082015;
+      box-sizing: border-box;
     }
     .programs_filter {
       flex: 0 0 auto;
@@ -711,6 +735,7 @@
       white-space: nowrap;
       cursor: pointer;
       transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
+      box-sizing: border-box;
     }
     .programs_filter:hover {
       background-color: rgba(61, 220, 132, 0.12);
@@ -753,6 +778,7 @@
       border-radius: 1.25rem;
       background-color: #082015;
       transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, background-color 0.35s ease;
+      box-sizing: border-box;
     }
     .programs_card-inner:hover {
       transform: translateY(-0.5rem);
@@ -804,6 +830,7 @@
       line-height: 1.2;
       letter-spacing: 0.14em;
       text-transform: uppercase;
+      box-sizing: border-box;
     }
     .programs_card-body {
       display: flex;
@@ -811,6 +838,7 @@
       flex-direction: column;
       gap: 1rem;
       padding: 1.75rem;
+      box-sizing: border-box;
     }
     .programs_card-title {
       margin: 0;
@@ -836,6 +864,7 @@
       padding: 1rem 0 0;
       border-top: 1px solid #174a30;
       list-style: none;
+      box-sizing: border-box;
     }
     .programs_meta-item {
       display: flex;
@@ -930,6 +959,7 @@
       border-radius: 1.25rem;
       background-color: #082015;
       transition: border-color 0.35s ease, box-shadow 0.35s ease;
+      box-sizing: border-box;
     }
     .trainers_card-inner:hover {
       border-color: #3ddc84;
@@ -989,6 +1019,7 @@
       visibility: hidden;
       transform: translateY(1.5rem);
       transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s ease;
+      box-sizing: border-box;
     }
     .trainers_bio.is-open {
       opacity: 1;
@@ -1024,6 +1055,7 @@
       color: #b9e6ca;
       font-size: 0.8125rem;
       line-height: 1.4;
+      box-sizing: border-box;
     }
     .trainers_content {
       display: flex;
@@ -1031,6 +1063,7 @@
       flex-direction: column;
       gap: 0.375rem;
       padding: 1.5rem;
+      box-sizing: border-box;
     }
     .trainers_specialty {
       margin: 0;
@@ -1064,6 +1097,7 @@
       gap: 0.75rem;
       margin-top: auto;
       padding-top: 1.25rem;
+      box-sizing: border-box;
     }
     .trainers_bio-toggle {
       padding: 0.65rem 1.1rem;
@@ -1080,6 +1114,7 @@
       white-space: nowrap;
       cursor: pointer;
       transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+      box-sizing: border-box;
     }
     .trainers_bio-toggle:hover {
       border-color: #3ddc84;
@@ -1113,6 +1148,7 @@
       letter-spacing: 0.04em;
       text-decoration: none;
       transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+      box-sizing: border-box;
     }
     .trainers_social-link:hover {
       border-color: #3ddc84;
@@ -1129,7 +1165,6 @@
     .section_schedule {
       position: relative;
       overflow: hidden;
-      background-image: linear-gradient(180deg, #04140c 0%, #061a10 100%);
       background-color: #04140c;
     }
     .schedule_glow {
@@ -1198,6 +1233,7 @@
       grid-template-columns: repeat(7, minmax(0, 1fr));
       gap: 0.5rem;
       margin-bottom: 1.5rem;
+      box-sizing: border-box;
     }
     .schedule_tab {
       position: relative;
@@ -1214,6 +1250,7 @@
       text-align: left;
       cursor: pointer;
       transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+      box-sizing: border-box;
     }
     .schedule_tab:hover {
       border-color: #3ddc84;
@@ -1255,6 +1292,7 @@
       line-height: 1.2;
       letter-spacing: 0.1em;
       text-transform: uppercase;
+      box-sizing: border-box;
     }
     .schedule_tab-badge.is-visible {
       display: inline-flex;
@@ -1276,7 +1314,7 @@
     .schedule_list {
       display: flex;
       flex-direction: column;
-      gap: 1px;
+      gap: 0.0625rem;
       margin: 0;
       padding: 0;
       overflow: hidden;
@@ -1284,6 +1322,7 @@
       border-radius: 1.25rem;
       background-color: #174a30;
       list-style: none;
+      box-sizing: border-box;
     }
     .schedule_item {
       display: grid;
@@ -1294,6 +1333,7 @@
       padding: 1.375rem 1.75rem;
       background-color: #082015;
       transition: background-color 0.25s ease;
+      box-sizing: border-box;
     }
     .schedule_item:hover {
       background-color: #0c2b1c;
@@ -1424,6 +1464,7 @@
       border: 1px solid #174a30;
       border-radius: 1.25rem;
       background: linear-gradient(160deg, #0c2b1c 0%, #082015 55%, #061a10 100%);
+      box-sizing: border-box;
     }
     .calc_tabs {
       display: inline-flex;
@@ -1432,6 +1473,7 @@
       border: 1px solid #174a30;
       border-radius: 62.5rem;
       background-color: #04140c;
+      box-sizing: border-box;
     }
     .calc_tab {
       padding: 0.75rem 1.5rem;
@@ -1448,6 +1490,7 @@
       white-space: nowrap;
       cursor: pointer;
       transition: background-color 0.25s ease, color 0.25s ease;
+      box-sizing: border-box;
     }
     .calc_tab:hover {
       color: #ecfff3;
@@ -1516,6 +1559,7 @@
       line-height: 1.4;
       appearance: textfield;
       transition: border-color 0.25s ease, background-color 0.25s ease;
+      box-sizing: border-box;
     }
     .calc_number:hover {
       border-color: #3ddc84;
@@ -1580,6 +1624,7 @@
       appearance: none;
       cursor: pointer;
       transition: border-color 0.25s ease, background-color 0.25s ease;
+      box-sizing: border-box;
     }
     .calc_select:hover {
       border-color: #3ddc84;
@@ -1628,6 +1673,7 @@
       border: 1px solid #174a30;
       border-radius: 1.25rem;
       background-color: #04140c;
+      box-sizing: border-box;
     }
     .calc_result-glow {
       position: absolute;
@@ -1701,6 +1747,7 @@
       gap: 1rem;
       padding-top: 1.5rem;
       border-top: 1px solid #174a30;
+      box-sizing: border-box;
     }
     .calc_percent-title {
       margin: 0;
@@ -1770,6 +1817,7 @@
       line-height: 1.3;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      box-sizing: border-box;
     }
     .calc_gauge-wrap {
       position: relative;
@@ -1781,6 +1829,7 @@
     .calc_gauge {
       position: relative;
       padding: 0.5rem 0;
+      box-sizing: border-box;
     }
     .calc_gauge-bar {
       display: flex;
@@ -1897,6 +1946,7 @@
       border: 1px solid #174a30;
       border-radius: 62.5rem;
       background-color: #082015;
+      box-sizing: border-box;
     }
     .pricing_billing-label {
       color: #7fb895;
@@ -1931,6 +1981,7 @@
       border-radius: 62.5rem;
       background-color: #04140c;
       transition: background-color 0.25s ease, border-color 0.25s ease;
+      box-sizing: border-box;
     }
     .pricing_switch-track.is-on {
       border-color: #3ddc84;
@@ -1960,6 +2011,7 @@
       font-weight: 800;
       line-height: 1.2;
       letter-spacing: 0.04em;
+      box-sizing: border-box;
     }
     .pricing_sr-only {
       position: absolute;
@@ -1989,6 +2041,7 @@
       border-radius: 1.25rem;
       background-color: #082015;
       transition: transform 0.35s ease, border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.35s ease;
+      box-sizing: border-box;
     }
     .pricing_card:hover {
       transform: translateY(-0.375rem);
@@ -2016,6 +2069,7 @@
       white-space: nowrap;
       transform: translateX(-50%);
       box-shadow: 0 0 1.5rem rgba(61, 220, 132, 0.25);
+      box-sizing: border-box;
     }
     .pricing_plan-name {
       margin: 0;
@@ -2070,6 +2124,7 @@
       height: 0;
       margin: 2rem 0;
       border-top: 1px solid #174a30;
+      box-sizing: border-box;
     }
     .pricing_feature-list {
       display: flex;
@@ -2153,6 +2208,7 @@
       border: 1px solid #174a30;
       border-radius: 1.25rem;
       background-color: #082015;
+      box-sizing: border-box;
     }
     .testimonials_score-value {
       margin: 0;
@@ -2203,6 +2259,7 @@
       border-radius: 1.25rem;
       background-color: #082015;
       transition: border-color 0.25s ease, background-color 0.25s ease;
+      box-sizing: border-box;
     }
     .testimonials_slide:hover {
       border-color: #3ddc84;
@@ -2250,6 +2307,7 @@
       line-height: 1.3;
       letter-spacing: 0.06em;
       text-transform: uppercase;
+      box-sizing: border-box;
     }
     .testimonials_author {
       display: flex;
@@ -2257,6 +2315,7 @@
       gap: 0.875rem;
       padding-top: 1.5rem;
       border-top: 1px solid #174a30;
+      box-sizing: border-box;
     }
     .testimonials_avatar-wrap {
       position: relative;
@@ -2266,6 +2325,7 @@
       overflow: hidden;
       border: 2px solid #3ddc84;
       border-radius: 50%;
+      box-sizing: border-box;
     }
     .testimonials_avatar {
       display: block;
@@ -2327,6 +2387,7 @@
       background-clip: content-box;
       cursor: pointer;
       transition: width 0.3s ease, background-color 0.25s ease;
+      box-sizing: border-box;
     }
     .testimonials_dot:hover {
       background-color: #7fb895;
@@ -2360,6 +2421,7 @@
       font: inherit;
       cursor: pointer;
       transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+      box-sizing: border-box;
     }
     .testimonials_arrow:hover {
       border-color: #3ddc84;
@@ -2427,6 +2489,7 @@
       flex-wrap: wrap;
       gap: 1rem;
       padding-top: 0.5rem;
+      box-sizing: border-box;
     }
     .faq_help {
       display: flex;
@@ -2437,6 +2500,7 @@
       border: 1px solid #174a30;
       border-radius: 1.25rem;
       background-color: #082015;
+      box-sizing: border-box;
     }
     .faq_help-label {
       margin: 0;
@@ -2479,6 +2543,7 @@
       border-radius: 1.25rem;
       background-color: #082015;
       transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      box-sizing: border-box;
     }
     .faq_item:hover {
       border-color: rgba(61, 220, 132, 0.45);
@@ -2513,6 +2578,7 @@
       text-align: left;
       cursor: pointer;
       transition: color 0.25s ease;
+      box-sizing: border-box;
     }
     .faq_question:hover {
       color: #6ef0a6;
@@ -2533,6 +2599,7 @@
       border-radius: 62.5rem;
       background-color: #04140c;
       transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+      box-sizing: border-box;
     }
     .faq_icon.is-open {
       border-color: #3ddc84;
@@ -2575,6 +2642,7 @@
     }
     .faq_answer-inner {
       padding: 0 5.75rem 1.75rem 1.75rem;
+      box-sizing: border-box;
     }
     .faq_answer-text {
       margin: 0;
@@ -2645,6 +2713,7 @@
       border-radius: 1rem;
       background-color: #082015;
       transition: border-color 0.25s ease, background-color 0.25s ease, transform 0.25s ease;
+      box-sizing: border-box;
     }
     .contact_detail:hover {
       border-color: rgba(61, 220, 132, 0.45);
@@ -2679,6 +2748,7 @@
       text-decoration: none;
       border-bottom: 1px solid rgba(61, 220, 132, 0.45);
       transition: color 0.25s ease, border-color 0.25s ease;
+      box-sizing: border-box;
     }
     .contact_detail-link:hover {
       color: #6ef0a6;
@@ -2708,7 +2778,7 @@
       right: 0;
       bottom: 0;
       left: 0;
-      background-image: linear-gradient(rgba(61, 220, 132, 0.07) 1px, rgba(4, 20, 12, 0) 1px), linear-gradient(90deg, rgba(61, 220, 132, 0.07) 1px, rgba(4, 20, 12, 0) 1px);
+      background-image: linear-gradient(rgba(61, 220, 132, 0.07) 0.0625rem, rgba(4, 20, 12, 0) 0.0625rem), linear-gradient(90deg, rgba(61, 220, 132, 0.07) 0.0625rem, rgba(4, 20, 12, 0) 0.0625rem);
       background-size: 2rem 2rem;
     }
     .contact_map-park {
@@ -2720,6 +2790,7 @@
       border-radius: 0.75rem;
       background-color: rgba(61, 220, 132, 0.1);
       border: 1px solid rgba(61, 220, 132, 0.18);
+      box-sizing: border-box;
     }
     .contact_map-river {
       position: absolute;
@@ -2769,6 +2840,7 @@
       border: 2px solid rgba(61, 220, 132, 0.6);
       border-radius: 62.5rem;
       background-color: rgba(61, 220, 132, 0.12);
+      box-sizing: border-box;
     }
     .contact_map-dot {
       position: absolute;
@@ -2812,6 +2884,7 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
       white-space: nowrap;
+      box-sizing: border-box;
     }
     .contact_map-bar {
       display: flex;
@@ -2820,6 +2893,7 @@
       gap: 1rem;
       padding: 1rem 1.25rem;
       border-top: 1px solid #174a30;
+      box-sizing: border-box;
     }
     .contact_map-address {
       margin: 0;
@@ -2853,6 +2927,7 @@
       border-radius: 1.25rem;
       background-image: linear-gradient(160deg, #0c2b1c 0%, #082015 60%);
       box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.35), 0 0 3rem rgba(61, 220, 132, 0.12);
+      box-sizing: border-box;
     }
     .contact_form {
       display: flex;
@@ -2969,6 +3044,7 @@
       border-bottom: 2px solid #3ddc84;
       transform: rotate(45deg);
       pointer-events: none;
+      box-sizing: border-box;
     }
     .contact_error {
       margin: 0;
@@ -3025,6 +3101,7 @@
       border: 1px solid rgba(61, 220, 132, 0.55);
       border-radius: 0.75rem;
       background-color: rgba(61, 220, 132, 0.12);
+      box-sizing: border-box;
     }
     .contact_success.is-visible {
       display: flex;
@@ -3077,6 +3154,7 @@
       visibility: hidden;
       transform: translateY(1rem);
       transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease, background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+      box-sizing: border-box;
     }
     .backtop_button.is-visible {
       opacity: 1;
@@ -3132,6 +3210,7 @@
       z-index: 1;
       padding-top: 5.5rem;
       padding-bottom: 2rem;
+      box-sizing: border-box;
     }
     .footer_top {
       display: grid;
@@ -3140,6 +3219,7 @@
       align-items: end;
       padding-bottom: 3.5rem;
       border-bottom: 1px solid #174a30;
+      box-sizing: border-box;
     }
     .footer_intro {
       display: flex;
@@ -3188,6 +3268,7 @@
       border: 1px solid #174a30;
       border-radius: 62.5rem;
       background-color: #082015;
+      box-sizing: border-box;
     }
     .footer_newsletter-input {
       flex: 1;
@@ -3236,6 +3317,7 @@
       gap: 2.5rem;
       padding-top: 3.5rem;
       padding-bottom: 3.5rem;
+      box-sizing: border-box;
     }
     .footer_column {
       display: flex;
@@ -3306,6 +3388,7 @@
       overflow: hidden;
       padding-top: 1rem;
       border-top: 1px solid #174a30;
+      box-sizing: border-box;
     }
     .footer_wordmark {
       margin: 0;
@@ -3328,6 +3411,7 @@
       margin-top: 1.5rem;
       padding-top: 1.5rem;
       border-top: 1px solid #174a30;
+      box-sizing: border-box;
     }
     .footer_copyright {
       margin: 0;
