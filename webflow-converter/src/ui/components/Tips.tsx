@@ -1,17 +1,17 @@
 const NATIVE = [
-  'Elements and semantic tags (section, nav, h1-h6, p, a, img, lists, forms)',
+  'Elements and semantic tags (section, nav, h1-h6, p, a, button, img, lists)',
   'Class styles, plus combo classes from .block.is-modifier',
   ':hover, :focus and :active on the class itself',
-  'max-width media at 991 / 767 / 479px (tablet, landscape, portrait)',
+  'Media at 991 / 767 / 479px, max-width or min-width (tablet, landscape, portrait)',
   'Attributes such as data-*, aria-* and alt, so your JS hooks keep working',
 ];
 
 const EMBED = [
   'Tag, ID, descendant, child and sibling selectors',
   '::before / ::after, @keyframes, :root variables',
-  'Other media queries (min-width, odd breakpoints)',
+  'Other media queries (odd breakpoints, orientation, prefers-*)',
   'All <script> code and CDN libraries (GSAP, Three.js, Lenis)',
-  'Inline SVG and elements Webflow has no native match for',
+  'SVG, canvas, video, iframe, forms and tables',
 ];
 
 /**

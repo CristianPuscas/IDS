@@ -217,6 +217,12 @@ describe('links, buttons, images', () => {
     expect(urls).toEqual(['mailto:a@b.c', 'tel:+123', '#pricing', '#']);
   });
 
+  it('#anchors to an element in the fragment become section links to its node id', () => {
+    const res = html('<div><a href="#pricing">Go</a><section id="pricing">P</section></div>');
+    const section = first(res, 'Section');
+    expect(first(res, 'Link').data!.link).toEqual({ mode: 'section', domId: section._id });
+  });
+
   it('a link without href has no url', () => {
     const res = html('<a class="x">x</a>');
     expect(first(res, 'Link').data!.link).toEqual({ mode: 'external' });

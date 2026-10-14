@@ -49,7 +49,8 @@ describe('class -> native style', () => {
   it('wraps var() values in @raw and puts :root variables in the embed', () => {
     const res = run('<a class="link">x</a>', ':root { --brand: #146ef5; --space: 1rem; } .link { color: var(--brand); padding: var(--space); }');
     expect(style(res, 'link').styleLess).toContain('color: @raw<|var(--brand)|>;');
-    expect(style(res, 'link').styleLess).toContain('padding-left: @raw<|var(--space)|>;');
+    // A lone var() may hold several values, so the shorthand is kept (wrapped in @raw).
+    expect(style(res, 'link').styleLess).toContain('padding: @raw<|var(--space)|>;');
     expect(embeddedCss(res)).toContain(':root {\n  --brand: #146ef5;\n  --space: 1rem;\n}');
     expect(res.warnings.some((w) => w.code === 'css-variable')).toBe(true);
   });
@@ -101,6 +102,28 @@ describe('combo classes', () => {
     const res = run('<div class="tag"></div><div class="card tag"></div>', '.tag { color: red }');
     expect(style(res, 'tag', '').styleLess).toBe('color: red;');
     expect(style(res, 'tag', '&').styleLess).toBe('color: red;');
+  });
+
+  it('a later base rule beats an earlier modifier rule of equal specificity', () => {
+    // Browser: .b and .a tie on specificity, .a comes later -> blue. The combo must not force red.
+    const res = run('<div class="a b">x</div>', '.b { color: red; margin-top: 1px } .a { color: blue }');
+    expect(style(res, 'a').styleLess).toBe('color: blue;');
+    expect(style(res, 'b', '&').styleLess).toBe('margin-top: 1px;');
+  });
+
+  it('a combo value carries the parent breakpoint overrides it would otherwise mask', () => {
+    // Browser: .a@medium (later) beats .b at <=991px. In Webflow .a.b outranks .a at every width,
+    // so the combo must restate the medium value.
+    const res = run('<div class="a b">x</div>', '.b { color: red } @media (max-width: 991px) { .a { color: blue } }');
+    expect(style(res, 'a').variants).toEqual({ medium: { styleLess: 'color: blue;' } });
+    const combo = style(res, 'b', '&');
+    expect(combo.styleLess).toBe('color: red;');
+    expect(combo.variants).toEqual({ medium: { styleLess: 'color: blue;' } });
+  });
+
+  it('a combo with nothing new stays empty', () => {
+    const res = run('<div class="a b">x</div>', '.a { color: blue } .b { color: blue }');
+    expect(style(res, 'b', '&').styleLess).toBe('');
   });
 
   it('keeps JS-toggled combos (not present in the HTML) in the embed', () => {

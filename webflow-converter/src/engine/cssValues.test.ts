@@ -82,6 +82,24 @@ describe('expandRepeat', () => {
 });
 
 describe('prepareDeclaration', () => {
+  it('keeps side/corner/gap shorthands whole when a var() may stand for several values', () => {
+    expect(expandShorthand('padding', 'var(--p)')).toEqual([{ property: 'padding', value: 'var(--p)' }]);
+    expect(expandShorthand('margin', 'var(--m) 0')).toEqual([{ property: 'margin', value: 'var(--m) 0' }]);
+    expect(expandShorthand('border-radius', 'var(--r)')).toEqual([{ property: 'border-radius', value: 'var(--r)' }]);
+    expect(expandShorthand('gap', 'var(--g)')).toEqual([{ property: 'gap', value: 'var(--g)' }]);
+    expect(prepareDeclaration({ property: 'padding', value: 'var(--p)', important: false })).toEqual({
+      kind: 'native',
+      decls: [{ property: 'padding', value: '@raw<|var(--p)|>' }],
+    });
+    // With one token per slot the positions are unambiguous, so it still expands.
+    expect(expandShorthand('padding', 'var(--a) var(--b) 0 1rem').map((d) => d.property)).toEqual([
+      'padding-top',
+      'padding-right',
+      'padding-bottom',
+      'padding-left',
+    ]);
+  });
+
   it('wraps var() values in @raw', () => {
     expect(prepareDeclaration({ property: 'color', value: 'var(--accent)', important: false })).toEqual({
       kind: 'native',

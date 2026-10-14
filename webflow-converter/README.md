@@ -7,9 +7,106 @@ elements and class styles. CSS and JS that Webflow cannot represent natively go 
 
 Everything runs in the browser. Nothing is uploaded.
 
-- Format reference: [`docs/webflow-xscp-spec.md`](docs/webflow-xscp-spec.md). It covers what is verified and what is uncertain.
-- Browser: use a Chromium browser (Chrome, Edge, Arc, Brave). Safari does not pass the
-  `application/json` clipboard entry to another site (spec section 4).
+Format reference: [`docs/webflow-xscp-spec.md`](docs/webflow-xscp-spec.md). It covers what is
+verified and what is uncertain.
+
+> **Validate by pasting.** Webflow does not document this clipboard format. The output follows real
+> Designer dumps and passes structural validation and an automated browser test, but the only real
+> proof is a paste into the Webflow Designer. Test each new kind of input on a scratch page first.
+
+## Features
+
+- Two input modes: **All-in-One** (one HTML file with `<style>` and `<script>`) and **Separate
+  Files** (HTML, CSS and JS editors). Each has a "Load example" button.
+- Native Webflow elements: Div Blocks, Sections, Headings, Paragraphs, Text Links, Link Blocks,
+  Buttons, Images, Lists, and inline Span/Strong/Emphasized/Superscript/Subscript/Line Break.
+- Native class styles: base classes, combo classes (`.a.b`, with the Designer's `children` chain),
+  state variants and breakpoint variants. Shorthands are expanded to the longhands the Designer
+  writes, and `repeat(N, …)` grid tracks are expanded.
+- Mobile-first `min-width` CSS is re-encoded desktop-first onto Webflow's breakpoints.
+- In-page links (`href="#id"`) to an element inside the pasted tree become Webflow section links.
+- Everything else goes into Code Embeds, split to stay under 10,000 characters each: leftover CSS
+  as `<style>` (first child of the root) and JS as `<script>` (last child).
+- Structural validation before copying, then a summary with node, class and embed counts, plus
+  warnings that explain every piece sent to an embed.
+- Fallbacks: Download JSON, and copy the raw JSON as text for debugging.
+- An "ideal AI prompt" you can give Claude or ChatGPT so the code it writes converts cleanly.
+
+## How to use
+
+1. Open the app in a Chromium browser (Chrome, Edge, Arc or Brave).
+2. Paste your code into the All-in-One tab, or into the HTML/CSS/JS editors of the Separate tab.
+3. Press **Convert & Copy to Webflow** (Ctrl/Cmd+Enter). A green toast confirms the copy.
+4. In the Webflow Designer, select an element (the Body, or a container you want to paste into)
+   and press **Ctrl/Cmd+V**. Webflow refuses the paste if nothing is selected.
+5. Check the warnings list. Scripts in embeds do not run on the Designer canvas, so check them in
+   Preview or on the published site. Add any custom fonts to the site.
+
+## What becomes native and what goes into an embed
+
+| Input | Result in Webflow |
+|---|---|
+| `div`, `header`, `footer`, `nav`, `main`, `article`, `aside`, `figure`, `address` | Div Block with that tag (Text Block when it holds text directly) |
+| `section` | Section |
+| `h1`–`h6`, `p`, `blockquote` | Heading, Paragraph, Block Quote |
+| `a` | Text Link; Link Block when it wraps block elements or images; Button when it looks like one (`btn`, `button`, `*-btn` classes or `role="button"`) |
+| `button` | Webflow Button (an `<a>` with `role="button"`); Link Block if it wraps block elements |
+| `img` | Image that keeps its original URL (hot-linked, no asset record) |
+| `ul`/`ol`, `li` | List, List Item |
+| `span`, `strong`/`b`, `em`/`i`, `sup`, `sub`, `br` | Span, Bold, Italic, Superscript, Subscript, Line Break |
+| Other tags (`small`, `code`, `pre`, `label`, `time`, `hr`…) | Custom Element (DOM node) |
+| `svg`, `canvas`, `video`, `audio`, `iframe`, `picture`, forms and form controls, `table`… | Code Embed with the element's HTML |
+| `.a { }` | Base class |
+| `.a.b { }` | Combo class `b` on `a`, only for combinations present in the HTML |
+| `:hover`, `:active`, `:focus`, `:focus-visible`, `:visited`, `::placeholder`, `.w--current`, `.w--open` | State variants (`main_hover`, `main_active` for "Pressed"…) |
+| `@media (max-width: 991/767/479px)` and `(min-width: 992/768/480px)`, ±20px | `medium` / `small` / `tiny` variants |
+| `style="…"` attributes | A generated class (`inline-style-N`) |
+| `var(--x)` values | Kept in the class as `@raw<\|var(--x)\|>` (the variables themselves go to the embed) |
+| Tag, ID, attribute, descendant, child and sibling selectors; `::before`/`::after`; other pseudo-classes | `<style>` embed |
+| `:root`/custom property definitions, `@keyframes`, `@font-face`, `@import`, other `@media` | `<style>` embed |
+| Vendor-prefixed properties or values, `!important` | `<style>` embed |
+| Class combinations not on any element (usually toggled by JS) | `<style>` embed |
+| `<script>` (inline or `src`) and the JS editor | `<script>` embed, last child of the root |
+| `<link rel="stylesheet">` | Embed, first child of the root |
+
+The payload is always one tree. If the input has several top-level elements or needs embeds, they
+are wrapped in one classless Div Block.
+
+## Browser support
+
+| Browser | Status |
+|---|---|
+| Chrome, Edge, Arc, Brave (Chromium) | Supported. This is the tested path. |
+| Safari | May not work. Safari does not pass custom clipboard types such as `application/json` to another site, so Webflow can report an empty clipboard (spec section 4). The app shows a warning. |
+| Firefox | Untested. |
+
+## Known limitations
+
+- **Images** keep their original URL with no Webflow asset record (spec 2.4: fabricating asset
+  records is risky). They hot-link from the original host and do not appear in the Assets panel.
+  Relative URLs will not resolve. `srcset`/`sizes` are dropped.
+- **Buttons** use Webflow's Button element, so they pick up the `.w-button` defaults (blue
+  background, padding, white text) wherever your CSS does not override them.
+- **Forms** go into a Code Embed. They render, but Webflow form handling (submissions,
+  success/error states) is not wired up. Rebuild them with native Form elements if you need it.
+- **Code Embed sizing**: an embedded `canvas`, `svg` or `video` sits inside Webflow's `.w-embed`
+  wrapper div, so `height: 100%` on it resolves against that wrapper and can collapse.
+- **Section links** are used only when the `#id` target is inside the pasted tree. Other anchors
+  stay plain `#id` URLs. The section-link shape comes from real dumps but has not been
+  paste-tested here.
+- **`var()` in side shorthands**: `padding: var(--x)` and similar (fewer tokens than sides) is kept
+  as one shorthand in `@raw<|…|>`, because the variable may hold several values. The Style panel
+  shows it as a raw value.
+- **Cascade across states**: combo classes reproduce the cascade per state and per breakpoint,
+  but conflicts between a combo's base value and the parent's `:hover` (or other state) value
+  are not reconciled.
+- **Class names** with uppercase letters or escaped characters only get a warning. Webflow
+  slugifies class names on publish, so CSS or JS in embeds that references the original name may
+  stop matching.
+- **Breakpoints**: `min-width` 1280/1440/1920 and odd widths stay in the `<style>` embed, because
+  pasting `large`/`xl`/`xxl` variants adds breakpoints to the whole site.
+- **Scripts** do not run on the Designer canvas. Webflow Interactions are not generated.
+- The format is undocumented and Webflow can change it. See the spec for every uncertain point.
 
 ## Run
 
@@ -42,6 +139,9 @@ webflow-converter/
     │   ├── htmlParser.ts       parseHtml(): DOM + extracted <style>/<script>/<link>
     │   ├── cssParser.ts        parseCss(): flat rules (with @media) + at-rules; parseDeclarations()
     │   ├── styleMapper.ts      mapStyles(): CSS -> WfStyle registry + leftover CSS for embeds
+    │   ├── selectors.ts        classifySelector(): native class/combo/state selector or embed
+    │   ├── media.ts            mediaToBands(): @media -> Webflow breakpoint bands
+    │   ├── cssValues.ts        prepareDeclaration(): longhand expansion, @raw, embed-only values
     │   ├── nodeBuilder.ts      buildNodes(): DOM -> pre-order WfNode list under one root Block
     │   ├── jsExtractor.ts      extractJs(): <script> tags + JS editor -> ordered bundle
     │   ├── embedBuilder.ts     HtmlEmbed builders for <style>/<script>/raw code, with size splitting
@@ -92,10 +192,10 @@ type ConvertInput =
 
 interface ConvertOptions {
   breakpointTolerancePx: number;   // 20: max-width media within ±20px of 991/767/479 maps to medium/small/tiny
-  embedPlacement: 'root';          // embeds are appended as children of the root wrapper
+  embedPlacement: 'root';          // embeds are children of the root wrapper (CSS first, JS last)
   keepUnsupportedInEmbed: boolean; // true: unmappable CSS goes into a <style> embed
   maxEmbedChars: number;           // 10000: split larger embeds
-  includeLargeBreakpoints: boolean;// false: min-width rules are not emitted as large/xl/xxl
+  includeLargeBreakpoints: boolean;// false: min-width 1280/1440/1920 rules go to the embed, not large/xl/xxl
 }
 
 interface ConvertResult {
@@ -106,11 +206,15 @@ interface ConvertResult {
 }
 ```
 
-## Status
+## Testing
 
-The scaffold is in place. `clipboard.ts`, `ids.ts` and `validate.ts` are complete. The other engine
-modules are minimal stubs, and for now the converter wraps the HTML in Code Embeds. The engine work
-replaces them with native element and style mapping, following checklist section 7 of the spec.
+- `npm test` runs the unit tests for the engine and UI, including fixture-based end-to-end
+  conversions validated with `validateXscp()`.
+- A browser check (Playwright, not a project dependency) has been run against `npm run preview`.
+  It loads each tab's example, presses Convert, captures the `application/json` clipboard entry
+  from the copy event and checks the invariants: single pre-order root, unique UUID ids, no
+  dangling child or class references, combo chains, `styleLess` format, variant keys and embed
+  meta.
 
 Credits: the converter approach and prompt guidance follow Timothy Ricks' "AI To Webflow" video
 (analysis in `../analize/youtube-skB7npZnwcc.md`).

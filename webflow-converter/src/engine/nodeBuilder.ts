@@ -26,7 +26,7 @@ import { parseDeclarations } from './cssParser';
 import { buildEmbedNode } from './embedBuilder';
 import { uuid } from './ids';
 import type { ClassUsage, StyleRegistry } from './styleMapper';
-import type { ConvertOptions, ConvertWarning, WfElementNode, WfLink, WfNode, WfNodeData, WfXattr } from './types';
+import { isTextNode, type ConvertOptions, type ConvertWarning, type WfElementNode, type WfLink, type WfNode, type WfNodeData, type WfXattr } from './types';
 
 /** Result of `buildNodes`. */
 export interface NodeBuildResult {
@@ -97,6 +97,8 @@ interface Ctx {
   embeddedTags: Map<string, number>;
   domTags: Map<string, number>;
   notes: Set<string>;
+  /** Links whose href is `#id`, resolved to section links once every node exists. */
+  anchorLinks: { node: WfElementNode; fragment: string }[];
 }
 
 /**
@@ -124,6 +126,7 @@ export function buildNodes(
     embeddedTags: new Map(),
     domTags: new Map(),
     notes: new Set(),
+    anchorLinks: [],
   };
 
   const root = createBlock('div', registry.resolve(extra.rootClasses ?? []));
@@ -145,6 +148,8 @@ export function buildNodes(
     const id = buildElement(ctx, node as Element);
     if (id) root.children.push(id);
   }
+
+  resolveAnchorLinks(ctx);
 
   for (const [tag, n] of ctx.embeddedTags) {
     ctx.warnings.push({
@@ -291,7 +296,7 @@ function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', classes: string[]
   if (tag === 'a') {
     const href = el.getAttribute('href');
     if (href !== null && href.trim() !== '') {
-      // In-page anchors stay as plain "#id" URLs: `{mode:"section"}` needs Webflow-side ids (spec 2.4).
+      // `#id` anchors become section links later if the target is in the fragment (resolveAnchorLinks).
       link.url = /^\s*javascript:/i.test(href) ? '#' : href.trim();
     }
     const target = el.getAttribute('target');
@@ -304,6 +309,10 @@ function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', classes: string[]
     link,
     ...commonData(ctx, el, id, reserved, extraAttrs),
   });
+  if (tag === 'a') {
+    const fragment = /^#(.+)$/.exec((el.getAttribute('href') ?? '').trim());
+    if (fragment) ctx.anchorLinks.push({ node, fragment: fragment[1]! });
+  }
   if (tag === 'button' && !ctx.notes.has('button')) {
     ctx.notes.add('button');
     ctx.warnings.push({
@@ -314,6 +323,31 @@ function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', classes: string[]
     });
   }
   return emit(ctx, node, el, !hasBlockChild);
+}
+
+/**
+ * `href="#id"` pointing at an element inside the pasted tree -> `{mode:"section", domId:<node _id>}`,
+ * the in-page anchor shape of real Designer dumps (spec 2.4 Link). Anchors whose target is not in
+ * the fragment (or sits inside a Code Embed) stay plain `#id` URLs, since Webflow resets section
+ * links that point outside the pasted fragment (spec 2.4, S7).
+ */
+function resolveAnchorLinks(ctx: Ctx): void {
+  const byHtmlId = new Map<string, string>();
+  for (const n of ctx.nodes) {
+    if (isTextNode(n)) continue;
+    const htmlId = n.data?.attr?.id;
+    if (htmlId && !byHtmlId.has(htmlId)) byHtmlId.set(htmlId, n._id);
+  }
+  for (const { node, fragment } of ctx.anchorLinks) {
+    let target = fragment;
+    try {
+      target = decodeURIComponent(fragment);
+    } catch {
+      // Keep the raw fragment.
+    }
+    const domId = byHtmlId.get(target);
+    if (domId && node.data) node.data.link = { mode: 'section', domId };
+  }
 }
 
 /** `<img>` -> Image with an external `src` and no asset record (spec 2.4 Image). */

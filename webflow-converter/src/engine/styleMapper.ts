@@ -321,12 +321,19 @@ export function mapStyles(
     }
   }
 
-  // 4. Resolve every chain prefix.
+  // 4. Resolve every chain prefix. A prefix's target values come from *every* rule that applies to
+  // the chain (classes ⊆ prefix), in cascade order. A combo level then holds only the properties
+  // whose target differs from what its parent chain already produces (spec 3.4: combos hold the
+  // delta), but for those it carries every band: in Webflow `.a.b` outranks `.a` at all widths, so
+  // a combo value set in `main` would otherwise mask the parent's breakpoint overrides.
+  const targets = new Map<string, Map<string, Resolved>>(); // prefix key -> state -> per-band values
   for (const { classes, style } of registry.prefixes()) {
-    const last = classes[classes.length - 1]!;
-    const group = [...live].filter((c) => c.classes.includes(last) && isSubset(c.classes, classes));
+    const group = [...live].filter((c) => isSubset(c.classes, classes));
     const byState = new Map<string, Candidate[]>();
     for (const c of group) byState.set(c.state, [...(byState.get(c.state) ?? []), c]);
+    const parent = classes.length > 1 ? targets.get(classes.slice(0, -1).join(SEP)) : undefined;
+    const own = new Map<string, Resolved>();
+    targets.set(classes.join(SEP), own);
 
     const variants: WfStyle['variants'] = {};
     let styleLess = '';
@@ -351,6 +358,9 @@ export function mapStyles(
         }
         resolved = resolveBands(alive, domain);
       }
+      own.set(state, resolved);
+      const inherited = parent?.get(state);
+      if (inherited) resolved = comboDelta(resolved, inherited, domain);
       for (const [band, decls] of encodeDesktopFirst(resolved, domain)) {
         if (decls.length === 0) continue;
         const text = toStyleLess(decls);
@@ -400,6 +410,24 @@ function resolveBands(cands: Candidate[], domain: Band[]): Resolved {
         map.set(d.property, d.value);
       }
     }
+  }
+  return out;
+}
+
+/**
+ * Restricts a combo level's target values to the properties its parent chain does not already
+ * produce identically in every band. Kept properties keep all their bands (see step 4).
+ */
+function comboDelta(target: Resolved, parent: Resolved, domain: Band[]): Resolved {
+  const owned = new Set<string>();
+  for (const band of domain) {
+    const t = target.get(band)!;
+    const p = parent.get(band)!;
+    for (const [property, value] of t) if (p.get(property) !== value) owned.add(property);
+  }
+  const out: Resolved = new Map();
+  for (const band of domain) {
+    out.set(band, new Map([...target.get(band)!].filter(([property]) => owned.has(property))));
   }
   return out;
 }

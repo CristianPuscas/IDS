@@ -74,14 +74,18 @@ export function expandShorthand(property: string, value: string): NativeDecl[] {
   const same = [{ property, value }];
   const tokens = splitValueTokens(value);
   const isWide = tokens.length === 1 && WIDE_KEYWORDS.has(value.toLowerCase());
+  // A var() may stand for several values (`--space: 1rem 2rem`), so a side/corner shorthand with
+  // fewer tokens than slots cannot be expanded safely. Keep the shorthand; `wrapRaw` turns it into
+  // `@raw<|…|>`, the form real dumps use for shorthands such as `border-radius` (spec 3.5).
+  const varShort = (slots: number, toks: string[] = tokens): boolean => toks.length < slots && toks.some((t) => /var\(/i.test(t));
 
   switch (property) {
     case 'margin':
     case 'padding':
-      if (tokens.length === 0 || tokens.length > 4) return same;
+      if (tokens.length === 0 || tokens.length > 4 || varShort(4)) return same;
       return fourSides(tokens, isWide).map((v, i) => ({ property: `${property}-${SIDES[i]}`, value: v }));
     case 'inset':
-      if (tokens.length === 0 || tokens.length > 4) return same;
+      if (tokens.length === 0 || tokens.length > 4 || varShort(4)) return same;
       return fourSides(tokens, isWide).map((v, i) => ({ property: SIDES[i]!, value: v }));
     case 'margin-inline':
     case 'padding-inline':
@@ -89,7 +93,7 @@ export function expandShorthand(property: string, value: string): NativeDecl[] {
     case 'padding-block':
     case 'inset-inline':
     case 'inset-block': {
-      if (tokens.length === 0 || tokens.length > 2) return same;
+      if (tokens.length === 0 || tokens.length > 2 || varShort(2)) return same;
       const base = property.replace(/-(inline|block)$/, '');
       const [a, b] = [tokens[0]!, tokens[1] ?? tokens[0]!];
       const sides = property.endsWith('inline') ? ['left', 'right'] : ['top', 'bottom'];
@@ -115,6 +119,7 @@ export function expandShorthand(property: string, value: string): NativeDecl[] {
     case 'border-radius': {
       const [h, v] = splitTopLevel(value, '/').map((p) => splitValueTokens(p.trim()));
       if (!h || h.length === 0 || h.length > 4 || (v && (v.length === 0 || v.length > 4))) return same;
+      if (varShort(4, h) || (v && varShort(4, v))) return same;
       const hs = fourSides(h, isWide);
       const vs = v ? fourSides(v, false) : null;
       return CORNERS.map((corner, i) => ({
@@ -125,7 +130,7 @@ export function expandShorthand(property: string, value: string): NativeDecl[] {
     case 'border-width':
     case 'border-style':
     case 'border-color': {
-      if (tokens.length === 0 || tokens.length > 4) return same;
+      if (tokens.length === 0 || tokens.length > 4 || varShort(4)) return same;
       const kind = property.slice('border-'.length);
       return fourSides(tokens, isWide).map((v, i) => ({ property: `border-${SIDES[i]}-${kind}`, value: v }));
     }
@@ -156,7 +161,7 @@ export function expandShorthand(property: string, value: string): NativeDecl[] {
     }
     case 'gap':
     case 'grid-gap': {
-      if (tokens.length === 0 || tokens.length > 2) return same;
+      if (tokens.length === 0 || tokens.length > 2 || varShort(2)) return same;
       return [
         { property: 'grid-row-gap', value: tokens[0]! },
         { property: 'grid-column-gap', value: tokens[1] ?? tokens[0]! },
