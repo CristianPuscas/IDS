@@ -9,12 +9,52 @@
   --color-surface: #121216;
   --color-surface-2: #1a1a20;
   --color-line: #26262e;
-  --color-muted: #8b8b98;
+  --color-muted: #9494a1;
   --color-accent: #146ef5; /* Webflow blue */
   --color-accent-hover: #3b86f7;
   --color-ok: #22c55e;
   --color-warn: #f59e0b;
-  --color-err: #ef4444;
+  --color-err: #f05252;
+
+  --animate-toast-in: toast-in 260ms cubic-bezier(0.21, 1.02, 0.73, 1) both;
+  --animate-toast-out: toast-out 160ms ease-in both;
+  --animate-toast-progress: toast-progress linear both;
+  --animate-pop-in: pop-in 200ms ease-out both;
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes toast-out {
+    to {
+      opacity: 0;
+      transform: translateY(0.5rem) scale(0.98);
+    }
+  }
+  @keyframes toast-progress {
+    from {
+      transform: scaleX(1);
+    }
+    to {
+      transform: scaleX(0);
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.25rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 @layer base {
@@ -25,7 +65,59 @@
   body {
     @apply bg-canvas text-zinc-200 font-sans antialiased;
   }
+  body {
+    overflow-x: hidden;
+    background-image: radial-gradient(60rem 30rem at 50% -10rem, rgba(20, 110, 245, 0.09), transparent 70%);
+    background-repeat: no-repeat;
+  }
   ::selection {
     @apply bg-accent/40;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent-hover);
+    outline-offset: 2px;
+  }
+  button:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-line bg-surface shadow-[0_1px_0_0_rgba(255,255,255,0.03)_inset];
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted transition-colors hover:bg-white/5 hover:text-zinc-100 disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface-2 px-2.5 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:border-zinc-600 hover:text-white;
+  }
+  .btn-primary-soft {
+    @apply inline-flex items-center gap-2 rounded-lg bg-accent/15 px-3 py-2 text-[13px] font-semibold text-[#8db8ff] ring-1 ring-inset ring-accent/40 transition-colors hover:bg-accent/25 hover:text-white;
+  }
+  .summary-row {
+    @apply flex list-none items-center gap-2 px-4 py-3 text-[13px] font-medium text-zinc-200 hover:bg-white/[0.02] [&::-webkit-details-marker]:hidden;
+  }
+  .kbd {
+    @apply rounded border border-line bg-surface-2 px-1.5 py-px font-mono text-[11px] text-zinc-300;
+  }
+  .code-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #3f3f46 transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
