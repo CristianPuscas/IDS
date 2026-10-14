@@ -27,7 +27,7 @@ verified and what is uncertain.
   keeps its browser font (13.33px Arial, centred, `line-height: normal`). When an
   `<a class="button">` and a `<button class="button">` share a class, the `<button>` gets its own
   values on a generated `is-button-ua` combo so the links are not changed.
-- Converted `<button>`s get `data-wf-button`, and a one-line script stops their clicks from jumping
+- Converted `<button>`s get `data-h2w-button`, and a one-line script stops their clicks from jumping
   to the top of the page (Webflow publishes them with `href="#"`).
 - External images keep their exact URL: they become Custom Elements (`<img>`), because Webflow
   rewrites the `src` of a native Image to its own CDN on publish. `data:` URIs and Webflow CDN URLs
@@ -37,7 +37,7 @@ verified and what is uncertain.
 - Full documents get a small browser-default reset at the top of the `<style>` embed (body
   letter-spacing, heading and paragraph margins…), so the destination site's tag styles do not
   leak into what the page left to the browser. Properties your CSS sets are skipped.
-- `<style>` embed CSS survives the paste: native classes are referenced through a `data-wfc`
+- `<style>` embed CSS survives the paste: native classes are referenced through a `data-h2w-class`
   attribute (same specificity), so Webflow renaming a clashing class to "name 2" does not break it;
   a lone combo class is repeated to keep beating the published combo selector; and `b`, `i` and
   `button` selectors are rewritten to the tags Webflow publishes (`strong`, `em`, links).
@@ -77,7 +77,7 @@ verified and what is uncertain.
 | `section` | Section |
 | `h1`–`h6`, `p`, `blockquote` | Heading, Paragraph, Block Quote |
 | `a` | Text Link; Link Block when it wraps block elements or images; Button when it looks like one (`btn`, `button`, `*-btn` classes or `role="button"`) |
-| `button` | Webflow Button (an `<a>` with `role="button"` and `data-wf-button`); Link Block if it wraps block elements. Option `buttonMode: 'linkBlock'` makes button-like elements Link Blocks |
+| `button` | Webflow Button (an `<a>` with `role="button"` and `data-h2w-button`); Link Block if it wraps block elements. Option `buttonMode: 'linkBlock'` makes button-like elements Link Blocks |
 | `form` and its `input`/`textarea`/`select`/`label`/submit `button` | Native Form Block: FormWrapper > FormForm (+ success and error messages), FormTextInput, FormTextarea, FormSelect, FormBlockLabel, Checkbox/Radio wrappers, FormButton |
 | File, hidden, date, range… inputs, reset buttons, `<optgroup>` selects inside a form | Code Embed inside the native form, with a warning |
 | `img` with an external URL | Custom Element `<img>` with `src`, `srcset`, `sizes`, `alt`, `loading`, `width`, `height` kept verbatim (option `externalImages`: `'embed'` or `'image'`) |
@@ -161,12 +161,12 @@ are wrapped in one classless Div Block.
 - **Class clashes**: Webflow renames a pasted class whose name already exists with different styles
   to "name 2", and a combo class merges with a same-named class of the site (whose styles then
   apply too: a combo `.navbar_component` picked up a site's navy navbar). Native styles still apply
-  after a rename, and `<style>` embed CSS reaches native classes through `data-wfc`, but site styles
+  after a rename, and `<style>` embed CSS reaches native classes through `data-h2w-class`, but site styles
   can still leak in through merged combos. Set `classPrefix` (engine option, not in the UI yet) or
   paste into a clean site. Scripts that query classes by name are not rewritten.
 - **Baseline reset** (`neutralizeDefaults`, full documents only) uses bare tag selectors, so it
   applies to the whole page you paste on, like the page's own `body`/tag rules do.
-- **`data-wfc` / `data-wf-button`** are custom attributes; that Webflow keeps them on paste and
+- **`data-h2w-class` / `data-h2w-button`** are custom attributes; that Webflow keeps them on paste and
   publish (and accepts Custom Element `<img>` with `src`) is still to be confirmed with a real
   paste.
 - **Scripts** do not run on the Designer canvas. Webflow Interactions are not generated.
@@ -241,7 +241,7 @@ webflow-converter/
     │   ├── forms.ts            Native Form Block (FormWrapper, FormForm, fields, messages)
     │   ├── buttonDefaults.ts   .w-button neutralizers (and <button> UA font) for Webflow Buttons
     │   ├── baseline.ts         Browser-default tag reset for full documents
-    │   ├── embedCss.ts         <style> embed selector rewriting (data-wfc, specificity, b/i/button)
+    │   ├── embedCss.ts         <style> embed selector rewriting (data-h2w-class, specificity, b/i/button)
     │   ├── __fixtures__/       Real pages used as regression fixtures (ferma.html)
     │   ├── classNames.ts       Webflow class-name rule, renames, CSS selector rewriting
     │   ├── cascade.ts          Which source declarations apply to an element (specificity)
@@ -304,7 +304,7 @@ interface ConvertOptions {
   breakpointSnap: 'up' | 'off';       // 'up': off-grid max-width < 991 snaps to the next Webflow breakpoint up
   neutralizeDefaults: boolean;        // true: browser-default tag reset at the top of the <style> embed (full documents)
   embedSpecificityParity: boolean;    // true: lone combo classes in embed selectors are repeated (.b -> .b.b)
-  renameProofEmbedCss: boolean;       // true: embed CSS targets native classes via [data-wfc~="x"]
+  renameProofEmbedCss: boolean;       // true: embed CSS targets native classes via [data-h2w-class~="x"]
   rewriteRemappedTags: boolean;       // true: b/i/button selectors in the embed follow the pasted tags
   classPrefix: string;                // '': prefix for every HTML class and generated class (e.g. 'fm-')
   buttonClickShim: boolean;           // true: preventDefault on converted <button> links (href="#")

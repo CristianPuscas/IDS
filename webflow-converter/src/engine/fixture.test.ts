@@ -271,11 +271,11 @@ describe('AI-generated landing page fixture', () => {
       '* {',
       'body {',
       '.hero_canvas {',
-      // Native classes are referenced through data-wfc (rename-proof), embed-only ones keep their name.
-      '[data-wfc~="hero_title"] span {',
-      '[data-wfc~="card"]::before {',
+      // Native classes are referenced through data-h2w-class (rename-proof), embed-only ones keep their name.
+      '[data-h2w-class~="hero_title"] span {',
+      '[data-h2w-class~="card"]::before {',
       '.card_icon {',
-      '[data-wfc~="features_grid"] [data-wfc~="card"]:nth-child(2) {',
+      '[data-h2w-class~="features_grid"] [data-h2w-class~="card"]:nth-child(2) {',
       '@keyframes float',
       '@media (prefers-reduced-motion: reduce)',
     ]) {

@@ -26,7 +26,7 @@
  * that share a base class need different values (an `<a class="button">` and a
  * `<button class="button">`), the shared values go on the base class and the rest on a generated
  * `is-button-ua` combo of the buttons that differ. A `<button>` that became a link gets
- * `data-wf-button` (options `buttonClickShim`, `rewriteRemappedTags`).
+ * `data-h2w-button` (options `buttonClickShim`, `rewriteRemappedTags`).
  *
  * Ownership: engine.
  */
@@ -54,7 +54,7 @@ export interface NodeBuildResult {
   extraRules: CssStyleRule[];
   /** Source tags that were pasted as another tag and appear in the output (`b`, `i`, `button`). */
   remappedTags: Set<string>;
-  /** Number of `<button>` elements that became links carrying `data-wf-button`. */
+  /** Number of `<button>` elements that became links carrying `data-h2w-button`. */
   convertedButtons: number;
   warnings: ConvertWarning[];
 }
@@ -529,8 +529,8 @@ function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', id: string): stri
   if (tag === 'button' && !el.hasAttribute('role')) extraAttrs.push({ name: 'role', value: 'button' });
   if (tag === 'button') {
     ctx.remappedTags.add('button');
-    if ((ctx.options.buttonClickShim || ctx.options.rewriteRemappedTags) && !el.hasAttribute('data-wf-button')) {
-      extraAttrs.push({ name: 'data-wf-button', value: '' });
+    if ((ctx.options.buttonClickShim || ctx.options.rewriteRemappedTags) && !el.hasAttribute('data-h2w-button')) {
+      extraAttrs.push({ name: 'data-h2w-button', value: '' });
       ctx.convertedButtons++;
     }
   }

@@ -9,12 +9,12 @@
  * - **Rename-proof classes** (option `renameProofEmbedCss`). Webflow renames a pasted class whose
  *   name already exists with different styles to "name 2" (`.name-2`), and embed CSS that says
  *   `.name` stops matching. Classes that are both styled natively and used in embed selectors are
- *   rewritten to `[data-wfc~="name"]` (same specificity), and the elements carry
- *   `data-wfc="<their classes>"`. A class that is also used inside Code Embed HTML (which Webflow
- *   never renames) becomes `:is(.name,[data-wfc~="name"])`.
+ *   rewritten to `[data-h2w-class~="name"]` (same specificity), and the elements carry
+ *   `data-h2w-class="<their classes>"`. A class that is also used inside Code Embed HTML (which Webflow
+ *   never renames) becomes `:is(.name,[data-h2w-class~="name"])`.
  * - **Remapped tags** (option `rewriteRemappedTags`). `<b>` is pasted as `<strong>`, `<i>` as
  *   `<em>` and `<button>` as `<a>`; type selectors are rewritten to match. `button` becomes
- *   `:is(button,a:where([data-wf-button]))`, which keeps its (0,0,1) specificity and still matches
+ *   `:is(button,a:where([data-h2w-button]))`, which keeps its (0,0,1) specificity and still matches
  *   real buttons left in embeds.
  *
  * Selectors are tokenized (classes, ids, types, attributes, pseudo-classes with their arguments,
@@ -28,9 +28,9 @@
 export interface EmbedRewritePlan {
   /** Class -> how many times a lone-class compound is repeated (only entries > 1). */
   repeat: Map<string, number>;
-  /** Classes written as `[data-wfc~="x"]`. */
+  /** Classes written as `[data-h2w-class~="x"]`. */
   attr: Set<string>;
-  /** Of `attr`, classes also used inside Code Embed HTML: `:is(.x,[data-wfc~="x"])`. */
+  /** Of `attr`, classes also used inside Code Embed HTML: `:is(.x,[data-h2w-class~="x"])`. */
   both: Set<string>;
   /** Lower-case tag -> replacement selector text. */
   tags: Map<string, string>;
@@ -172,9 +172,9 @@ function rewriteCompound(tokens: Token[], plan: EmbedRewritePlan): string {
   return out;
 }
 
-/** `[data-wfc~="name"]` with the value escaped for a double-quoted CSS string. */
+/** `[data-h2w-class~="name"]` with the value escaped for a double-quoted CSS string. */
 export function attrSelector(name: string): string {
-  return `[data-wfc~="${name.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"]`;
+  return `[data-h2w-class~="${name.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"]`;
 }
 
 /** Reads a CSS identifier starting at `start` (escapes are resolved in `name`, kept in the text). */
@@ -251,7 +251,7 @@ export interface EmbedRewriteInput {
 export const TAG_REPLACEMENTS: Record<string, string> = {
   b: 'strong',
   i: 'em',
-  button: ':is(button,a:where([data-wf-button]))',
+  button: ':is(button,a:where([data-h2w-button]))',
 };
 
 /** Works out what to rewrite in the embed selectors. */

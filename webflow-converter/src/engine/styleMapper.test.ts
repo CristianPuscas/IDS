@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { convert, validateXscp, type ConvertOptions } from './index';
 import { classNames, embeddedCss, first, style } from './testHelpers';
 
-// These tests check the class/embed split; embed selector rewriting (data-wfc) is tested in embedCss.test.ts.
+// These tests check the class/embed split; embed selector rewriting (data-h2w-class) is tested in embedCss.test.ts.
 const run = (htmlBody: string, css: string, options?: Partial<ConvertOptions>) => {
   const res = convert({ mode: 'separate', html: htmlBody, css, js: '' }, { renameProofEmbedCss: false, ...options });
   expect(validateXscp(res.data)).toEqual([]);

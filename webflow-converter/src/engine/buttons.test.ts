@@ -208,8 +208,8 @@ describe('button click shim (F8)', () => {
     const res = convert({ mode: 'combined', html: '<div><button class="t" id="m">x</button><a class="btn" href="/x">y</a></div><script>init()</script>' });
     expect(validateXscp(res.data)).toEqual([]);
     const [b, a] = elements(res).filter((e) => e.type === 'Link');
-    expect(b!.data!.xattr).toContainEqual({ name: 'data-wf-button', value: '' });
-    expect(a!.data!.xattr!.some((x) => x.name === 'data-wf-button')).toBe(false);
+    expect(b!.data!.xattr).toContainEqual({ name: 'data-h2w-button', value: '' });
+    expect(a!.data!.xattr!.some((x) => x.name === 'data-h2w-button')).toBe(false);
     const js = elements(res).filter((e) => e.type === 'HtmlEmbed').pop()!.v!;
     expect(js.startsWith(`<script>\n${BUTTON_CLICK_SHIM}\n</script>`)).toBe(true);
     expect(js.indexOf('init()')).toBeGreaterThan(js.indexOf('preventDefault'));
@@ -225,7 +225,7 @@ describe('button click shim (F8)', () => {
 
   it('can be turned off', () => {
     const res = run('<button class="t">x</button>', '', { buttonClickShim: false, rewriteRemappedTags: false });
-    expect(first(res, 'Link').data!.xattr!.some((x) => x.name === 'data-wf-button')).toBe(false);
+    expect(first(res, 'Link').data!.xattr!.some((x) => x.name === 'data-h2w-button')).toBe(false);
     expect(elements(res).some((e) => e.type === 'HtmlEmbed')).toBe(false);
   });
 });
@@ -249,7 +249,7 @@ describe('buttonMode: "linkBlock"', () => {
       block: 'inline',
       xattr: [
         { name: 'role', value: 'button' },
-        { name: 'data-wf-button', value: '' },
+        { name: 'data-h2w-button', value: '' },
       ],
     });
     expect(res.data.payload.styles.map((s) => s.name)).toEqual(['menu-toggle']);

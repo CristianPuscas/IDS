@@ -4,7 +4,7 @@
  * Pipeline:
  *   parseHtml -> class renames (normalization, `classPrefix`) -> parseCss -> buildNodes (registers
  *   class chains) -> mapStyles (fills styles, collects leftover CSS; the baseline reset goes first
- *   and embed selectors are rewritten by ./embedCss, which also tags elements with `data-wfc`)
+ *   and embed selectors are rewritten by ./embedCss, which also tags elements with `data-h2w-class`)
  *   -> extractJs (+ button click shim) -> embeds -> XscpData
  *
  * Root decision (spec 1): the payload is always a single tree whose first node is the root. When
@@ -192,7 +192,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
       warnings.push({
         code: 'other',
         severity: 'info',
-        message: `Code Embed CSS refers to ${plan.attr.size} native class${plan.attr.size > 1 ? 'es' : ''} through a data-wfc attribute (${tagged} element${tagged === 1 ? '' : 's'}), so it keeps matching if Webflow renames a clashing class to "name 2".`,
+        message: `Code Embed CSS refers to ${plan.attr.size} native class${plan.attr.size > 1 ? 'es' : ''} through a data-h2w-class attribute (${tagged} element${tagged === 1 ? '' : 's'}), so it keeps matching if Webflow renames a clashing class to "name 2".`,
         detail: [...plan.attr].map((c) => `.${c} -> ${attrSelector(c)}`).join('\n'),
       });
     }
@@ -298,7 +298,7 @@ function normalizeClassNames(parsed: ParsedHtml, cssText: string, scripts: strin
 
 /** Stops converted `<button>` links (`href="#"` once published) from jumping to the top. */
 export const BUTTON_CLICK_SHIM =
-  "document.querySelectorAll('[data-wf-button]').forEach(b=>b.addEventListener('click',e=>e.preventDefault()))";
+  "document.querySelectorAll('[data-h2w-button]').forEach(b=>b.addEventListener('click',e=>e.preventDefault()))";
 
 /** Class names whose Webflow style (base or any combo level) has declarations. */
 function styledClassNames(registry: StyleRegistry): Set<string> {
@@ -310,7 +310,7 @@ function styledClassNames(registry: StyleRegistry): Set<string> {
 }
 
 /**
- * Adds `data-wfc="<class names>"` to every element that has one of `classes` (`data.attributes`
+ * Adds `data-h2w-class="<class names>"` to every element that has one of `classes` (`data.attributes`
  * on Custom Elements, `data.xattr` elsewhere). Returns how many elements were tagged.
  */
 function tagDataWfc(nodes: WfNode[], registry: StyleRegistry, classes: Set<string>): number {
@@ -320,13 +320,13 @@ function tagDataWfc(nodes: WfNode[], registry: StyleRegistry, classes: Set<strin
     if (isTextNode(n) || n.type === 'HtmlEmbed' || n.classes.length === 0) continue;
     const names = n.classes.map((id) => nameById.get(id) ?? '').filter(Boolean);
     if (!names.some((c) => classes.has(c))) continue;
-    const attr = { name: 'data-wfc', value: names.join(' ') };
+    const attr = { name: 'data-h2w-class', value: names.join(' ') };
     if (n.type === 'DOM') {
       n.data = n.data ?? {};
-      n.data.attributes = [...(n.data.attributes ?? []).filter((a) => a.name !== 'data-wfc'), attr];
+      n.data.attributes = [...(n.data.attributes ?? []).filter((a) => a.name !== 'data-h2w-class'), attr];
     } else {
       n.data = n.data ?? { attr: { id: '' } };
-      n.data.xattr = [...(n.data.xattr ?? []).filter((a) => a.name !== 'data-wfc'), attr];
+      n.data.xattr = [...(n.data.xattr ?? []).filter((a) => a.name !== 'data-h2w-class'), attr];
     }
     count++;
   }

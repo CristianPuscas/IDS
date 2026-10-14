@@ -595,13 +595,13 @@ export interface ConvertOptions {
   embedSpecificityParity: boolean;
   /**
    * Classes used both natively and in `<style>` embed selectors are rewritten in the embed to
-   * `[data-wfc~="name"]`, and the elements get `data-wfc="<their classes>"`, so embed CSS keeps
+   * `[data-h2w-class~="name"]`, and the elements get `data-h2w-class="<their classes>"`, so embed CSS keeps
    * matching when Webflow renames a clashing class to "name 2". Same specificity. Default `true`.
    */
   renameProofEmbedCss: boolean;
   /**
    * Rewrite tag selectors in the `<style>` embed for tags the converter remaps: `b` -> `strong`,
-   * `i` -> `em`, and `button` -> `:is(button,a:where([data-wf-button]))` (same specificity) when a
+   * `i` -> `em`, and `button` -> `:is(button,a:where([data-h2w-button]))` (same specificity) when a
    * `<button>` became a Webflow Button/Link. Default `true`.
    */
   rewriteRemappedTags: boolean;
@@ -613,7 +613,7 @@ export interface ConvertOptions {
    */
   classPrefix: string;
   /**
-   * Links converted from `<button>` get `data-wf-button`, and a one-line script at the top of the
+   * Links converted from `<button>` get `data-h2w-button`, and a one-line script at the top of the
    * script embed calls `preventDefault()` on their clicks, so the published `href="#"` does not
    * jump to the top of the page. Default `true`.
    */

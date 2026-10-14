@@ -43,8 +43,8 @@ describe('classPrefix (F7)', () => {
     expect(style(res, 'fm-card').styleLess).toBe('padding-top: 1px; padding-right: 1px; padding-bottom: 1px; padding-left: 1px;');
     expect(style(res, 'fm-is-big', '&').styleLess).toContain('padding-top: 2px;');
     const embed = embeddedCss(res);
-    expect(embed).toContain('[data-wfc~="fm-card"] h3');
-    expect(embed).toContain('[data-wfc~="fm-panel"].open');
+    expect(embed).toContain('[data-h2w-class~="fm-card"] h3');
+    expect(embed).toContain('[data-h2w-class~="fm-panel"].open');
     expect(embed).not.toMatch(/\.card\b/);
     expect(res.warnings.some((w) => w.code === 'class-collision-risk')).toBe(false);
   });

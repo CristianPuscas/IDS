@@ -252,7 +252,7 @@ describe('links, buttons, images', () => {
       { name: 'aria-expanded', value: 'false' },
       { name: 'data-menu', value: '' },
       { name: 'role', value: 'button' },
-      { name: 'data-wf-button', value: '' },
+      { name: 'data-h2w-button', value: '' },
     ]);
     expect(textOf(res, b)).toBe('Menu');
     expect(classNames(res, b)).toEqual(['menu-toggle']);

@@ -37,31 +37,31 @@ describe('ferma.html (real paste-test regression)', () => {
     expect(style(res, 'navbar_menu-button').styleLess).toContain('display: none;');
     expect(style(res, 'navbar_menu-button').variants.small).toEqual({ styleLess: 'display: block;' });
     expect(css).toContain('@media (max-width: 991px) {');
-    expect(css).toContain('[data-wfc~="navbar_component"][data-wfc~="navbar_component"]>[data-wfc~="button"] {\n  display: none;');
+    expect(css).toContain('[data-h2w-class~="navbar_component"][data-h2w-class~="navbar_component"]>[data-h2w-class~="button"] {\n  display: none;');
     expect(css).toMatch(/@media \(max-width: 767px\) \{\nnav \{\n {2}display: none;/);
     expect(css).not.toMatch(/max-width: ?(850|640)px/);
   });
 
   it('leaves no bare b selector in the embed (b is pasted as strong)', () => {
     expect(css).not.toMatch(/(^|[\s,>+~(])b(?=[\s,{:.[>+~)])/m);
-    expect(css).toContain('[data-wfc~="hero_features"] strong {\n  font-size: 19px;');
+    expect(css).toContain('[data-h2w-class~="hero_features"] strong {\n  font-size: 19px;');
   });
 
   it('starts the embed with the baseline reset, without a margin-top reset for p', () => {
     expect(css.indexOf('Browser defaults')).toBeGreaterThan(-1);
-    expect(css.indexOf('Browser defaults')).toBeLessThan(css.indexOf('[data-wfc~="process_item"] h3'));
+    expect(css.indexOf('Browser defaults')).toBeLessThan(css.indexOf('[data-h2w-class~="process_item"] h3'));
     expect(css).toMatch(/\nbody\{letter-spacing:normal;/);
     expect(css).toMatch(/\np\{margin-right:0;margin-bottom:1em;margin-left:0;letter-spacing:inherit\}/);
   });
 
-  it('marks both <button> toggles with data-wf-button and adds the click shim', () => {
+  it('marks both <button> toggles with data-h2w-button and adds the click shim', () => {
     for (const id of ['menuToggle', 'contactToggle']) {
       const el = byXattr(id);
       expect(el.type).toBe('Link');
-      expect(el.data!.xattr).toContainEqual({ name: 'data-wf-button', value: '' });
+      expect(el.data!.xattr).toContainEqual({ name: 'data-h2w-button', value: '' });
     }
     const js = elements(res).filter((e) => e.type === 'HtmlEmbed').pop()!.v!;
-    expect(js).toContain("querySelectorAll('[data-wf-button]')");
+    expect(js).toContain("querySelectorAll('[data-h2w-button]')");
   });
 
   it('gives the <button> toggles their user-agent font without touching the <a class="button"> links', () => {
