@@ -123,6 +123,34 @@ Stack: Vite 7, React 19, TypeScript 5.9 (strict, `noUncheckedIndexedAccess`), Ta
 (`@tailwindcss/vite`, tokens in `src/index.css`), Vitest 4 with jsdom. Fonts: Inter and
 JetBrains Mono from Google Fonts.
 
+## Deploy
+
+The app is fully static, so any static host can serve `dist/`.
+
+**GitHub Pages (built in).** Live URL: <https://cristianpuscas.github.io/IDS/>
+
+- `.github/workflows/deploy-pages.yml` runs `npm ci && npm test && npm run build` in
+  `webflow-converter/` and publishes `webflow-converter/dist`. It runs on every push to `main`
+  that touches `webflow-converter/**` (so after a PR is merged), or manually from
+  Actions → "Deploy webflow-converter to GitHub Pages" → Run workflow (`workflow_dispatch`).
+- One-time setup: in the repo go to **Settings → Pages → Build and deployment → Source** and
+  choose **GitHub Actions**.
+- `.github/workflows/ci.yml` runs typecheck, tests and build on pull requests and on pushes to
+  branches other than `main`.
+
+**Base path.** `vite.config.ts` reads `BASE_PATH` (default `/`). Pages serves the app under
+`/<repo-name>/`, so the workflow sets `BASE_PATH=/${{ github.event.repository.name }}/`. The path
+is case-sensitive: the repo is `IDS`, so the path is `/IDS/`. To reproduce locally:
+
+```bash
+BASE_PATH=/IDS/ npm run build
+npx vite preview --base /IDS/   # http://localhost:4173/IDS/
+```
+
+**Vercel or Netlify.** Import the repo, set the root directory to `webflow-converter`, the build
+command to `npm run build` and the output directory to `dist`. Leave `BASE_PATH` unset, because
+these hosts serve from the domain root.
+
 ## Folder structure
 
 ```

@@ -4,8 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Relative base so the static build works from any sub-path (GitHub Pages, artifact hosting, file server).
-  base: './',
+  // Public base path. Defaults to '/'; the GitHub Pages workflow sets BASE_PATH=/<repo-name>/
+  // so assets resolve under the project sub-path (e.g. BASE_PATH=/IDS/ npm run build).
+  base: process.env.BASE_PATH || '/',
   plugins: [react(), tailwindcss()],
   test: {
     // jsdom provides DOMParser / document for the engine's HTML parsing and for clipboard tests.
