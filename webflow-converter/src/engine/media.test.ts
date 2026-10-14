@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mediaToBands } from './media';
+import { mediaToBands, snapMediaStack } from './media';
 
 const bands = (q: string[], tol = 20, large = false): string[] | string => {
   const m = mediaToBands(q, tol, large);
@@ -72,5 +72,35 @@ describe('mediaToBands: unmatched', () => {
     '(max-width: 600px)',
   ])('%s', (q) => {
     expect(bands([q])).toBe('unmatched');
+  });
+});
+
+describe('mediaToBands: breakpointSnap "up" (F2)', () => {
+  const snap = (q: string[]) => mediaToBands(q, 20, false, 'up');
+
+  it('snaps an off-grid max-width up to the smallest Webflow breakpoint that contains it', () => {
+    expect(snap(['(max-width:850px)'])).toEqual({ kind: 'bands', bands: ['tiny', 'small', 'medium'], snapped: [{ px: 850, band: 'medium' }] });
+    expect(snap(['(max-width:640px)'])).toEqual({ kind: 'bands', bands: ['tiny', 'small'], snapped: [{ px: 640, band: 'small' }] });
+    expect(snap(['(max-width: 400px)'])).toMatchObject({ bands: ['tiny'], snapped: [{ px: 400, band: 'tiny' }] });
+    expect(snap(['(max-width: 40em)'])).toMatchObject({ bands: ['tiny', 'small'] }); // 640px
+  });
+
+  it('leaves near-breakpoint queries unsnapped and wide ones unmatched', () => {
+    expect(snap(['(max-width: 767px)'])).toEqual({ kind: 'bands', bands: ['tiny', 'small'] });
+    expect(snap(['(max-width: 1200px)']).kind).toBe('unmatched');
+    expect(snap(['(max-width: 1024px)']).kind).toBe('unmatched');
+    expect(snap(['(prefers-reduced-motion: reduce)']).kind).toBe('unmatched');
+  });
+
+  it('"off" (the function default) keeps the old behaviour', () => {
+    expect(bands(['(max-width: 850px)'])).toBe('unmatched');
+    expect(mediaToBands(['(max-width: 640px)'], 20, false, 'off').kind).toBe('unmatched');
+  });
+
+  it('snapMediaStack rewrites only the snapped conditions', () => {
+    expect(snapMediaStack(['(max-width:850px)'], 20, false)).toEqual(['(max-width: 991px)']);
+    expect(snapMediaStack(['screen and (max-width: 640px)'], 20, false)).toEqual(['screen and (max-width: 767px)']);
+    expect(snapMediaStack(['(min-width: 768px) and (max-width: 850px)'], 20, false)).toEqual(['(min-width: 768px) and (max-width: 991px)']);
+    expect(snapMediaStack(['(max-width: 767px)'], 20, false)).toEqual(['(max-width: 767px)']);
   });
 });

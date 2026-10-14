@@ -54,6 +54,9 @@ export function Tips() {
       <p className="mt-4 rounded-lg border border-line bg-canvas/60 px-3 py-2 text-[12px] leading-relaxed text-muted">
         Scripts don't run on the Designer canvas. Check them in Preview or on the published site. Custom fonts need to be added to the site.
       </p>
+      <p className="mt-2 rounded-lg border border-line bg-canvas/60 px-3 py-2 text-[12px] leading-relaxed text-muted">
+        Class names already in your site clash: Webflow renames yours to "name 2", and a combo merges with the site's class of the same name. Use unique names, or the converter's <code>classPrefix</code> option.
+      </p>
     </section>
   );
 }

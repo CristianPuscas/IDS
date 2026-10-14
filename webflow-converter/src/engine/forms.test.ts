@@ -137,9 +137,11 @@ describe('forms: "native" (default)', () => {
       data: { form: { type: 'button', wait: 'Please wait...' }, attr: { type: 'submit', value: 'Send message', 'data-wait': 'Please wait...' } },
     });
     expect(classNames(res, btn)).toEqual(['btn']);
-    // .btn sets everything .w-button touches (UA radius/text-decoration equal .w-button): no neutralizers.
+    // .btn sets everything .w-button touches (UA radius/text-decoration equal .w-button); only the
+    // <button> user-agent font is added (webflow.css gives inputs `font: inherit`).
     expect(style(res, 'btn').styleLess).toBe(
-      'background-color: #000; color: #fff; padding-top: 1rem; padding-right: 1rem; padding-bottom: 1rem; padding-left: 1rem; border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; cursor: pointer; line-height: 1; display: inline-block;',
+      'font-family: Arial, sans-serif; font-size: 13.3333px; font-weight: 400; font-style: normal; letter-spacing: normal; text-transform: none; text-align: center; ' +
+        'background-color: #000; color: #fff; padding-top: 1rem; padding-right: 1rem; padding-bottom: 1rem; padding-left: 1rem; border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; cursor: pointer; line-height: 1; display: inline-block;',
     );
   });
 });

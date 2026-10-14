@@ -252,6 +252,7 @@ describe('links, buttons, images', () => {
       { name: 'aria-expanded', value: 'false' },
       { name: 'data-menu', value: '' },
       { name: 'role', value: 'button' },
+      { name: 'data-wf-button', value: '' },
     ]);
     expect(textOf(res, b)).toBe('Menu');
     expect(classNames(res, b)).toEqual(['menu-toggle']);
@@ -262,14 +263,74 @@ describe('links, buttons, images', () => {
     expect(first(res, 'Link').data).toMatchObject({ button: false, block: 'inline' });
   });
 
-  it('<img> -> Image with src/alt/loading/width/height in data.attr and no asset', () => {
-    const res = html('<img src="https://cdn.x/a.png" alt="A" width="400" class="pic" data-parallax="0.2" srcset="a 1x">');
+  it('<img> -> Image with src/alt/loading/width/height in data.attr and no asset (externalImages: "image")', () => {
+    const res = convert(
+      { mode: 'combined', html: '<img src="https://cdn.x/a.png" alt="A" width="400" class="pic" data-parallax="0.2" srcset="a 1x">' },
+      { externalImages: 'image' },
+    );
+    expect(validateXscp(res.data)).toEqual([]);
     const img = first(res, 'Image');
     expect(img.data!.attr).toEqual({ src: 'https://cdn.x/a.png', alt: 'A', loading: 'lazy', width: '400', height: 'auto', id: '' });
     expect(img.data!.img).toBeUndefined();
     expect(img.data!.xattr).toEqual([{ name: 'data-parallax', value: '0.2' }]);
     expect(res.data.payload.assets).toEqual([]);
     expect(res.warnings.some((w) => w.code === 'external-image')).toBe(true);
+  });
+
+  it('external <img> -> Custom Element <img> with every attribute verbatim (default)', () => {
+    const src = 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1000&q=85';
+    const res = html(
+      `<div><img loading="lazy" src="${src}" alt="Plante" width="400" height="300" class="pic is-round" srcset="${src}&dpr=2 2x" sizes="50vw" id="hero-img" data-x="1"></div>`,
+    );
+    expect(elements(res).some((e) => e.type === 'Image')).toBe(false);
+    const img = elements(res).find((e) => e.type === 'DOM')!;
+    // Same shape as other Custom Elements (e.g. <small>): node tag "div", real tag in data.tag.
+    expect(img).toMatchObject({ type: 'DOM', tag: 'div', children: [], data: { tag: 'img', text: false, slot: '', visibility: { conditions: [] } } });
+    expect(img.data!.attributes).toEqual([
+      { name: 'id', value: 'hero-img' },
+      { name: 'loading', value: 'lazy' },
+      { name: 'src', value: src },
+      { name: 'alt', value: 'Plante' },
+      { name: 'width', value: '400' },
+      { name: 'height', value: '300' },
+      { name: 'srcset', value: `${src}&dpr=2 2x` },
+      { name: 'sizes', value: '50vw' },
+      { name: 'data-x', value: '1' },
+    ]);
+    expect(img.data!.xattr).toBeUndefined();
+    expect(classNames(res, img)).toEqual(['pic', 'is-round']);
+    expect(res.json).toContain(JSON.stringify(src)); // byte-identical, query string included
+    expect(res.warnings.some((w) => w.code === 'external-image' && w.message.includes('Custom Elements'))).toBe(true);
+  });
+
+  it('the Custom Element <img> matches the shape the engine uses for <small>', () => {
+    const res = html('<p><small class="s" data-a="1">x</small><img class="s" src="https://x.y/a.png" data-a="1"></p>');
+    const [small, img] = elements(res).filter((e) => e.type === 'DOM');
+    expect(Object.keys(img!).sort()).toEqual(Object.keys(small!).sort());
+    expect(Object.keys(img!.data!).sort()).toEqual(Object.keys(small!.data!).sort());
+    expect(img!.tag).toBe(small!.tag);
+  });
+
+  it('data: URIs and Webflow CDN URLs stay native Images', () => {
+    const data = 'data:image/png;base64,iVBORw0KGgo=';
+    const cdn = 'https://cdn.prod.website-files.com/64a/abc_photo.webp';
+    const res = html(`<div><img src="${data}" class="a"><img src="${cdn}" alt="c"></div>`);
+    const imgs = elements(res).filter((e) => e.type === 'Image');
+    expect(imgs.map((i) => i.data!.attr!.src)).toEqual([data, cdn]);
+    expect(classNames(res, imgs[0]!)).toEqual(['a']);
+    expect(elements(res).some((e) => e.type === 'DOM')).toBe(false);
+  });
+
+  it('externalImages: "embed" keeps the <img> HTML in a Code Embed and its CSS in the style embed', () => {
+    const res = convert(
+      { mode: 'separate', html: '<div class="w"><img class="pic" src="https://x.y/a.png?v=1&s=2" alt="A"></div>', css: '.pic { width: 100% } .w { padding: 1px }', js: '' },
+      { externalImages: 'embed' },
+    );
+    expect(validateXscp(res.data)).toEqual([]);
+    const codes = elements(res).filter((e) => e.type === 'HtmlEmbed').map((e) => e.v!);
+    expect(codes.some((c) => c.startsWith('<img class="pic" src="https://x.y/a.png?v=1&amp;s=2"'))).toBe(true);
+    expect(res.data.payload.styles.some((s) => s.name === 'pic')).toBe(false);
+    expect(codes.some((c) => c.includes('.pic {'))).toBe(true);
   });
 
   it('warns about relative image URLs', () => {

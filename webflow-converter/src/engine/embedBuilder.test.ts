@@ -77,7 +77,7 @@ describe('embed size limits', () => {
 
   it('wraps each chunk of a large media group in its own @media', () => {
     const inner = Array.from({ length: 30 }, (_, i) => `.x .y${i} { color: red; }`).join(' ');
-    const res = convert({ mode: 'separate', html: '<div class="x"></div>', css: `@media (max-width: 600px) { ${inner} }`, js: '' }, { maxEmbedChars: 400 });
+    const res = convert({ mode: 'separate', html: '<div class="x"></div>', css: `@media (max-width: 600px) { ${inner} }`, js: '' }, { maxEmbedChars: 400, breakpointSnap: 'off' });
     const styles = embedCodes(res).filter((c) => c.startsWith('<style>'));
     expect(styles.length).toBeGreaterThan(1);
     for (const c of styles) expect(c).toMatch(/^<style>\n@media \(max-width: 600px\) \{/);

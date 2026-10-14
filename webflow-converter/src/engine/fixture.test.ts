@@ -165,7 +165,7 @@ describe('AI-generated landing page fixture', () => {
     expect(outline(res)).toMatchInlineSnapshot(`
       "Block<div>
         HtmlEmbed<div> [<link href="https://fonts.goog…]
-        HtmlEmbed<div> [<style> :root {   --bg: #0b0b1…]
+        HtmlEmbed<div> [<style> /* Browser defaults th…]
         Block<nav>.nav
           Link<a>.nav_logo {button:false, block:""}
             "Nebula"
@@ -271,10 +271,11 @@ describe('AI-generated landing page fixture', () => {
       '* {',
       'body {',
       '.hero_canvas {',
-      '.hero_title span {',
-      '.card::before {',
+      // Native classes are referenced through data-wfc (rename-proof), embed-only ones keep their name.
+      '[data-wfc~="hero_title"] span {',
+      '[data-wfc~="card"]::before {',
       '.card_icon {',
-      '.features_grid .card:nth-child(2) {',
+      '[data-wfc~="features_grid"] [data-wfc~="card"]:nth-child(2) {',
       '@keyframes float',
       '@media (prefers-reduced-motion: reduce)',
     ]) {

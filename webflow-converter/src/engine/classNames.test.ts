@@ -103,7 +103,7 @@ describe('class name normalization in convert()', () => {
       .heroTitle span { color: red }
       .md\\:flex { display: flex }
     </style>
-    <h1 class="heroTitle md:flex">Hi <span>there</span></h1>`);
+    <h1 class="heroTitle md:flex">Hi <span>there</span></h1>`, { renameProofEmbedCss: false });
     expect(classNames(res, first(res, 'Heading'))).toEqual(['herotitle', 'md-flex']);
     expect(style(res, 'herotitle').styleLess).toBe('font-size: 3rem;');
     expect(style(res, 'md-flex', '&').styleLess).toBe('display: flex;');

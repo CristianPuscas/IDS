@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { convert, validateXscp, type ConvertOptions } from './index';
 import { classNames, embeddedCss, first, style } from './testHelpers';
 
+// These tests check the class/embed split; embed selector rewriting (data-wfc) is tested in embedCss.test.ts.
 const run = (htmlBody: string, css: string, options?: Partial<ConvertOptions>) => {
-  const res = convert({ mode: 'separate', html: htmlBody, css, js: '' }, options);
+  const res = convert({ mode: 'separate', html: htmlBody, css, js: '' }, { renameProofEmbedCss: false, ...options });
   expect(validateXscp(res.data)).toEqual([]);
   return res;
 };
@@ -308,7 +309,7 @@ describe('unsupported selectors -> embed', () => {
   });
 
   it('preserves source order of embedded rules and groups them by media query', () => {
-    const res = run('<div class="a"></div>', '.a .b { color: red } #x { color: blue } @media (max-width: 600px) { .a .b { color: green } #x { color: pink } } h2 { margin: 0 }');
+    const res = run('<div class="a"></div>', '.a .b { color: red } #x { color: blue } @media (max-width: 600px) { .a .b { color: green } #x { color: pink } } h2 { margin: 0 }', { breakpointSnap: 'off' });
     const css = embeddedCss(res);
     const order = ['.a .b {\n  color: red', '#x {\n  color: blue', '@media (max-width: 600px) {', 'color: green', 'color: pink', 'h2 {'].map((s) =>
       css.indexOf(s),
@@ -350,5 +351,36 @@ describe('class name hygiene', () => {
   it('ignores duplicated class tokens and Webflow state classes on elements', () => {
     const res = run('<a class="link link w--current">x</a>', '');
     expect(classNames(res, first(res, 'Link'))).toEqual(['link']);
+  });
+});
+
+describe('breakpointSnap (F2)', () => {
+  const css = '.a { color: red; padding: 0 } @media (max-width: 850px) { .a { color: green } } @media (max-width: 640px) { .a { color: blue } .a span { color: pink } }';
+
+  it('maps 850 to medium and 640 to small; the 640 rule wins in small and tiny', () => {
+    const res = run('<div class="a"><span>x</span></div>', css, { renameProofEmbedCss: true });
+    expect(style(res, 'a').variants).toEqual({ medium: { styleLess: 'color: green;' }, small: { styleLess: 'color: blue;' } });
+    const snapped = res.warnings.filter((w) => w.code === 'breakpoint-snapped');
+    expect(snapped.map((w) => w.detail)).toEqual(['@media (max-width: 850px) -> (max-width: 991px)', '@media (max-width: 640px) -> (max-width: 767px)']);
+    expect(snapped.every((w) => w.severity === 'info')).toBe(true);
+  });
+
+  it('moves the embed-bound rules of a snapped block to the same breakpoint', () => {
+    const res = run('<div class="a"><span>x</span></div>', css);
+    expect(embeddedCss(res)).toContain('@media (max-width: 767px) {\n.a span {\n  color: pink;\n}');
+    expect(embeddedCss(res)).not.toContain('640px');
+  });
+
+  it('"off" keeps the old behaviour (everything in the embed)', () => {
+    const res = run('<div class="a"><span>x</span></div>', css, { breakpointSnap: 'off' });
+    expect(style(res, 'a').variants).toEqual({});
+    expect(embeddedCss(res)).toContain('@media (max-width: 850px) {\n.a {\n  color: green;');
+    expect(res.warnings.some((w) => w.code === 'breakpoint-snapped')).toBe(false);
+  });
+
+  it('a max-width above the medium breakpoint stays unmatched', () => {
+    const res = run('<div class="a"></div>', '.a { color: red } @media (max-width: 1200px) { .a { color: blue } }');
+    expect(style(res, 'a').variants).toEqual({});
+    expect(embeddedCss(res)).toContain('@media (max-width: 1200px)');
   });
 });

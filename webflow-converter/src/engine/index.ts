@@ -2,8 +2,10 @@
  * Public engine API. The UI imports only from this module (and from ./types, ./clipboard).
  *
  * Pipeline:
- *   parseHtml -> parseCss -> buildNodes (registers class chains) -> mapStyles (fills styles,
- *   collects leftover CSS) -> extractJs -> embeds -> XscpData
+ *   parseHtml -> class renames (normalization, `classPrefix`) -> parseCss -> buildNodes (registers
+ *   class chains) -> mapStyles (fills styles, collects leftover CSS; the baseline reset goes first
+ *   and embed selectors are rewritten by ./embedCss, which also tags elements with `data-wfc`)
+ *   -> extractJs (+ button click shim) -> embeds -> XscpData
  *
  * Root decision (spec 1): the payload is always a single tree whose first node is the root. When
  * the input has exactly one top-level element and nothing needs an embed, that element is the
@@ -15,14 +17,16 @@
  * Ownership: engine.
  */
 
-import { cssClassNames, findJsClassReferences, planClassRenames, renameClassesInDocument, rewriteCssClasses } from './classNames';
+import { buildBaselineReset, isFullDocument } from './baseline';
+import { cssClassNames, findJsClassReferences, isWebflowClassName, planClassRenames, renameClassesInDocument, rewriteCssClasses } from './classNames';
+import { attrSelector, isEmptyPlan, planEmbedRewrite, rewriteEmbedSelector } from './embedCss';
 import { parseCss } from './cssParser';
 import { buildEmbedNode, buildScriptEmbeds, buildStyleEmbeds } from './embedBuilder';
 import { parseHtml, type ParsedHtml } from './htmlParser';
 import { uuid } from './ids';
 import { extractJs } from './jsExtractor';
 import { buildNodes } from './nodeBuilder';
-import { createStyleRegistry, mapStyles } from './styleMapper';
+import { createStyleRegistry, mapStyles, type MapStylesHooks, type StyleRegistry } from './styleMapper';
 import {
   DEFAULT_CONVERT_OPTIONS,
   isTextNode,
@@ -49,6 +53,7 @@ export function resolveOptions(options: Partial<ConvertOptions> = {}): ConvertOp
   if (!Number.isFinite(out.breakpointTolerancePx) || out.breakpointTolerancePx < 0) {
     out.breakpointTolerancePx = DEFAULT_CONVERT_OPTIONS.breakpointTolerancePx;
   }
+  if (typeof out.classPrefix !== 'string') out.classPrefix = '';
   if (!Number.isFinite(out.maxEmbedChars) || out.maxEmbedChars < 100) {
     out.maxEmbedChars = Number.isFinite(out.maxEmbedChars) ? 100 : DEFAULT_CONVERT_OPTIONS.maxEmbedChars;
   }
@@ -110,7 +115,8 @@ export function convert(input: ConvertInput, options?: Partial<ConvertOptions>):
   }
 }
 
-function convertUnsafe(input: ConvertInput, opts: ConvertOptions): ConvertResult {
+function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertResult {
+  let opts = options;
   const warnings: ConvertWarning[] = [];
   const html = input.html ?? '';
   const editorCss = input.mode === 'separate' ? (input.css ?? '') : '';
@@ -124,8 +130,21 @@ function convertUnsafe(input: ConvertInput, opts: ConvertOptions): ConvertResult
   warnings.push(...parsed.warnings);
 
   let cssText = [...parsed.styles, editorCss].filter((s) => s.trim()).join('\n');
+  const scriptsText = [...parsed.scripts.map((s) => s.code), editorJs];
   if (opts.normalizeClassNames) {
-    cssText = normalizeClassNames(parsed, cssText, [...parsed.scripts.map((s) => s.code), editorJs], warnings);
+    cssText = normalizeClassNames(parsed, cssText, scriptsText, warnings);
+  }
+  if (opts.classPrefix) {
+    const prefix = sanitizePrefix(opts.classPrefix);
+    if (prefix) cssText = prefixClassNames(parsed, cssText, scriptsText, prefix, warnings);
+    else {
+      warnings.push({
+        code: 'other',
+        severity: 'warning',
+        message: `classPrefix "${opts.classPrefix}" is not usable as the start of a Webflow class name (letters, digits, "-" and "_", not starting with a digit, "w-" or "wf-"); no prefix was added.`,
+      });
+    }
+    opts = { ...opts, classPrefix: prefix };
   }
   const css = parseCss(cssText);
   warnings.push(...css.warnings);
@@ -142,11 +161,60 @@ function convertUnsafe(input: ConvertInput, opts: ConvertOptions): ConvertResult
   });
   warnings.push(...built.warnings);
 
-  const styleMap = mapStyles({ ...css, rules: [...css.rules, ...built.extraRules] }, registry, built.usage, opts);
+  const hooks: MapStylesHooks = {};
+  if (opts.neutralizeDefaults && opts.keepUnsupportedInEmbed && isFullDocument(html)) {
+    const reset = buildBaselineReset(css.rules);
+    if (reset) {
+      hooks.prelude = reset;
+      warnings.push({
+        code: 'baseline-reset',
+        severity: 'info',
+        message:
+          'A short reset of browser defaults (body, headings, p, label, img, lists, strong) was put at the top of the <style> embed, so the site\'s tag styles do not change properties this page left to the browser. It applies to the whole page it is pasted on.',
+        detail: reset,
+      });
+    }
+  }
+  hooks.prepareEmbed = (selectors) => {
+    const plan = planEmbedRewrite({
+      selectors,
+      chains: registry.chains(),
+      styled: styledClassNames(registry),
+      embeddedClassLists: built.usage.embeddedClassLists,
+      remappedTags: built.remappedTags,
+      embedSpecificityParity: opts.embedSpecificityParity,
+      renameProofEmbedCss: opts.renameProofEmbedCss,
+      rewriteRemappedTags: opts.rewriteRemappedTags,
+    });
+    if (isEmptyPlan(plan)) return null;
+    if (plan.attr.size > 0) {
+      const tagged = tagDataWfc(built.nodes, registry, plan.attr);
+      warnings.push({
+        code: 'other',
+        severity: 'info',
+        message: `Code Embed CSS refers to ${plan.attr.size} native class${plan.attr.size > 1 ? 'es' : ''} through a data-wfc attribute (${tagged} element${tagged === 1 ? '' : 's'}), so it keeps matching if Webflow renames a clashing class to "name 2".`,
+        detail: [...plan.attr].map((c) => `.${c} -> ${attrSelector(c)}`).join('\n'),
+      });
+    }
+    return (selector) => rewriteEmbedSelector(selector, plan);
+  };
+
+  const styleMap = mapStyles({ ...css, rules: [...css.rules, ...built.extraRules] }, registry, built.usage, opts, hooks);
   warnings.push(...styleMap.warnings);
+  if (!opts.classPrefix) warnings.push(...collisionWarnings(registry));
 
   const js = extractJs(parsed.scripts, editorJs);
   warnings.push(...js.warnings);
+  if (opts.buttonClickShim && built.convertedButtons > 0) {
+    js.scripts.unshift({ src: null, code: BUTTON_CLICK_SHIM, attributes: [] });
+    js.totalBytes += new TextEncoder().encode(BUTTON_CLICK_SHIM).length;
+    warnings.push({
+      code: 'script-extracted',
+      severity: 'info',
+      message: `${built.convertedButtons} <button>${built.convertedButtons > 1 ? 's' : ''} became Webflow links (published with href="#"); a one-line script at the top of the script embed stops their clicks from jumping to the top of the page.`,
+      detail: BUTTON_CLICK_SHIM,
+    });
+  }
 
   // Embeds: links + CSS first (styles apply before content renders), scripts last.
   const headEmbeds: WfElementNode[] = [];
@@ -222,6 +290,114 @@ function normalizeClassNames(parsed: ParsedHtml, cssText: string, scripts: strin
       code: 'class-renamed',
       severity: 'warning',
       message: `Scripts still reference renamed classes (${names.join(', ')}). Scripts are not rewritten: update these strings to the new names.`,
+      detail: refs.map((r) => `${r.literal}  (${r.oldName} → ${r.newName})`).join('\n'),
+    });
+  }
+  return rewriteCssClasses(cssText, renames);
+}
+
+/** Stops converted `<button>` links (`href="#"` once published) from jumping to the top. */
+export const BUTTON_CLICK_SHIM =
+  "document.querySelectorAll('[data-wf-button]').forEach(b=>b.addEventListener('click',e=>e.preventDefault()))";
+
+/** Class names whose Webflow style (base or any combo level) has declarations. */
+function styledClassNames(registry: StyleRegistry): Set<string> {
+  const out = new Set<string>();
+  for (const { style } of registry.prefixes()) {
+    if (style.styleLess.trim() || Object.keys(style.variants).length > 0) out.add(style.name);
+  }
+  return out;
+}
+
+/**
+ * Adds `data-wfc="<class names>"` to every element that has one of `classes` (`data.attributes`
+ * on Custom Elements, `data.xattr` elsewhere). Returns how many elements were tagged.
+ */
+function tagDataWfc(nodes: WfNode[], registry: StyleRegistry, classes: Set<string>): number {
+  const nameById = new Map(registry.styles().map((s) => [s._id, s.name]));
+  let count = 0;
+  for (const n of nodes) {
+    if (isTextNode(n) || n.type === 'HtmlEmbed' || n.classes.length === 0) continue;
+    const names = n.classes.map((id) => nameById.get(id) ?? '').filter(Boolean);
+    if (!names.some((c) => classes.has(c))) continue;
+    const attr = { name: 'data-wfc', value: names.join(' ') };
+    if (n.type === 'DOM') {
+      n.data = n.data ?? {};
+      n.data.attributes = [...(n.data.attributes ?? []).filter((a) => a.name !== 'data-wfc'), attr];
+    } else {
+      n.data = n.data ?? { attr: { id: '' } };
+      n.data.xattr = [...(n.data.xattr ?? []).filter((a) => a.name !== 'data-wfc'), attr];
+    }
+    count++;
+  }
+  return count;
+}
+
+/**
+ * Class names that Client-First / Relume sites commonly define globally. Pasting a class whose name
+ * exists with different styles makes Webflow rename it to "name 2" (S7); a combo class merges with
+ * a same-named class of the site, whose styles then apply too.
+ */
+const CORE_CLASS = [
+  /^(page-wrapper|main-wrapper|button|button-group|hide|layer|overflow-hidden|align-center|fs-styleguide.*)$/,
+  /^(container|padding|margin|spacer|text-size|text-weight|text-style|text-color|text-align|heading-style|max-width|background-color|icon-embed|icon-height|icon-1x1|pointer-events|z-index|aspect-ratio|hide)-/,
+  /^navbar_/,
+  /^[a-z]+\d+_/, // Relume component names: navbar1_component, header5_content…
+];
+
+function collisionWarnings(registry: StyleRegistry): ConvertWarning[] {
+  const core: string[] = [];
+  const combos: string[] = [];
+  for (const s of registry.styles()) {
+    if (s.comb === '' && CORE_CLASS.some((re) => re.test(s.name)) && !core.includes(s.name)) core.push(s.name);
+    if (s.comb === '&' && !s.name.startsWith('is-') && !/^inline-style-\d+$/.test(s.name) && !combos.includes(s.name)) combos.push(s.name);
+  }
+  if (core.length === 0 && combos.length === 0) return [];
+  const detail: string[] = [];
+  if (core.length) detail.push(`Common Client-First / Relume names: ${core.join(', ')}`);
+  if (combos.length) detail.push(`Combo classes not named is-*: ${combos.join(', ')}`);
+  return [
+    {
+      code: 'class-collision-risk',
+      severity: 'warning',
+      message:
+        'Some classes may already exist in your Webflow site. Webflow renames a pasted class that clashes to "name 2", and a combo class merges with a site class of the same name (its styles apply too). Paste into a clean site, or set the classPrefix option.',
+      detail: detail.join('\n'),
+    },
+  ];
+}
+
+/** Lower-cases a class prefix and replaces other characters with "-"; `""` when unusable. */
+function sanitizePrefix(prefix: string): string {
+  const p = prefix.trim().toLowerCase().replace(/[^0-9a-z_-]/g, '-');
+  return p && isWebflowClassName(`${p}x`) ? p : '';
+}
+
+/**
+ * Adds `prefix` to every class used in the HTML (not to CSS-only classes, which scripts usually
+ * toggle), in the document and in the CSS. Scripts are not rewritten; literals that mention a
+ * prefixed class are reported.
+ */
+function prefixClassNames(parsed: ParsedHtml, cssText: string, scripts: string[], prefix: string, warnings: ConvertWarning[]): string {
+  const renames = new Map<string, string>();
+  for (const c of parsed.classNames) if (!c.startsWith('w--') && !c.startsWith(prefix)) renames.set(c, prefix + c);
+  if (renames.size === 0) return cssText;
+  renameClassesInDocument(parsed.document, renames);
+  const rename = (c: string): string => renames.get(c) ?? c;
+  parsed.classNames = new Set([...parsed.classNames].map(rename));
+  parsed.bodyClasses = parsed.bodyClasses.map(rename);
+  warnings.push({
+    code: 'class-renamed',
+    severity: 'info',
+    message: `${renames.size} class name${renames.size > 1 ? 's were' : ' was'} prefixed with "${prefix}" (option classPrefix); the <style> CSS was updated to match.`,
+  });
+  const refs = findJsClassReferences(scripts, renames);
+  if (refs.length > 0) {
+    const names = [...new Set(refs.map((r) => `${r.oldName} → ${r.newName}`))];
+    warnings.push({
+      code: 'class-renamed',
+      severity: 'warning',
+      message: `Scripts still reference prefixed classes (${names.join(', ')}). Scripts are not rewritten: update these strings to the new names.`,
       detail: refs.map((r) => `${r.literal}  (${r.oldName} → ${r.newName})`).join('\n'),
     });
   }

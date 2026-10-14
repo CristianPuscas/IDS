@@ -34,6 +34,9 @@ export const WARNING_LABELS: Record<ConvertWarningCode, string> = {
   'embed-split': 'Embeds split',
   'embed-too-large': 'Embed too large',
   'class-renamed': 'Classes renamed',
+  'class-collision-risk': 'Class name clash risk',
+  'breakpoint-snapped': 'Media queries snapped to breakpoints',
+  'baseline-reset': 'Browser-default reset',
   'not-implemented': 'Not implemented yet',
   other: 'Other',
 };

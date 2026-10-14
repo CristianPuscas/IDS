@@ -23,7 +23,26 @@ verified and what is uncertain.
 - Native Webflow forms: Form Block with text inputs, textareas, selects, checkboxes, radios, labels,
   a submit button and the success and error messages Webflow requires.
 - Buttons keep the source look: every Webflow `.w-button` default (blue background, padding,
-  white text…) that your CSS does not set is overridden on the button's class.
+  white text…) that your CSS does not set is overridden on the button's class, and a `<button>`
+  keeps its browser font (13.33px Arial, centred, `line-height: normal`). When an
+  `<a class="button">` and a `<button class="button">` share a class, the `<button>` gets its own
+  values on a generated `is-button-ua` combo so the links are not changed.
+- Converted `<button>`s get `data-wf-button`, and a one-line script stops their clicks from jumping
+  to the top of the page (Webflow publishes them with `href="#"`).
+- External images keep their exact URL: they become Custom Elements (`<img>`), because Webflow
+  rewrites the `src` of a native Image to its own CDN on publish. `data:` URIs and Webflow CDN URLs
+  stay native Images.
+- Off-grid `max-width` queries below 991px (850px, 640px…) snap up to the nearest Webflow breakpoint
+  (`medium`, `small`, `tiny`), so mobile menus and one-column layouts reach every narrower width.
+- Full documents get a small browser-default reset at the top of the `<style>` embed (body
+  letter-spacing, heading and paragraph margins…), so the destination site's tag styles do not
+  leak into what the page left to the browser. Properties your CSS sets are skipped.
+- `<style>` embed CSS survives the paste: native classes are referenced through a `data-wfc`
+  attribute (same specificity), so Webflow renaming a clashing class to "name 2" does not break it;
+  a lone combo class is repeated to keep beating the published combo selector; and `b`, `i` and
+  `button` selectors are rewritten to the tags Webflow publishes (`strong`, `em`, links).
+- A warning lists class names likely to clash with an existing Client-First / Relume site, and the
+  `classPrefix` option prefixes every class to avoid clashes.
 - Class names are renamed to the selector Webflow publishes (`heroTitle` → `herotitle`,
   `md:flex` → `md-flex`), and the `<style>` embed is rewritten to match.
 - Embedded canvas, svg, video and iframe elements with percentage or absolute sizing get a wrapper
@@ -58,18 +77,20 @@ verified and what is uncertain.
 | `section` | Section |
 | `h1`–`h6`, `p`, `blockquote` | Heading, Paragraph, Block Quote |
 | `a` | Text Link; Link Block when it wraps block elements or images; Button when it looks like one (`btn`, `button`, `*-btn` classes or `role="button"`) |
-| `button` | Webflow Button (an `<a>` with `role="button"`); Link Block if it wraps block elements. Option `buttonMode: 'linkBlock'` makes button-like elements Link Blocks |
+| `button` | Webflow Button (an `<a>` with `role="button"` and `data-wf-button`); Link Block if it wraps block elements. Option `buttonMode: 'linkBlock'` makes button-like elements Link Blocks |
 | `form` and its `input`/`textarea`/`select`/`label`/submit `button` | Native Form Block: FormWrapper > FormForm (+ success and error messages), FormTextInput, FormTextarea, FormSelect, FormBlockLabel, Checkbox/Radio wrappers, FormButton |
 | File, hidden, date, range… inputs, reset buttons, `<optgroup>` selects inside a form | Code Embed inside the native form, with a warning |
-| `img` | Image that keeps its original URL (hot-linked, no asset record) |
+| `img` with an external URL | Custom Element `<img>` with `src`, `srcset`, `sizes`, `alt`, `loading`, `width`, `height` kept verbatim (option `externalImages`: `'embed'` or `'image'`) |
+| `img` with a `data:` URI or Webflow CDN URL | Image (`data.attr.src`, no asset record) |
 | `ul`/`ol`, `li` | List, List Item |
-| `span`, `strong`/`b`, `em`/`i`, `sup`, `sub`, `br` | Span, Bold, Italic, Superscript, Subscript, Line Break |
+| `span`, `strong`/`b`, `em`/`i`, `sup`, `sub`, `br` | Span, Bold, Italic, Superscript, Subscript, Line Break (`b`/`i` selectors in the embed become `strong`/`em`) |
 | Other tags (`small`, `code`, `pre`, `label`, `time`, `hr`…) | Custom Element (DOM node) |
 | `svg`, `canvas`, `video`, `audio`, `iframe`, `picture`, `table`, form controls outside a form… | Code Embed with the element's HTML; inside a classed Div Block (`<class>-embed`) when it uses percentage sizes or absolute positioning |
 | `.a { }` | Base class |
 | `.a.b { }` | Combo class `b` on `a`, only for combinations present in the HTML |
 | `:hover`, `:active`, `:focus`, `:focus-visible`, `:visited`, `::placeholder`, `.w--current`, `.w--open` | State variants (`main_hover`, `main_active` for "Pressed"…) |
 | `@media (max-width: 991/767/479px)` and `(min-width: 992/768/480px)`, ±20px | `medium` / `small` / `tiny` variants |
+| `@media (max-width: N)` with N < 991 and off the grid (850, 640…) | Snapped up to the smallest breakpoint ≥ N (850 → `medium`, 640 → `small`); the block's embed rules use the same breakpoint. Option `breakpointSnap: 'off'` keeps them in the embed |
 | `style="…"` attributes | A generated class (`inline-style-N`) |
 | `var(--x)` values | Kept in the class as `@raw<\|var(--x)\|>` (the variables themselves go to the embed) |
 | Tag, ID, attribute, descendant, child and sibling selectors; `::before`/`::after`; other pseudo-classes | `<style>` embed |
@@ -92,15 +113,21 @@ are wrapped in one classless Div Block.
 
 ## Known limitations
 
-- **Images** keep their original URL with no Webflow asset record (spec 2.4: fabricating asset
-  records is risky). They hot-link from the original host and do not appear in the Assets panel.
-  Relative URLs will not resolve. `srcset`/`sizes` are dropped.
+- **Images**: in a real paste test Webflow rewrote every external `src` of a native Image to
+  `cdn.prod.website-files.com/<basename>` (query string dropped), which returned 403. External
+  images are therefore Custom Elements (`<img>`) by default; they hot-link from the original host
+  and do not appear in the Assets panel. Upload them and swap in native Images if you want Webflow
+  to host them. Relative URLs will not resolve. With `externalImages: 'image'`, `srcset`/`sizes`
+  are dropped and the URL may be rewritten as above.
 - **Buttons** are Webflow Buttons, which carry `.w-button`. The converter adds the source's values
   (or the browser defaults of the source `<a>`/`<button>`) to the button's base class for each
   `.w-button` property your CSS leaves unset. This is skipped, with a warning, when that base class
-  is also used on non-button elements. UA font styles of `<button>` (13.33px system font) are not
-  reproduced, because the element becomes an `<a>`. Use `buttonMode: 'linkBlock'` to avoid
-  `.w-button` entirely (the text then sits in a Text Block inside a Link Block).
+  is also used on non-button elements. A `<button>` also gets its user-agent font (13.33px Arial;
+  macOS Chrome uses the system font instead) unless your CSS sets it. Use `buttonMode: 'linkBlock'`
+  to avoid `.w-button` entirely (the text then sits in a Text Block inside a Link Block; it does not
+  get the button defaults).
+- **Converted `<button>`s** publish as `<a href="#">`. The click shim (`buttonClickShim`) is a
+  script, so it runs only in Preview and on the published site.
 - **Forms** are native (`forms: 'native'`). The node shapes come from real Designer dumps (spec
   2.4); the radio wrapper and radio label types are inferred from the checkbox pair. Native fields
   pick up Webflow's `.w-input`/`.w-select`/`.w-checkbox` defaults (height 38px, padding, grey
@@ -127,8 +154,21 @@ are wrapped in one classless Div Block.
   (`card-2`). HTML and CSS are rewritten; scripts are not. A warning lists every rename and every
   string literal in your JS that still uses an old name, so you can update it. CSS-only classes
   (usually toggled by JS) keep their names. Turn it off with `normalizeClassNames: false`.
-- **Breakpoints**: `min-width` 1280/1440/1920 and odd widths stay in the `<style>` embed, because
-  pasting `large`/`xl`/`xxl` variants adds breakpoints to the whole site.
+- **Breakpoints**: `min-width` 1280/1440/1920, odd `min-width`s and `max-width` above 1011px stay in
+  the `<style>` embed, because pasting `large`/`xl`/`xxl` variants adds breakpoints to the whole
+  site. Snapped `max-width` queries switch a little wider than in the source (850 → 991,
+  640 → 767).
+- **Class clashes**: Webflow renames a pasted class whose name already exists with different styles
+  to "name 2", and a combo class merges with a same-named class of the site (whose styles then
+  apply too: a combo `.navbar_component` picked up a site's navy navbar). Native styles still apply
+  after a rename, and `<style>` embed CSS reaches native classes through `data-wfc`, but site styles
+  can still leak in through merged combos. Set `classPrefix` (engine option, not in the UI yet) or
+  paste into a clean site. Scripts that query classes by name are not rewritten.
+- **Baseline reset** (`neutralizeDefaults`, full documents only) uses bare tag selectors, so it
+  applies to the whole page you paste on, like the page's own `body`/tag rules do.
+- **`data-wfc` / `data-wf-button`** are custom attributes; that Webflow keeps them on paste and
+  publish (and accepts Custom Element `<img>` with `src`) is still to be confirmed with a real
+  paste.
 - **Scripts** do not run on the Designer canvas. Webflow Interactions are not generated.
 - The format is undocumented and Webflow can change it. See the spec for every uncertain point.
 
@@ -199,7 +239,10 @@ webflow-converter/
     │   ├── embedBuilder.ts     HtmlEmbed builders for <style>/<script>/raw code, with size splitting
     │   ├── embedSizing.ts      Layout wrapper Block for sized canvas/svg/video/iframe embeds
     │   ├── forms.ts            Native Form Block (FormWrapper, FormForm, fields, messages)
-    │   ├── buttonDefaults.ts   .w-button neutralizers for Webflow Buttons
+    │   ├── buttonDefaults.ts   .w-button neutralizers (and <button> UA font) for Webflow Buttons
+    │   ├── baseline.ts         Browser-default tag reset for full documents
+    │   ├── embedCss.ts         <style> embed selector rewriting (data-wfc, specificity, b/i/button)
+    │   ├── __fixtures__/       Real pages used as regression fixtures (ferma.html)
     │   ├── classNames.ts       Webflow class-name rule, renames, CSS selector rewriting
     │   ├── cascade.ts          Which source declarations apply to an element (specificity)
     │   ├── validate.ts         validateXscp(): structural checks before copying
@@ -257,6 +300,14 @@ interface ConvertOptions {
   forms: 'native' | 'embed';          // 'native': Webflow Form Block; 'embed': form HTML in a Code Embed
   embedSizing: 'wrapper' | 'none';    // 'wrapper': sized canvas/svg/video/iframe get a classed layout Div Block
   normalizeClassNames: boolean;       // true: rename classes to Webflow's published form, rewrite CSS
+  externalImages: 'customElement' | 'embed' | 'image'; // 'customElement': external <img> keeps its URL as a Custom Element
+  breakpointSnap: 'up' | 'off';       // 'up': off-grid max-width < 991 snaps to the next Webflow breakpoint up
+  neutralizeDefaults: boolean;        // true: browser-default tag reset at the top of the <style> embed (full documents)
+  embedSpecificityParity: boolean;    // true: lone combo classes in embed selectors are repeated (.b -> .b.b)
+  renameProofEmbedCss: boolean;       // true: embed CSS targets native classes via [data-wfc~="x"]
+  rewriteRemappedTags: boolean;       // true: b/i/button selectors in the embed follow the pasted tags
+  classPrefix: string;                // '': prefix for every HTML class and generated class (e.g. 'fm-')
+  buttonClickShim: boolean;           // true: preventDefault on converted <button> links (href="#")
 }
 
 interface ConvertResult {
@@ -270,7 +321,9 @@ interface ConvertResult {
 ## Testing
 
 - `npm test` runs the unit tests for the engine and UI, including fixture-based end-to-end
-  conversions validated with `validateXscp()`.
+  conversions validated with `validateXscp()`. `src/engine/__fixtures__/ferma.html` is a real page
+  whose paste test found the issues fixed in the external-image, breakpoint-snap, baseline-reset,
+  embed-CSS and button-shim changes; `ferma.test.ts` guards them.
 - A browser check (Playwright, not a project dependency) has been run against `npm run preview`.
   It loads each tab's example, presses Convert, captures the `application/json` clipboard entry
   from the copy event and checks the invariants: single pre-order root, unique UUID ids, no

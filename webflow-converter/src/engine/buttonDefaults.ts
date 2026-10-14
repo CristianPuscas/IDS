@@ -18,6 +18,11 @@
  *   `<button>`/`<input>` gets the user-agent button styles (1px 6px padding, #efefef, black text,
  *   2px outset border, `line-height: normal`, `cursor: default`).
  *
+ * A `<button>`/`<input>` also loses its user-agent *font* styles when it becomes an `<a>` (or, for a
+ * Form Button, when webflow.css applies `font: inherit`): 13.33px Arial, normal weight and style,
+ * `letter-spacing: normal`, `text-transform: none`, `text-align: center`. Those are added too
+ * unless any source rule sets them (`BUTTON_UA_FONT`).
+ *
  * Only the resting state outside `@media` decides; breakpoint rules keep overriding the result
  * through the normal variant mapping.
  *
@@ -47,6 +52,21 @@ export const W_BUTTON_DEFAULTS: ReadonlyArray<readonly [string, string]> = [
   ['text-decoration', 'none'],
   ['cursor', 'pointer'],
   ...CORNERS.map((c) => [`border-${c}-radius`, '0px'] as const),
+];
+
+/**
+ * User-agent font styles of `<button>`/`<input type="submit">` (Chromium `font: -webkit-small-control`
+ * plus the form-control text resets). The measured family on Linux/Windows Chromium is Arial
+ * (macOS uses the system font).
+ */
+export const BUTTON_UA_FONT: ReadonlyArray<readonly [string, string]> = [
+  ['font-family', 'Arial, sans-serif'],
+  ['font-size', '13.3333px'],
+  ['font-weight', '400'],
+  ['font-style', 'normal'],
+  ['letter-spacing', 'normal'],
+  ['text-transform', 'none'],
+  ['text-align', 'center'],
 ];
 
 const INHERITED = new Set(['color', 'line-height', 'cursor']);
@@ -156,6 +176,8 @@ function covers(shorthand: string, prop: string): boolean {
       return new RegExp(`^${shorthand}-(width|style|color)$`).test(prop);
     case 'border-radius':
       return /^border-.*-radius$/.test(prop);
+    case 'font':
+      return /^(font-(family|size|weight|style|variant|stretch)|line-height)$/.test(prop);
     default:
       return false;
   }
@@ -179,18 +201,33 @@ function same(a: string, b: string): boolean {
   return norm(a) === norm(b);
 }
 
+/** What one converted button needs for one property. */
+export interface ButtonTarget {
+  property: string;
+  /** Value that reproduces the source, or `null` when the user's CSS already sets it on the button. */
+  value: string | null;
+  /** What the property renders as in Webflow when no class declaration sets it. */
+  natural: string;
+}
+
+/** The value a property has on a converted button when no class declaration sets it. */
+export function naturalButtonValue(prop: string): string {
+  return W_BUTTON_DEFAULTS.find(([p]) => p === prop)?.[1] ?? 'inherit';
+}
+
 /**
- * Longhands to add to a converted button's base class so it renders like the source element
- * instead of picking up `.w-button` defaults. Empty when the user's CSS already covers them.
+ * Per-property targets for one converted button: every `.w-button` property, plus the user-agent
+ * font styles for a `<button>`/`<input>` source. `value` is what the class must declare to render
+ * like the source (`null` = left to the user's CSS).
  *
  * @param el Source element (`<a>`, `<button>` or `<input type="submit">`) in the parsed document.
  * @param rules All parsed style rules (after class-name normalization).
  */
-export function buttonNeutralizers(el: Element, rules: CssStyleRule[]): NativeDecl[] {
+export function buttonTargets(el: Element, rules: CssStyleRule[]): ButtonTarget[] {
   const tag = el.tagName.toLowerCase();
   const hasHref = tag === 'a' && el.hasAttribute('href');
   const matched = matchedDeclarations(el, rules).filter((m) => m.mediaStack.length === 0);
-  const out: NativeDecl[] = [];
+  const out: ButtonTarget[] = [];
   for (const [prop, wValue] of W_BUTTON_DEFAULTS) {
     let winner: { value: string | null; strong: boolean } | null = null;
     for (const m of matched) {
@@ -198,15 +235,36 @@ export function buttonNeutralizers(el: Element, rules: CssStyleRule[]): NativeDe
       if (value === undefined) continue;
       winner = { value, strong: m.inline || m.decl.important || atLeastClass(m.specificity) };
     }
-    let value: string;
-    if (winner) {
-      if (winner.strong || winner.value === null) continue;
-      value = winner.value;
-    } else {
-      value = userAgentValue(prop, tag, hasHref);
+    let value: string | null;
+    if (winner) value = winner.strong || winner.value === null ? null : winner.value;
+    else value = userAgentValue(prop, tag, hasHref) || wValue;
+    out.push({ property: prop, value: value === null ? null : wrapRaw(value), natural: wValue });
+  }
+  if (tag !== 'a') {
+    // Any source rule (even `button {}` or `*`, which keep applying from the embed) counts as set.
+    for (const [prop, ua] of BUTTON_UA_FONT) {
+      const covered = matched.some((m) => coveredValue(m.decl, prop) !== undefined);
+      out.push({ property: prop, value: covered ? null : ua, natural: 'inherit' });
     }
-    if (!value || same(value, wValue)) continue;
-    out.push({ property: prop, value: wrapRaw(value) });
   }
   return out;
+}
+
+/**
+ * Longhands to add to a converted button's class so it renders like the source element instead
+ * of picking up `.w-button` defaults (and, for a `<button>`, keeps its user-agent font). Empty when
+ * the user's CSS already covers them.
+ *
+ * @param el Source element (`<a>`, `<button>` or `<input type="submit">`) in the parsed document.
+ * @param rules All parsed style rules (after class-name normalization).
+ */
+export function buttonNeutralizers(el: Element, rules: CssStyleRule[]): NativeDecl[] {
+  return buttonTargets(el, rules)
+    .filter((t): t is ButtonTarget & { value: string } => t.value !== null && !sameValue(t.value, t.natural))
+    .map((t) => ({ property: t.property, value: t.value }));
+}
+
+/** Compares two CSS values loosely (case, `0` vs `0px`, white/#fff). */
+export function sameValue(a: string, b: string): boolean {
+  return same(a, b);
 }

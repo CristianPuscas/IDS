@@ -22,7 +22,8 @@ describe('combined vs separate input modes', () => {
     const res = convert({ mode: 'combined', html: doc });
     expect(validateXscp(res.data)).toEqual([]);
     expect(style(res, 'card').styleLess).toContain('padding-top: 1rem;');
-    expect(embeddedCss(res)).toContain('.card .t');
+    // .card is styled natively, so the embed reaches it through data-wfc; .t has no native style.
+    expect(embeddedCss(res)).toContain('[data-wfc~="card"] .t');
     const codes = embedCodes(res);
     expect(codes[0]).toContain('fonts.googleapis.com/css2');
     expect(codes[0]).not.toContain('favicon');

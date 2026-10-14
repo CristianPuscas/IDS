@@ -19,13 +19,17 @@
  * - `and`-ed conditions intersect; nested `@media` intersect too.
  * - Range syntax `(width <= N)`, `(width < N)`, `(width >= N)`, `(width > N)` and `em`/`rem`
  *   units (×16px) are understood.
+ * - `(max-width: N)` below 991 and outside the tolerance snaps up (option `breakpointSnap: 'up'`)
+ *   to the smallest of 479/767/991 that is ≥ N: 850 -> medium, 640 -> small, 400 -> tiny. The
+ *   rules then start a little wider than in the source, but they reach every narrower breakpoint,
+ *   which is what desktop-first CSS relies on (a mobile menu at 640px must show at 375px).
  * - Anything else (`orientation`, `hover`, `prefers-*`, `print`, comma lists, `not`, other widths)
  *   is unmatched and stays in the `<style>` embed with its original query.
  *
  * Ownership: engine.
  */
 
-import { WF_MAX_WIDTH_BREAKPOINTS, WF_MIN_WIDTH_BREAKPOINTS } from './types';
+import { WF_MAX_WIDTH_BREAKPOINTS, WF_MIN_WIDTH_BREAKPOINTS, type BreakpointSnap } from './types';
 
 /** Viewport bands, narrowest first. */
 export const ALL_BANDS = ['tiny', 'small', 'medium', 'main', 'large', 'xl', 'xxl'] as const;
@@ -38,7 +42,8 @@ export function bandDomain(includeLarge: boolean): Band[] {
 
 /** Result of `mediaToBands`. */
 export type MediaMapping =
-  | { kind: 'bands'; bands: Band[] }
+  /** `snapped` lists the `max-width` values (px) that were snapped up, with their breakpoint. */
+  | { kind: 'bands'; bands: Band[]; snapped?: { px: number; band: Band }[] }
   /** A min-width query near 1280/1440/1920 while large breakpoints are disabled. */
   | { kind: 'large'; reason: string }
   | { kind: 'unmatched'; reason: string };
@@ -60,20 +65,23 @@ const BAND_START: Record<Band, number> = {
  * @param stack `CssStyleRule.mediaStack`. `[]` covers every band.
  * @param tolerancePx `ConvertOptions.breakpointTolerancePx`.
  * @param includeLarge `ConvertOptions.includeLargeBreakpoints`.
+ * @param snap `ConvertOptions.breakpointSnap`. Defaults to `'off'` here (the engine passes the option).
  */
-export function mediaToBands(stack: string[], tolerancePx: number, includeLarge: boolean): MediaMapping {
+export function mediaToBands(stack: string[], tolerancePx: number, includeLarge: boolean, snap: BreakpointSnap = 'off'): MediaMapping {
   const domain = bandDomain(includeLarge);
   let bands = new Set<Band>(domain);
+  const snapped: { px: number; band: Band }[] = [];
   for (const prelude of stack) {
-    const m = queryToBands(prelude, tolerancePx, includeLarge);
+    const m = queryToBands(prelude, tolerancePx, includeLarge, snap);
     if (m.kind !== 'bands') return m;
     bands = new Set(m.bands.filter((b) => bands.has(b)));
+    if (m.snapped) snapped.push(...m.snapped);
   }
   if (bands.size === 0) return { kind: 'unmatched', reason: 'media query matches no Webflow breakpoint' };
-  return { kind: 'bands', bands: domain.filter((b) => bands.has(b)) };
+  return { kind: 'bands', bands: domain.filter((b) => bands.has(b)), ...(snapped.length ? { snapped } : {}) };
 }
 
-function queryToBands(prelude: string, tol: number, includeLarge: boolean): MediaMapping {
+function queryToBands(prelude: string, tol: number, includeLarge: boolean, snap: BreakpointSnap): MediaMapping {
   const domain = bandDomain(includeLarge);
   let q = prelude.trim().toLowerCase().replace(/\s+/g, ' ');
   if (q.includes(',')) return { kind: 'unmatched', reason: 'media query list (comma)' };
@@ -82,15 +90,17 @@ function queryToBands(prelude: string, tol: number, includeLarge: boolean): Medi
   if (!q) return { kind: 'bands', bands: domain };
 
   let bands = new Set<Band>(domain);
+  const snapped: { px: number; band: Band }[] = [];
   for (const part of q.split(/ and /)) {
     const cond = part.trim();
     const parsed = parseWidthCondition(cond);
     if (!parsed) return { kind: 'unmatched', reason: `unsupported media feature ${cond}` };
-    const covered = conditionToBands(parsed, tol, includeLarge, domain);
+    const covered = conditionToBands(parsed, tol, includeLarge, domain, snap);
     if (covered.kind !== 'bands') return covered;
     bands = new Set(covered.bands.filter((b) => bands.has(b)));
+    if (covered.snapped) snapped.push(...covered.snapped);
   }
-  return { kind: 'bands', bands: domain.filter((b) => bands.has(b)) };
+  return { kind: 'bands', bands: domain.filter((b) => bands.has(b)), ...(snapped.length ? { snapped } : {}) };
 }
 
 /** `max` = viewport ≤ px, `min` = viewport ≥ px. */
@@ -124,7 +134,7 @@ function toPx(n: string, unit: string | undefined): number {
   return unit === 'em' || unit === 'rem' ? v * 16 : v;
 }
 
-function conditionToBands(c: WidthCondition, tol: number, includeLarge: boolean, domain: Band[]): MediaMapping {
+function conditionToBands(c: WidthCondition, tol: number, includeLarge: boolean, domain: Band[], snap: BreakpointSnap): MediaMapping {
   if (c.type === 'max') {
     for (const [bp, px] of Object.entries(WF_MAX_WIDTH_BREAKPOINTS) as [Band, number][]) {
       if (Math.abs(c.px - px) <= tol) {
@@ -132,6 +142,16 @@ function conditionToBands(c: WidthCondition, tol: number, includeLarge: boolean,
         const idx = domain.indexOf(bp);
         return { kind: 'bands', bands: domain.slice(0, idx + 1) };
       }
+    }
+    if (snap === 'up' && c.px > 0 && c.px < WF_MAX_WIDTH_BREAKPOINTS.medium) {
+      // Smallest Webflow max-width breakpoint that contains the query (479, then 767, then 991).
+      const order: [Band, number][] = [
+        ['tiny', WF_MAX_WIDTH_BREAKPOINTS.tiny],
+        ['small', WF_MAX_WIDTH_BREAKPOINTS.small],
+        ['medium', WF_MAX_WIDTH_BREAKPOINTS.medium],
+      ];
+      const [bp] = order.find(([, px]) => px >= c.px)!;
+      return { kind: 'bands', bands: domain.slice(0, domain.indexOf(bp) + 1), snapped: [{ px: c.px, band: bp }] };
     }
     return { kind: 'unmatched', reason: `max-width ${c.px}px is not within ±${tol}px of 991/767/479` };
   }
@@ -149,4 +169,29 @@ function conditionToBands(c: WidthCondition, tol: number, includeLarge: boolean,
     }
   }
   return { kind: 'unmatched', reason: `min-width ${c.px}px is not within ±${tol}px of 480/768/992` };
+}
+
+/**
+ * Rewrites the `max-width` conditions of a media chain that `breakpointSnap: 'up'` snaps, to the
+ * Webflow breakpoint they snap to (`(max-width:640px)` -> `(max-width: 767px)`). Other conditions
+ * are kept (normalised to lower case and single spaces). Used for the embed-bound rules of a
+ * snapped `@media` block, so they switch at the same width as its native variants.
+ */
+export function snapMediaStack(stack: string[], tolerancePx: number, includeLarge: boolean): string[] {
+  const domain = bandDomain(includeLarge);
+  return stack.map((prelude) => {
+    let q = prelude.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (q.includes(',')) return prelude;
+    const lead = /^(only )?((screen|all)( and |$))?/.exec(q)![0];
+    q = q.slice(lead.length);
+    if (!q) return prelude;
+    const parts = q.split(/ and /).map((part) => {
+      const c = parseWidthCondition(part.trim());
+      if (!c || c.type !== 'max') return part.trim();
+      const m = conditionToBands(c, tolerancePx, includeLarge, domain, 'up');
+      if (m.kind !== 'bands' || !m.snapped) return part.trim();
+      return `(max-width: ${WF_MAX_WIDTH_BREAKPOINTS[m.snapped[0]!.band as keyof typeof WF_MAX_WIDTH_BREAKPOINTS]}px)`;
+    });
+    return lead + parts.join(' and ');
+  });
 }

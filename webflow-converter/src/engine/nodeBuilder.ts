@@ -10,7 +10,8 @@
  * | a                                                         | `Link`: text link, Link Block (`block:"inline"`) or Button (`button:true`) |
  * | button                                                    | `Link` with `button:true` + `role="button"` (Link Block if it holds elements) |
  * | form (option `forms: 'native'`)                           | FormWrapper > FormForm + messages (see ./forms) |
- * | img                                                       | `Image` (external `src`, no asset record)  |
+ * | img (external URL, option `externalImages`)               | `DOM` Custom Element `<img>` (default), HtmlEmbed, or `Image` |
+ * | img (`data:` URI or Webflow CDN URL)                      | `Image` (`data.attr.src`, no asset record) |
  * | ul/ol, li                                                 | `List`, `ListItem`                        |
  * | span, strong/b, em/i, sup, sub, br, blockquote            | `Span`, `Strong`, `Emphasized`, `Superscript`, `Subscript`, `LineBreak`, `Blockquote` |
  * | canvas, video, audio, svg, iframe, table…                 | `HtmlEmbed` with the element's outerHTML (in a sizing Block when needed, see ./embedSizing) |
@@ -21,12 +22,16 @@
  * `style="…"` becomes a generated class (`inline-style-N`) so it stays editable in the Designer.
  *
  * Buttons (option `buttonMode`): native Buttons get `.w-button` neutralizers on their base class
- * (see ./buttonDefaults); `'linkBlock'` emits a Link Block with a Text Block instead.
+ * (see ./buttonDefaults); `'linkBlock'` emits a Link Block with a Text Block instead. When buttons
+ * that share a base class need different values (an `<a class="button">` and a
+ * `<button class="button">`), the shared values go on the base class and the rest on a generated
+ * `is-button-ua` combo of the buttons that differ. A `<button>` that became a link gets
+ * `data-wf-button` (options `buttonClickShim`, `rewriteRemappedTags`).
  *
  * Ownership: engine.
  */
 
-import { buttonNeutralizers } from './buttonDefaults';
+import { buttonTargets, naturalButtonValue, sameValue, type ButtonTarget } from './buttonDefaults';
 import { parseDeclarations, type CssStyleRule } from './cssParser';
 import type { NativeDecl } from './cssValues';
 import { buildEmbedNode } from './embedBuilder';
@@ -47,6 +52,10 @@ export interface NodeBuildResult {
   usage: ClassUsage;
   /** Generated style rules (embed sizing wrappers) to map together with the source CSS. */
   extraRules: CssStyleRule[];
+  /** Source tags that were pasted as another tag and appear in the output (`b`, `i`, `button`). */
+  remappedTags: Set<string>;
+  /** Number of `<button>` elements that became links carrying `data-wf-button`. */
+  convertedButtons: number;
   warnings: ConvertWarning[];
 }
 
@@ -114,13 +123,25 @@ interface Ctx {
   rules: CssStyleRule[];
   /** True while converting the inside of a native form. */
   inForm: boolean;
-  /** `.w-button` neutralizers for buttons that have their own base class (applied at the end). */
-  buttonDefaults: { base: string; decls: NativeDecl[] }[];
+  /** Buttons with their own base class; their `.w-button` neutralizers are applied at the end. */
+  buttonDefaults: PendingButton[];
+  pendingByElement: Map<Element, PendingButton>;
+  remappedTags: Set<string>;
+  convertedButtons: number;
   /** Class names used by anything that is not a Webflow Button (native or embedded). */
   otherClasses: Set<string>;
   /** Generated classes, keyed by base name + declarations, so identical ones are shared. */
   generated: Map<string, string>;
   extraRules: CssStyleRule[];
+}
+
+/** A converted button with its own classes, waiting for `applyButtonDefaults`. */
+interface PendingButton {
+  base: string;
+  targets: ButtonTarget[];
+  /** Class names of the element's chain, and the style-id array its node holds (patched in place). */
+  names?: string[];
+  ids?: string[];
 }
 
 /**
@@ -152,6 +173,9 @@ export function buildNodes(
     rules: extra.cssRules ?? [],
     inForm: false,
     buttonDefaults: [],
+    pendingByElement: new Map(),
+    remappedTags: new Set(),
+    convertedButtons: 0,
     otherClasses: new Set(),
     generated: new Map(),
     extraRules: [],
@@ -202,37 +226,78 @@ export function buildNodes(
     topLevel: [...root.children],
     usage: { embeddedClassLists: ctx.embeddedClassLists },
     extraRules: ctx.extraRules,
+    remappedTags: ctx.remappedTags,
+    convertedButtons: ctx.convertedButtons,
     warnings: ctx.warnings,
   };
 }
 
 /**
- * Registers the `.w-button` neutralizers on each button base class. A base class that is also used
- * by something other than a Button is left alone: the neutralizers (e.g. `display: inline`) would
- * change that element too.
+ * Registers the `.w-button` neutralizers of buttons that have their own classes. Per base class, a
+ * value every button agrees on goes on the base class; when buttons sharing the base need
+ * different values (typically `<a class="button">` next to `<button class="button">`), the base
+ * keeps the natural value and each differing button gets a generated `is-button-ua` combo with
+ * its own values. A base class that is also used by something other than a Button is left alone:
+ * the neutralizers (e.g. `display: inline`) would change that element too.
  */
 function applyButtonDefaults(ctx: Ctx): void {
   for (const list of ctx.embeddedClassLists) for (const c of list) ctx.otherClasses.add(c);
-  const merged = new Map<string, Map<string, string>>();
+  const groups = new Map<string, PendingButton[]>();
   const skipped = new Set<string>();
-  for (const { base, decls } of ctx.buttonDefaults) {
-    if (ctx.otherClasses.has(base)) {
-      skipped.add(base);
+  for (const b of ctx.buttonDefaults) {
+    if (ctx.otherClasses.has(b.base)) {
+      if (b.targets.some((t) => t.value !== null && !sameValue(t.value, t.natural))) skipped.add(b.base);
       continue;
     }
-    const m = merged.get(base) ?? new Map<string, string>();
-    for (const d of decls) if (!m.has(d.property)) m.set(d.property, d.value);
-    merged.set(base, m);
+    groups.set(b.base, [...(groups.get(b.base) ?? []), b]);
   }
-  for (const [base, m] of merged) {
-    ctx.registry.addDefaults(base, [...m].map(([property, value]) => ({ property, value })));
+
+  const baseDecls = new Map<string, NativeDecl[]>();
+  const comboDecls = new Map<PendingButton, NativeDecl[]>();
+  for (const [base, members] of groups) {
+    const props: string[] = [];
+    for (const m of members) for (const t of m.targets) if (!props.includes(t.property)) props.push(t.property);
+    const onBase: NativeDecl[] = [];
+    for (const prop of props) {
+      const natural = naturalButtonValue(prop);
+      // What each member wants; `null` = its own CSS sets it (compatible with anything).
+      const wants = members.map((m) => {
+        const t = m.targets.find((x) => x.property === prop);
+        return t ? t.value : natural;
+      });
+      const live = wants.filter((w): w is string => w !== null);
+      if (live.length === 0) continue;
+      const uniform = live.every((w) => sameValue(w, live[0]!));
+      const baseValue = uniform || !live.some((w) => sameValue(w, natural)) ? live[0]! : natural;
+      if (!sameValue(baseValue, natural)) onBase.push({ property: prop, value: baseValue });
+      members.forEach((m, i) => {
+        const w = wants[i];
+        if (w === null || w === undefined || sameValue(w, baseValue)) return;
+        comboDecls.set(m, [...(comboDecls.get(m) ?? []), { property: prop, value: w }]);
+      });
+    }
+    if (onBase.length) baseDecls.set(base, onBase);
   }
-  if (merged.size > 0) {
+
+  // Base defaults first: a combo's defaults must come later to override them at the combo level.
+  for (const [base, decls] of baseDecls) ctx.registry.addDefaults(base, decls);
+  const combos = new Map<PendingButton, string>();
+  for (const [m, decls] of comboDecls) {
+    if (!m.names || !m.ids) continue;
+    const name = defaultsClass(ctx, 'is-button-ua', decls);
+    combos.set(m, name);
+    m.ids.splice(0, m.ids.length, ...ctx.registry.resolve([...m.names, name]));
+  }
+
+  if (baseDecls.size > 0 || comboDecls.size > 0) {
+    const detail = [...baseDecls].map(([b, d]) => `.${b} { ${d.map((x) => `${x.property}: ${x.value};`).join(' ')} }`);
+    for (const [m, name] of combos) detail.push(`.${m.base} … .${name} { ${comboDecls.get(m)!.map((x) => `${x.property}: ${x.value};`).join(' ')} }`);
+    const classes = [...new Set([...baseDecls.keys(), ...combos.values()])];
     ctx.warnings.push({
       code: 'other',
       severity: 'info',
-      message: `Webflow Buttons get .w-button defaults (blue background, padding, white text); ${merged.size === 1 ? 'class' : 'classes'} ${[...merged.keys()].map((b) => `"${b}"`).join(', ')} got declarations that keep the source look.`,
-      detail: [...merged].map(([b, m]) => `.${b} { ${[...m].map(([p, v]) => `${p}: ${v};`).join(' ')} }`).join('\n'),
+      message: `Webflow Buttons get .w-button defaults (blue background, padding, white text) and a <button> loses its own font when it becomes a link; ${classes.length === 1 ? 'class' : 'classes'} ${classes.map((b) => `"${b}"`).join(', ')} got declarations that keep the source look.`,
+      detail: [...new Set(detail)].join('\n'),
     });
   }
   for (const base of skipped) {
@@ -247,6 +312,8 @@ function applyButtonDefaults(ctx: Ctx): void {
 
 /** A class name not used anywhere else, built from `base` (`base`, `base-2`, …). */
 function uniqueClassName(ctx: Ctx, base: string): string {
+  const prefix = ctx.options.classPrefix;
+  if (prefix && !base.startsWith(prefix)) base = prefix + base;
   let name = base;
   for (let i = 2; ctx.reserved.has(name); i++) name = `${base}-${i}`;
   ctx.reserved.add(name);
@@ -288,6 +355,10 @@ function buildElement(ctx: Ctx, el: Element): string[] {
 
   const id = el.getAttribute('id') ?? '';
   if (tag === 'a' || tag === 'button') return [buildLink(ctx, el, tag, id)];
+  if (tag === 'img' && ctx.options.externalImages === 'embed' && !isNativeImageSrc(el.getAttribute('src') ?? '')) {
+    noteExternalImage(ctx, el, 'embed');
+    return [buildElementEmbed(ctx, el, tag, false)];
+  }
 
   const classes = resolveClasses(ctx, el);
 
@@ -350,6 +421,7 @@ function buildElement(ctx: Ctx, el: Element): string[] {
 
   const inline = INLINE_TYPES[tag];
   if (inline) {
+    if (inline.tag !== tag) ctx.remappedTags.add(tag);
     // Spec 2.4: these types may omit `data`; only emit it when there is an id or attributes.
     const xattr = collectXattr(ctx, el, []);
     const node: WfElementNode = { _id: uuid(), type: inline.type, tag: inline.tag, classes, children: [] };
@@ -413,13 +485,19 @@ function formApi(ctx: Ctx): FormBuilderApi {
  * neutralizers go to its existing base class at the end of the build.
  */
 function buttonClasses(ctx: Ctx, el: Element): string[] {
-  const decls = buttonNeutralizers(el, ctx.rules);
-  if (decls.length === 0) return [];
+  const targets = buttonTargets(el, ctx.rules);
   const own = classNamesOf(el);
   if (own.length > 0) {
-    ctx.buttonDefaults.push({ base: own[0]!, decls });
+    // Recorded even with nothing to add: it still takes part in the base class's agreement.
+    const pending: PendingButton = { base: own[0]!, targets };
+    ctx.buttonDefaults.push(pending);
+    ctx.pendingByElement.set(el, pending);
     return [];
   }
+  const decls = targets
+    .filter((t): t is ButtonTarget & { value: string } => t.value !== null && !sameValue(t.value, t.natural))
+    .map((t) => ({ property: t.property, value: t.value }));
+  if (decls.length === 0) return [];
   return [defaultsClass(ctx, 'button', decls)];
 }
 
@@ -449,6 +527,13 @@ function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', id: string): stri
   const reserved = tag === 'a' ? ['href', 'target'] : ['type'];
   const extraAttrs: WfXattr[] = [];
   if (tag === 'button' && !el.hasAttribute('role')) extraAttrs.push({ name: 'role', value: 'button' });
+  if (tag === 'button') {
+    ctx.remappedTags.add('button');
+    if ((ctx.options.buttonClickShim || ctx.options.rewriteRemappedTags) && !el.hasAttribute('data-wf-button')) {
+      extraAttrs.push({ name: 'data-wf-button', value: '' });
+      ctx.convertedButtons++;
+    }
+  }
 
   const link: WfLink = { mode: 'external' };
   if (tag === 'a') {
@@ -476,7 +561,9 @@ function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', id: string): stri
     ctx.warnings.push({
       code: 'unsupported-element',
       severity: 'info',
-      message: `<button> became a Webflow ${asLinkBlock ? 'Link Block' : 'Button'} (an <a>${tag === 'button' ? ' with role="button"' : ''}); CSS or JS that targets the "button" tag will not match it.`,
+      message: `<button> became a Webflow ${asLinkBlock ? 'Link Block' : 'Button'} (an <a>${tag === 'button' ? ' with role="button"' : ''}); ${
+        ctx.options.rewriteRemappedTags ? '<style> embed selectors for "button" were rewritten to match it, but JS' : 'CSS or JS'
+      } that targets the "button" tag will not match it.`,
       detail: 'button',
     });
   }
@@ -519,9 +606,41 @@ function resolveAnchorLinks(ctx: Ctx): void {
   }
 }
 
-/** `<img>` -> Image with an external `src` and no asset record (spec 2.4 Image). */
+/**
+ * `src` values Webflow leaves alone on a native Image: `data:` URIs and its own CDN. Any other URL
+ * is rewritten on publish to `cdn.prod.website-files.com/<basename>` (query string dropped), which
+ * 403s for an image that was never uploaded (seen in a real paste test).
+ */
+export function isNativeImageSrc(src: string): boolean {
+  const s = src.trim();
+  return /^data:/i.test(s) || /^(https?:)?\/\/([a-z0-9-]+\.)*(website-files\.com|uploads-ssl\.webflow\.com|uploads\.webflow\.com)\//i.test(s);
+}
+
+/**
+ * `<img>` (spec 2.4 Image). A `data:` URI or Webflow CDN URL becomes a native Image with
+ * `data.attr.src` and no asset record. Other URLs follow `externalImages`: by default a Custom
+ * Element (`DOM`, `data.tag: "img"`, the same shape as other Custom Elements) whose
+ * `data.attributes` keep `src`, `srcset`, `sizes`, `alt`, `loading`, `width`, `height`… exactly as
+ * written, so Webflow never re-hosts the URL.
+ */
 function buildImage(ctx: Ctx, el: Element, classes: string[], id: string): string {
   const src = el.getAttribute('src') ?? '';
+  if (ctx.options.externalImages === 'customElement' && !isNativeImageSrc(src)) {
+    noteExternalImage(ctx, el, 'customElement');
+    const attributes: WfXattr[] = [];
+    if (id) attributes.push({ name: 'id', value: id });
+    attributes.push(...collectXattr(ctx, el, []));
+    const node: WfElementNode = {
+      _id: uuid(),
+      type: 'DOM',
+      tag: 'div',
+      classes,
+      children: [],
+      data: { tag: 'img', attributes, text: false, slot: '', visibility: { conditions: [] } },
+    };
+    ctx.nodes.push(node);
+    return node._id;
+  }
   const loadingAttr = (el.getAttribute('loading') ?? '').toLowerCase();
   const loading = loadingAttr === 'eager' || loadingAttr === 'auto' ? loadingAttr : 'lazy';
   const node: WfElementNode = {
@@ -544,22 +663,7 @@ function buildImage(ctx: Ctx, el: Element, classes: string[], id: string): strin
     height: el.getAttribute('height') ?? 'auto',
     id,
   };
-  if (!ctx.notes.has('img')) {
-    ctx.notes.add('img');
-    ctx.warnings.push({
-      code: 'external-image',
-      severity: 'info',
-      message: 'Images keep their original URL (hot-linked); upload them to Webflow Assets to host them.',
-    });
-  }
-  if (src && !/^(https?:|data:|\/\/)/i.test(src)) {
-    ctx.warnings.push({
-      code: 'external-image',
-      severity: 'warning',
-      message: 'Image has a relative URL that will not resolve inside Webflow.',
-      detail: src,
-    });
-  }
+  if (!isNativeImageSrc(src)) noteExternalImage(ctx, el, 'image');
   if (el.hasAttribute('srcset') && !ctx.notes.has('srcset')) {
     ctx.notes.add('srcset');
     ctx.warnings.push({
@@ -570,6 +674,31 @@ function buildImage(ctx: Ctx, el: Element, classes: string[], id: string): strin
   }
   ctx.nodes.push(node);
   return node._id;
+}
+
+/** One notice per conversion mode for external images, plus a warning per relative URL. */
+function noteExternalImage(ctx: Ctx, el: Element, mode: 'customElement' | 'embed' | 'image'): void {
+  const key = `img-${mode}`;
+  if (!ctx.notes.has(key)) {
+    ctx.notes.add(key);
+    const message = {
+      customElement:
+        'External images became Custom Elements (<img>) with their URL, srcset and sizes kept as written: Webflow rewrites the src of a native Image to its own CDN on publish, which breaks images that were never uploaded. Upload them to Assets and swap in native Images to manage them in Webflow.',
+      embed: 'External images were placed in Code Embeds with their original HTML, so Webflow keeps their URL.',
+      image:
+        'Images keep their original URL in a native Image (hot-linked, no asset record). Webflow may rewrite such URLs to its CDN on publish; upload them to Webflow Assets to host them.',
+    }[mode];
+    ctx.warnings.push({ code: 'external-image', severity: mode === 'image' ? 'warning' : 'info', message });
+  }
+  const src = el.getAttribute('src') ?? '';
+  if (src && !/^(https?:|data:|\/\/)/i.test(src)) {
+    ctx.warnings.push({
+      code: 'external-image',
+      severity: 'warning',
+      message: 'Image has a relative URL that will not resolve inside Webflow.',
+      detail: src,
+    });
+  }
 }
 
 /**
@@ -712,7 +841,7 @@ function resolveClasses(ctx: Ctx, el: Element, opts: { generated?: string[]; but
       let name: string;
       do {
         ctx.inlineCounter++;
-        name = `inline-style-${ctx.inlineCounter}`;
+        name = `${ctx.options.classPrefix}inline-style-${ctx.inlineCounter}`;
       } while (ctx.reserved.has(name));
       ctx.reserved.add(name);
       ctx.registry.addInlineStyle(name, decls);
@@ -728,7 +857,13 @@ function resolveClasses(ctx: Ctx, el: Element, opts: { generated?: string[]; but
     }
   }
   if (!opts.button) for (const n of names) ctx.otherClasses.add(n);
-  return ctx.registry.resolve(names);
+  const ids = ctx.registry.resolve(names);
+  const pending = opts.button ? ctx.pendingByElement.get(el) : undefined;
+  if (pending) {
+    pending.names = names.filter((n, i) => n && names.indexOf(n) === i);
+    pending.ids = ids;
+  }
+  return ids;
 }
 
 /** Common `data` fields (spec 2.3). */

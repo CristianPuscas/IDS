@@ -29,7 +29,7 @@
 
 import { declarationsToCss, type CssDeclaration, type CssStyleRule, type ParsedCss } from './cssParser';
 import { prepareDeclaration, type NativeDecl } from './cssValues';
-import { bandDomain, mediaToBands, type Band } from './media';
+import { bandDomain, mediaToBands, snapMediaStack, type Band } from './media';
 import { uuid } from './ids';
 import { classifySelector, isWebflowSafeClassName } from './selectors';
 import type { ConvertOptions, ConvertWarning, ConvertWarningCode, WfStyle, WfVariantKey } from './types';
@@ -150,6 +150,17 @@ export interface StyleMapResult {
   warnings: ConvertWarning[];
 }
 
+/** Optional extras for `mapStyles`. */
+export interface MapStylesHooks {
+  /** CSS put first in the `<style>` embed (after any `@import`), e.g. the baseline reset. */
+  prelude?: string;
+  /**
+   * Called once the class styles are filled, with every selector headed for the embed. Returns a
+   * function that rewrites each of them (or `null` to keep them as they are).
+   */
+  prepareEmbed?: (selectors: string[]) => ((selector: string) => string) | null;
+}
+
 /** One native-mappable selector of one rule. */
 interface Candidate {
   id: number;
@@ -197,6 +208,7 @@ export function mapStyles(
   registry: StyleRegistry,
   usage: ClassUsage,
   options: ConvertOptions,
+  hooks: MapStylesHooks = {},
 ): StyleMapResult {
   const warnings: ConvertWarning[] = [];
   const pieces: EmbedPiece[] = [];
@@ -257,9 +269,27 @@ export function mapStyles(
   const defaultSet = new Set(defaultRules);
 
   let nextId = 0;
+  const snappedQueries = new Set<string>();
   for (const rule of [...defaultRules, ...css.rules, ...inlineRules]) {
     const isInline = inlineSet.has(rule);
-    const media = mediaToBands(rule.mediaStack, options.breakpointTolerancePx, options.includeLargeBreakpoints);
+    const media = mediaToBands(rule.mediaStack, options.breakpointTolerancePx, options.includeLargeBreakpoints, options.breakpointSnap);
+    // A snapped query moves as a whole: its embed-bound rules use the Webflow breakpoint too, so
+    // the native and embedded halves of one @media block switch at the same width.
+    const stack =
+      media.kind === 'bands' && media.snapped
+        ? snapMediaStack(rule.mediaStack, options.breakpointTolerancePx, options.includeLargeBreakpoints)
+        : rule.mediaStack;
+    if (media.kind === 'bands' && media.snapped) {
+      const key = rule.mediaStack.join(' and ');
+      if (!snappedQueries.has(key)) {
+        snappedQueries.add(key);
+        warn(
+          'breakpoint-snapped',
+          `@media ${key} was snapped up to Webflow's breakpoint ${stack.join(' and ')}: its class rules became breakpoint variants and its other rules use the same query in the <style> embed.`,
+          `@media ${key} -> ${stack.join(' and ')}`,
+        );
+      }
+    }
 
     const nativeDecls: (NativeDecl & { src: number })[] = [];
     const nativeSource: CssDeclaration[] = [];
@@ -278,7 +308,7 @@ export function mapStyles(
       const where = describe(selector, rule.mediaStack);
       const sel = classifySelector(selector);
       if (sel.kind === 'embed') {
-        pushRulePiece(rule.order, si * 3, rule.mediaStack, selector, rule.declarations);
+        pushRulePiece(rule.order, si * 3, stack, selector, rule.declarations);
         if (sel.global) {
           warn(sel.code, `${verb}: "${selector}" styles the whole page, not just the pasted element.`, where, 'warning');
         } else {
@@ -287,12 +317,12 @@ export function mapStyles(
         return;
       }
       if (media.kind !== 'bands') {
-        pushRulePiece(rule.order, si * 3, rule.mediaStack, selector, rule.declarations);
+        pushRulePiece(rule.order, si * 3, stack, selector, rule.declarations);
         warn(media.kind === 'large' ? 'large-breakpoint-folded' : 'unmatched-media', `${verb}: ${media.reason}.`, where);
         return;
       }
       if (embedDecls.length > 0) {
-        pushRulePiece(rule.order, si * 3 + 1, rule.mediaStack, selector, embedDecls.map((e) => e.decl));
+        pushRulePiece(rule.order, si * 3 + 1, stack, selector, embedDecls.map((e) => e.decl));
         for (const e of embedDecls) {
           warn(e.code, `${verb}: ${e.reason}.`, where, e.code === 'important-dropped' ? 'warning' : 'info');
         }
@@ -309,7 +339,7 @@ export function mapStyles(
           order: rule.order,
           sub: si * 3 + 2,
           selector,
-          mediaStack: rule.mediaStack,
+          mediaStack: stack,
           embedded: false,
         });
       }
@@ -411,6 +441,12 @@ export function mapStyles(
       );
     }
   }
+
+  if (keep && hooks.prepareEmbed) {
+    const rewrite = hooks.prepareEmbed(pieces.filter((p) => p.selector !== undefined).map((p) => p.selector!));
+    if (rewrite) for (const p of pieces) if (p.selector !== undefined) p.selector = rewrite(p.selector);
+  }
+  if (keep && hooks.prelude) pieces.push({ order: -2e9, sub: 0, mediaStack: [], raw: hooks.prelude });
 
   const leftover = keep ? assembleChunks(pieces, options.maxEmbedChars) : { chunks: [], ruleCount: 0 };
   return { leftoverCss: leftover.chunks, leftoverRuleCount: leftover.ruleCount, warnings };

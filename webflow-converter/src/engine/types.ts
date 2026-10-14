@@ -511,7 +511,8 @@ export type EmbedPlacement = 'root';
 export interface ConvertOptions {
   /**
    * A `max-width` media query within this many px of a Webflow breakpoint (991/767/479) is
-   * mapped onto it; anything farther goes to the `<style>` embed. Default 20.
+   * mapped onto it; anything farther is snapped (see `breakpointSnap`) or goes to the `<style>`
+   * embed. Default 20.
    */
   breakpointTolerancePx: number;
   /** Placement of generated CSS/JS embeds. Default `'root'`. */
@@ -560,7 +561,70 @@ export interface ConvertOptions {
    * renamed classes they mention are reported. Default `true`.
    */
   normalizeClassNames: boolean;
+  /**
+   * How `<img>` with an external `src` is converted. Webflow re-hosts the `src` of a native Image on
+   * publish (it was rewritten to `cdn.prod.website-files.com/<basename>` and returned 403 in a real
+   * paste test), so the default keeps the URL out of Webflow's hands:
+   * - `'customElement'` (default): a Custom Element (`DOM` node, `data.tag: "img"`) whose
+   *   `data.attributes` carry `src`, `alt`, `loading`, `width`, `height`, `srcset`, `sizes`… verbatim.
+   * - `'embed'`: the `<img>` HTML in a Code Embed.
+   * - `'image'`: a native Image with `data.attr.src` (the previous behaviour).
+   * `data:` URIs and Webflow CDN URLs always become a native Image.
+   */
+  externalImages: ExternalImageMode;
+  /**
+   * What to do with a `max-width` media query that is not within `breakpointTolerancePx` of a
+   * Webflow breakpoint. `'up'` (default): below 991px it snaps up to the smallest Webflow
+   * breakpoint that contains it (850 -> `medium`, 640 -> `small`, 400 -> `tiny`), with a
+   * `breakpoint-snapped` note. `'off'`: it stays in the `<style>` embed.
+   */
+  breakpointSnap: BreakpointSnap;
+  /**
+   * For full-document input (`<!doctype>`, `<html>` or `<body>`), put a small tag reset at the top
+   * of the `<style>` embed (body letter-spacing/size/line-height, heading and paragraph margins,
+   * label/img/list/strong defaults) so the destination site's tag styles and webflow.css do not leak
+   * into properties the source left to the browser. Properties the source sets on that tag are
+   * skipped. Default `true`.
+   */
+  neutralizeDefaults: boolean;
+  /**
+   * In `<style>` embed selectors, repeat a lone class that sits at depth d > 1 of a Webflow combo
+   * chain d times (`.about_layout` -> `.about_layout.about_layout`), so the embed rule keeps
+   * beating the published combo selector as it did in the source. Default `true`.
+   */
+  embedSpecificityParity: boolean;
+  /**
+   * Classes used both natively and in `<style>` embed selectors are rewritten in the embed to
+   * `[data-wfc~="name"]`, and the elements get `data-wfc="<their classes>"`, so embed CSS keeps
+   * matching when Webflow renames a clashing class to "name 2". Same specificity. Default `true`.
+   */
+  renameProofEmbedCss: boolean;
+  /**
+   * Rewrite tag selectors in the `<style>` embed for tags the converter remaps: `b` -> `strong`,
+   * `i` -> `em`, and `button` -> `:is(button,a:where([data-wf-button]))` (same specificity) when a
+   * `<button>` became a Webflow Button/Link. Default `true`.
+   */
+  rewriteRemappedTags: boolean;
+  /**
+   * Prefix added to every class name used in the HTML (and to generated classes), in the HTML and
+   * in the `<style>` CSS, so pasted classes never clash with the destination site's classes.
+   * Scripts are not rewritten; string literals that mention a prefixed class are reported.
+   * Default `''` (no prefix).
+   */
+  classPrefix: string;
+  /**
+   * Links converted from `<button>` get `data-wf-button`, and a one-line script at the top of the
+   * script embed calls `preventDefault()` on their clicks, so the published `href="#"` does not
+   * jump to the top of the page. Default `true`.
+   */
+  buttonClickShim: boolean;
 }
+
+/** `ConvertOptions.externalImages`. */
+export type ExternalImageMode = 'customElement' | 'embed' | 'image';
+
+/** `ConvertOptions.breakpointSnap`. */
+export type BreakpointSnap = 'up' | 'off';
 
 /** `ConvertOptions.buttonMode`. */
 export type ButtonMode = 'button' | 'linkBlock';
@@ -582,6 +646,14 @@ export const DEFAULT_CONVERT_OPTIONS: Readonly<ConvertOptions> = Object.freeze({
   forms: 'native',
   embedSizing: 'wrapper',
   normalizeClassNames: true,
+  externalImages: 'customElement',
+  breakpointSnap: 'up',
+  neutralizeDefaults: true,
+  embedSpecificityParity: true,
+  renameProofEmbedCss: true,
+  rewriteRemappedTags: true,
+  classPrefix: '',
+  buttonClickShim: true,
 });
 
 /** Machine-readable warning categories. The UI may group or filter by these. */
@@ -608,6 +680,9 @@ export type ConvertWarningCode =
   | 'embed-split'
   | 'embed-too-large'
   | 'class-renamed'
+  | 'class-collision-risk'
+  | 'breakpoint-snapped'
+  | 'baseline-reset'
   | 'not-implemented'
   | 'other';
 

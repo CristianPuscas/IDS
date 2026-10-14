@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buttonNeutralizers } from './buttonDefaults';
 import { parseCss } from './cssParser';
-import { convert, validateXscp, type ConvertOptions } from './index';
+import { BUTTON_CLICK_SHIM, convert, validateXscp, type ConvertOptions } from './index';
 import { classNames, elements, first, kids, style, textOf } from './testHelpers';
 import type { WfElementNode } from './types';
 
@@ -60,7 +60,29 @@ describe('buttonNeutralizers', () => {
       'border-left-color': '#767676',
       'line-height': 'normal',
       cursor: 'default',
+      // The <button> user-agent font, lost when it becomes an <a> (F9).
+      'font-family': 'Arial, sans-serif',
+      'font-size': '13.3333px',
+      'font-weight': '400',
+      'font-style': 'normal',
+      'letter-spacing': 'normal',
+      'text-transform': 'none',
+      'text-align': 'center',
     });
+  });
+
+  it('keeps the user-agent font props the source sets, on any rule', () => {
+    const css = '.menu { font-size: 26px; text-align: left } * { letter-spacing: .1em }';
+    const out = neutralize('<button class="menu">x</button>', css, 'button');
+    expect(out).toMatchObject({ 'font-family': 'Arial, sans-serif', 'font-weight': '400', 'line-height': 'normal' });
+    expect(out).not.toHaveProperty('font-size');
+    expect(out).not.toHaveProperty('text-align');
+    expect(out).not.toHaveProperty('letter-spacing');
+  });
+
+  it('an <a> gets no font declarations (it inherits in the source too)', () => {
+    const out = neutralize('<a class="btn" href="#">Go</a>', '', 'a');
+    expect(Object.keys(out).some((k) => k.startsWith('font') || k === 'text-align')).toBe(false);
   });
 
   it('copies values from tag rules, which lose to .w-button in Webflow', () => {
@@ -72,6 +94,10 @@ describe('buttonNeutralizers', () => {
       'padding-right': '0',
       'padding-bottom': '0',
       'padding-left': '0',
+      // `font: inherit` covers the font longhands; the text resets of the UA stay.
+      'letter-spacing': 'normal',
+      'text-transform': 'none',
+      'text-align': 'center',
     });
   });
 
@@ -143,6 +169,67 @@ describe('buttonMode: "button" (default)', () => {
   });
 });
 
+describe('buttons sharing a base class (F9)', () => {
+  const css =
+    '.button { display: inline-flex; padding: 13px 21px; background: green; color: white; font-size: 14px; border: 1px solid green; border-radius: 99px; text-decoration: none }';
+
+  it('keeps <a class="button"> inheriting and gives <button class="button"> an is-button-ua combo', () => {
+    const res = run(`<div><a class="button" href="#x">Link</a><button class="button" id="t">Toggle</button></div>`, css);
+    const base = style(res, 'button');
+    // Nothing that would change the links: no line-height, cursor or font on the shared base.
+    expect(base.styleLess).not.toMatch(/line-height|cursor|font-family|text-align/);
+    const combo = style(res, 'is-button-ua', '&');
+    expect(combo.styleLess).toContain('line-height: normal;');
+    expect(combo.styleLess).toContain('cursor: default;');
+    expect(combo.styleLess).toContain('font-family: Arial, sans-serif;');
+    expect(combo.styleLess).toContain('text-align: center;');
+    expect(combo.styleLess).not.toContain('font-size');
+    const [a, b] = elements(res).filter((e) => e.type === 'Link');
+    expect(classNames(res, a!)).toEqual(['button']);
+    expect(classNames(res, b!)).toEqual(['button', 'is-button-ua']);
+    expect(base.children).toEqual([combo._id]);
+  });
+
+  it('puts agreed values on the base when every button is a <button>', () => {
+    const res = run('<div><button class="menu">A</button><button class="menu">B</button></div>', '.menu { font-size: 26px }');
+    expect(style(res, 'menu').styleLess).toContain('font-family: Arial, sans-serif;');
+    expect(res.data.payload.styles.some((s) => s.name === 'is-button-ua')).toBe(false);
+  });
+
+  it('appends the combo after existing combos and inline styles', () => {
+    const res = run(`<div><a class="button" href="#">A</a><button class="button is-outline" style="margin:0">B</button></div>`, css + ' .button.is-outline { background: none }');
+    const b = elements(res).filter((e) => e.type === 'Link')[1]!;
+    expect(classNames(res, b)).toEqual(['button', 'is-outline', 'inline-style-1', 'is-button-ua']);
+  });
+});
+
+describe('button click shim (F8)', () => {
+  it('marks converted <button>s and puts a preventDefault shim first in the script embed', () => {
+    const res = convert({ mode: 'combined', html: '<div><button class="t" id="m">x</button><a class="btn" href="/x">y</a></div><script>init()</script>' });
+    expect(validateXscp(res.data)).toEqual([]);
+    const [b, a] = elements(res).filter((e) => e.type === 'Link');
+    expect(b!.data!.xattr).toContainEqual({ name: 'data-wf-button', value: '' });
+    expect(a!.data!.xattr!.some((x) => x.name === 'data-wf-button')).toBe(false);
+    const js = elements(res).filter((e) => e.type === 'HtmlEmbed').pop()!.v!;
+    expect(js.startsWith(`<script>\n${BUTTON_CLICK_SHIM}\n</script>`)).toBe(true);
+    expect(js.indexOf('init()')).toBeGreaterThan(js.indexOf('preventDefault'));
+  });
+
+  it('adds a script embed for the shim when the page has no scripts', () => {
+    const res = run('<button class="t">x</button>');
+    const root = res.data.payload.nodes[0] as WfElementNode;
+    expect(root.type).toBe('Block');
+    const last = elements(res).find((e) => e._id === root.children[root.children.length - 1])!;
+    expect(last.v).toContain(BUTTON_CLICK_SHIM);
+  });
+
+  it('can be turned off', () => {
+    const res = run('<button class="t">x</button>', '', { buttonClickShim: false, rewriteRemappedTags: false });
+    expect(first(res, 'Link').data!.xattr!.some((x) => x.name === 'data-wf-button')).toBe(false);
+    expect(elements(res).some((e) => e.type === 'HtmlEmbed')).toBe(false);
+  });
+});
+
 describe('buttonMode: "linkBlock"', () => {
   it('emits a Link Block (no .w-button) with the content in a Text Block', () => {
     const res = run('<a class="btn" href="/x">Go <strong>now</strong></a>', '.btn { background-color: red }', { buttonMode: 'linkBlock' });
@@ -157,7 +244,14 @@ describe('buttonMode: "linkBlock"', () => {
 
   it('applies to <button> too', () => {
     const res = run('<button class="menu-toggle">Menu</button>', '', { buttonMode: 'linkBlock' });
-    expect(first(res, 'Link').data).toMatchObject({ button: false, block: 'inline', xattr: [{ name: 'role', value: 'button' }] });
+    expect(first(res, 'Link').data).toMatchObject({
+      button: false,
+      block: 'inline',
+      xattr: [
+        { name: 'role', value: 'button' },
+        { name: 'data-wf-button', value: '' },
+      ],
+    });
     expect(res.data.payload.styles.map((s) => s.name)).toEqual(['menu-toggle']);
   });
 });
