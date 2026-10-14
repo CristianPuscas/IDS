@@ -1,15 +1,26 @@
 /**
  * HtmlEmbed (Code Embed) builders (spec 2.4 HtmlEmbed). Used for leftover CSS (`<style>`),
- * scripts (`<script>`), head links and elements kept as raw code (e.g. `<svg>`).
+ * scripts (`<script>`), head links and elements kept as raw code (e.g. `<svg>`, `<canvas>`).
  *
- * Embeds over `maxChars` are split into several embeds (spec 5: keep each under 10k chars).
+ * Embeds over `maxChars` are split into several embeds (spec 5: keep each under 10k chars):
+ * - CSS is split between rules (a rule is never cut).
+ * - Classic inline scripts are split between top-level statements into several `<script>` tags.
+ *   Classic scripts share one global scope, so top-level `const`/`function` declarations stay
+ *   visible across tags. Modules, import maps and single giant statements (e.g. one IIFE) cannot
+ *   be split; they are emitted whole with an `embed-too-large` warning.
  *
  * Ownership: engine.
  */
 
 import { uuid } from './ids';
-import type { JsBundle } from './jsExtractor';
-import type { WfElementNode } from './types';
+import type { JsBundle, ScriptEntry } from './jsExtractor';
+import type { ConvertWarning, WfElementNode } from './types';
+
+/** Embed nodes plus any warnings produced while splitting. */
+export interface EmbedBuildResult {
+  nodes: WfElementNode[];
+  warnings: ConvertWarning[];
+}
 
 /**
  * Builds one HtmlEmbed node. `v` and `data.embed.meta.html` hold the same string; `script` and
@@ -42,53 +53,252 @@ export function buildEmbedNode(code: string, classes: string[] = []): WfElementN
   };
 }
 
+const STYLE_OPEN = '<style>\n';
+const STYLE_CLOSE = '\n</style>';
+
 /**
- * Wraps leftover CSS in `<style>` embeds, splitting between rules so no embed exceeds `maxChars`.
+ * Wraps leftover CSS in `<style>` embeds, splitting between chunks so no embed exceeds `maxChars`.
  *
  * @param cssChunks Rule/at-rule source texts in cascade order (each chunk is never split).
  * @param maxChars Max characters per embed, including the `<style>` tags.
- * @returns Zero or more HtmlEmbed nodes, in order.
  */
-export function buildStyleEmbeds(cssChunks: string[], maxChars: number): WfElementNode[] {
-  return packChunks(cssChunks, maxChars, '<style>\n', '\n</style>').map((code) => buildEmbedNode(code));
+export function buildStyleEmbeds(cssChunks: string[], maxChars: number): EmbedBuildResult {
+  const warnings: ConvertWarning[] = [];
+  const safe = cssChunks.map((c) => c.replace(/<\/style/gi, '<\\/style'));
+  const codes = packChunks(safe, maxChars, STYLE_OPEN, STYLE_CLOSE, '\n');
+  for (const code of codes) {
+    if (code.length > maxChars) {
+      warnings.push({
+        code: 'embed-too-large',
+        severity: 'warning',
+        message: `A single CSS rule produces a ${code.length}-character embed, over the ${maxChars}-character limit.`,
+        detail: code.slice(STYLE_OPEN.length, STYLE_OPEN.length + 120),
+      });
+    }
+  }
+  if (codes.length > 1) {
+    warnings.push({
+      code: 'embed-split',
+      severity: 'info',
+      message: `Unsupported CSS was split across ${codes.length} Code Embeds to stay under ${maxChars} characters each.`,
+    });
+  }
+  return { nodes: codes.map((c) => buildEmbedNode(c)), warnings };
 }
 
 /**
- * Turns a script bundle into `<script>` embeds: one per external `src`, and inline code packed
- * under `maxChars` per embed.
+ * Turns a script bundle into `<script>` embeds, in bundle order: tags are packed into as few
+ * embeds as fit under `maxChars`, and oversized classic scripts are split between statements.
  *
  * @param bundle Output of `extractJs`.
  * @param maxChars Max characters per embed.
  */
-export function buildScriptEmbeds(bundle: JsBundle, maxChars: number): WfElementNode[] {
-  const nodes: WfElementNode[] = [];
+export function buildScriptEmbeds(bundle: JsBundle, maxChars: number): EmbedBuildResult {
+  const warnings: ConvertWarning[] = [];
+  const tags: string[] = [];
+  let splitScripts = 0;
+
   for (const s of bundle.scripts) {
-    const attrs = s.attributes.map((a) => (a.value === '' ? ` ${a.name}` : ` ${a.name}="${a.value}"`)).join('');
+    const open = `<script${renderAttrs(s)}>`;
+    const close = '</script>';
     if (s.src) {
-      nodes.push(buildEmbedNode(`<script src="${s.src}"${attrs}></script>`));
-    } else if (s.code.trim()) {
-      nodes.push(buildEmbedNode(`<script${attrs}>\n${s.code}\n</script>`));
+      tags.push(`<script src="${escapeAttr(s.src)}"${renderAttrs(s)}></script>`);
+      continue;
+    }
+    const code = s.code.replace(/<\/script/gi, '<\\/script').trim();
+    const whole = `${open}\n${code}\n${close}`;
+    if (whole.length <= maxChars) {
+      tags.push(whole);
+      continue;
+    }
+    const budget = maxChars - open.length - close.length - 2;
+    const pieces = isSplittable(s) ? splitJsStatements(code, budget) : [code];
+    if (pieces.length > 1) splitScripts++;
+    for (const p of pieces) {
+      const tag = `${open}\n${p}\n${close}`;
+      if (tag.length > maxChars) {
+        warnings.push({
+          code: 'embed-too-large',
+          severity: 'warning',
+          message: `A script block of ${tag.length} characters cannot be split below the ${maxChars}-character embed limit; it may be rejected on free Webflow plans.`,
+          detail: p.slice(0, 120),
+        });
+      }
+      tags.push(tag);
     }
   }
-  void maxChars; // Stub: splitting of oversized inline scripts is left to the engine agent.
-  return nodes;
+
+  const codes = packChunks(tags, maxChars, '', '', '\n');
+  if (splitScripts > 0) {
+    warnings.push({
+      code: 'embed-split',
+      severity: 'info',
+      message: `${splitScripts} large script${splitScripts > 1 ? 's were' : ' was'} split between top-level statements across several <script> tags.`,
+    });
+  }
+  return { nodes: codes.map((c) => buildEmbedNode(c)), warnings };
 }
 
-/** Greedily packs chunks into strings of at most `maxChars` (a single oversized chunk stays whole). */
-function packChunks(chunks: string[], maxChars: number, open: string, close: string): string[] {
+/** Only classic JavaScript can be split into several tags without changing scope. */
+function isSplittable(s: ScriptEntry): boolean {
+  const type = (s.attributes.find((a) => a.name.toLowerCase() === 'type')?.value ?? '').trim().toLowerCase();
+  return type === '' || type === 'text/javascript' || type === 'application/javascript';
+}
+
+function renderAttrs(s: ScriptEntry): string {
+  return s.attributes.map((a) => (a.value === '' ? ` ${a.name}` : ` ${a.name}="${escapeAttr(a.value)}"`)).join('');
+}
+
+function escapeAttr(v: string): string {
+  return v.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+/**
+ * Greedily packs chunks into strings of at most `maxChars` (a single oversized chunk stays whole).
+ */
+export function packChunks(chunks: string[], maxChars: number, open: string, close: string, sep: string): string[] {
   const out: string[] = [];
   let current: string[] = [];
   let size = open.length + close.length;
   for (const chunk of chunks) {
-    const add = chunk.length + 1;
+    const add = chunk.length + (current.length > 0 ? sep.length : 0);
     if (current.length > 0 && size + add > maxChars) {
-      out.push(open + current.join('\n') + close);
+      out.push(open + current.join(sep) + close);
       current = [];
       size = open.length + close.length;
     }
+    size += chunk.length + (current.length > 0 ? sep.length : 0);
     current.push(chunk);
-    size += add;
   }
-  if (current.length > 0) out.push(open + current.join('\n') + close);
+  if (current.length > 0) out.push(open + current.join(sep) + close);
   return out;
+}
+
+const REGEX_PRECEDERS = new Set('(,=:[!&|?{};+-*%<>~^'.split(''));
+const REGEX_KEYWORDS = new Set(['return', 'typeof', 'case', 'do', 'else', 'in', 'of', 'new', 'delete', 'void', 'throw', 'instanceof', 'yield', 'await']);
+/** Tokens that continue the previous statement; never split before them. */
+const CONTINUATION = /^(else\b|catch\b|finally\b|while\b|[.,)\]}?:+\-*/%&|^=<>]|\(|\[|`)/;
+
+/**
+ * Splits JavaScript into top-level statements (outside braces, parens, strings, template
+ * literals, comments and regex literals) and greedily packs them into pieces of at most
+ * `maxChars`. A split point is a newline at depth 0 after `;` or `}` that is not followed by a
+ * continuation token (`else`, `.then`, `)`…). Returns `[code]` when no split point exists.
+ */
+export function splitJsStatements(code: string, maxChars: number): string[] {
+  const boundaries: number[] = [];
+  let depth = 0;
+  let lastSig = ''; // last significant (non-space, non-comment) character
+  let lastWord = '';
+  const templateStack: number[] = []; // brace depth at which each `${` opened
+  let i = 0;
+  const n = code.length;
+
+  const skipString = (q: string): void => {
+    i++;
+    while (i < n && code[i] !== q) {
+      if (code[i] === '\\') i++;
+      else if (code[i] === '\n') break;
+      i++;
+    }
+    i++;
+  };
+  // Scans a template literal from just after a backtick (or a closing `}` of `${…}`).
+  const scanTemplate = (): void => {
+    while (i < n) {
+      const c = code[i];
+      if (c === '\\') i += 2;
+      else if (c === '`') {
+        i++;
+        return;
+      } else if (c === '$' && code[i + 1] === '{') {
+        templateStack.push(depth);
+        depth++;
+        i += 2;
+        return;
+      } else i++;
+    }
+  };
+
+  while (i < n) {
+    const c = code[i]!;
+    if (c === '/' && code[i + 1] === '/') {
+      while (i < n && code[i] !== '\n') i++;
+      continue;
+    }
+    if (c === '/' && code[i + 1] === '*') {
+      const end = code.indexOf('*/', i + 2);
+      i = end < 0 ? n : end + 2;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      skipString(c);
+      lastSig = c;
+      lastWord = '';
+      continue;
+    }
+    if (c === '`') {
+      i++;
+      scanTemplate();
+      lastSig = '`';
+      lastWord = '';
+      continue;
+    }
+    if (c === '/' && (lastSig === '' || REGEX_PRECEDERS.has(lastSig) || REGEX_KEYWORDS.has(lastWord))) {
+      // Regex literal.
+      i++;
+      let inClass = false;
+      while (i < n && code[i] !== '\n') {
+        const r = code[i];
+        if (r === '\\') i++;
+        else if (r === '[') inClass = true;
+        else if (r === ']') inClass = false;
+        else if (r === '/' && !inClass) break;
+        i++;
+      }
+      i++;
+      while (i < n && /[a-z]/i.test(code[i]!)) i++;
+      lastSig = '/';
+      lastWord = '';
+      continue;
+    }
+    if (c === '{' || c === '(' || c === '[') depth++;
+    else if (c === '}' || c === ')' || c === ']') {
+      depth = Math.max(0, depth - 1);
+      if (c === '}' && templateStack.length && templateStack[templateStack.length - 1] === depth) {
+        templateStack.pop();
+        i++;
+        scanTemplate();
+        lastSig = '`';
+        continue;
+      }
+    }
+    if (c === '\n' && depth === 0 && (lastSig === ';' || lastSig === '}')) {
+      const rest = code.slice(i + 1, i + 200).replace(/^(\s|\/\/[^\n]*\n|\/\*[\s\S]*?\*\/)*/, '');
+      if (!CONTINUATION.test(rest)) boundaries.push(i + 1);
+    }
+    if (/[A-Za-z_$]/.test(c)) {
+      let j = i;
+      while (j < n && /[\w$]/.test(code[j]!)) j++;
+      lastWord = code.slice(i, j);
+      lastSig = code[j - 1]!;
+      i = j;
+      continue;
+    }
+    if (!/\s/.test(c)) {
+      lastSig = c;
+      lastWord = '';
+    }
+    i++;
+  }
+
+  if (boundaries.length === 0) return [code];
+  const statements: string[] = [];
+  let prev = 0;
+  for (const b of boundaries) {
+    statements.push(code.slice(prev, b));
+    prev = b;
+  }
+  statements.push(code.slice(prev));
+  return packChunks(statements.filter((s) => s.trim()), maxChars, '', '', '').map((s) => s.trim());
 }

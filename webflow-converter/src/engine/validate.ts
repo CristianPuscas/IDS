@@ -10,7 +10,8 @@ import { isTextNode, XSCP_TYPE, type XscpData } from './types';
  * Checks that `data` is structurally sound for paste:
  * correct `type`; unique node and style ids; `nodes[0]` is the only root; every child id exists;
  * no node has two parents; every class id exists; every style has a non-empty name and
- * `type: "class"`; every style `children` entry exists.
+ * `type: "class"`; every style `children` entry exists; class lists form a base + combo chain linked
+ * through `children` (spec 3.4); HtmlEmbed `v` equals `data.embed.meta.html`.
  *
  * @returns A list of human-readable problems. Empty means valid.
  */
@@ -25,6 +26,7 @@ export function validateXscp(data: XscpData): string[] {
     nodeIds.add(n._id);
   }
   const styleIds = new Set<string>();
+  const styleById = new Map(styles.map((st) => [st._id, st]));
   for (const s of styles) {
     if (styleIds.has(s._id) || nodeIds.has(s._id)) problems.push(`duplicate style id ${s._id}`);
     styleIds.add(s._id);
@@ -44,6 +46,17 @@ export function validateXscp(data: XscpData): string[] {
       parentOf.set(c, n._id);
     }
     for (const cls of n.classes) if (!styleIds.has(cls)) problems.push(`node ${n._id} class ${cls} not found`);
+    // Combo chain (spec 3.4): first class is a base style, the rest are combos, and each style
+    // lists the next one in its `children` (true for every adjacent pair in real Designer dumps).
+    n.classes.forEach((cls, i) => {
+      const s = styleById.get(cls);
+      if (!s) return;
+      if (i === 0 && s.comb !== '') problems.push(`node ${n._id} first class ${s.name} must have comb ""`);
+      if (i > 0 && s.comb !== '&') problems.push(`node ${n._id} class ${s.name} must be a combo (comb "&")`);
+      const next = n.classes[i + 1];
+      if (next && !s.children.includes(next)) problems.push(`style ${s.name} does not list combo ${next} in children`);
+    });
+    if (n.type === 'HtmlEmbed' && n.v !== n.data?.embed?.meta.html) problems.push(`embed ${n._id} v must equal data.embed.meta.html`);
   }
 
   if (nodes.length > 0) {

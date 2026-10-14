@@ -1,6 +1,8 @@
 /**
  * HTML parsing. Turns the user's HTML string into a DOM tree and pulls out the parts that are
  * not elements to convert: `<style>` blocks, `<script>` tags and `<link rel="stylesheet">` tags.
+ * Works for full documents (`<!doctype html><html><head>…`) and for fragments: DOMParser puts a
+ * fragment's leading `<style>`/`<link>` in `<head>` and the rest in `<body>`; both are searched.
  *
  * Runs in the browser (DOMParser) and in Vitest (jsdom environment).
  *
@@ -34,11 +36,17 @@ export interface ParsedHtml {
   scripts: HtmlScript[];
   /** Outer HTML of `<link rel="stylesheet">` / `<link rel="preconnect">` tags to keep in an embed. */
   headLinks: string[];
+  /** Classes on `<body>`; the converter puts them on the root wrapper. */
+  bodyClasses: string[];
+  /** Every class name used on any element (for collision-free generated names). */
+  classNames: Set<string>;
   warnings: ConvertWarning[];
 }
 
 /**
  * Parses an HTML document or fragment.
+ *
+ * `<style>` and `<script>` inside `<svg>` stay with the SVG (they belong to it).
  *
  * @param html Full document (`<!doctype html>...`) or a fragment. Empty input yields no roots.
  * @returns The DOM, the top-level nodes to convert and the extracted style/script/link tags.
@@ -48,12 +56,16 @@ export function parseHtml(html: string): ParsedHtml {
   const styles: string[] = [];
   const scripts: HtmlScript[] = [];
   const headLinks: string[] = [];
+  const warnings: ConvertWarning[] = [];
+  const outsideSvg = (el: Element): boolean => !el.parentElement?.closest('svg');
 
   doc.querySelectorAll('style').forEach((el) => {
+    if (!outsideSvg(el)) return;
     styles.push(el.textContent ?? '');
     el.remove();
   });
   doc.querySelectorAll('script').forEach((el) => {
+    if (!outsideSvg(el)) return;
     scripts.push({
       src: el.getAttribute('src'),
       code: el.textContent ?? '',
@@ -65,7 +77,7 @@ export function parseHtml(html: string): ParsedHtml {
   });
   doc.querySelectorAll('link').forEach((el) => {
     const rel = (el.getAttribute('rel') ?? '').toLowerCase();
-    if (rel.includes('stylesheet') || rel.includes('preconnect')) headLinks.push(el.outerHTML);
+    if (/\b(stylesheet|preconnect|preload|modulepreload)\b/.test(rel)) headLinks.push(el.outerHTML);
     el.remove();
   });
 
@@ -73,5 +85,15 @@ export function parseHtml(html: string): ParsedHtml {
     (n) => n.nodeType === 1 || (n.nodeType === 3 && (n.textContent ?? '').trim() !== ''),
   );
 
-  return { document: doc, roots, styles, scripts, headLinks, warnings: [] };
+  const classNames = new Set<string>();
+  doc.querySelectorAll('[class]').forEach((el) => {
+    for (const c of (el.getAttribute('class') ?? '').split(/\s+/)) if (c) classNames.add(c);
+  });
+  const bodyClasses = (doc.body.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
+
+  if (html.trim() && roots.length === 0 && styles.length === 0 && scripts.length === 0) {
+    warnings.push({ code: 'parse-error', severity: 'warning', message: 'The HTML contains no elements to convert.' });
+  }
+
+  return { document: doc, roots, styles, scripts, headLinks, bodyClasses, classNames, warnings };
 }
