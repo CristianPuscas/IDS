@@ -529,7 +529,47 @@ export interface ConvertOptions {
    * to the whole destination site (spec 3.2), so the default is `false` (rules go to the embed).
    */
   includeLargeBreakpoints: boolean;
+  /**
+   * How button-like elements (`<button>`, `<a class="btn">`, `role="button"`) are converted.
+   * - `'button'` (default): the native Webflow Button. Webflow publishes it with `.w-button`
+   *   (blue background, 9px 15px padding, white text…), so the button's base class gets longhands
+   *   that restore what the source rendered for every `.w-button` property the CSS did not set.
+   *   A classless button gets a generated `button` class for them.
+   * - `'linkBlock'`: a Link Block (no `.w-button`) whose text sits in a Text Block.
+   */
+  buttonMode: ButtonMode;
+  /**
+   * How `<form>` is converted.
+   * - `'native'` (default): Webflow Form Block (FormWrapper > FormForm + success and error
+   *   messages) with native inputs, textareas, selects, checkboxes, radios, labels and submit
+   *   button (spec 2.4 Forms). Unsupported controls (file, hidden, date… inputs) stay as Code
+   *   Embeds inside the form, with a warning.
+   * - `'embed'`: the whole form is kept as HTML in a Code Embed (no Webflow form handling).
+   */
+  forms: FormMode;
+  /**
+   * Layout of embedded canvas/svg/video/iframe elements that use percentage sizes or absolute
+   * positioning. `'wrapper'` (default) puts the Code Embed in a classed Div Block
+   * (`<class>-embed`) that takes over the element's layout, and makes the element fill it.
+   * `'none'` embeds the element as is (it then sizes against Webflow's `.w-embed` div).
+   */
+  embedSizing: EmbedSizing;
+  /**
+   * Rename classes to the selector Webflow publishes them under (lowercase, other characters
+   * turned into `-`, spec 3.1), and rewrite the `<style>` CSS to match. Scripts are never rewritten;
+   * renamed classes they mention are reported. Default `true`.
+   */
+  normalizeClassNames: boolean;
 }
+
+/** `ConvertOptions.buttonMode`. */
+export type ButtonMode = 'button' | 'linkBlock';
+
+/** `ConvertOptions.forms`. */
+export type FormMode = 'native' | 'embed';
+
+/** `ConvertOptions.embedSizing`. */
+export type EmbedSizing = 'wrapper' | 'none';
 
 /** Defaults applied by `convert()` for any option not passed. */
 export const DEFAULT_CONVERT_OPTIONS: Readonly<ConvertOptions> = Object.freeze({
@@ -538,6 +578,10 @@ export const DEFAULT_CONVERT_OPTIONS: Readonly<ConvertOptions> = Object.freeze({
   keepUnsupportedInEmbed: true,
   maxEmbedChars: 10000,
   includeLargeBreakpoints: false,
+  buttonMode: 'button',
+  forms: 'native',
+  embedSizing: 'wrapper',
+  normalizeClassNames: true,
 });
 
 /** Machine-readable warning categories. The UI may group or filter by these. */

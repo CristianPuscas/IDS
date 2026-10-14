@@ -62,6 +62,13 @@ export interface StyleRegistry {
   addInlineStyle(className: string, decls: CssDeclaration[]): void;
   /** Inline-style classes registered with `addInlineStyle`, in order. */
   inlineStyles(): [string, CssDeclaration[]][];
+  /**
+   * Registers low-priority declarations for a class (e.g. neutralizing Webflow's `.w-button`
+   * defaults). Every source rule for the class overrides them.
+   */
+  addDefaults(className: string, decls: NativeDecl[]): void;
+  /** Defaults registered with `addDefaults`, in order. */
+  defaults(): [string, NativeDecl[]][];
 }
 
 /** Creates an empty registry. */
@@ -70,6 +77,7 @@ export function createStyleRegistry(): StyleRegistry {
   const order: WfStyle[] = [];
   const chains = new Map<string, string[]>();
   const inline: [string, CssDeclaration[]][] = [];
+  const defaults: [string, NativeDecl[]][] = [];
 
   const getOrCreate = (classes: string[]): WfStyle => {
     const key = classes.join(SEP);
@@ -116,6 +124,10 @@ export function createStyleRegistry(): StyleRegistry {
       inline.push([className, decls]);
     },
     inlineStyles: () => [...inline],
+    addDefaults(className, decls) {
+      if (decls.length) defaults.push([className, decls]);
+    },
+    defaults: () => [...defaults],
   };
 }
 
@@ -230,9 +242,23 @@ export function mapStyles(
     order: 1e9 + i,
   }));
 
+  // Defaults rank below every source rule (specificity 0, before everything in source order).
+  const defaultRules: CssStyleRule[] = registry.defaults().map(([name, decls], i) => ({
+    kind: 'style',
+    selectors: [`.${name}`],
+    declarations: decls.map((d) => ({ property: d.property, value: d.value, important: false })),
+    media: null,
+    mediaStack: [],
+    body: '',
+    raw: '',
+    order: -1e6 + i,
+  }));
+  const inlineSet = new Set(inlineRules);
+  const defaultSet = new Set(defaultRules);
+
   let nextId = 0;
-  for (const rule of [...css.rules, ...inlineRules]) {
-    const isInline = rule.order >= 1e9;
+  for (const rule of [...defaultRules, ...css.rules, ...inlineRules]) {
+    const isInline = inlineSet.has(rule);
     const media = mediaToBands(rule.mediaStack, options.breakpointTolerancePx, options.includeLargeBreakpoints);
 
     const nativeDecls: (NativeDecl & { src: number })[] = [];
@@ -279,7 +305,7 @@ export function mapStyles(
           bands: new Set(media.bands),
           decls: [...nativeDecls],
           source: nativeSource,
-          specificity: isInline ? 1000 : sel.specificity,
+          specificity: isInline ? 1000 : defaultSet.has(rule) ? 0 : sel.specificity,
           order: rule.order,
           sub: si * 3 + 2,
           selector,

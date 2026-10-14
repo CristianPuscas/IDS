@@ -15,9 +15,10 @@
  * Ownership: engine.
  */
 
+import { cssClassNames, findJsClassReferences, planClassRenames, renameClassesInDocument, rewriteCssClasses } from './classNames';
 import { parseCss } from './cssParser';
 import { buildEmbedNode, buildScriptEmbeds, buildStyleEmbeds } from './embedBuilder';
-import { parseHtml } from './htmlParser';
+import { parseHtml, type ParsedHtml } from './htmlParser';
 import { uuid } from './ids';
 import { extractJs } from './jsExtractor';
 import { buildNodes } from './nodeBuilder';
@@ -122,19 +123,26 @@ function convertUnsafe(input: ConvertInput, opts: ConvertOptions): ConvertResult
   const parsed = parseHtml(html);
   warnings.push(...parsed.warnings);
 
-  const cssText = [...parsed.styles, editorCss].filter((s) => s.trim()).join('\n');
+  let cssText = [...parsed.styles, editorCss].filter((s) => s.trim()).join('\n');
+  if (opts.normalizeClassNames) {
+    cssText = normalizeClassNames(parsed, cssText, [...parsed.scripts.map((s) => s.code), editorJs], warnings);
+  }
   const css = parseCss(cssText);
   warnings.push(...css.warnings);
 
-  // Class names used anywhere, so generated names (inline-style-N) never clash.
+  // Class names used anywhere, so generated names (inline-style-N, button, *-embed) never clash.
   const reserved = new Set(parsed.classNames);
-  for (const m of cssText.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) reserved.add(m[1]!);
+  for (const name of cssClassNames(cssText)) reserved.add(name);
 
   const registry = createStyleRegistry();
-  const built = buildNodes(parsed.roots, registry, opts, { rootClasses: parsed.bodyClasses, reservedClassNames: reserved });
+  const built = buildNodes(parsed.roots, registry, opts, {
+    rootClasses: parsed.bodyClasses,
+    reservedClassNames: reserved,
+    cssRules: css.rules,
+  });
   warnings.push(...built.warnings);
 
-  const styleMap = mapStyles(css, registry, built.usage, opts);
+  const styleMap = mapStyles({ ...css, rules: [...css.rules, ...built.extraRules] }, registry, built.usage, opts);
   warnings.push(...styleMap.warnings);
 
   const js = extractJs(parsed.scripts, editorJs);
@@ -185,6 +193,39 @@ function convertUnsafe(input: ConvertInput, opts: ConvertOptions): ConvertResult
       jsBytes: js.totalBytes,
     },
   };
+}
+
+/**
+ * Renames classes Webflow would publish under a different selector (uppercase, `:`, `/`…) to that
+ * selector, in the HTML and in every stylesheet, so native classes and `<style>` embeds keep
+ * matching (spec 3.1). Scripts are not rewritten; renamed classes they mention are reported.
+ * Mutates `parsed` (document, class lists) and returns the rewritten CSS.
+ */
+function normalizeClassNames(parsed: ParsedHtml, cssText: string, scripts: string[], warnings: ConvertWarning[]): string {
+  const renames = planClassRenames(parsed.classNames, cssClassNames(cssText));
+  if (renames.size === 0) return cssText;
+  renameClassesInDocument(parsed.document, renames);
+  const rename = (c: string): string => renames.get(c) ?? c;
+  parsed.classNames = new Set([...parsed.classNames].map(rename));
+  parsed.bodyClasses = parsed.bodyClasses.map(rename);
+  const list = [...renames].map(([from, to]) => `${from} → ${to}`);
+  warnings.push({
+    code: 'class-renamed',
+    severity: 'info',
+    message: `${renames.size} class name${renames.size > 1 ? 's were' : ' was'} renamed to the form Webflow publishes (lowercase, other characters become "-"); the <style> CSS was updated to match.`,
+    detail: list.join('\n'),
+  });
+  const refs = findJsClassReferences(scripts, renames);
+  if (refs.length > 0) {
+    const names = [...new Set(refs.map((r) => `${r.oldName} → ${r.newName}`))];
+    warnings.push({
+      code: 'class-renamed',
+      severity: 'warning',
+      message: `Scripts still reference renamed classes (${names.join(', ')}). Scripts are not rewritten: update these strings to the new names.`,
+      detail: refs.map((r) => `${r.literal}  (${r.oldName} → ${r.newName})`).join('\n'),
+    });
+  }
+  return rewriteCssClasses(cssText, renames);
 }
 
 function buildEmptyRoot(): WfElementNode {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { convert, validateXscp } from './index';
 import { isTextNode, type ConvertResult, type WfElementNode, type WfNode } from './types';
-import { embedCodes, embeddedCss, first, style } from './testHelpers';
+import { elements, embedCodes, embeddedCss, first, style } from './testHelpers';
 
 /** A typical AI-generated landing page: nav with hover, hero with a Three.js canvas, card grid, GSAP. */
 const LANDING = `<!DOCTYPE html>
@@ -177,7 +177,8 @@ describe('AI-generated landing page fixture', () => {
               Link<a>.nav_link {button:false, block:""}
                 "Pricing"
         Section<section>.hero
-          HtmlEmbed<div> [<canvas id="hero-canvas" class…]
+          Block<div>.hero_canvas-embed
+            HtmlEmbed<div> [<canvas id="hero-canvas" class…]
           Block<div>.hero_content
             Heading<h1>.hero_title
               "Ship "
@@ -244,9 +245,23 @@ describe('AI-generated landing page fixture', () => {
 
   it('keeps the canvas (with id/size) and the svg in embeds', () => {
     const codes = embedCodes(res);
-    expect(codes).toContain('<canvas id="hero-canvas" class="hero_canvas" width="1440" height="900"></canvas>');
+    expect(codes).toContain(
+      '<canvas id="hero-canvas" class="hero_canvas" width="1440" height="900" style="position: static; display: block; width: 100%; height: 100%;"></canvas>',
+    );
     expect(codes.some((c) => c.startsWith('<svg class="card_icon"'))).toBe(true);
     expect(first(res, 'Section').data!.attr!.id).toBe('top');
+  });
+
+  it('moves the Three.js canvas layout (absolute, inset 0, 100%) onto a classed wrapper Block', () => {
+    const wrap = style(res, 'hero_canvas-embed');
+    expect(wrap.styleLess).toBe(
+      'display: grid; position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; z-index: 0;',
+    );
+    const block = elements(res).find((e) => e.classes[0] === wrap._id)!;
+    expect(block.type).toBe('Block');
+    expect(block.children).toHaveLength(1);
+    // The canvas rule itself stays in the <style> embed for the inner element.
+    expect(embeddedCss(res)).toContain('.hero_canvas {');
   });
 
   it('routes everything non-native to one <style> embed in source order', () => {

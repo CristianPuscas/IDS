@@ -74,14 +74,14 @@ describe('combo classes', () => {
   it('builds combo chains with comb "&" and children links', () => {
     const res = run(
       '<a class="button is-secondary is-small">x</a><a class="button">y</a>',
-      '.button { padding: 1rem } .button.is-secondary { background-color: transparent } .button.is-secondary.is-small { padding: .5rem }',
+      '.button { padding: 1rem } .button.is-secondary { background-color: #000 } .button.is-secondary.is-small { padding: .5rem }',
     );
     const base = style(res, 'button');
     const sec = style(res, 'is-secondary', '&');
     const small = style(res, 'is-small', '&');
     expect(base.children).toEqual([sec._id]);
     expect(sec.children).toEqual([small._id]);
-    expect(sec.styleLess).toBe('background-color: transparent;');
+    expect(sec.styleLess).toBe('background-color: #000;');
     expect(small.styleLess).toBe('padding-top: .5rem; padding-right: .5rem; padding-bottom: .5rem; padding-left: .5rem;');
     expect(classNames(res, first(res, 'Link'))).toEqual(['button', 'is-secondary', 'is-small']);
   });
@@ -335,8 +335,14 @@ describe('unsupported selectors -> embed', () => {
 });
 
 describe('class name hygiene', () => {
-  it('warns when Webflow will slugify a class name', () => {
+  it('renames a class Webflow would slugify, and reports it', () => {
     const res = run('<div class="heroTitle"></div>', '.heroTitle { color: red }');
+    expect(style(res, 'herotitle').styleLess).toBe('color: red;');
+    expect(res.warnings.some((w) => w.code === 'class-renamed' && w.detail === 'heroTitle → herotitle')).toBe(true);
+  });
+
+  it('only warns when normalizeClassNames is off', () => {
+    const res = run('<div class="heroTitle"></div>', '.heroTitle { color: red }', { normalizeClassNames: false });
     expect(style(res, 'heroTitle').styleLess).toBe('color: red;');
     expect(res.warnings.some((w) => w.code === 'class-renamed' && w.detail === 'heroTitle')).toBe(true);
   });

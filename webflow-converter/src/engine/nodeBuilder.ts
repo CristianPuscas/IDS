@@ -9,21 +9,29 @@
  * | p                                                         | `Paragraph`                               |
  * | a                                                         | `Link`: text link, Link Block (`block:"inline"`) or Button (`button:true`) |
  * | button                                                    | `Link` with `button:true` + `role="button"` (Link Block if it holds elements) |
+ * | form (option `forms: 'native'`)                           | FormWrapper > FormForm + messages (see ./forms) |
  * | img                                                       | `Image` (external `src`, no asset record)  |
  * | ul/ol, li                                                 | `List`, `ListItem`                        |
  * | span, strong/b, em/i, sup, sub, br, blockquote            | `Span`, `Strong`, `Emphasized`, `Superscript`, `Subscript`, `LineBreak`, `Blockquote` |
- * | canvas, video, audio, svg, iframe, form controls, table…  | `HtmlEmbed` with the element's outerHTML  |
+ * | canvas, video, audio, svg, iframe, table…                 | `HtmlEmbed` with the element's outerHTML (in a sizing Block when needed, see ./embedSizing) |
  * | any other element (small, code, pre, label, dl, time…)    | `DOM` (Custom Element, real tag in `data.tag`) |
  *
  * Attributes: `id` -> `data.attr.id`; everything else that is not a built-in of the node type
  * (`data-*`, `aria-*`, `role`, …) -> `data.xattr` (`data.attributes` on DOM nodes).
  * `style="…"` becomes a generated class (`inline-style-N`) so it stays editable in the Designer.
  *
+ * Buttons (option `buttonMode`): native Buttons get `.w-button` neutralizers on their base class
+ * (see ./buttonDefaults); `'linkBlock'` emits a Link Block with a Text Block instead.
+ *
  * Ownership: engine.
  */
 
-import { parseDeclarations } from './cssParser';
+import { buttonNeutralizers } from './buttonDefaults';
+import { parseDeclarations, type CssStyleRule } from './cssParser';
+import type { NativeDecl } from './cssValues';
 import { buildEmbedNode } from './embedBuilder';
+import { planEmbedSizing, SIZED_EMBED_TAGS } from './embedSizing';
+import { buildForm, buildFormControl, FORM_CONTROL_TAGS, type FormBuilderApi } from './forms';
 import { uuid } from './ids';
 import type { ClassUsage, StyleRegistry } from './styleMapper';
 import { isTextNode, type ConvertOptions, type ConvertWarning, type WfElementNode, type WfLink, type WfNode, type WfNodeData, type WfXattr } from './types';
@@ -37,6 +45,8 @@ export interface NodeBuildResult {
   /** Ids of the converted top-level nodes (children of `root`). */
   topLevel: string[];
   usage: ClassUsage;
+  /** Generated style rules (embed sizing wrappers) to map together with the source CSS. */
+  extraRules: CssStyleRule[];
   warnings: ConvertWarning[];
 }
 
@@ -46,6 +56,8 @@ export interface BuildNodesExtra {
   rootClasses?: string[];
   /** Every class name in the input (HTML and CSS), so generated names never clash. */
   reservedClassNames?: Set<string>;
+  /** Parsed source rules, used to work out what the source rendered (buttons, embed sizing). */
+  cssRules?: CssStyleRule[];
 }
 
 /** Tags that become a Block with a matching `data.tag` (spec 2.4 Block). */
@@ -99,6 +111,16 @@ interface Ctx {
   notes: Set<string>;
   /** Links whose href is `#id`, resolved to section links once every node exists. */
   anchorLinks: { node: WfElementNode; fragment: string }[];
+  rules: CssStyleRule[];
+  /** True while converting the inside of a native form. */
+  inForm: boolean;
+  /** `.w-button` neutralizers for buttons that have their own base class (applied at the end). */
+  buttonDefaults: { base: string; decls: NativeDecl[] }[];
+  /** Class names used by anything that is not a Webflow Button (native or embedded). */
+  otherClasses: Set<string>;
+  /** Generated classes, keyed by base name + declarations, so identical ones are shared. */
+  generated: Map<string, string>;
+  extraRules: CssStyleRule[];
 }
 
 /**
@@ -127,6 +149,12 @@ export function buildNodes(
     domTags: new Map(),
     notes: new Set(),
     anchorLinks: [],
+    rules: extra.cssRules ?? [],
+    inForm: false,
+    buttonDefaults: [],
+    otherClasses: new Set(),
+    generated: new Map(),
+    extraRules: [],
   };
 
   const root = createBlock('div', registry.resolve(extra.rootClasses ?? []));
@@ -145,11 +173,11 @@ export function buildNodes(
       root.children.push(block._id);
       continue;
     }
-    const id = buildElement(ctx, node as Element);
-    if (id) root.children.push(id);
+    root.children.push(...buildElement(ctx, node as Element));
   }
 
   resolveAnchorLinks(ctx);
+  applyButtonDefaults(ctx);
 
   for (const [tag, n] of ctx.embeddedTags) {
     ctx.warnings.push({
@@ -173,21 +201,95 @@ export function buildNodes(
     nodes: ctx.nodes,
     topLevel: [...root.children],
     usage: { embeddedClassLists: ctx.embeddedClassLists },
+    extraRules: ctx.extraRules,
     warnings: ctx.warnings,
   };
 }
 
-/** Builds one element (and its subtree). Returns the node id, or null if it was skipped. */
-function buildElement(ctx: Ctx, el: Element): string | null {
-  const tag = el.tagName.toLowerCase();
-  if (SKIP_TAGS.has(tag)) return null;
+/**
+ * Registers the `.w-button` neutralizers on each button base class. A base class that is also used
+ * by something other than a Button is left alone: the neutralizers (e.g. `display: inline`) would
+ * change that element too.
+ */
+function applyButtonDefaults(ctx: Ctx): void {
+  for (const list of ctx.embeddedClassLists) for (const c of list) ctx.otherClasses.add(c);
+  const merged = new Map<string, Map<string, string>>();
+  const skipped = new Set<string>();
+  for (const { base, decls } of ctx.buttonDefaults) {
+    if (ctx.otherClasses.has(base)) {
+      skipped.add(base);
+      continue;
+    }
+    const m = merged.get(base) ?? new Map<string, string>();
+    for (const d of decls) if (!m.has(d.property)) m.set(d.property, d.value);
+    merged.set(base, m);
+  }
+  for (const [base, m] of merged) {
+    ctx.registry.addDefaults(base, [...m].map(([property, value]) => ({ property, value })));
+  }
+  if (merged.size > 0) {
+    ctx.warnings.push({
+      code: 'other',
+      severity: 'info',
+      message: `Webflow Buttons get .w-button defaults (blue background, padding, white text); ${merged.size === 1 ? 'class' : 'classes'} ${[...merged.keys()].map((b) => `"${b}"`).join(', ')} got declarations that keep the source look.`,
+      detail: [...merged].map(([b, m]) => `.${b} { ${[...m].map(([p, v]) => `${p}: ${v};`).join(' ')} }`).join('\n'),
+    });
+  }
+  for (const base of skipped) {
+    ctx.warnings.push({
+      code: 'other',
+      severity: 'warning',
+      message: `Class "${base}" is used on a Button and on other elements, so Webflow's .w-button defaults (blue background, padding, white text) were not neutralized on it.`,
+      detail: base,
+    });
+  }
+}
 
-  if (EMBED_TAGS.has(tag) || el.namespaceURI === 'http://www.w3.org/2000/svg') {
-    return buildElementEmbed(ctx, el, tag);
+/** A class name not used anywhere else, built from `base` (`base`, `base-2`, …). */
+function uniqueClassName(ctx: Ctx, base: string): string {
+  let name = base;
+  for (let i = 2; ctx.reserved.has(name); i++) name = `${base}-${i}`;
+  ctx.reserved.add(name);
+  return name;
+}
+
+/** A generated class holding low-priority declarations; identical requests share one class. */
+function defaultsClass(ctx: Ctx, base: string, decls: NativeDecl[]): string {
+  const key = `${base}\u0001${JSON.stringify(decls)}`;
+  const existing = ctx.generated.get(key);
+  if (existing) return existing;
+  const name = uniqueClassName(ctx, base);
+  ctx.generated.set(key, name);
+  ctx.registry.addDefaults(name, decls);
+  return name;
+}
+
+/** Builds one element (and its subtree). Returns the ids of the nodes that take its place. */
+function buildElement(ctx: Ctx, el: Element): string[] {
+  const tag = el.tagName.toLowerCase();
+  if (SKIP_TAGS.has(tag)) return [];
+
+  if (tag === 'form' && ctx.options.forms === 'native' && !ctx.inForm) {
+    ctx.inForm = true;
+    try {
+      return [buildForm(formApi(ctx), el)];
+    } finally {
+      ctx.inForm = false;
+    }
+  }
+  if (ctx.inForm && FORM_CONTROL_TAGS.has(tag)) {
+    const ids = buildFormControl(formApi(ctx), el);
+    if (ids) return ids;
   }
 
-  const classes = resolveClasses(ctx, el);
+  if ((EMBED_TAGS.has(tag) && !(ctx.inForm && tag === 'fieldset')) || el.namespaceURI === 'http://www.w3.org/2000/svg') {
+    return [buildElementEmbed(ctx, el, tag)];
+  }
+
   const id = el.getAttribute('id') ?? '';
+  if (tag === 'a' || tag === 'button') return [buildLink(ctx, el, tag, id)];
+
+  const classes = resolveClasses(ctx, el);
 
   if (BLOCK_TAGS.has(tag) || tag === 'section') {
     const isSection = tag === 'section';
@@ -203,21 +305,19 @@ function buildElement(ctx: Ctx, el: Element): string | null {
         ...commonData(ctx, el, id, []),
       },
     };
-    return emit(ctx, node, el, hasDirectText(el));
+    return [emit(ctx, node, el, hasDirectText(el))];
   }
 
   if (/^h[1-6]$/.test(tag)) {
     const node = element('Heading', tag, classes, { tag, ...commonData(ctx, el, id, []) });
-    return emit(ctx, node, el, true);
+    return [emit(ctx, node, el, true)];
   }
 
   if (tag === 'p') {
-    return emit(ctx, element('Paragraph', 'p', classes, commonData(ctx, el, id, [])), el, true);
+    return [emit(ctx, element('Paragraph', 'p', classes, commonData(ctx, el, id, [])), el, true)];
   }
 
-  if (tag === 'a' || tag === 'button') return buildLink(ctx, el, tag, classes, id);
-
-  if (tag === 'img') return buildImage(ctx, el, classes, id);
+  if (tag === 'img') return [buildImage(ctx, el, classes, id)];
 
   if (tag === 'ul' || tag === 'ol') {
     const node = element('List', tag, classes, {
@@ -225,7 +325,7 @@ function buildElement(ctx: Ctx, el: Element): string | null {
       list: { type: 'list', unstyled: false },
       ...commonData(ctx, el, id, []),
     });
-    return emit(ctx, node, el, false);
+    return [emit(ctx, node, el, false)];
   }
 
   if (tag === 'li') {
@@ -235,17 +335,17 @@ function buildElement(ctx: Ctx, el: Element): string | null {
       ...(text ? { text: true } : {}),
       ...commonData(ctx, el, id, []),
     });
-    return emit(ctx, node, el, text);
+    return [emit(ctx, node, el, text)];
   }
 
   if (tag === 'br') {
     const node: WfElementNode = { _id: uuid(), type: 'LineBreak', tag: 'br', classes, children: [] };
     ctx.nodes.push(node);
-    return node._id;
+    return [node._id];
   }
 
   if (tag === 'blockquote') {
-    return emit(ctx, element('Blockquote', 'blockquote', classes, commonData(ctx, el, id, [])), el, true);
+    return [emit(ctx, element('Blockquote', 'blockquote', classes, commonData(ctx, el, id, [])), el, true)];
   }
 
   const inline = INLINE_TYPES[tag];
@@ -254,7 +354,7 @@ function buildElement(ctx: Ctx, el: Element): string | null {
     const xattr = collectXattr(ctx, el, []);
     const node: WfElementNode = { _id: uuid(), type: inline.type, tag: inline.tag, classes, children: [] };
     if (id || xattr.length) node.data = { attr: { id }, xattr };
-    return emit(ctx, node, el, true);
+    return [emit(ctx, node, el, true)];
   }
 
   // Anything else: Webflow Custom Element (DOM node). Real tag in data.tag, attributes in
@@ -272,21 +372,79 @@ function buildElement(ctx: Ctx, el: Element): string | null {
     children: [],
     data: { tag, attributes, text: false, slot: '', visibility: { conditions: [] } },
   };
-  return emit(ctx, node, el, textLike, tag === 'pre');
+  return [emit(ctx, node, el, textLike, tag === 'pre')];
 }
 
-/** `<a>` / `<button>` -> Link (text link, Link Block or Button; spec 2.4 Link). */
-function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', classes: string[], id: string): string {
+/** The node-builder services the form builder uses (see ./forms). */
+function formApi(ctx: Ctx): FormBuilderApi {
+  return {
+    push: (node) => ctx.nodes.push(node),
+    buildElement: (el) => buildElement(ctx, el),
+    buildChildren: (el, textContext) => buildChildren(ctx, el, textContext, false),
+    resolveClasses: (el, extra) => {
+      const tag = el.tagName.toLowerCase();
+      const submit = tag === 'button' || (tag === 'input' && (el.getAttribute('type') ?? '').toLowerCase() === 'submit');
+      return resolveClasses(ctx, el, { generated: extra, button: submit });
+    },
+    resolveNames: (names) => {
+      for (const n of names) ctx.otherClasses.add(n);
+      return ctx.registry.resolve(names);
+    },
+    xattr: (el, reserved) => collectXattr(ctx, el, reserved),
+    embed: (el, reason) => {
+      ctx.warnings.push({
+        code: 'unsupported-element',
+        severity: 'warning',
+        message: `${reason}; it was kept as a Code Embed inside the native form.`,
+        detail: el.outerHTML.slice(0, 160),
+      });
+      return buildElementEmbed(ctx, el, el.tagName.toLowerCase(), false);
+    },
+    submitButtonClasses: (el) => buttonClasses(ctx, el),
+    defaultsClass: (base, decls) => defaultsClass(ctx, base, decls),
+    warn: (message, detail, severity = 'warning') =>
+      ctx.warnings.push({ code: 'unsupported-element', severity, message, ...(detail ? { detail } : {}) }),
+  };
+}
+
+/**
+ * Records the `.w-button` neutralizers for a button element. Returns a generated class name to
+ * put first in its class list when the element has no class of its own; otherwise the
+ * neutralizers go to its existing base class at the end of the build.
+ */
+function buttonClasses(ctx: Ctx, el: Element): string[] {
+  const decls = buttonNeutralizers(el, ctx.rules);
+  if (decls.length === 0) return [];
+  const own = classNamesOf(el);
+  if (own.length > 0) {
+    ctx.buttonDefaults.push({ base: own[0]!, decls });
+    return [];
+  }
+  return [defaultsClass(ctx, 'button', decls)];
+}
+
+/**
+ * `<a>` / `<button>` -> Link (text link, Link Block or Button; spec 2.4 Link). With
+ * `buttonMode: 'linkBlock'` a button-like element becomes a Link Block whose content sits in a
+ * Text Block, so it never gets `.w-button`.
+ */
+function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', id: string): string {
   const hasBlockChild = Array.from(el.children).some((c) => {
     const t = c.tagName.toLowerCase();
     return BLOCK_LEVEL.has(t) || t === 'img' || EMBED_TAGS.has(t) || c.namespaceURI === 'http://www.w3.org/2000/svg';
   });
-  const classNames = (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
+  const classNames = classNamesOf(el);
   const looksLikeButton =
     tag === 'button' ||
     el.getAttribute('role') === 'button' ||
     classNames.some((c) => /^(btn|button)([-_]|$)/i.test(c) || /[-_](btn|button)$/i.test(c));
-  const isButton = looksLikeButton && !hasBlockChild;
+  const buttonLike = looksLikeButton && !hasBlockChild;
+  const asLinkBlock = buttonLike && ctx.options.buttonMode === 'linkBlock';
+  const isButton = buttonLike && !asLinkBlock;
+
+  const classes = isButton
+    ? resolveClasses(ctx, el, { generated: buttonClasses(ctx, el), button: true })
+    : resolveClasses(ctx, el);
 
   const reserved = tag === 'a' ? ['href', 'target'] : ['type'];
   const extraAttrs: WfXattr[] = [];
@@ -305,7 +463,7 @@ function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', classes: string[]
 
   const node = element('Link', 'a', classes, {
     button: isButton,
-    block: hasBlockChild ? 'inline' : '',
+    block: hasBlockChild || asLinkBlock ? 'inline' : '',
     link,
     ...commonData(ctx, el, id, reserved, extraAttrs),
   });
@@ -318,9 +476,20 @@ function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', classes: string[]
     ctx.warnings.push({
       code: 'unsupported-element',
       severity: 'info',
-      message: '<button> became a Webflow Button/Link (an <a> with role="button"); CSS or JS that targets the "button" tag will not match it.',
+      message: `<button> became a Webflow ${asLinkBlock ? 'Link Block' : 'Button'} (an <a>${tag === 'button' ? ' with role="button"' : ''}); CSS or JS that targets the "button" tag will not match it.`,
       detail: 'button',
     });
+  }
+  if (asLinkBlock) {
+    // Link Blocks hold elements (spec 2.4 Link): the text goes into one classless Text Block.
+    ctx.nodes.push(node);
+    const block = createBlock('div', []);
+    block.data!.text = true;
+    ctx.nodes.push(block);
+    block.children = buildChildren(ctx, el, true, false);
+    node.children = block.children.length ? [block._id] : [];
+    if (!block.children.length) ctx.nodes.splice(ctx.nodes.indexOf(block), 1);
+    return node._id;
   }
   return emit(ctx, node, el, !hasBlockChild);
 }
@@ -403,12 +572,48 @@ function buildImage(ctx: Ctx, el: Element, classes: string[], id: string): strin
   return node._id;
 }
 
-/** Elements without a native type -> HtmlEmbed of their outerHTML (keeps id, width, height…). */
-function buildElementEmbed(ctx: Ctx, el: Element, tag: string): string {
-  const html = el.outerHTML;
+/**
+ * Elements without a native type -> HtmlEmbed of their outerHTML (keeps id, width, height…). With
+ * `embedSizing: 'wrapper'`, a canvas/svg/video/iframe that sizes itself in percentages or is
+ * absolutely positioned goes inside a classed Block that carries its layout (./embedSizing).
+ *
+ * @param count `false` when the caller already reported the element.
+ */
+function buildElementEmbed(ctx: Ctx, el: Element, tag: string, count = true): string {
+  let html = el.outerHTML;
+  let wrapper: WfElementNode | null = null;
+  if (ctx.options.embedSizing === 'wrapper' && (SIZED_EMBED_TAGS.has(tag) || el.namespaceURI === 'http://www.w3.org/2000/svg')) {
+    const base = `${classNamesOf(el)[0] ?? tag}-embed`;
+    const offset = ctx.extraRules.length;
+    let plan = planEmbedSizing(el, ctx.rules, base, offset);
+    if (plan) {
+      const signature = `${base}\u0001${JSON.stringify(plan.rules.map((r) => [r.declarations, r.mediaStack]))}`;
+      let name = ctx.generated.get(signature);
+      if (!name) {
+        name = uniqueClassName(ctx, base);
+        ctx.generated.set(signature, name);
+        if (name !== base) plan = planEmbedSizing(el, ctx.rules, name, offset)!;
+        ctx.extraRules.push(...plan.rules);
+      }
+      html = plan.html;
+      ctx.otherClasses.add(name);
+      wrapper = createBlock('div', ctx.registry.resolve([name]));
+      ctx.nodes.push(wrapper);
+      if (!ctx.notes.has('embed-sizing')) {
+        ctx.notes.add('embed-sizing');
+        ctx.warnings.push({
+          code: 'other',
+          severity: 'info',
+          message: `Embedded elements with percentage or absolute sizing were placed in a Div Block (".${name}"…) that carries their layout, because Webflow wraps every Code Embed in an unsized div.`,
+          detail: plan.moved.join(', '),
+        });
+      }
+    }
+  }
   const node = buildEmbedNode(html);
   ctx.nodes.push(node);
-  ctx.embeddedTags.set(tag, (ctx.embeddedTags.get(tag) ?? 0) + 1);
+  if (wrapper) wrapper.children = [node._id];
+  if (count) ctx.embeddedTags.set(tag, (ctx.embeddedTags.get(tag) ?? 0) + 1);
   // Record class usage inside the embed: CSS targeting these classes must stay in the <style> embed.
   for (const e of [el, ...Array.from(el.querySelectorAll('[class]'))]) {
     const list = (e.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
@@ -422,7 +627,7 @@ function buildElementEmbed(ctx: Ctx, el: Element, tag: string): string {
       detail: tag,
     });
   }
-  return node._id;
+  return wrapper ? wrapper._id : node._id;
 }
 
 /** Pushes `node`, then builds its children (pre-order). */
@@ -443,8 +648,7 @@ function buildChildren(ctx: Ctx, el: Element, textContext: boolean, preserveWs: 
   const parentBlock = BLOCK_LEVEL.has(el.tagName.toLowerCase());
   kids.forEach((kid, idx) => {
     if (kid.nodeType === 1) {
-      const id = buildElement(ctx, kid as Element);
-      if (id) ids.push(id);
+      ids.push(...buildElement(ctx, kid as Element));
       return;
     }
     const raw = kid.textContent ?? '';
@@ -486,13 +690,21 @@ function hasDirectText(el: Element): boolean {
   return Array.from(el.childNodes).some((n) => n.nodeType === 3 && (n.textContent ?? '').trim() !== '');
 }
 
+/** The element's own class names, minus Webflow state classes. */
+function classNamesOf(el: Element): string[] {
+  return (el.getAttribute('class') ?? '').split(/\s+/).filter((c) => c && !WEBFLOW_STATE_CLASSES.has(c));
+}
+
 /**
  * Class list -> style ids. Also turns `style="…"` into a generated class appended to the chain,
  * because Webflow has no per-element inline styles on paste (spec 2.3 `data.style` is not
  * generated).
+ *
+ * @param opts.generated Generated class names placed first (e.g. a classless button's `button`).
+ * @param opts.button The element is a Webflow Button (its classes may get `.w-button` neutralizers).
  */
-function resolveClasses(ctx: Ctx, el: Element): string[] {
-  const names = (el.getAttribute('class') ?? '').split(/\s+/).filter((c) => c && !WEBFLOW_STATE_CLASSES.has(c));
+function resolveClasses(ctx: Ctx, el: Element, opts: { generated?: string[]; button?: boolean } = {}): string[] {
+  const names = [...(opts.generated ?? []), ...classNamesOf(el)];
   const style = el.getAttribute('style');
   if (style && style.trim()) {
     const decls = parseDeclarations(style);
@@ -515,6 +727,7 @@ function resolveClasses(ctx: Ctx, el: Element): string[] {
       }
     }
   }
+  if (!opts.button) for (const n of names) ctx.otherClasses.add(n);
   return ctx.registry.resolve(names);
 }
 

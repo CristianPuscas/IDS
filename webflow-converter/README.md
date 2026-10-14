@@ -20,6 +20,14 @@ verified and what is uncertain.
   Files** (HTML, CSS and JS editors). Each has a "Load example" button.
 - Native Webflow elements: Div Blocks, Sections, Headings, Paragraphs, Text Links, Link Blocks,
   Buttons, Images, Lists, and inline Span/Strong/Emphasized/Superscript/Subscript/Line Break.
+- Native Webflow forms: Form Block with text inputs, textareas, selects, checkboxes, radios, labels,
+  a submit button and the success and error messages Webflow requires.
+- Buttons keep the source look: every Webflow `.w-button` default (blue background, padding,
+  white text…) that your CSS does not set is overridden on the button's class.
+- Class names are renamed to the selector Webflow publishes (`heroTitle` → `herotitle`,
+  `md:flex` → `md-flex`), and the `<style>` embed is rewritten to match.
+- Embedded canvas, svg, video and iframe elements with percentage or absolute sizing get a wrapper
+  Div Block that carries their layout, so they size like in the source.
 - Native class styles: base classes, combo classes (`.a.b`, with the Designer's `children` chain),
   state variants and breakpoint variants. Shorthands are expanded to the longhands the Designer
   writes, and `repeat(N, …)` grid tracks are expanded.
@@ -50,12 +58,14 @@ verified and what is uncertain.
 | `section` | Section |
 | `h1`–`h6`, `p`, `blockquote` | Heading, Paragraph, Block Quote |
 | `a` | Text Link; Link Block when it wraps block elements or images; Button when it looks like one (`btn`, `button`, `*-btn` classes or `role="button"`) |
-| `button` | Webflow Button (an `<a>` with `role="button"`); Link Block if it wraps block elements |
+| `button` | Webflow Button (an `<a>` with `role="button"`); Link Block if it wraps block elements. Option `buttonMode: 'linkBlock'` makes button-like elements Link Blocks |
+| `form` and its `input`/`textarea`/`select`/`label`/submit `button` | Native Form Block: FormWrapper > FormForm (+ success and error messages), FormTextInput, FormTextarea, FormSelect, FormBlockLabel, Checkbox/Radio wrappers, FormButton |
+| File, hidden, date, range… inputs, reset buttons, `<optgroup>` selects inside a form | Code Embed inside the native form, with a warning |
 | `img` | Image that keeps its original URL (hot-linked, no asset record) |
 | `ul`/`ol`, `li` | List, List Item |
 | `span`, `strong`/`b`, `em`/`i`, `sup`, `sub`, `br` | Span, Bold, Italic, Superscript, Subscript, Line Break |
 | Other tags (`small`, `code`, `pre`, `label`, `time`, `hr`…) | Custom Element (DOM node) |
-| `svg`, `canvas`, `video`, `audio`, `iframe`, `picture`, forms and form controls, `table`… | Code Embed with the element's HTML |
+| `svg`, `canvas`, `video`, `audio`, `iframe`, `picture`, `table`, form controls outside a form… | Code Embed with the element's HTML; inside a classed Div Block (`<class>-embed`) when it uses percentage sizes or absolute positioning |
 | `.a { }` | Base class |
 | `.a.b { }` | Combo class `b` on `a`, only for combinations present in the HTML |
 | `:hover`, `:active`, `:focus`, `:focus-visible`, `:visited`, `::placeholder`, `.w--current`, `.w--open` | State variants (`main_hover`, `main_active` for "Pressed"…) |
@@ -85,12 +95,24 @@ are wrapped in one classless Div Block.
 - **Images** keep their original URL with no Webflow asset record (spec 2.4: fabricating asset
   records is risky). They hot-link from the original host and do not appear in the Assets panel.
   Relative URLs will not resolve. `srcset`/`sizes` are dropped.
-- **Buttons** use Webflow's Button element, so they pick up the `.w-button` defaults (blue
-  background, padding, white text) wherever your CSS does not override them.
-- **Forms** go into a Code Embed. They render, but Webflow form handling (submissions,
-  success/error states) is not wired up. Rebuild them with native Form elements if you need it.
-- **Code Embed sizing**: an embedded `canvas`, `svg` or `video` sits inside Webflow's `.w-embed`
-  wrapper div, so `height: 100%` on it resolves against that wrapper and can collapse.
+- **Buttons** are Webflow Buttons, which carry `.w-button`. The converter adds the source's values
+  (or the browser defaults of the source `<a>`/`<button>`) to the button's base class for each
+  `.w-button` property your CSS leaves unset. This is skipped, with a warning, when that base class
+  is also used on non-button elements. UA font styles of `<button>` (13.33px system font) are not
+  reproduced, because the element becomes an `<a>`. Use `buttonMode: 'linkBlock'` to avoid
+  `.w-button` entirely (the text then sits in a Text Block inside a Link Block).
+- **Forms** are native (`forms: 'native'`). The node shapes come from real Designer dumps (spec
+  2.4); the radio wrapper and radio label types are inferred from the checkbox pair. Native fields
+  pick up Webflow's `.w-input`/`.w-select`/`.w-checkbox` defaults (height 38px, padding, grey
+  border…) where your CSS does not set them, and a submit button with icons becomes a plain-text
+  Form Button. File, hidden, date and other unsupported controls stay as Code Embeds inside the
+  form, so Webflow form handling does not see their files. The pasted form uses the destination
+  site's notification settings. Use `forms: 'embed'` to keep the original HTML.
+- **Code Embed sizing**: Webflow wraps each Code Embed in an unsized `.w-embed` div. Embedded
+  elements with percentage sizes or absolute positioning are therefore placed in a classed Div
+  Block that takes over their layout declarations (from every matching rule and breakpoint), and
+  get an inline style that makes them fill it. Other embedded elements are unchanged. Spec 2.4 shows
+  no Code Embed with a class, hence the wrapper. Turn it off with `embedSizing: 'none'`.
 - **Section links** are used only when the `#id` target is inside the pasted tree. Other anchors
   stay plain `#id` URLs. The section-link shape comes from real dumps but has not been
   paste-tested here.
@@ -100,9 +122,11 @@ are wrapped in one classless Div Block.
 - **Cascade across states**: combo classes reproduce the cascade per state and per breakpoint,
   but conflicts between a combo's base value and the parent's `:hover` (or other state) value
   are not reconciled.
-- **Class names** with uppercase letters or escaped characters only get a warning. Webflow
-  slugifies class names on publish, so CSS or JS in embeds that references the original name may
-  stop matching.
+- **Class names** are renamed with Webflow's own rule (lowercase; other characters become `-`;
+  a leading digit, `w-` or `wf-` gets a `_` prefix), and classes that would collide get a suffix
+  (`card-2`). HTML and CSS are rewritten; scripts are not. A warning lists every rename and every
+  string literal in your JS that still uses an old name, so you can update it. CSS-only classes
+  (usually toggled by JS) keep their names. Turn it off with `normalizeClassNames: false`.
 - **Breakpoints**: `min-width` 1280/1440/1920 and odd widths stay in the `<style>` embed, because
   pasting `large`/`xl`/`xxl` variants adds breakpoints to the whole site.
 - **Scripts** do not run on the Designer canvas. Webflow Interactions are not generated.
@@ -173,6 +197,11 @@ webflow-converter/
     │   ├── nodeBuilder.ts      buildNodes(): DOM -> pre-order WfNode list under one root Block
     │   ├── jsExtractor.ts      extractJs(): <script> tags + JS editor -> ordered bundle
     │   ├── embedBuilder.ts     HtmlEmbed builders for <style>/<script>/raw code, with size splitting
+    │   ├── embedSizing.ts      Layout wrapper Block for sized canvas/svg/video/iframe embeds
+    │   ├── forms.ts            Native Form Block (FormWrapper, FormForm, fields, messages)
+    │   ├── buttonDefaults.ts   .w-button neutralizers for Webflow Buttons
+    │   ├── classNames.ts       Webflow class-name rule, renames, CSS selector rewriting
+    │   ├── cascade.ts          Which source declarations apply to an element (specificity)
     │   ├── validate.ts         validateXscp(): structural checks before copying
     │   ├── clipboard.ts        copyToWebflow(): copy-event clipboard write (done); isSafari()
     │   ├── ids.ts              uuid() v4 helper
@@ -224,6 +253,10 @@ interface ConvertOptions {
   keepUnsupportedInEmbed: boolean; // true: unmappable CSS goes into a <style> embed
   maxEmbedChars: number;           // 10000: split larger embeds
   includeLargeBreakpoints: boolean;// false: min-width 1280/1440/1920 rules go to the embed, not large/xl/xxl
+  buttonMode: 'button' | 'linkBlock'; // 'button': native Button + .w-button neutralizers; 'linkBlock': Link Block, no .w-button
+  forms: 'native' | 'embed';          // 'native': Webflow Form Block; 'embed': form HTML in a Code Embed
+  embedSizing: 'wrapper' | 'none';    // 'wrapper': sized canvas/svg/video/iframe get a classed layout Div Block
+  normalizeClassNames: boolean;       // true: rename classes to Webflow's published form, rewrite CSS
 }
 
 interface ConvertResult {

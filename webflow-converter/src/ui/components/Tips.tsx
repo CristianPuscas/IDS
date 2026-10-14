@@ -1,6 +1,8 @@
 const NATIVE = [
   'Elements and semantic tags (section, nav, h1-h6, p, a, button, img, lists)',
-  'Class styles, plus combo classes from .block.is-modifier',
+  'Forms: inputs, textarea, select, checkbox, radio, labels and submit, with success/error messages',
+  'Buttons keep their look: Webflow\'s blue .w-button defaults are neutralized',
+  'Class styles, plus combo classes from .block.is-modifier (names lowercased like Webflow does)',
   ':hover, :focus and :active on the class itself',
   'Media at 991 / 767 / 479px, max-width or min-width (tablet, landscape, portrait)',
   'Attributes such as data-*, aria-* and alt, so your JS hooks keep working',
@@ -11,7 +13,8 @@ const EMBED = [
   '::before / ::after, @keyframes, :root variables',
   'Other media queries (odd breakpoints, orientation, prefers-*)',
   'All <script> code and CDN libraries (GSAP, Three.js, Lenis)',
-  'SVG, canvas, video, iframe, forms and tables',
+  'SVG, canvas, video, iframe and tables (sized ones get a wrapper Div that carries their layout)',
+  'File, hidden and date inputs (inside the native form)',
 ];
 
 /**

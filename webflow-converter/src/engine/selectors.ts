@@ -17,6 +17,7 @@
  * Ownership: engine.
  */
 
+import { isWebflowClassName } from './classNames';
 import type { ConvertWarningCode, WfPseudoState, WfWebflowState } from './types';
 
 /** A selector Webflow can represent as a class style. */
@@ -198,10 +199,10 @@ function matchParen(sel: string, open: number): number {
 }
 
 /**
- * True when a class name survives Webflow's slugification unchanged (lowercase letters, digits,
- * `-`, `_`). Webflow derives the published selector by slugifying the name (spec 3.1), so other
- * names are renamed on publish and `<style>`/JS references to them may stop matching.
+ * True when a class name survives Webflow's slugification unchanged (spec 3.1; the exact rule is
+ * `toWebflowClassName` in ./classNames). Other names are published under a different selector, so
+ * `<style>`/JS references to them may stop matching.
  */
 export function isWebflowSafeClassName(name: string): boolean {
-  return /^[a-z_-][a-z0-9_-]*$/.test(name);
+  return isWebflowClassName(name);
 }

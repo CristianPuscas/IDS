@@ -75,7 +75,6 @@ describe('tag mapping', () => {
     ['<video src="a.mp4" autoplay muted loop playsinline></video>', 'video'],
     ['<svg viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z"/></svg>', 'svg'],
     ['<iframe src="https://www.youtube.com/embed/x"></iframe>', 'iframe'],
-    ['<form action="/s"><input name="email" type="email"><textarea></textarea></form>', 'form'],
     ['<table><tbody><tr><td>1</td></tr></tbody></table>', 'table'],
   ])('%s -> HtmlEmbed of its outerHTML', (src, tag) => {
     const res = html(`<div>${src}</div>`);
@@ -84,6 +83,13 @@ describe('tag mapping', () => {
     expect(embed.v!.startsWith(`<${tag}`)).toBe(true);
     expect(embed.data!.embed!.meta.iframe).toBe(tag === 'iframe');
     expect(res.warnings.some((w) => w.code === 'unsupported-element' && w.detail === tag)).toBe(true);
+  });
+
+  it('<form> -> HtmlEmbed of its outerHTML with forms: "embed"', () => {
+    const res = convert({ mode: 'combined', html: '<div><form action="/s"><input name="email" type="email"><textarea></textarea></form></div>' }, { forms: 'embed' });
+    expect(validateXscp(res.data)).toEqual([]);
+    expect(first(res, 'HtmlEmbed').v).toBe('<form action="/s"><input name="email" type="email"><textarea></textarea></form>');
+    expect(elements(res).some((e) => e.type.startsWith('Form'))).toBe(false);
   });
 
   it('keeps the canvas id, width and height in the embed', () => {

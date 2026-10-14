@@ -300,6 +300,7 @@ The common converter mapping follows.
 - **VERIFIED [S3]:** `createdBy` (a 24-hex Webflow user id) is present on only 432 of 5,390 styles, and `origin: null` on only 277.
 - **UNCERTAIN:** Both are therefore optional in practice. S14's ADR addendum confirms one real dump with no `origin`. S14's earlier claim that "without `createdBy`/`origin` Webflow rejects the paste" is not supported by the corpus. **Recommendation:** emit `origin: null`; `createdBy` is harmless but unnecessary.
 - **VERIFIED [S1, S3]:** `name` is the human-readable class name as typed in the Designer. Spaces are allowed: Webflow derives the CSS selector by slugifying, so `box 2` becomes `.box-2` [S4].
+- **VERIFIED [S1]:** The slug rule, from the Designer bundle's `toClassName` / `toClassNameNoConflictChecks`: `name.toLowerCase().replace(/[^0-9a-z_-]/g, " ").replace(/^[ _-]+|[ _-]+$/g, "").replace(/\s+/g, "-")`, then `.replace(/(^[\d]|^wf?-)/, "_$1")`. So `heroTitle` → `.herotitle`, `md:flex` → `.md-flex`, `2col` → `._2col` and `w-full` → `._w-full`. The converter renames classes to this form up front (`src/engine/classNames.ts`).
 - **VERIFIED [S3]:** `styleLess` is a CSS declaration list: `prop: value;` pairs separated by a single space, with no selector and no braces. An empty class uses `""`.
 
 ### 3.2 Breakpoint variants
