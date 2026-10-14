@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* Design tokens. Tailwind v4 turns these into utilities (font-sans, font-mono, bg-surface, text-accent...). */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-canvas: #0a0a0c;
+  --color-surface: #121216;
+  --color-surface-2: #1a1a20;
+  --color-line: #26262e;
+  --color-muted: #8b8b98;
+  --color-accent: #146ef5; /* Webflow blue */
+  --color-accent-hover: #3b86f7;
+  --color-ok: #22c55e;
+  --color-warn: #f59e0b;
+  --color-err: #ef4444;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html,
+  body {
+    @apply bg-canvas text-zinc-200 font-sans antialiased;
+  }
+  ::selection {
+    @apply bg-accent/40;
+  }
+}
