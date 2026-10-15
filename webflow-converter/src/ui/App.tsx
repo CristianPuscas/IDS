@@ -10,6 +10,7 @@ import { AlertIcon, LogoMark } from './components/icons';
 import { InputTabs, panelId, tabId } from './components/InputTabs';
 import { PromptHelper } from './components/PromptHelper';
 import { ResultPanel } from './components/ResultPanel';
+import { SITE_PASTE_ID, SiteStylesPanel } from './components/SiteStylesPanel';
 import { Tips } from './components/Tips';
 import { Toast, type ToastAction, type ToastMessage } from './components/Toast';
 import { EXAMPLE_COMBINED, EXAMPLE_SEPARATE } from './examples';
@@ -18,6 +19,7 @@ import { downloadText } from './lib/download';
 import { buildConvertInput, EMPTY_DRAFTS, hasConvertibleInput, loadPersisted, savePersisted, type Drafts } from './lib/drafts';
 import { loadAdvanced, saveAdvanced, toConvertOptions, type AdvancedOptions } from './lib/options';
 import { isConvertShortcut, isMacPlatform } from './lib/platform';
+import { activeSite, loadSiteLibrary, saveSiteLibrary, type SiteLibrary } from './lib/siteLibrary';
 
 const TABS_ID = 'input';
 const JSON_FILE = 'webflow-paste.json';
@@ -38,6 +40,9 @@ export default function App() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [options, setOptions] = useState<AdvancedOptions>(() => loadAdvanced());
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [siteLibrary, setSiteLibrary] = useState<SiteLibrary>(() => loadSiteLibrary());
+  const [siteSaved, setSiteSaved] = useState(true);
+  const [siteOpen, setSiteOpen] = useState(false);
   const toastSeq = useRef(0);
   const statusTimer = useRef<number | undefined>(undefined);
 
@@ -56,7 +61,21 @@ export default function App() {
     saveAdvanced(options);
   }, [options]);
 
+  // Persist imported site styles. saveSiteLibrary swallows quota / privacy-mode errors.
+  useEffect(() => {
+    setSiteSaved(saveSiteLibrary(siteLibrary) || siteLibrary.sites.length === 0);
+  }, [siteLibrary]);
+
   useEffect(() => () => window.clearTimeout(statusTimer.current), []);
+
+  const focusSiteImport = useCallback(() => {
+    setSiteOpen(true);
+    window.setTimeout(() => {
+      const box = document.getElementById(SITE_PASTE_ID) as HTMLTextAreaElement | null;
+      box?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      box?.focus({ preventScroll: true });
+    }, 50);
+  }, []);
 
   const focusClassPrefix = useCallback(() => {
     setAdvancedOpen(true);
@@ -135,7 +154,8 @@ export default function App() {
 
     // convertAsync settles right away unless a script needs terser (loaded once, on demand); the
     // copy then still runs within the click's user-activation window.
-    convertAsync(buildConvertInput(mode, drafts), toConvertOptions(options))
+    const siteStyles = activeSite(siteLibrary)?.styles;
+    convertAsync(buildConvertInput(mode, drafts), { ...toConvertOptions(options), siteStyles, reuseSiteClasses: !!siteStyles })
       .then((res: ConvertResult) => {
         setResult((prev) => ({ id: (prev?.id ?? 0) + 1, value: res }));
         return copyResult(res);
@@ -152,7 +172,7 @@ export default function App() {
           message: err instanceof Error ? err.message : 'The converter hit an unexpected error. Check the input and try again.',
         });
       });
-  }, [copyResult, drafts, mode, options, showToast, status]);
+  }, [copyResult, drafts, mode, options, showToast, siteLibrary, status]);
 
   // Global shortcut: Ctrl/Cmd+Enter. A keydown is a user gesture, so the copy is allowed.
   const convertRef = useRef(handleConvert);
@@ -278,6 +298,19 @@ export default function App() {
             </div>
           </section>
 
+          <SiteStylesPanel
+            library={siteLibrary}
+            onLibraryChange={setSiteLibrary}
+            saved={siteSaved}
+            overrides={options.siteClassOverrides}
+            onOverridesChange={(v) => setOptions((o) => ({ ...o, siteClassOverrides: v }))}
+            emptyUtilities={options.skipClientFirstUtilityStyles}
+            onEmptyUtilitiesChange={(v) => setOptions((o) => ({ ...o, skipClientFirstUtilityStyles: v }))}
+            open={siteOpen}
+            onOpenChange={setSiteOpen}
+            modKey={modKey}
+          />
+
           <AdvancedOptionsPanel value={options} onChange={setOptions} open={advancedOpen} onOpenChange={setAdvancedOpen} />
 
           {result ? (
@@ -287,6 +320,8 @@ export default function App() {
               onCopyAgain={() => void copyResult(result.value)}
               onDownload={() => download(result.value.json)}
               onSetPrefix={focusClassPrefix}
+              onImportSite={focusSiteImport}
+              siteLabel={activeSite(siteLibrary)?.label ?? null}
             />
           ) : (
             <div className="rounded-xl border border-dashed border-line px-4 py-6 text-center text-[13px] text-muted">

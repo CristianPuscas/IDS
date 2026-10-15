@@ -29,6 +29,7 @@ import { extractJs } from './jsExtractor';
 import { loadTerserMinifier } from './jsMinify';
 import { buildNodes } from './nodeBuilder';
 import { createStyleRegistry, mapStyles, type MapStylesHooks, type StyleRegistry } from './styleMapper';
+import { buildOverrideCss, emptyClientFirstUtilities, finalizeStyles, matchSiteStyles, siteReuseWarnings, type SiteMatch } from './siteStyles';
 import {
   DEFAULT_CONVERT_OPTIONS,
   isTextNode,
@@ -45,6 +46,7 @@ import {
 export * from './types';
 export { copyToWebflow, isSafari } from './clipboard';
 export { validateXscp } from './validate';
+export { mergeSiteStyles, parseSiteStyles, siteClassKey } from './siteStyles';
 
 /** Merges user options over `DEFAULT_CONVERT_OPTIONS`, ignoring `undefined` and invalid numbers. */
 export function resolveOptions(options: Partial<ConvertOptions> = {}): ConvertOptions {
@@ -66,6 +68,8 @@ export function resolveOptions(options: Partial<ConvertOptions> = {}): ConvertOp
   if (!['button', 'linkBlock', 'customElement'].includes(out.buttonMode)) out.buttonMode = DEFAULT_CONVERT_OPTIONS.buttonMode;
   if (typeof out.jsMinifier !== 'function') out.jsMinifier = null;
   if (out.clientFirstUtilities !== 'keep' && out.clientFirstUtilities !== 'prefix') out.clientFirstUtilities = DEFAULT_CONVERT_OPTIONS.clientFirstUtilities;
+  if (!Array.isArray(out.siteStyles)) delete out.siteStyles;
+  if (out.siteClassOverrides !== 'embed' && out.siteClassOverrides !== 'drop') out.siteClassOverrides = DEFAULT_CONVERT_OPTIONS.siteClassOverrides;
   return out;
 }
 
@@ -119,7 +123,7 @@ export function convert(input: ConvertInput, options?: Partial<ConvertOptions>):
           detail: err instanceof Error ? err.message : String(err),
         },
       ],
-      stats: { nodes: 1, styles: 0, embeds: 0, embeddedCssRules: 0, jsBytes: 0 },
+      stats: { nodes: 1, styles: 0, embeds: 0, embeddedCssRules: 0, jsBytes: 0, reusedClasses: 0, newClasses: 0 },
       externalScripts: [],
     };
   }
@@ -237,7 +241,40 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
 
   const styleMap = mapStyles({ ...css, rules: [...css.rules, ...built.extraRules] }, registry, built.usage, opts, hooks);
   warnings.push(...styleMap.warnings);
-  warnings.push(...collisionWarnings(registry, opts));
+
+  // Reuse the destination site's classes (spec 3.6): matched classes become the site's style objects
+  // verbatim at the end (finalizeStyles); where the source differs, its values go to the embed.
+  const chainStyles = registry.prefixes();
+  const matches: SiteMatch[] = opts.reuseSiteClasses && opts.siteStyles?.length ? matchSiteStyles(chainStyles, opts.siteStyles) : [];
+  const reusedIds = new Set(matches.map((m) => m.ours._id));
+  let overrideRules = 0;
+  if (matches.length > 0) {
+    const differing = matches.filter((m) => m.overrides.size > 0);
+    const embedAllowed = opts.keepUnsupportedInEmbed;
+    const override =
+      differing.length > 0 && opts.siteClassOverrides === 'embed' && embedAllowed
+        ? buildOverrideCss(differing, opts.maxEmbedChars)
+        : { chunks: [], rules: 0, skipped: [] };
+    if (override.chunks.length > 0) {
+      tagDataWfc(built.nodes, registry, new Set(differing.flatMap((m) => m.chain)));
+      // First, so later embed rules of equal specificity (unmatched media…) still win as in the source.
+      styleMap.leftoverCss.unshift(...override.chunks);
+      overrideRules = override.rules;
+    }
+    warnings.push(...siteReuseWarnings(matches, { rules: override.rules, skipped: override.skipped, mode: opts.siteClassOverrides, embedAllowed }));
+  }
+  if (opts.skipClientFirstUtilityStyles) {
+    const emptied = emptyClientFirstUtilities(chainStyles, reusedIds);
+    if (emptied.length > 0) {
+      warnings.push({
+        code: 'site-classes',
+        severity: 'warning',
+        message: `${emptied.length} Client-First utility class${emptied.length === 1 ? ' was' : 'es were'} emitted with empty styles (skipClientFirstUtilityStyles), so a site that has ${emptied.length === 1 ? 'it' : 'them'} applies its own values. Their source CSS was dropped. Not confirmed by a paste test: if Webflow renames ${emptied.length === 1 ? 'it' : 'them'} to "name 2", the element is unstyled.`,
+        detail: emptied.join(', '),
+      });
+    }
+  }
+  warnings.push(...collisionWarnings(registry, opts, reusedIds));
 
   const js = extractJs(parsed.scripts, editorJs);
   warnings.push(...js.warnings);
@@ -280,7 +317,12 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
     }
   }
 
-  const styles = registry.styles();
+  const styles = finalizeStyles(
+    registry.styles(),
+    chainStyles,
+    nodes.filter((n): n is WfElementNode => !isTextNode(n)),
+    { matches, stableIds: opts.stableClassIds },
+  );
   const data = createXscpData(nodes, styles);
   const json = JSON.stringify(data);
   const embedCount = nodes.filter((n) => !isTextNode(n) && n.type === 'HtmlEmbed').length;
@@ -293,8 +335,10 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
       nodes: nodes.length,
       styles: styles.length,
       embeds: embedCount,
-      embeddedCssRules: opts.keepUnsupportedInEmbed ? styleMap.leftoverRuleCount : 0,
+      embeddedCssRules: opts.keepUnsupportedInEmbed ? styleMap.leftoverRuleCount + overrideRules : 0,
       jsBytes: js.totalBytes,
+      reusedClasses: matches.length,
+      newClasses: styles.length - matches.length,
     },
     externalScripts: scriptEmbeds.external,
   };
@@ -389,14 +433,16 @@ const OTHER_COMMON_CLASS = [
  * other common names and combos not named `is-*`. With a prefix and `clientFirstUtilities: 'keep'`:
  * an info about the utilities that kept their names. With `'prefix'`: nothing.
  */
-function collisionWarnings(registry: StyleRegistry, opts: ConvertOptions): ConvertWarning[] {
+function collisionWarnings(registry: StyleRegistry, opts: ConvertOptions, reused: ReadonlySet<string> = new Set()): ConvertWarning[] {
   const utilities: string[] = [];
   const common: string[] = [];
   const combos: string[] = [];
   const add = (list: string[], name: string) => {
     if (!list.includes(name)) list.push(name);
   };
+  // A class whose combo parent is reused may still be new: only skip the reused styles themselves.
   for (const s of registry.styles()) {
+    if (reused.has(s._id)) continue;
     if (isClientFirstUtility(s.name)) add(utilities, s.name);
     else if (s.comb === '' && OTHER_COMMON_CLASS.some((re) => re.test(s.name))) add(common, s.name);
     else if (s.comb === '&' && !s.name.startsWith('is-') && !/^inline-style-\d+$/.test(s.name)) add(combos, s.name);
@@ -428,7 +474,11 @@ function collisionWarnings(registry: StyleRegistry, opts: ConvertOptions): Conve
   if (common.length || combos.length) {
     parts.push('Other names may clash the same way, and a combo class merges with a site class of the same name (its styles apply too).');
   }
-  parts.push("Set a classPrefix (Client-First utilities keep their names by default, so they reuse the site's), or use the site's existing utilities with their standard values.");
+  parts.push(
+    opts.siteStyles?.length && opts.reuseSiteClasses
+      ? "These names are not in your imported site styles: import a copy that contains them (e.g. the style guide page) to reuse the site's classes, or set a classPrefix."
+      : "To reuse your site's classes instead, import your site's styles (\"Reuse classes from your Webflow site\": copy an element in the Designer and paste it into the app). Otherwise set a classPrefix (Client-First utilities keep their names by default).",
+  );
   return [
     {
       code: 'class-collision-risk',

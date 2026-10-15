@@ -33,6 +33,7 @@ Webflow does not document this format and can change it at any time. Every claim
 | S16 | Webstudio docs, "Copy-paste / Webflow" (https://github.com/webstudio-is/webstudio-community/blob/main/docs/university/foundations/copy-paste/webflow.md) | What the clipboard does and does not contain. |
 | S17 | `humanagencyorg/webflow-xscp_bindings` (Ruby) | A generator with commented real form-node examples. |
 | S18 | Bubble forum, "Copy To Clipboard As application/json" (https://forum.bubble.io/t/copy-to-clipboard-as-application-json/270983) | A community report. |
+| S19 | Relume docs, "How to fix and prevent class duplication in Webflow" (https://www.relume.io/resources/docs/how-to-fix-and-prevent-class-duplication-in-webflow) | Vendor docs on "class 2" and its Class Sync fix. |
 
 ---
 
@@ -404,6 +405,50 @@ The common converter mapping follows.
   - **UNCERTAIN** how those map onto `styleLess` on paste. S4 saw `aspect-ratio` saved without problems; S4 keeps a configurable "unsafe props" list because others reported style-panel crashes with it.
 - `!important`: **UNCERTAIN.** Webflow added `!important` to Custom properties (Webflow updates page "important custom properties"), but there is no clipboard evidence.
 
+### 3.6 How paste reuses a class or creates "name 2"
+
+Research date 2026-10-15. Prompted by a user report: pasting converter output into a site that already has Client-First classes produced `container-large 2` on the **first** paste, then `container-large 3` on the next, and so on. The user confirmed the project had no numbered duplicates beforehand.
+
+**The rule.** Webflow reuses an existing class only when **the name matches (ignoring a trailing " N") AND the styles are exactly the same AND, for a combo, the parent chain is the same.** The pasted `_id` plays no part.
+
+- **VERIFIED [S1]:** `importXscpStyles` and its reducer `N` (`webflow-designer.js`, around line 33,060 of the 2018 bundle) handle every pasted style in parent-before-child order:
+  1. It looks for an existing style block `s` where `J(pasted).equals(J(s))`.
+     - `J` sets `_id` to `""`, replaces `name` with `getPrefix(name)` (the name with any trailing `" <digits>"` removed: `"button 3"` becomes `"button"`), and empties `children`.
+     - The comparison therefore covers `fake`, `type`, `namespace`, `comb`, `styleLess` (an exact string) and `variants` (an Immutable OrderedMap, so key order counts).
+  2. It also requires that `s`'s parent in the site's style tree equals the pasted style's parent, after mapping (`L(...)(parentIndex)`). For a base class, both parents are none. For a combo, the parent must be the site style that the pasted parent mapped to.
+  3. **Match:** the pasted style takes the existing `_id` (`idMap[pasted._id] = existing._id`) and nothing is created.
+  4. **No match:** a **new** style is created with a freshly minted id (`nextId`, from the paste action's `initialStyleBlockId`). The pasted `_id` is never kept.
+     - A **base** class (`comb ""`) is renamed with `createConflictResolver(toClassName)` against the names of existing base classes, which adds `" 2"`, `" 3"`… on a slug clash.
+     - **Combo classes are never renamed.** This matches S4's observation.
+  5. `parentIdMap` is built from each pasted style's `children`, so a combo that is not listed in its base's `children` has no parent. It is then treated as a top-level class.
+- **VERIFIED [S7, official, scraped 2026-10-15]:**
+  - "If the classes from the source and the destination sites have the same name but different styles, Webflow will add a number to the pasted elements' class name."
+  - "If the classes … have the same name — ignoring any numbers added at the end … — *and* the exact same styles, Webflow will merge the pasted classes with the existing class in the destination."
+
+  This is the same rule as the S1 code.
+- **VERIFIED [S19, scraped 2026-10-15]:** Relume's Chrome extension "Class Sync" "stops class duplication by changing the styling of pasted classes to the same as the Webflow project". In other words, it makes the pasted styles identical to the site's before the paste, which is the S1/S7 rule. Relume also warns that if `button 2` already exists, Webflow still duplicates. The Client-First and Relume cloneables avoid duplicates the same way: their utility classes carry the same values as the site's style guide.
+- **VERIFIED [user report, 2026-10-15]:** On the first paste, our output's `container-large`, which had different styles and a random `_id`, became `container-large 2`.
+
+**Answers to the specific questions**
+
+| Question | Answer | Status |
+|---|---|---|
+| (a) Match by `_id`, by name, or by name plus styles? | By **name prefix + exact `fake/type/namespace/comb/styleLess/variants` + same parent**. `_id` is ignored by the matcher and is never kept for new styles. | **VERIFIED [S1 code, S7 doc]** for the 2018 code and current docs. Whether today's Designer *also* short-circuits on an identical `_id` is **UNCERTAIN**. It cannot hurt to send the site's own `_id`. |
+| (b) Why does a copy between two pages of the same site create no duplicates? | `pastingCrossSite` is `false` when the clipboard JSON equals `DesignerStore.lastNativeClipboardDataSaved`, i.e. the Designer's own last copy. Same-site paste then uses the internal `ClipboardStore`, whose nodes already point at the site's style ids, and `importXscpStyles` never runs. Even through the cross-site path, the styles are identical, so they merge. | **VERIFIED [S1]** (`getXscpDataWhenPastingCrossSite`, `pastingCrossSite`, `getPasteDetails`) |
+| (c) What do `fake`, `origin` and `createdBy` do? | `buildStyleBlock` keeps only `_id, fake, type, name, namespace, comb, styleLess, variants, children`, so `origin` and `createdBy` are dropped and not compared. `fake` is compared, and it is always `false`. | **VERIFIED [S1]** for 2018. Whether today's record compares `origin`/`createdBy` is **UNCERTAIN**, so copy them verbatim. |
+| (d) Empty `styleLess` + same name as an existing class: reused or renamed? | 2018 code: an empty style matches only an empty site style, so a styled site class gives `name 2`. S4 measured in 2026 that an empty pasted class whose name exists **is reused, with the site's values**. The two sources conflict, which suggests the current Designer special-cases empty styles. | **UNCERTAIN.** One recent measurement (S4) against older code (S1). |
+| (e) Official docs / forum on "class 2"; how Relume and Client-First avoid it | S7 (above); Relume Class Sync (above); Webflow Wishlist WEBFLOW-I-1195 asks for an "update/replace existing styles when pasting" option, which shows there is none. | **VERIFIED** (S7, Relume). Wishlist status not verified. |
+
+**Consequences for the converter**
+
+1. **Reliable reuse (primary fix):** for a class the site already has, emit the **site's own style object verbatim**, with the same `_id`, `name`, `styleLess`, `variants` (same key order), `fake`, `namespace`, `comb`, `createdBy` and `origin`.
+   - It then satisfies "same name + exact same styles" under both S1 and S7, whatever the matcher compares besides that.
+   - Only `children` may change, because it is excluded from the comparison. It must list every combo that follows the style in our output, or those combos lose their parent (point 5 above).
+   - The converter can only know the site's exact styles if the user gives it a copy of them: the "Site styles" import (README, "Reusing your site's classes").
+2. Where the source CSS differs from the site's class, the site's class is kept unchanged. Otherwise it would not match and would become `name 2`. The differing declarations go to the `<style>` embed under `[data-h2w-class~="name"]`, which has the same specificity as `.name`, comes later in the cascade and only matches the pasted elements.
+3. **Deterministic style `_id`s** do not cause reuse (point 4: pasted ids are never kept), but they are harmless. Re-pasting identical output already merges by content (same name prefix + identical styles). The converter derives them from the class chain plus the styles, so the same output always has the same ids, and a class with different CSS never shares an id with another.
+4. **Empty utility styles** (option `skipClientFirstUtilityStyles`) rely on (d), which is UNCERTAIN, so the option is off by default.
+
 ---
 
 ## 4. Putting it on the clipboard
@@ -446,7 +491,7 @@ function copyToWebflow(json /* object */) {
 | CSS custom properties (`--x: …` declarations) | No clipboard field defines a variable. `var(--x)` as a *value* can appear wrapped in `@raw<\|…\|>` (real dump) or plain (generators). The variable itself must be defined in site or page custom code (e.g. a `:root` `<style>` embed). Webflow Variables (`@var_…`) cannot be created via paste. | **VERIFIED [S3, S4, S7]**; plain `var()` without `@raw` is **UNCERTAIN** |
 | `@keyframes`, `@font-face`, `@supports`, `prefers-reduced-motion` and other non-breakpoint `@media` | No field. The `animation` property can be stored, but the keyframes must live in a `<style>` embed or head code. | **VERIFIED (no field) [S1, S2]**; S14 sends these to the head. |
 | Custom fonts | The pasted `font-family` falls back unless the font is installed on the destination site. | **VERIFIED [S7]** |
-| Class name collisions | Pasting a class whose **name exists with different CSS** creates `name 2`, `name 3` (selector `.name-2`). Our paste test confirmed this for base classes (`container-large` → `container-large-3`, `button` → `button-2`); combo classes were not renamed and the element also matched the site's global class of the same name. A class with the **same name and identical CSS** merges. A class with **empty `styleLess`** whose name exists reuses the site's class and its values (this is how Client-First utility combos are reused). | **VERIFIED [S7 official; S4 measured]**. S13's claim that rules get merged into the existing class contradicts both and is **UNCERTAIN/likely wrong**. Prefix generated class names (e.g. `cv-`) so `<style>` embeds keep matching. |
+| Class name collisions | Pasting a base class whose **name exists with different styles** creates `name 2`, `name 3` (selector `.name-2`), even on the first paste (user report 2026-10-15; S4: `container-large` → `container-large-3`, `button` → `button-2`). Combo classes are never renamed (S1). A class with the **same name (ignoring a trailing " N") and exactly the same `styleLess`/`variants`** (and, for a combo, the same parent) merges into the site class; `_id` is ignored (S1 reducer). S4 measured that an **empty `styleLess`** with an existing name reuses the site class (UNCERTAIN, see 3.6). | **VERIFIED [S1 code, S7 official, user report]**; empty-style reuse **UNCERTAIN [S4 only]**. S4's "renamed even with identical CSS" most likely compared values, not the site's exact stored strings. Fix: import the site's styles and emit them verbatim (3.6). |
 | Unknown or invalid properties | Webflow's behaviour is undocumented. S12 says vendor-prefixed and limited-support properties are not allowed as custom properties. | **UNCERTAIN**. Drop vendor-prefixed properties, or move them to a `<style>` embed. |
 | Scripts | `<script>` in an embed is stored (`meta.script:true`) but doesn't run in the Designer canvas, only in preview or on the published site. | **VERIFIED [S3 flag; S13 quote of the Designer warning]** |
 | Interactions | Can be included via `ix2`, but generating them is out of scope. Page triggers are never pasted. | **VERIFIED [S7]** |
@@ -454,7 +499,7 @@ function copyToWebflow(json /* object */) {
 | `<svg>` | No native SVG element. Use an `HtmlEmbed` (the common approach) or DOM nodes (`data.tag:"svg"`/`"path"`, attributes in `data.attributes`). | **VERIFIED [S3, S15]** |
 | `<video>`, `<iframe>`, `<table>`, `<button>`, `<input>` outside forms | Use DOM nodes or an HtmlEmbed. | VERIFIED that DOM exists; per-tag behaviour **UNCERTAIN** |
 | Payload size | No documented cap. Payloads of hundreds of KB (whole pages) are common in S3. | **UNCERTAIN** |
-| Re-paste dedup | Re-pasting the same deterministic output merges identical classes instead of renaming them. | **VERIFIED [S7 rule; S14 playbook]** |
+| Re-paste dedup | Re-pasting the same output merges identical classes (same name prefix + identical styles) instead of renaming them. `_id`s do not matter (S1: pasted ids are never kept). | **VERIFIED [S1 code, S7 rule]** |
 
 **How Timothy Ricks' moden.club converter handles the leftovers (S13):** it produces native elements and classes. CSS it cannot map becomes a `<style>` HtmlEmbed and JS becomes a `<script>` HtmlEmbed, both inserted as children of the converted root. Its authoring rules: class-only selectors, no descendant selectors, only simple pseudos (`:hover`/`:focus`/`:focus-visible`/`:active`), combos via `.a.b`, REM units preferred, and no `::before`/`::after`. **VERIFIED [S13]** as third-party documentation of that tool; I did not inspect the tool itself.
 
@@ -662,7 +707,7 @@ This payload is constructed and was not paste-tested. It shows:
    | Breakpoint `@media` | `medium` / `small` / `tiny` |
    | Everything else (descendants, tag rules, pseudo-elements, keyframes, `:root` variables, unmatched media, unsupported pseudos) | One HtmlEmbed `<style>` per component (child of the root), kept under 10k characters |
 
-5. Expand shorthands to longhands, use `grid-*-gap`, and expand `repeat()`. Never emit `@var_`. Prefix class names to avoid " 2" renames.
+5. Expand shorthands to longhands, use `grid-*-gap`, and expand `repeat()`. Never emit `@var_`. To reuse a site class, emit the site's style object verbatim (3.6); otherwise prefix class names to avoid " 2" renames.
 6. Validate before copying:
    - unique `_id`s
    - every child id exists

@@ -46,6 +46,11 @@ const RESET_CHOICES: Choice<'on' | 'off'>[] = [
   { value: 'off', label: 'Off', hint: 'No reset: the destination site’s body, heading and paragraph styles apply.' },
 ];
 
+const ID_CHOICES: Choice<'stable' | 'random'>[] = [
+  { value: 'stable', label: 'Stable', hint: 'Each class id is derived from its name and styles, so the same output always carries the same ids. Webflow matches classes by name and styles, so this is harmless.' },
+  { value: 'random', label: 'Random', hint: 'A new random id for every class on every conversion.' },
+];
+
 const IMAGE_CHOICES: Choice<AdvancedOptions['externalImages']>[] = [
   { value: 'customElement', label: 'Custom Element', hint: 'External images keep their exact URL, srcset and sizes as an <img> Custom Element.' },
   { value: 'embed', label: 'Embed', hint: 'External images go into Code Embeds with their original HTML.' },
@@ -91,6 +96,13 @@ export function AdvancedOptionsPanel({ value, onChange, open, onOpenChange }: Ad
           onChange={(v) => set('neutralizeDefaults', v === 'on')}
         />
         <Segmented legend="External images" name="adv-images" choices={IMAGE_CHOICES} value={value.externalImages} onChange={(v) => set('externalImages', v)} />
+        <Segmented
+          legend="Class ids"
+          name="adv-class-ids"
+          choices={ID_CHOICES}
+          value={value.stableClassIds ? 'stable' : 'random'}
+          onChange={(v) => set('stableClassIds', v === 'stable')}
+        />
       </div>
       <div className="flex flex-wrap items-center gap-2 border-t border-line px-4 py-2.5 text-[12px] text-muted">
         <span>Saved in this browser and used for every conversion.</span>

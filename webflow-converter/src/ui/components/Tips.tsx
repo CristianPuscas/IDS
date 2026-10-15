@@ -19,7 +19,7 @@ const EMBED = [
 
 const CLIENT_FIRST = [
   'Use the core structure: section_[name] > padding-global > container-[size] > padding-section-[size]. The "Copy Ideal System Prompt" asks the AI for exactly this.',
-  'Utilities (padding-global, container-large, text-size-*, heading-style-*) are expected in a Client-First site; with standard values the site reuses its own, otherwise Webflow adds "name 2".',
+  'Utilities (padding-global, container-large, text-size-*, heading-style-*) are expected in a Client-First site. Webflow reuses a class only when its styles are identical, otherwise it adds "name 2": import your site\'s styles ("Reuse classes from your Webflow site") so they paste as the site\'s own.',
   'One utility per element and only is- combos on custom classes: a stack like "margin-bottom margin-large" pastes as a combo with its own styles.',
 ];
 

@@ -655,7 +655,40 @@ export interface ConvertOptions {
    * jump to the top of the page. Default `true`.
    */
   buttonClickShim: boolean;
+  /**
+   * The destination site's class styles, verbatim from a Webflow Designer copy (see
+   * `parseSiteStyles` in ./siteStyles and spec 3.6). With `reuseSiteClasses`, every output class
+   * whose name matches one of them (as Webflow slugifies names) is emitted as the site's own style
+   * object (same `_id`, identical `styleLess`/`variants`), which Webflow reuses on paste instead of
+   * creating "name 2". Default: none.
+   */
+  siteStyles?: WfStyle[];
+  /** Reuse `siteStyles` when given. Default `true`. */
+  reuseSiteClasses: boolean;
+  /**
+   * Where a reused site class differs from the source CSS: `'embed'` (default) keeps the site's
+   * class unchanged and puts the source's differing declarations in the `<style>` embed under
+   * `[data-h2w-class~="name"]` (only the pasted elements); `'drop'` uses the site's styles as they are.
+   */
+  siteClassOverrides: SiteClassOverrides;
+  /**
+   * Derive each style `_id` from its class chain and declarations instead of a random UUID, so the
+   * same output always carries the same style ids. Webflow ignores pasted style ids when it matches
+   * classes (spec 3.6), so this is harmless. Node ids stay random. Default `true`.
+   */
+  stableClassIds: boolean;
+  /**
+   * Emit Client-First utility base classes (`padding-global`, `container-large`…) that are not in
+   * `siteStyles` with EMPTY styles, so a site that has them applies its own values. Relies on Webflow
+   * reusing a same-named class when the pasted style is empty: measured once (S4, 2026) but not what
+   * the 2018 Designer code does, so UNCERTAIN (spec 3.6). If Webflow renames instead, the element
+   * gets an empty "name 2" class. The source CSS of those classes is dropped. Default `false`.
+   */
+  skipClientFirstUtilityStyles: boolean;
 }
+
+/** `ConvertOptions.siteClassOverrides`. */
+export type SiteClassOverrides = 'embed' | 'drop';
 
 /** `ConvertOptions.externalImages`. */
 export type ExternalImageMode = 'customElement' | 'embed' | 'image';
@@ -714,6 +747,10 @@ export const DEFAULT_CONVERT_OPTIONS: Readonly<ConvertOptions> = Object.freeze({
   classPrefix: '',
   clientFirstUtilities: 'keep',
   buttonClickShim: true,
+  reuseSiteClasses: true,
+  siteClassOverrides: 'embed',
+  stableClassIds: true,
+  skipClientFirstUtilityStyles: false,
 });
 
 /** Machine-readable warning categories. The UI may group or filter by these. */
@@ -741,6 +778,7 @@ export type ConvertWarningCode =
   | 'embed-too-large'
   | 'class-renamed'
   | 'class-collision-risk'
+  | 'site-classes'
   | 'breakpoint-snapped'
   | 'baseline-reset'
   | 'client-first-structure'
@@ -774,6 +812,10 @@ export interface ConvertStats {
   embeddedCssRules: number;
   /** UTF-8 byte length of all JavaScript placed in embeds. */
   jsBytes: number;
+  /** Styles that are the destination site's own (imported `siteStyles`), reused on paste. */
+  reusedClasses: number;
+  /** Styles this output creates (`styles - reusedClasses`). */
+  newClasses: number;
 }
 
 /** Output of `convert()`. */

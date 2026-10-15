@@ -1,4 +1,13 @@
-import { DEFAULT_CONVERT_OPTIONS, type BreakpointSnap, type ButtonMode, type ClientFirstUtilities, type ConvertOptions, type ExternalImageMode, type FormMode } from '../../engine/types';
+import {
+  DEFAULT_CONVERT_OPTIONS,
+  type BreakpointSnap,
+  type ButtonMode,
+  type ClientFirstUtilities,
+  type ConvertOptions,
+  type ExternalImageMode,
+  type FormMode,
+  type SiteClassOverrides,
+} from '../../engine/types';
 import { getStorage } from './drafts';
 
 /** The engine options the "Advanced options" panel exposes. */
@@ -10,6 +19,12 @@ export interface AdvancedOptions {
   breakpointSnap: BreakpointSnap;
   neutralizeDefaults: boolean;
   externalImages: ExternalImageMode;
+  /** Where a reused site class differs from the source CSS (see the site styles panel). */
+  siteClassOverrides: SiteClassOverrides;
+  /** Experimental: empty Client-First utility styles so the site's apply. */
+  skipClientFirstUtilityStyles: boolean;
+  /** Deterministic style ids. */
+  stableClassIds: boolean;
 }
 
 export const DEFAULT_ADVANCED: Readonly<AdvancedOptions> = Object.freeze({
@@ -20,6 +35,9 @@ export const DEFAULT_ADVANCED: Readonly<AdvancedOptions> = Object.freeze({
   breakpointSnap: DEFAULT_CONVERT_OPTIONS.breakpointSnap,
   neutralizeDefaults: DEFAULT_CONVERT_OPTIONS.neutralizeDefaults,
   externalImages: DEFAULT_CONVERT_OPTIONS.externalImages,
+  siteClassOverrides: DEFAULT_CONVERT_OPTIONS.siteClassOverrides,
+  skipClientFirstUtilityStyles: DEFAULT_CONVERT_OPTIONS.skipClientFirstUtilityStyles,
+  stableClassIds: DEFAULT_CONVERT_OPTIONS.stableClassIds,
 });
 
 export const OPTIONS_STORAGE_KEY = 'wf-converter:options:v1';
@@ -29,6 +47,8 @@ const BUTTONS: readonly ButtonMode[] = ['button', 'linkBlock', 'customElement'];
 const CF_UTILITIES: readonly ClientFirstUtilities[] = ['keep', 'prefix'];
 const SNAPS: readonly BreakpointSnap[] = ['up', 'off'];
 const IMAGES: readonly ExternalImageMode[] = ['customElement', 'embed', 'image'];
+const OVERRIDES: readonly SiteClassOverrides[] = ['embed', 'drop'];
+const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback);
 
 const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T => (allowed.includes(v as T) ? (v as T) : fallback);
 
@@ -43,6 +63,9 @@ export function sanitizeAdvanced(raw: unknown): AdvancedOptions {
     breakpointSnap: pick(o.breakpointSnap, SNAPS, DEFAULT_ADVANCED.breakpointSnap),
     neutralizeDefaults: typeof o.neutralizeDefaults === 'boolean' ? o.neutralizeDefaults : DEFAULT_ADVANCED.neutralizeDefaults,
     externalImages: pick(o.externalImages, IMAGES, DEFAULT_ADVANCED.externalImages),
+    siteClassOverrides: pick(o.siteClassOverrides, OVERRIDES, DEFAULT_ADVANCED.siteClassOverrides),
+    skipClientFirstUtilityStyles: bool(o.skipClientFirstUtilityStyles, DEFAULT_ADVANCED.skipClientFirstUtilityStyles),
+    stableClassIds: bool(o.stableClassIds, DEFAULT_ADVANCED.stableClassIds),
   };
 }
 

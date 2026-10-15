@@ -48,7 +48,7 @@ describe('combined vs separate input modes', () => {
   it('separate: works with a plain fragment and no CSS/JS', () => {
     const res = convert({ mode: 'separate', html: '<h2 class="t">x</h2>', css: '', js: '' });
     expect(validateXscp(res.data)).toEqual([]);
-    expect(res.stats).toEqual({ nodes: 2, styles: 1, embeds: 0, embeddedCssRules: 0, jsBytes: 0 });
+    expect(res.stats).toEqual({ nodes: 2, styles: 1, embeds: 0, embeddedCssRules: 0, jsBytes: 0, reusedClasses: 0, newClasses: 1 });
   });
 
   it('separate: CSS/JS without HTML still produces a valid payload of embeds', () => {

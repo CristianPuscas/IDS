@@ -153,6 +153,51 @@ The tool and its AI prompt follow [Finsweet Client-First v2](https://finsweet.co
 - **Structure hint.** A page with sections but no `padding-global`, `container-[size]` or
   `section_[name]` class gets an info note (`client-first-structure`). It never changes the output.
 
+## Reusing your site's classes
+
+When you paste into a site that already has classes such as `container-large`, `padding-global`,
+`button` or `heading-style-h2`, Webflow creates `container-large 2`, `container-large 3`… on every
+paste. Webflow reuses an existing class only when the pasted class has **the same name (a trailing
+" 2" is ignored) and exactly the same styles**. The id does not matter. This comes from Webflow's
+own paste code and its help article; see `docs/webflow-xscp-spec.md` §3.6. The converter cannot
+know your site's exact styles unless you give them to it once:
+
+1. In the Webflow Designer, open your site, select the **page wrapper** (or a section of the style
+   guide page, which has every utility class) and press **Ctrl+C / Cmd+C**.
+2. In the converter, open **Reuse classes from your Webflow site**, enter a site name, click the
+   **Paste here** box and press **Ctrl+V / Cmd+V**. The status shows, for example,
+   `142 classes from "My site"`. Paste more copies (other pages or sections) to add their classes;
+   tick "Replace" to start over. Several sites can be stored; pick one, or "None". **Clear**
+   removes a site. The imports are kept in this browser's localStorage.
+3. Convert and paste as usual. Each class of the output whose name matches a site class (ignoring
+   case and spaces, the way Webflow builds selectors) is emitted as **the site's own style object,
+   verbatim** (same `_id`, same `styleLess` and `variants`), so Webflow reuses it instead of
+   creating "name 2". The result panel shows how many classes were reused and how many are new.
+
+Details:
+
+- **Your CSS differs from the site's class.** The site's class is never changed (a changed class
+  would not match and would become "name 2"). With "Keep my CSS" (default,
+  `siteClassOverrides: 'embed'`), the differing declarations go to the `<style>` embed as
+  `[data-h2w-class~="container-large"] { … }`. That selector has the same specificity as the
+  class, comes after it and matches only the pasted elements. With "Use the site's" (`'drop'`),
+  they are dropped. A warning lists the differences, and the properties the site's class sets that
+  your CSS does not.
+- **Combos.** A new combo (`button is-large`) is chained under the reused base's `_id`. A combo the
+  site already has under that same base (`button is-secondary`) is reused too. Webflow scopes combos
+  to their parent, so a site combo under another base is not reused.
+- **Without an import**, Client-First utilities still risk "name 2" unless their styles are
+  byte-identical to your site's. "Empty styles (experimental)" (`skipClientFirstUtilityStyles`)
+  pastes utilities that are not in the import with no styles, so that the site's values apply
+  *if* Webflow reuses an empty class with the same name. One 2026 measurement says it does; the
+  2018 Designer code says it does not. It is off by default.
+- **Stable class ids** (`stableClassIds`, default on): style `_id`s are a hash of the class chain
+  and its styles, so the same output always carries the same ids. Webflow ignores pasted style ids
+  when matching, so this neither helps nor hurts the "name 2" problem. It only makes outputs
+  reproducible. Node ids stay random.
+- Copying from the Designer into the converter needs a Chromium browser (Chrome, Edge, Arc,
+  Brave), the same as pasting back.
+
 ## Browser support
 
 | Browser | Status |
@@ -219,7 +264,7 @@ The tool and its AI prompt follow [Finsweet Client-First v2](https://finsweet.co
   to "name 2", and a combo class merges with a same-named class of the site (whose styles then
   apply too: a combo `.navbar_component` picked up a site's navy navbar). Native styles still apply
   after a rename, and `<style>` embed CSS reaches native classes through `data-h2w-class`, but site styles
-  can still leak in through merged combos. Set a class prefix (Advanced options) or paste into a
+  can still leak in through merged combos. Import your site's styles ("Reusing your site's classes" above) so matching classes are pasted as the site's own, set a class prefix (Advanced options), or paste into a
   clean site. Scripts that query classes by name are not rewritten.
 - **Baseline reset** (`neutralizeDefaults`, full documents only) uses bare tag selectors, so it
   applies to the whole page you paste on, like the page's own `body`/tag rules do.
@@ -307,7 +352,8 @@ webflow-converter/
     │   ├── cascade.ts          Which source declarations apply to an element (specificity)
     │   ├── validate.ts         validateXscp(): structural checks before copying
     │   ├── clipboard.ts        copyToWebflow(): copy-event clipboard write (done); isSafari()
-    │   ├── ids.ts              uuid() v4 helper
+    │   ├── siteStyles.ts       Site styles import, reuse of the site's classes, overrides, stable ids
+    │   ├── ids.ts              uuid() v4 helper, stableUuid() for deterministic style ids
     │   └── *.test.ts           Vitest tests
     └── ui/                     Interface (React)
         ├── App.tsx             State, convert() + copyToWebflow() on click
@@ -319,6 +365,7 @@ webflow-converter/
             ├── ConvertButton.tsx
             ├── Toast.tsx
             ├── AdvancedOptions.tsx Collapsible options panel (persisted by lib/options.ts)
+            ├── SiteStylesPanel.tsx "Reuse classes from your Webflow site" import (lib/siteLibrary.ts)
             └── ResultPanel.tsx Stats, collision notice, external scripts, warnings
 ```
 
@@ -375,13 +422,18 @@ interface ConvertOptions {
   classPrefix: string;                // '': prefix for HTML classes and generated classes (e.g. 'fm-')
   clientFirstUtilities: 'keep' | 'prefix'; // 'keep': with a prefix, Client-First utilities keep their names
   buttonClickShim: boolean;           // true: preventDefault on converted <button> links (href="#")
+  siteStyles?: WfStyle[];             // the site's styles from a Designer copy (parseSiteStyles)
+  reuseSiteClasses: boolean;          // true: matching classes are emitted as the site's style objects
+  siteClassOverrides: 'embed' | 'drop'; // 'embed': source values that differ go to the embed, scoped
+  stableClassIds: boolean;            // true: style _ids hashed from class chain + styles
+  skipClientFirstUtilityStyles: boolean; // false: experimental, empty styles for CF utilities
 }
 
 interface ConvertResult {
   data: XscpData;
   json: string;
   warnings: ConvertWarning[];
-  stats: { nodes; styles; embeds; embeddedCssRules; jsBytes };
+  stats: { nodes; styles; embeds; embeddedCssRules; jsBytes; reusedClasses; newClasses };
   externalScripts: { name; code; type }[]; // scripts too large for any embed, to host as files
 }
 ```

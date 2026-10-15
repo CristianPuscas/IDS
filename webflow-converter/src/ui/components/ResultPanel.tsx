@@ -15,6 +15,10 @@ export interface ResultPanelProps {
   onDownload: () => void;
   /** Opens the advanced options and focuses the class prefix input. */
   onSetPrefix?: () => void;
+  /** Opens the site styles panel and focuses its paste box. */
+  onImportSite?: () => void;
+  /** Label of the active imported site, or `null`. */
+  siteLabel?: string | null;
 }
 
 const SEV_DOT: Record<ConvertWarningSeverity, string> = { error: 'bg-err', warning: 'bg-warn', info: 'bg-sky-400' };
@@ -27,7 +31,7 @@ const PREVIEW_LIMIT = 150_000;
  * Shows conversion stats, grouped warnings and a JSON preview.
  * Ownership: ui.
  */
-export function ResultPanel({ result, onCopyAgain, onDownload, onSetPrefix }: ResultPanelProps) {
+export function ResultPanel({ result, onCopyAgain, onDownload, onSetPrefix, onImportSite, siteLabel = null }: ResultPanelProps) {
   const { stats, warnings } = result;
   const collisions = useMemo(() => {
     const names = new Set<string>();
@@ -40,7 +44,8 @@ export function ResultPanel({ result, onCopyAgain, onDownload, onSetPrefix }: Re
 
   const chips: { label: string; value: string; hint: string }[] = [
     { label: 'Nodes', value: String(stats.nodes), hint: 'Element and text nodes' },
-    { label: 'Classes', value: String(stats.styles), hint: 'Native Webflow class styles' },
+    { label: 'New classes', value: String(stats.newClasses ?? stats.styles), hint: 'Class styles this paste creates in your site' },
+    { label: 'Reused', value: String(stats.reusedClasses ?? 0), hint: siteLabel ? `Classes that reuse "${siteLabel}"'s own styles (no "name 2")` : 'Import your site\'s styles to reuse its classes' },
     { label: 'Embeds', value: String(stats.embeds), hint: 'Code Embed elements' },
     { label: 'CSS → embed', value: String(stats.embeddedCssRules), hint: 'CSS rules placed in <style> embeds' },
     { label: 'JS size', value: formatBytes(stats.jsBytes), hint: 'JavaScript placed in <script> embeds' },
@@ -74,11 +79,17 @@ export function ResultPanel({ result, onCopyAgain, onDownload, onSetPrefix }: Re
       {(external.length > 0 || collisions.length > 0) && (
         <div className="space-y-2 px-4 pt-4">
           {external.length > 0 && <ExternalScripts scripts={external} />}
-          {collisions.length > 0 && <CollisionNotice names={collisions} onSetPrefix={onSetPrefix} />}
+          {collisions.length > 0 && <CollisionNotice names={collisions} onSetPrefix={onSetPrefix} onImportSite={onImportSite} imported={siteLabel !== null} />}
         </div>
       )}
 
-      <dl className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3 lg:grid-cols-5">
+      {siteLabel !== null && (
+        <p className="px-4 pt-3 text-[13px] text-zinc-300" data-testid="reuse-summary">
+          {stats.reusedClasses ?? 0} class{(stats.reusedClasses ?? 0) === 1 ? '' : 'es'} reused from “{siteLabel}”, {stats.newClasses ?? stats.styles} new.
+        </p>
+      )}
+
+      <dl className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3 lg:grid-cols-6">
         {chips.map((c) => (
           <div key={c.label} title={c.hint} className="rounded-lg border border-line bg-canvas/60 px-3 py-2">
             <dt className="truncate text-[11px] font-medium uppercase tracking-wider text-muted">{c.label}</dt>
@@ -141,7 +152,7 @@ export function ResultPanel({ result, onCopyAgain, onDownload, onSetPrefix }: Re
 }
 
 /** Yellow notice for classes that may clash with the destination site's classes. */
-function CollisionNotice({ names, onSetPrefix }: { names: string[]; onSetPrefix?: () => void }) {
+function CollisionNotice({ names, onSetPrefix, onImportSite, imported }: { names: string[]; onSetPrefix?: () => void; onImportSite?: () => void; imported: boolean }) {
   const shown = names.slice(0, 8);
   return (
     <div role="note" className="flex flex-col gap-2 rounded-lg border border-warn/30 bg-warn/5 px-3 py-2.5 text-[13px] leading-snug text-amber-200 sm:flex-row sm:items-start">
@@ -151,18 +162,26 @@ function CollisionNotice({ names, onSetPrefix }: { names: string[]; onSetPrefix?
           <strong className="font-semibold">
             {names.length} class{names.length === 1 ? '' : 'es'} may clash with existing site classes;
           </strong>{' '}
-          Webflow will rename them (name-2) or merge combos.
+          Webflow adds “name 2” unless your site has them with identical styles.{' '}
+          {imported ? 'They are not in your imported site styles: import a copy that contains them (e.g. your style guide page).' : 'Import your site’s styles to reuse its classes instead.'}
         </p>
         <p className="mt-1 break-words font-mono text-[11.5px] text-amber-200/70">
           {shown.join(', ')}
           {names.length > shown.length ? ` +${names.length - shown.length} more` : ''}
         </p>
       </div>
-      {onSetPrefix && (
-        <button type="button" onClick={onSetPrefix} className="btn-secondary shrink-0 self-start">
-          Set a class prefix
-        </button>
-      )}
+      <div className="flex shrink-0 flex-wrap gap-2 self-start">
+        {onImportSite && (
+          <button type="button" onClick={onImportSite} className="btn-secondary">
+            Import site styles
+          </button>
+        )}
+        {onSetPrefix && (
+          <button type="button" onClick={onSetPrefix} className="btn-secondary">
+            Set a class prefix
+          </button>
+        )}
+      </div>
     </div>
   );
 }

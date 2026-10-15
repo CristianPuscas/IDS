@@ -103,7 +103,7 @@ describe("clientFirstUtilities with a classPrefix", () => {
     expect(w.message).toContain('name-2');
     expect(w.message).toContain('identical styles');
     expect(w.message).toContain('classPrefix');
-    expect(w.message).toContain("site's existing utilities");
+    expect(w.message).toContain("import your site's styles");
     expect(w.detail).toBe('Client-First utility / core classes: padding-global, container-large, heading-style-h2, text-size-large');
     expect(w.items).toEqual(['padding-global', 'container-large', 'heading-style-h2', 'text-size-large']);
   });

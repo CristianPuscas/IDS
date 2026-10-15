@@ -35,6 +35,7 @@ export const WARNING_LABELS: Record<ConvertWarningCode, string> = {
   'embed-too-large': 'Embed too large',
   'class-renamed': 'Classes renamed',
   'class-collision-risk': 'Class name clash risk',
+  'site-classes': 'Reused site classes',
   'breakpoint-snapped': 'Media queries snapped to breakpoints',
   'baseline-reset': 'Browser-default reset',
   'client-first-structure': 'Client-First structure',
