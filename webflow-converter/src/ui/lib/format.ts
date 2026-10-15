@@ -37,6 +37,7 @@ export const WARNING_LABELS: Record<ConvertWarningCode, string> = {
   'class-collision-risk': 'Class name clash risk',
   'breakpoint-snapped': 'Media queries snapped to breakpoints',
   'baseline-reset': 'Browser-default reset',
+  'client-first-structure': 'Client-First structure',
   'not-implemented': 'Not implemented yet',
   other: 'Other',
 };

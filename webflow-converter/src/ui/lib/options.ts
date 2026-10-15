@@ -1,4 +1,4 @@
-import { DEFAULT_CONVERT_OPTIONS, type BreakpointSnap, type ButtonMode, type ConvertOptions, type ExternalImageMode, type FormMode } from '../../engine/types';
+import { DEFAULT_CONVERT_OPTIONS, type BreakpointSnap, type ButtonMode, type ClientFirstUtilities, type ConvertOptions, type ExternalImageMode, type FormMode } from '../../engine/types';
 import { getStorage } from './drafts';
 
 /** The engine options the "Advanced options" panel exposes. */
@@ -6,6 +6,7 @@ export interface AdvancedOptions {
   forms: FormMode;
   buttonMode: ButtonMode;
   classPrefix: string;
+  clientFirstUtilities: ClientFirstUtilities;
   breakpointSnap: BreakpointSnap;
   neutralizeDefaults: boolean;
   externalImages: ExternalImageMode;
@@ -15,6 +16,7 @@ export const DEFAULT_ADVANCED: Readonly<AdvancedOptions> = Object.freeze({
   forms: DEFAULT_CONVERT_OPTIONS.forms,
   buttonMode: DEFAULT_CONVERT_OPTIONS.buttonMode,
   classPrefix: DEFAULT_CONVERT_OPTIONS.classPrefix,
+  clientFirstUtilities: DEFAULT_CONVERT_OPTIONS.clientFirstUtilities,
   breakpointSnap: DEFAULT_CONVERT_OPTIONS.breakpointSnap,
   neutralizeDefaults: DEFAULT_CONVERT_OPTIONS.neutralizeDefaults,
   externalImages: DEFAULT_CONVERT_OPTIONS.externalImages,
@@ -24,6 +26,7 @@ export const OPTIONS_STORAGE_KEY = 'wf-converter:options:v1';
 
 const FORMS: readonly FormMode[] = ['auto', 'native', 'embed'];
 const BUTTONS: readonly ButtonMode[] = ['button', 'linkBlock', 'customElement'];
+const CF_UTILITIES: readonly ClientFirstUtilities[] = ['keep', 'prefix'];
 const SNAPS: readonly BreakpointSnap[] = ['up', 'off'];
 const IMAGES: readonly ExternalImageMode[] = ['customElement', 'embed', 'image'];
 
@@ -36,6 +39,7 @@ export function sanitizeAdvanced(raw: unknown): AdvancedOptions {
     forms: pick(o.forms, FORMS, DEFAULT_ADVANCED.forms),
     buttonMode: pick(o.buttonMode, BUTTONS, DEFAULT_ADVANCED.buttonMode),
     classPrefix: typeof o.classPrefix === 'string' ? o.classPrefix.slice(0, 40) : DEFAULT_ADVANCED.classPrefix,
+    clientFirstUtilities: pick(o.clientFirstUtilities, CF_UTILITIES, DEFAULT_ADVANCED.clientFirstUtilities),
     breakpointSnap: pick(o.breakpointSnap, SNAPS, DEFAULT_ADVANCED.breakpointSnap),
     neutralizeDefaults: typeof o.neutralizeDefaults === 'boolean' ? o.neutralizeDefaults : DEFAULT_ADVANCED.neutralizeDefaults,
     externalImages: pick(o.externalImages, IMAGES, DEFAULT_ADVANCED.externalImages),

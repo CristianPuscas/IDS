@@ -642,6 +642,14 @@ export interface ConvertOptions {
    */
   classPrefix: string;
   /**
+   * How `classPrefix` treats Client-First core and utility classes (`padding-global`,
+   * `container-large`, `text-size-large`, `heading-style-h2`… see ./clientFirst). `'keep'`: they
+   * keep their names, so a Client-First site reuses its own utilities and only custom
+   * (`folder_element`) and other classes get the prefix. `'prefix'`: every class is prefixed.
+   * Has no effect without a `classPrefix`. Default `'keep'`.
+   */
+  clientFirstUtilities: ClientFirstUtilities;
+  /**
    * Links converted from `<button>` get `data-h2w-button`, and a one-line script at the top of the
    * script embed calls `preventDefault()` on their clicks, so the published `href="#"` does not
    * jump to the top of the page. Default `true`.
@@ -677,6 +685,9 @@ export interface ExternalScript {
   type: string;
 }
 
+/** `ConvertOptions.clientFirstUtilities`. */
+export type ClientFirstUtilities = 'keep' | 'prefix';
+
 /** `ConvertOptions.embedSizing`. */
 export type EmbedSizing = 'wrapper' | 'none';
 
@@ -701,6 +712,7 @@ export const DEFAULT_CONVERT_OPTIONS: Readonly<ConvertOptions> = Object.freeze({
   renameProofEmbedCss: true,
   rewriteRemappedTags: true,
   classPrefix: '',
+  clientFirstUtilities: 'keep',
   buttonClickShim: true,
 });
 
@@ -731,6 +743,7 @@ export type ConvertWarningCode =
   | 'class-collision-risk'
   | 'breakpoint-snapped'
   | 'baseline-reset'
+  | 'client-first-structure'
   | 'not-implemented'
   | 'other';
 

@@ -17,6 +17,12 @@ const EMBED = [
   'Forms your JavaScript drives (novalidate, data hooks, submit listeners), and file, hidden or date inputs',
 ];
 
+const CLIENT_FIRST = [
+  'Use the core structure: section_[name] > padding-global > container-[size] > padding-section-[size]. The "Copy Ideal System Prompt" asks the AI for exactly this.',
+  'Utilities (padding-global, container-large, text-size-*, heading-style-*) are expected in a Client-First site; with standard values the site reuses its own, otherwise Webflow adds "name 2".',
+  'One utility per element and only is- combos on custom classes: a stack like "margin-bottom margin-large" pastes as a combo with its own styles.',
+];
+
 /**
  * Explains what the converter makes native and what it routes to Code Embeds.
  * Ownership: ui.
@@ -51,11 +57,23 @@ export function Tips() {
           </li>
         ))}
       </ul>
+      <h3 className="mt-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-sky-300">
+        <span className="size-1.5 rounded-full bg-sky-400" aria-hidden="true" />
+        Client-First sites
+      </h3>
+      <ul className="mt-2 space-y-1.5 text-[13px] leading-snug text-zinc-300">
+        {CLIENT_FIRST.map((t) => (
+          <li key={t} className="flex gap-2">
+            <span className="mt-[0.45em] size-1 shrink-0 rounded-full bg-zinc-600" aria-hidden="true" />
+            {t}
+          </li>
+        ))}
+      </ul>
       <p className="mt-4 rounded-lg border border-line bg-canvas/60 px-3 py-2 text-[12px] leading-relaxed text-muted">
         Scripts don't run on the Designer canvas. Check them in Preview or on the published site. Custom fonts need to be added to the site.
       </p>
       <p className="mt-2 rounded-lg border border-line bg-canvas/60 px-3 py-2 text-[12px] leading-relaxed text-muted">
-        Class names already in your site clash: Webflow renames yours to "name 2", and a combo merges with the site's class of the same name. Use unique names, or set a class prefix in Advanced options.
+        Class names already in your site clash: Webflow renames yours to "name 2", and a combo merges with the site's class of the same name. Set a class prefix in Advanced options: by default it skips Client-First utilities, so they reuse the site's.
       </p>
     </section>
   );

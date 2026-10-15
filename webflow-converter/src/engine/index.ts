@@ -18,6 +18,7 @@
  */
 
 import { buildBaselineReset, isFullDocument } from './baseline';
+import { isClientFirstUtility, missingCoreStructure } from './clientFirst';
 import { cssClassNames, findJsClassReferences, isWebflowClassName, planClassRenames, renameClassesInDocument, rewriteCssClasses } from './classNames';
 import { attrSelector, isEmptyPlan, planEmbedRewrite, rewriteEmbedSelector } from './embedCss';
 import { parseCss } from './cssParser';
@@ -64,6 +65,7 @@ export function resolveOptions(options: Partial<ConvertOptions> = {}): ConvertOp
   if (!['auto', 'native', 'embed'].includes(out.forms)) out.forms = DEFAULT_CONVERT_OPTIONS.forms;
   if (!['button', 'linkBlock', 'customElement'].includes(out.buttonMode)) out.buttonMode = DEFAULT_CONVERT_OPTIONS.buttonMode;
   if (typeof out.jsMinifier !== 'function') out.jsMinifier = null;
+  if (out.clientFirstUtilities !== 'keep' && out.clientFirstUtilities !== 'prefix') out.clientFirstUtilities = DEFAULT_CONVERT_OPTIONS.clientFirstUtilities;
   return out;
 }
 
@@ -165,9 +167,11 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
   if (opts.normalizeClassNames) {
     cssText = normalizeClassNames(parsed, cssText, scriptsText, warnings);
   }
+  const structureHint = clientFirstStructureHint(parsed);
+  if (structureHint) warnings.push(structureHint);
   if (opts.classPrefix) {
     const prefix = sanitizePrefix(opts.classPrefix);
-    if (prefix) cssText = prefixClassNames(parsed, cssText, scriptsText, prefix, warnings);
+    if (prefix) cssText = prefixClassNames(parsed, cssText, scriptsText, prefix, opts.clientFirstUtilities === 'keep', warnings);
     else {
       warnings.push({
         code: 'other',
@@ -233,7 +237,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
 
   const styleMap = mapStyles({ ...css, rules: [...css.rules, ...built.extraRules] }, registry, built.usage, opts, hooks);
   warnings.push(...styleMap.warnings);
-  if (!opts.classPrefix) warnings.push(...collisionWarnings(registry));
+  warnings.push(...collisionWarnings(registry, opts));
 
   const js = extractJs(parsed.scripts, editorJs);
   warnings.push(...js.warnings);
@@ -369,38 +373,87 @@ function tagDataWfc(nodes: WfNode[], registry: StyleRegistry, classes: Set<strin
 }
 
 /**
- * Class names that Client-First / Relume sites commonly define globally. Pasting a class whose name
- * exists with different styles makes Webflow rename it to "name 2" (S7); a combo class merges with
- * a same-named class of the site, whose styles then apply too.
+ * Other class names that Client-First / Relume sites commonly define (the Client-First core and
+ * utility names come from ./clientFirst). Pasting a class whose name exists with different styles
+ * makes Webflow rename it to "name 2" (S7); a combo class merges with a same-named class of the
+ * site, whose styles then apply too.
  */
-const CORE_CLASS = [
-  /^(page-wrapper|main-wrapper|button|button-group|hide|layer|overflow-hidden|align-center|fs-styleguide.*)$/,
-  /^(container|padding|margin|spacer|text-size|text-weight|text-style|text-color|text-align|heading-style|max-width|background-color|icon-embed|icon-height|icon-1x1|pointer-events|z-index|aspect-ratio|hide)-/,
+const OTHER_COMMON_CLASS = [
+  /^(fs-styleguide.*|container)$/,
   /^navbar_/,
   /^[a-z]+\d+_/, // Relume component names: navbar1_component, header5_content…
 ];
 
-function collisionWarnings(registry: StyleRegistry): ConvertWarning[] {
-  const core: string[] = [];
+/**
+ * Class clash warnings. Without a prefix: Client-First utilities (expected in a Client-First site),
+ * other common names and combos not named `is-*`. With a prefix and `clientFirstUtilities: 'keep'`:
+ * an info about the utilities that kept their names. With `'prefix'`: nothing.
+ */
+function collisionWarnings(registry: StyleRegistry, opts: ConvertOptions): ConvertWarning[] {
+  const utilities: string[] = [];
+  const common: string[] = [];
   const combos: string[] = [];
+  const add = (list: string[], name: string) => {
+    if (!list.includes(name)) list.push(name);
+  };
   for (const s of registry.styles()) {
-    if (s.comb === '' && CORE_CLASS.some((re) => re.test(s.name)) && !core.includes(s.name)) core.push(s.name);
-    if (s.comb === '&' && !s.name.startsWith('is-') && !/^inline-style-\d+$/.test(s.name) && !combos.includes(s.name)) combos.push(s.name);
+    if (isClientFirstUtility(s.name)) add(utilities, s.name);
+    else if (s.comb === '' && OTHER_COMMON_CLASS.some((re) => re.test(s.name))) add(common, s.name);
+    else if (s.comb === '&' && !s.name.startsWith('is-') && !/^inline-style-\d+$/.test(s.name)) add(combos, s.name);
   }
-  if (core.length === 0 && combos.length === 0) return [];
+
+  if (opts.classPrefix) {
+    if (opts.clientFirstUtilities !== 'keep' || utilities.length === 0) return [];
+    return [
+      {
+        code: 'class-collision-risk',
+        severity: 'info',
+        message: `${utilities.length} Client-First utility class${utilities.length > 1 ? 'es' : ''} kept ${utilities.length > 1 ? 'their names' : 'its name'} (clientFirstUtilities: 'keep'), so a Client-First site reuses its own. Where the site's styles differ, Webflow pastes ${utilities.length > 1 ? 'them' : 'it'} as "name 2" (name-2); set clientFirstUtilities to 'prefix' to prefix ${utilities.length > 1 ? 'them' : 'it'} too.`,
+        detail: utilities.join(', '),
+      },
+    ];
+  }
+
+  if (utilities.length === 0 && common.length === 0 && combos.length === 0) return [];
   const detail: string[] = [];
-  if (core.length) detail.push(`Common Client-First / Relume names: ${core.join(', ')}`);
+  if (utilities.length) detail.push(`Client-First utility / core classes: ${utilities.join(', ')}`);
+  if (common.length) detail.push(`Other common Client-First / Relume names: ${common.join(', ')}`);
   if (combos.length) detail.push(`Combo classes not named is-*: ${combos.join(', ')}`);
+  const parts: string[] = [];
+  if (utilities.length) {
+    parts.push(
+      'Client-First utility and core classes are expected to exist in a Client-First site: Webflow renames a pasted one to "name 2" (name-2) unless the site already has it with identical styles.',
+    );
+  }
+  if (common.length || combos.length) {
+    parts.push('Other names may clash the same way, and a combo class merges with a site class of the same name (its styles apply too).');
+  }
+  parts.push("Set a classPrefix (Client-First utilities keep their names by default, so they reuse the site's), or use the site's existing utilities with their standard values.");
   return [
     {
       code: 'class-collision-risk',
       severity: 'warning',
-      message:
-        'Some classes may already exist in your Webflow site. Webflow renames a pasted class that clashes to "name 2", and a combo class merges with a site class of the same name (its styles apply too). Paste into a clean site, or set the classPrefix option.',
+      message: parts.join(' '),
       detail: detail.join('\n'),
-      items: [...core, ...combos],
+      items: [...utilities, ...common, ...combos],
     },
   ];
+}
+
+/**
+ * Info hint when a page with sections does not follow the Client-First core structure
+ * (`section_[name] > padding-global > container-[size]`). Never an error: the page converts the same.
+ */
+function clientFirstStructureHint(parsed: ParsedHtml): ConvertWarning | null {
+  const sections = parsed.document.querySelectorAll('section').length;
+  const missing = missingCoreStructure(parsed.classNames, sections);
+  if (missing.length === 0) return null;
+  return {
+    code: 'client-first-structure',
+    severity: 'info',
+    message: `Not the Client-First core structure: no ${missing.join(' / ')} class found. Client-First pages use page-wrapper > main-wrapper > section_[name] > padding-global > container-[size] > padding-section-[size]. This is only a hint; the page converts the same.`,
+    detail: `Missing: ${missing.join(', ')}`,
+  };
 }
 
 /** Lower-cases a class prefix and replaces other characters with "-"; `""` when unusable. */
@@ -411,12 +464,23 @@ function sanitizePrefix(prefix: string): string {
 
 /**
  * Adds `prefix` to every class used in the HTML (not to CSS-only classes, which scripts usually
- * toggle), in the document and in the CSS. Scripts are not rewritten; literals that mention a
- * prefixed class are reported.
+ * toggle), in the document and in the CSS. With `keepUtilities`, Client-First core and utility
+ * classes keep their names (option `clientFirstUtilities: 'keep'`). Scripts are not rewritten;
+ * literals that mention a prefixed class are reported.
  */
-function prefixClassNames(parsed: ParsedHtml, cssText: string, scripts: string[], prefix: string, warnings: ConvertWarning[]): string {
+function prefixClassNames(
+  parsed: ParsedHtml,
+  cssText: string,
+  scripts: string[],
+  prefix: string,
+  keepUtilities: boolean,
+  warnings: ConvertWarning[],
+): string {
   const renames = new Map<string, string>();
-  for (const c of parsed.classNames) if (!c.startsWith('w--') && !c.startsWith(prefix)) renames.set(c, prefix + c);
+  for (const c of parsed.classNames) {
+    if (c.startsWith('w--') || c.startsWith(prefix) || (keepUtilities && isClientFirstUtility(c))) continue;
+    renames.set(c, prefix + c);
+  }
   if (renames.size === 0) return cssText;
   renameClassesInDocument(parsed.document, renames);
   const rename = (c: string): string => renames.get(c) ?? c;

@@ -31,6 +31,11 @@ const BUTTON_CHOICES: Choice<AdvancedOptions['buttonMode']>[] = [
   { value: 'customElement', label: 'Custom Element', hint: 'A real <button> (Custom Element) with its attributes and type. Best for accessibility; not paste-tested yet.' },
 ];
 
+const CF_UTILITY_CHOICES: Choice<AdvancedOptions['clientFirstUtilities']>[] = [
+  { value: 'keep', label: 'Keep names', hint: 'With a prefix, Client-First utilities (padding-global, container-large, text-size-*…) keep their names and reuse the site’s; only custom classes are prefixed.' },
+  { value: 'prefix', label: 'Prefix too', hint: 'With a prefix, Client-First utilities are prefixed like every other class. Nothing reuses the site’s utilities.' },
+];
+
 const SNAP_CHOICES: Choice<AdvancedOptions['breakpointSnap']>[] = [
   { value: 'up', label: 'Snap up', hint: 'Off-grid max-width queries (850px, 640px…) snap to the next Webflow breakpoint and become native variants.' },
   { value: 'off', label: 'Keep in embed', hint: 'Off-grid media queries stay exactly as written, in the <style> embed.' },
@@ -48,7 +53,7 @@ const IMAGE_CHOICES: Choice<AdvancedOptions['externalImages']>[] = [
 ];
 
 /**
- * Collapsible "Advanced options" card: forms, buttons, class prefix, breakpoint snapping, the
+ * Collapsible "Advanced options" card: forms, buttons, class prefix (and Client-First utilities), breakpoint snapping, the
  * browser-default reset and external images. Purely controlled; the App persists the values.
  * Ownership: ui.
  */
@@ -70,6 +75,13 @@ export function AdvancedOptionsPanel({ value, onChange, open, onOpenChange }: Ad
         <Segmented legend="Forms" name="adv-forms" choices={FORM_CHOICES} value={value.forms} onChange={(v) => set('forms', v)} />
         <Segmented legend="Buttons" name="adv-buttons" choices={BUTTON_CHOICES} value={value.buttonMode} onChange={(v) => set('buttonMode', v)} />
         <ClassPrefixField value={value.classPrefix} onChange={(v) => set('classPrefix', v)} />
+        <Segmented
+          legend="Client-First utilities"
+          name="adv-cf-utilities"
+          choices={CF_UTILITY_CHOICES}
+          value={value.clientFirstUtilities}
+          onChange={(v) => set('clientFirstUtilities', v)}
+        />
         <Segmented legend="Off-grid breakpoints" name="adv-snap" choices={SNAP_CHOICES} value={value.breakpointSnap} onChange={(v) => set('breakpointSnap', v)} />
         <Segmented
           legend="Browser-default reset"
@@ -134,7 +146,7 @@ function ClassPrefixField({ value, onChange }: { value: string; onChange: (v: st
         className="mt-1.5 block w-full rounded-lg border border-line bg-canvas/60 px-3 py-1.5 font-mono text-[13px] text-zinc-100 placeholder:text-zinc-600 focus:border-accent focus:outline-none sm:max-w-56"
       />
       <p id={hintId} className="mt-1.5 text-[12px] leading-snug text-muted">
-        Added to every class so nothing clashes with the site’s classes. Scripts that use class names are not rewritten.
+        Added to your classes so nothing clashes with the site’s classes (Client-First utilities: see below). Scripts that use class names are not rewritten.
       </p>
     </div>
   );

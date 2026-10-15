@@ -33,11 +33,11 @@ describe('copyText (prompt copy)', () => {
 describe('IDEAL_SYSTEM_PROMPT', () => {
   it.each([
     ['single file', /ONE complete HTML file/],
-    ['vanilla', /Vanilla HTML, CSS and JavaScript/],
+    ['vanilla', /Vanilla HTML, CSS and JS/],
     ['rem', /1rem = 16px/],
     ['class-only', /Class selectors only/],
-    ['no descendants', /descendant, child or sibling/],
-    ['no reset', /No "\*"/],
+    ['no descendants', /No descendant, child, sibling/],
+    ['no reset', /No CSS reset/],
     ['breakpoints', /max-width: 991px[\s\S]*max-width: 767px[\s\S]*max-width: 479px/],
     ['alt text', /alt/],
     ['pinned CDN', /gsap@\d+\.\d+\.\d+/],

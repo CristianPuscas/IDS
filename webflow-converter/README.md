@@ -55,7 +55,8 @@ verified and what is uncertain.
   a lone combo class is repeated to keep beating the published combo selector; and `b`, `i` and
   `button` selectors are rewritten to the tags Webflow publishes (`strong`, `em`, links).
 - A warning lists class names likely to clash with an existing Client-First / Relume site, and the
-  `classPrefix` option prefixes every class to avoid clashes.
+  `classPrefix` option prefixes classes to avoid clashes (Client-First utilities keep their names
+  by default, see [Client-First](#client-first)).
 - Class names are renamed to the selector Webflow publishes (`heroTitle` → `herotitle`,
   `md:flex` → `md-flex`), and the `<style>` embed is rewritten to match.
 - Embedded canvas, svg, video and iframe elements with percentage or absolute sizing get a wrapper
@@ -71,9 +72,10 @@ verified and what is uncertain.
 - Structural validation before copying, then a summary with node, class and embed counts, plus
   warnings that explain every piece sent to an embed.
 - Fallbacks: Download JSON, and copy the raw JSON as text for debugging.
-- An "ideal AI prompt" you can give Claude or ChatGPT so the code it writes converts cleanly.
+- An "ideal AI prompt" you can give Claude or ChatGPT so the code it writes follows Client-First v2
+  and converts cleanly.
 - **Advanced options** (saved in the browser): forms (auto / native / embed), buttons (Button /
-  Link Block / Custom Element), class prefix, off-grid breakpoint snapping, the browser-default
+  Link Block / Custom Element), class prefix and Client-First utilities (keep / prefix), off-grid breakpoint snapping, the browser-default
   reset and external images. A yellow notice after converting lists classes that may clash with
   the site's classes and links to the class prefix.
 
@@ -121,6 +123,35 @@ verified and what is uncertain.
 
 The payload is always one tree. If the input has several top-level elements or needs embeds, they
 are wrapped in one classless Div Block.
+
+## Client-First
+
+The tool and its AI prompt follow [Finsweet Client-First v2](https://finsweet.com/client-first/docs)
+(with v2.1 colour variables), restricted to what pastes natively.
+
+- **Prompt.** "Copy Ideal System Prompt" asks for the core structure (`page-wrapper` >
+  `main-wrapper` > `section_[name]` > `padding-global` > `container-[size]` >
+  `padding-section-[size]`), `folder_element` custom classes, dash-only utilities with the
+  starter's standard values (`padding-global` 2.5rem, `container-large` 80rem, `heading-style-h2`
+  3rem…), only `is-` combos on custom classes, rem on a 16px base, and colours as `:root` variables
+  named like Webflow's (`--text-color--primary`), used through `var()`. The converter keeps `var()`
+  in native classes as `@raw<|…|>` and puts `:root` in the `<style>` embed: recreate the variables
+  in Webflow (`Text Color/primary`), or delete the embed when the site already has them.
+- **Deliberate deviations.** The prompt asks for no tag styles (tag rules land in an embed and
+  restyle the whole page; base typography goes on `page-wrapper`), at most one utility per element
+  (a stack such as `margin-bottom margin-large` pastes as a combo class with its own styles, the
+  Client-First red flag), and no Global Styles embed (the baseline reset neutralizes browser
+  defaults and the site keeps its own embed).
+- **Class list.** `src/engine/clientFirst.ts` lists the Client-First core and utility classes
+  (core structure, spacing, `max-width-*`, `text-size/weight/style/align/color-*`,
+  `heading-style-h1`–`h6`, `background-color-*`, `button`, `hide-*`, `icon-*`, `aspect-ratio-*`…).
+  The clash warning names them separately: a Client-First site is expected to have them, and
+  Webflow renames a pasted one to "name 2" (`name-2`) unless the site's styles are identical.
+- **Prefix.** `clientFirstUtilities: 'keep'` (default) leaves those classes unprefixed when a
+  `classPrefix` is set, so pasted elements reuse the site's utilities and only custom classes get
+  the prefix. `'prefix'` prefixes them too.
+- **Structure hint.** A page with sections but no `padding-global`, `container-[size]` or
+  `section_[name]` class gets an info note (`client-first-structure`). It never changes the output.
 
 ## Browser support
 
@@ -272,6 +303,7 @@ webflow-converter/
     │   ├── embedCss.ts         <style> embed selector rewriting (data-h2w-class, specificity, b/i/button)
     │   ├── __fixtures__/       Real pages used as regression fixtures (ferma.html, greeniron-snippets.html)
     │   ├── classNames.ts       Webflow class-name rule, renames, CSS selector rewriting
+    │   ├── clientFirst.ts      Client-First core/utility class list, structure check
     │   ├── cascade.ts          Which source declarations apply to an element (specificity)
     │   ├── validate.ts         validateXscp(): structural checks before copying
     │   ├── clipboard.ts        copyToWebflow(): copy-event clipboard write (done); isSafari()
@@ -279,7 +311,7 @@ webflow-converter/
     │   └── *.test.ts           Vitest tests
     └── ui/                     Interface (React)
         ├── App.tsx             State, convert() + copyToWebflow() on click
-        ├── prompt.ts           IDEAL_SYSTEM_PROMPT (Webflow-friendly AI prompt)
+        ├── prompt.ts           IDEAL_SYSTEM_PROMPT (Client-First, Webflow-friendly AI prompt)
         └── components/
             ├── InputTabs.tsx   'combined' | 'separate' tabs
             ├── CodeEditor.tsx  label, language ('html'|'css'|'js'), value, onChange, placeholder
@@ -340,7 +372,8 @@ interface ConvertOptions {
   embedSpecificityParity: boolean;    // true: lone combo classes in embed selectors are repeated (.b -> .b.b)
   renameProofEmbedCss: boolean;       // true: embed CSS targets native classes via [data-h2w-class~="x"]
   rewriteRemappedTags: boolean;       // true: b/i/button selectors in the embed follow the pasted tags
-  classPrefix: string;                // '': prefix for every HTML class and generated class (e.g. 'fm-')
+  classPrefix: string;                // '': prefix for HTML classes and generated classes (e.g. 'fm-')
+  clientFirstUtilities: 'keep' | 'prefix'; // 'keep': with a prefix, Client-First utilities keep their names
   buttonClickShim: boolean;           // true: preventDefault on converted <button> links (href="#")
 }
 

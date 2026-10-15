@@ -30,7 +30,7 @@ const throwing: Storage = {
 
 describe('advanced options', () => {
   it('defaults match the engine defaults', () => {
-    expect(DEFAULT_ADVANCED).toEqual({ forms: 'auto', buttonMode: 'button', classPrefix: '', breakpointSnap: 'up', neutralizeDefaults: true, externalImages: 'customElement' });
+    expect(DEFAULT_ADVANCED).toEqual({ forms: 'auto', buttonMode: 'button', classPrefix: '', clientFirstUtilities: 'keep', breakpointSnap: 'up', neutralizeDefaults: true, externalImages: 'customElement' });
   });
 
   it('round-trips through storage', () => {
