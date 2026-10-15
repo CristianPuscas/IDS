@@ -31,7 +31,7 @@ describe('native field defaults (.w-input / .w-select / .w-checkbox)', () => {
     const res = run('<input class="f" name="a">', css);
     const st = style(res, 'f');
     expect(st.styleLess).toBe(
-      'display: block; width: 100%; height: 3rem; margin-top: 0; margin-right: 0; margin-bottom: 1rem; margin-left: 0; padding-top: .5rem; padding-right: .5rem; padding-bottom: .5rem; padding-left: .5rem; border-top-width: 2px; border-top-style: solid; border-top-color: #0a0; border-right-width: 2px; border-right-style: solid; border-right-color: #0a0; border-bottom-width: 2px; border-bottom-style: solid; border-bottom-color: #0a0; border-left-width: 2px; border-left-style: solid; border-left-color: #0a0; background-color: #fff; color: #111; font: 16px/1.5 Inter, sans-serif; vertical-align: top;',
+      'display: block; width: 100%; height: 3rem; margin-top: 0; margin-right: 0; margin-bottom: 1rem; margin-left: 0; padding-top: .5rem; padding-right: .5rem; padding-bottom: .5rem; padding-left: .5rem; border-top-style: solid; border-top-width: 2px; border-top-color: #0a0; border-right-style: solid; border-right-width: 2px; border-right-color: #0a0; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #0a0; border-left-style: solid; border-left-width: 2px; border-left-color: #0a0; background-color: #fff; color: #111; font: 16px/1.5 Inter, sans-serif; vertical-align: top;',
     );
     expect(st.variants.main_focus).toEqual({ styleLess: 'border-top-color: #0a0; border-right-color: #0a0; border-bottom-color: #0a0; border-left-color: #0a0;' });
   });
@@ -66,7 +66,7 @@ describe('native field defaults (.w-input / .w-select / .w-checkbox)', () => {
     expect(style(res, 'cb').styleLess).toContain('float: none;');
     expect(style(res, 'cb').styleLess).toContain('margin-left: 4px;');
     expect(classNames(res, first(res, 'FormCheckboxWrapper'))).toEqual(['checkbox-field']);
-    expect(style(res, 'checkbox-field').styleLess).toBe('margin-bottom: 0px; padding-left: 0px; display: inline;');
+    expect(style(res, 'checkbox-field').styleLess).toBe('display: inline; margin-bottom: 0px; padding-left: 0px;');
   });
 
   it('splits differing values onto an is-field-ua combo when fields share a class', () => {

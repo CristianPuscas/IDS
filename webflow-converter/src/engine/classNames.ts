@@ -163,6 +163,53 @@ function mapSelector(sel: string, fn: (name: string) => string | undefined): str
   return out;
 }
 
+/**
+ * Class names that scripts add, remove or toggle at runtime: string literals passed to
+ * `classList.add/remove/toggle/replace`, jQuery `addClass/removeClass/toggleClass`, or assigned to
+ * `className`. Also any literal that is just one `is-*` / `w--*` modifier (`var OPEN = 'is-open'`).
+ * Such a class appears on the element only as a real class, never in its `data-h2w-class`
+ * attribute, so embed CSS must still match it as `.name` (./embedCss). A simple scan, by design.
+ */
+export function scriptToggledClasses(scripts: readonly string[]): Set<string> {
+  const out = new Set<string>();
+  const literal = /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\$]|\\.)*)`/g;
+  const addTokens = (text: string) => {
+    for (const t of text.split(/[^\w-]+/)) if (/^-?[a-zA-Z_][\w-]*$/.test(t)) out.add(t);
+  };
+  const call = /\.(?:classList\s*\.\s*(?:add|remove|toggle|replace)|addClass|removeClass|toggleClass)\s*\(|\.className\s*\+?=/g;
+  for (const code of scripts) {
+    for (const m of code.matchAll(call)) {
+      // The arguments: literals up to the closing parenthesis / end of statement.
+      const rest = code.slice(m.index! + m[0].length, m.index! + m[0].length + 300);
+      const end = m[0].endsWith('(') ? closingParen(rest) : rest.search(/[;\n]/);
+      const args = end >= 0 ? rest.slice(0, end) : rest;
+      for (const l of args.matchAll(literal)) addTokens(l[1] ?? l[2] ?? l[3] ?? '');
+    }
+    for (const l of code.matchAll(literal)) {
+      const text = (l[1] ?? l[2] ?? l[3] ?? '').trim();
+      if (/^(?:is-|w--)[\w-]+$/.test(text)) out.add(text);
+    }
+  }
+  return out;
+}
+
+/** Index of the `)` that closes a call whose `(` was just before `text` (strings skipped), or -1. */
+function closingParen(text: string): number {
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '\\') i++;
+    else if (c === '"' || c === "'" || c === '`') {
+      for (i++; i < text.length && text[i] !== c; i++) if (text[i] === '\\') i++;
+    } else if (c === '(') depth++;
+    else if (c === ')') {
+      if (depth === 0) return i;
+      depth--;
+    }
+  }
+  return -1;
+}
+
 /** A JS string literal that still mentions a renamed class. */
 export interface JsClassReference {
   oldName: string;

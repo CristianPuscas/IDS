@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { expandRepeat, expandShorthand, prepareDeclaration } from './cssValues';
+import { expandRepeat, expandShorthand, prepareDeclaration, unquoteFontFamilies } from './cssValues';
 
 const exp = (p: string, v: string): string =>
   expandShorthand(p, v)
@@ -116,5 +116,25 @@ describe('prepareDeclaration', () => {
     const r = prepareDeclaration(decl);
     expect(r.kind).toBe('embed');
     if (r.kind === 'embed') expect(r.code).toBe(code);
+  });
+});
+
+describe('unquoteFontFamilies (Webflow drops a font-family with two quoted names)', () => {
+  it('unquotes names that are valid unquoted when two or more are quoted', () => {
+    expect(unquoteFontFamilies('"Bebas Neue", Impact, "Arial Narrow", sans-serif')).toBe('Bebas Neue, Impact, Arial Narrow, sans-serif');
+    expect(unquoteFontFamilies("'Inter Tight', 'Segoe UI',sans-serif")).toBe('Inter Tight, Segoe UI, sans-serif');
+  });
+
+  it('leaves one quoted name alone (Webflow publishes it) and keeps quotes that are needed', () => {
+    expect(unquoteFontFamilies('"Inter", Arial, sans-serif')).toBe('"Inter", Arial, sans-serif');
+    expect(unquoteFontFamilies('"serif", "Font 2", "Ünïcode Sans"')).toBe('"serif", "Font 2", "Ünïcode Sans"');
+    expect(unquoteFontFamilies('@raw<|var(--font)|>')).toBe('@raw<|var(--font)|>');
+  });
+
+  it('is applied to native font-family declarations', () => {
+    expect(prepareDeclaration({ property: 'font-family', value: '"Bebas Neue", "Arial Narrow", sans-serif', important: false })).toEqual({
+      kind: 'native',
+      decls: [{ property: 'font-family', value: 'Bebas Neue, Arial Narrow, sans-serif' }],
+    });
   });
 });

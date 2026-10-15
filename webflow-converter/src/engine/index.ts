@@ -19,7 +19,7 @@
 
 import { buildBaselineReset, isFullDocument } from './baseline';
 import { isClientFirstUtility, missingCoreStructure } from './clientFirst';
-import { cssClassNames, findJsClassReferences, isWebflowClassName, planClassRenames, renameClassesInDocument, rewriteCssClasses } from './classNames';
+import { cssClassNames, findJsClassReferences, isWebflowClassName, planClassRenames, renameClassesInDocument, rewriteCssClasses, scriptToggledClasses } from './classNames';
 import { attrSelector, isEmptyPlan, planEmbedRewrite, rewriteEmbedSelector } from './embedCss';
 import { parseCss } from './cssParser';
 import { buildEmbedNode, buildScriptEmbeds, buildStyleEmbeds } from './embedBuilder';
@@ -221,6 +221,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
       chains: registry.chains(),
       styled: styledClassNames(registry),
       embeddedClassLists: built.usage.embeddedClassLists,
+      scriptClasses: scriptToggledClasses(scriptsText),
       remappedTags: built.remappedTags,
       embedSpecificityParity: opts.embedSpecificityParity,
       renameProofEmbedCss: opts.renameProofEmbedCss,

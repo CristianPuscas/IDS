@@ -20,6 +20,7 @@ import { buildConvertInput, EMPTY_DRAFTS, hasConvertibleInput, loadPersisted, sa
 import { loadAdvanced, saveAdvanced, toConvertOptions, type AdvancedOptions } from './lib/options';
 import { isConvertShortcut, isMacPlatform } from './lib/platform';
 import { activeSite, loadSiteLibrary, saveSiteLibrary, type SiteLibrary } from './lib/siteLibrary';
+import { changedSinceCopied, duplicateRisk, inputClassNames, loadCopiedClasses, recordCopiedClasses, type CopiedClasses } from './lib/duplicateRisk';
 
 const TABS_ID = 'input';
 const JSON_FILE = 'webflow-paste.json';
@@ -43,12 +44,20 @@ export default function App() {
   const [siteLibrary, setSiteLibrary] = useState<SiteLibrary>(() => loadSiteLibrary());
   const [siteSaved, setSiteSaved] = useState(true);
   const [siteOpen, setSiteOpen] = useState(false);
+  const [copied, setCopied] = useState<CopiedClasses>(() => loadCopiedClasses());
+  const copiedRef = useRef(copied);
+  copiedRef.current = copied;
   const toastSeq = useRef(0);
   const statusTimer = useRef<number | undefined>(undefined);
 
   const safari = useMemo(() => isSafari(), []);
   const modKey = useMemo(() => (isMacPlatform() ? '⌘' : 'Ctrl'), []);
   const canConvert = hasConvertibleInput(mode, drafts);
+  const site = activeSite(siteLibrary);
+
+  // Classes of the input that probably exist in the site already (spec 3.6): shown before the copy.
+  const inputHtml = mode === 'combined' ? drafts.combined.html : drafts.separate.html;
+  const risk = useMemo(() => duplicateRisk(inputClassNames(inputHtml), copied.keys(), site?.styles ?? []), [inputHtml, copied, site]);
 
   // Persist drafts (debounced). savePersisted swallows quota / privacy-mode errors.
   useEffect(() => {
@@ -110,10 +119,19 @@ export default function App() {
       void pending.then((ok) => {
         if (ok) {
           const n = res.warnings.length;
+          const styles = res.data.payload.styles;
+          const siteIds = new Set((activeSite(siteLibrary)?.styles ?? []).map((s) => s._id));
+          const changed = changedSinceCopied(styles, copiedRef.current, new Set(styles.filter((s) => siteIds.has(s._id)).map((s) => s.name)));
+          setCopied(recordCopiedClasses(styles));
           showToast({
             kind: 'success',
             title: 'Copied to Clipboard! Ready to paste in Webflow',
-            message: `Select an element in the Designer and press ${modKey}+V.${n ? ` ${n} note${n === 1 ? '' : 's'} below.` : ''}`,
+            message:
+              `Select an element in the Designer and press ${modKey}+V.${n ? ` ${n} note${n === 1 ? '' : 's'} below.` : ''}` +
+              (changed.length
+                ? ` Warning: ${changed.length} class${changed.length === 1 ? ' was' : 'es were'} copied before with different styles (${changed.slice(0, 4).join(', ')}${changed.length > 4 ? '…' : ''}); pasted into the same site, Webflow names ${changed.length === 1 ? 'it' : 'them'} "name 2". Import your site's styles first, or delete the old classes.`
+                : ''),
+            actions: changed.length ? [{ label: 'Import site styles', onClick: () => focusSiteImport() }] : undefined,
           });
           return;
         }
@@ -144,7 +162,7 @@ export default function App() {
       });
       return pending;
     },
-    [download, modKey, safari, showToast],
+    [download, focusSiteImport, modKey, safari, showToast, siteLibrary],
   );
 
   const handleConvert = useCallback(() => {
@@ -283,6 +301,32 @@ export default function App() {
                 />
               </div>
             </div>
+
+            {canConvert && risk.likely.length > 0 && (
+              <div role="alert" data-testid="duplicate-risk" className="mx-3 mb-3 flex flex-col gap-2 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-[13px] leading-relaxed text-amber-100 sm:flex-row sm:items-start">
+                <AlertIcon width={16} height={16} className="mt-0.5 shrink-0 text-warn" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-amber-200">
+                    {site
+                      ? `${risk.likely.length} class${risk.likely.length === 1 ? '' : 'es'} likely already in your site ${risk.likely.length === 1 ? 'is' : 'are'} not in the imported styles of "${site.label}" — import ${risk.likely.length === 1 ? 'it' : 'them'} too to avoid duplicates`
+                      : `${risk.likely.length} class${risk.likely.length === 1 ? '' : 'es'} already likely exist${risk.likely.length === 1 ? 's' : ''} in your site — import site styles to avoid duplicates`}
+                  </p>
+                  <p className="mt-1 text-amber-100/80">
+                    Webflow pastes a class whose name your site already has with different styles as "name 2".
+                    {risk.copiedBefore.length > 0 && ` ${risk.copiedBefore.length} ${risk.copiedBefore.length === 1 ? 'was' : 'were'} copied to Webflow from this browser before.`}
+                    {risk.utilities.length > 0 && ` ${risk.utilities.length} ${risk.utilities.length === 1 ? 'is a' : 'are'} Client-First utilit${risk.utilities.length === 1 ? 'y' : 'ies'}.`}
+                    {' '}In the Designer, copy an element that uses them (or a fresh blank page's style guide), then paste it under "Reuse classes from your Webflow site".
+                  </p>
+                  <details className="mt-1">
+                    <summary className="cursor-pointer text-amber-200/90">Show classes</summary>
+                    <p className="mt-1 break-words font-mono text-[12px] text-amber-100/80">{risk.likely.join(', ')}</p>
+                  </details>
+                </div>
+                <button type="button" onClick={focusSiteImport} className="btn-secondary shrink-0 self-start">
+                  Import site styles
+                </button>
+              </div>
+            )}
 
             <div className="flex flex-col gap-3 border-t border-line p-3 sm:flex-row sm:items-center">
               <ConvertButton onClick={handleConvert} disabled={!canConvert} status={status} modKey={modKey} />

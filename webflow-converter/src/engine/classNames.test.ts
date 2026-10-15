@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cssClassNames, findJsClassReferences, planClassRenames, rewriteCssClasses, toWebflowClassName } from './classNames';
+import { cssClassNames, findJsClassReferences, planClassRenames, rewriteCssClasses, scriptToggledClasses, toWebflowClassName } from './classNames';
 import { convert, validateXscp } from './index';
 import { classNames, embedCodes, embeddedCss, first, style } from './testHelpers';
 
@@ -142,5 +142,17 @@ describe('class name normalization in convert()', () => {
   it('can be turned off', () => {
     const res = run('<style>.heroTitle { color: red }</style><div class="heroTitle"></div>', { normalizeClassNames: false });
     expect(style(res, 'heroTitle').styleLess).toBe('color: red;');
+  });
+});
+
+describe('scriptToggledClasses', () => {
+  it('finds classes that scripts add, remove or toggle', () => {
+    const found = scriptToggledClasses([
+      "menu.classList.toggle('is-open', open); el.classList.add(\"is-a\", 'is-b');",
+      "bg.classList.remove(`is-scrolled`); $(x).addClass('active-tab'); el.className += ' js-ready';",
+      "var OPEN = 'is-visible'; el.classList.toggle(OPEN);",
+      "document.querySelector('.nav_link'); link.classList.contains('nav_link');",
+    ]);
+    expect([...found].sort()).toEqual(['active-tab', 'is-a', 'is-b', 'is-open', 'is-scrolled', 'is-visible', 'js-ready']);
   });
 });

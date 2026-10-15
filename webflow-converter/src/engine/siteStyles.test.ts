@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { convert, mergeSiteStyles, parseSiteStyles, siteClassKey, validateXscp, type ConvertOptions, type WfStyle } from './index';
 import { isUuidShaped, stableUuid } from './ids';
-import { parseStyleLess } from './siteStyles';
+import { matchSiteStyles, parseStyleLess, splitDuplicateSuffix } from './siteStyles';
 import { classNames, elements, embeddedCss, first, style } from './testHelpers';
 import SITE_COPY from './__fixtures__/client-first-site-copy.json?raw';
 
@@ -227,5 +227,33 @@ describe('payload with site styles stays valid', () => {
     expect(classNames(res, link)).toEqual(['button', 'is-secondary', 'is-small']);
     // is-small is a site combo of `button`, not of `button.is-secondary`: a new combo is created.
     expect(link.classes[2]).not.toBe(site('is-small')._id);
+  });
+});
+
+describe('matching site classes that Webflow numbered', () => {
+  const cls = (id: string, name: string, styleLess = 'color: red;'): WfStyle => ({ _id: id, fake: false, type: 'class', name, namespace: '', comb: '', styleLess, variants: {}, children: [], selector: null });
+  const ours = (name: string) => ({ classes: [name], style: cls(`ours-${name}`, name, 'color: blue;') });
+
+  it('splits the " N" suffix like Webflow (getPrefix)', () => {
+    expect(splitDuplicateSuffix('padding-global 5')).toEqual({ base: 'padding-global', n: 5 });
+    expect(splitDuplicateSuffix('padding-global')).toEqual({ base: 'padding-global', n: 0 });
+    expect(splitDuplicateSuffix('box-2')).toEqual({ base: 'box-2', n: 0 });
+  });
+
+  it('reuses "name N" when only a numbered copy was imported, and prefers the base name, then the lowest number', () => {
+    expect(matchSiteStyles([ours('padding-global')], [cls('s5', 'padding-global 5')]).map((m) => m.site._id)).toEqual(['s5']);
+    expect(matchSiteStyles([ours('padding-global')], [cls('s5', 'padding-global 5'), cls('s3', 'padding-global 3')]).map((m) => m.site._id)).toEqual(['s3']);
+    expect(matchSiteStyles([ours('padding-global')], [cls('s5', 'padding-global 5'), cls('s0', 'padding-global')]).map((m) => m.site._id)).toEqual(['s0']);
+    expect(matchSiteStyles([ours('container-large')], [cls('c', 'Container Large 2')]).map((m) => m.site._id)).toEqual(['c']);
+  });
+
+  it('pastes the numbered site class verbatim (name included) and routes differences to the embed', () => {
+    const SITE_N: WfStyle[] = [{ ...site('padding-global'), _id: 'pg5', name: 'padding-global 5' }];
+    const res = run('<div class="padding-global">x</div>', '.padding-global { padding-left: 3rem; padding-right: 3rem; }', { siteStyles: SITE_N });
+    const out = res.data.payload.styles.filter((s) => s.name.startsWith('padding-global'));
+    expect(out).toHaveLength(1);
+    expect(out[0]!.name).toBe('padding-global 5');
+    expect(classNames(res, elements(res).find((e) => e.classes.length > 0)!)).toEqual(['padding-global 5']);
+    expect(embeddedCss(res)).toContain('[data-h2w-class~="padding-global"] {');
   });
 });

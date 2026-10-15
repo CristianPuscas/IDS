@@ -118,7 +118,7 @@ describe('buttonMode: "button" (default)', () => {
     const res = run('<a class="btn" href="/x">Go</a>', '.btn { background-color: red; color: white }');
     expect(first(res, 'Link').data).toMatchObject({ button: true, block: '' });
     expect(style(res, 'btn').styleLess).toBe(
-      'display: inline; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; text-decoration: underline; background-color: red; color: white;',
+      'display: inline; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; background-color: red; color: white; text-decoration: underline;',
     );
     expect(res.warnings.some((w) => w.message.includes('.w-button defaults') && w.severity === 'info')).toBe(true);
   });
@@ -167,7 +167,7 @@ describe('buttonMode: "button" (default)', () => {
       '.button { display: inline-block; padding: 0.875rem 1.75rem; border-radius: 0.5rem; background-color: #146ef5; color: #ffffff; text-decoration: none; }';
     const res = run('<a href="#signup" class="button">Get started</a>', css);
     expect(style(res, 'button').styleLess).toBe(
-      'display: inline-block; padding-top: 0.875rem; padding-right: 1.75rem; padding-bottom: 0.875rem; padding-left: 1.75rem; border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; border-bottom-right-radius: 0.5rem; border-bottom-left-radius: 0.5rem; background-color: #146ef5; color: #ffffff; text-decoration: none;',
+      'display: inline-block; padding-top: 0.875rem; padding-right: 1.75rem; padding-bottom: 0.875rem; padding-left: 1.75rem; border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; background-color: #146ef5; color: #ffffff; text-decoration: none;',
     );
     expect(res.warnings.some((w) => w.message.includes('.w-button defaults'))).toBe(false);
   });

@@ -62,6 +62,22 @@ describe('rewriteEmbedSelector', () => {
     expect([...p.repeat]).toEqual([['about', 2]]);
     expect([...p.tags]).toEqual([['b', 'strong']]);
   });
+
+  it('matches classes that scripts toggle as real classes too (GreenIron mobile menu)', () => {
+    const p = planEmbedRewrite({
+      selectors: ['.nav_menu.is-open'],
+      chains: [['nav_menu'], ['faq_item', 'is-open']],
+      styled: new Set(['nav_menu', 'faq_item', 'is-open']),
+      embeddedClassLists: [],
+      scriptClasses: new Set(['is-open']),
+      remappedTags: new Set(),
+      embedSpecificityParity: true,
+      renameProofEmbedCss: true,
+      rewriteRemappedTags: true,
+    });
+    expect([...p.both]).toEqual(['is-open']);
+    expect(rewriteEmbedSelector('.nav_menu.is-open', p)).toBe('[data-h2w-class~="nav_menu"]:is(.is-open,[data-h2w-class~="is-open"])');
+  });
 });
 
 describe('embed CSS rewriting in convert()', () => {
@@ -113,5 +129,29 @@ describe('embed CSS rewriting in convert()', () => {
   it('leaves tag selectors alone when nothing was remapped', () => {
     const res = run('<p class="f"><strong>1</strong></p>', '.f b { font-size: 19px }', { renameProofEmbedCss: false });
     expect(embeddedCss(res)).toContain('.f b {');
+  });
+});
+
+describe('JS-toggled state classes in convert()', () => {
+  const html = `<style>
+.nav_menu { opacity: 0; }
+@media (max-width: 991px) { .nav_menu.is-open { opacity: 1; } }
+.faq_item.is-open { color: red; }
+</style>
+<nav class="nav_menu" data-nav-menu><a href="#">A</a></nav>
+<div class="faq_item is-open">Q</div>
+<button data-nav-toggle>Menu</button>
+<script>document.querySelector('[data-nav-toggle]').addEventListener('click', function () { document.querySelector('[data-nav-menu]').classList.toggle('is-open'); });</script>`;
+
+  it('keeps the is-open rule matching after the script adds the class to a renamed element', () => {
+    const res = convert({ mode: 'combined', html });
+    expect(validateXscp(res.data)).toEqual([]);
+    const css = embeddedCss(res);
+    const sel = '[data-h2w-class~="nav_menu"]:is(.is-open,[data-h2w-class~="is-open"])';
+    expect(css).toContain(`${sel} {\n  opacity: 1;`);
+    const el = document.createElement('nav');
+    el.className = 'nav_menu-2 is-open';
+    el.setAttribute('data-h2w-class', 'nav_menu');
+    expect(el.matches(sel)).toBe(true);
   });
 });

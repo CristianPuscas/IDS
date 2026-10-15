@@ -22,7 +22,7 @@ describe('embed sizing wrapper (embedSizing: "wrapper", default)', () => {
     const res = run('<section class="section_hero"><canvas class="hero_canvas" data-hero-canvas aria-hidden="true"></canvas><div class="x">Hi</div></section>', css);
     const wrap = wrapperOf(res, '<canvas')!;
     expect(classNames(res, wrap)).toEqual(['hero_canvas-embed']);
-    expect(style(res, 'hero_canvas-embed').styleLess).toBe('display: grid; position: absolute; top: 0; left: 0; width: 100%; height: 100%;');
+    expect(style(res, 'hero_canvas-embed').styleLess).toBe('position: absolute; left: 0; top: 0; display: grid; width: 100%; height: 100%;');
     expect(embedCodes(res)).toContain(
       '<canvas class="hero_canvas" data-hero-canvas="" aria-hidden="true" style="position: static; display: block; width: 100%; height: 100%;"></canvas>',
     );
@@ -32,7 +32,7 @@ describe('embed sizing wrapper (embedSizing: "wrapper", default)', () => {
 
   it('moves layout from an inline style and keeps the rest on the element', () => {
     const res = run('<div class="hero"><video class="bg" src="a.mp4" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover"></video></div>');
-    expect(style(res, 'bg-embed').styleLess).toBe('display: grid; position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%;');
+    expect(style(res, 'bg-embed').styleLess).toBe('position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: grid; width: 100%; height: 100%;');
     expect(embedCodes(res)[0]).toBe('<video class="bg" src="a.mp4" style="object-fit: cover; position: static; display: block; width: 100%; height: 100%;"></video>');
   });
 

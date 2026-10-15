@@ -18,10 +18,11 @@ describe('class -> native style', () => {
     const s = style(res, 'card');
     expect(s).toMatchObject({ type: 'class', comb: '', fake: false, namespace: '', selector: null, origin: null, children: [] });
     expect(s.styleLess).toBe(
-      'padding-top: 2rem; padding-right: 1.5rem; padding-bottom: 2rem; padding-left: 1.5rem; ' +
-        'margin-top: 0; margin-right: auto; margin-bottom: 0; margin-left: auto; ' +
-        'border-top-left-radius: 12px; border-top-right-radius: 12px; border-bottom-right-radius: 12px; border-bottom-left-radius: 12px; ' +
-        'grid-row-gap: 1rem; grid-column-gap: 1rem; display: flex; box-shadow: 0 1px 2px rgba(0,0,0,.1);',
+      // Webflow's canonical declaration order (./propertyOrder), not source order.
+      'display: flex; margin-top: 0; margin-right: auto; margin-bottom: 0; margin-left: auto; ' +
+        'padding-top: 2rem; padding-right: 1.5rem; padding-bottom: 2rem; padding-left: 1.5rem; grid-column-gap: 1rem; grid-row-gap: 1rem; ' +
+        'border-top-left-radius: 12px; border-top-right-radius: 12px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; ' +
+        'box-shadow: 0 1px 2px rgba(0,0,0,.1);',
     );
     expect(embeddedCss(res)).toBe('');
     expect(res.stats.embeddedCssRules).toBe(0);
@@ -29,12 +30,12 @@ describe('class -> native style', () => {
 
   it('keeps units and expands grid repeat()', () => {
     const res = run('<div class="grid"></div>', '.grid { width: 50vw; height: 10vh; font-size: 1.25em; grid-template-columns: repeat(3, minmax(0, 1fr)); }');
-    expect(style(res, 'grid').styleLess).toBe('width: 50vw; height: 10vh; font-size: 1.25em; grid-template-columns: 1fr 1fr 1fr;');
+    expect(style(res, 'grid').styleLess).toBe('width: 50vw; height: 10vh; grid-template-columns: 1fr 1fr 1fr; font-size: 1.25em;');
   });
 
   it('merges several rules for the same class in cascade order (later wins)', () => {
     const res = run('<p class="t"></p>', '.t { color: red; font-size: 1rem } .t { color: blue }');
-    expect(style(res, 't').styleLess).toBe('font-size: 1rem; color: blue;');
+    expect(style(res, 't').styleLess).toBe('color: blue; font-size: 1rem;');
   });
 
   it('emits one style per class even when it is used many times', () => {
@@ -90,7 +91,7 @@ describe('combo classes', () => {
   it('folds a standalone modifier rule into the combo where the element uses it', () => {
     const res = run('<div class="card is-active"></div>', '.card { color: black } .is-active { color: red; outline: 2px solid red }');
     expect(style(res, 'card').styleLess).toBe('color: black;');
-    expect(style(res, 'is-active', '&').styleLess).toBe('color: red; outline-width: 2px; outline-style: solid; outline-color: red;');
+    expect(style(res, 'is-active', '&').styleLess).toBe('outline-color: red; outline-style: solid; outline-width: 2px; color: red;');
   });
 
   it('gives the same combo name under different bases separate styles', () => {

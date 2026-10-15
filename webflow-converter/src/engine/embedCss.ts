@@ -11,7 +11,9 @@
  *   `.name` stops matching. Classes that are both styled natively and used in embed selectors are
  *   rewritten to `[data-h2w-class~="name"]` (same specificity), and the elements carry
  *   `data-h2w-class="<their classes>"`. A class that is also used inside Code Embed HTML (which Webflow
- *   never renames) becomes `:is(.name,[data-h2w-class~="name"])`.
+ *   never renames) becomes `:is(.name,[data-h2w-class~="name"])`, and so does a class that scripts
+ *   add or toggle at runtime (`.nav_menu.is-open`): the attribute is written once, at conversion,
+ *   so `[data-h2w-class~="is-open"]` alone would never match the class the script adds.
  * - **Remapped tags** (option `rewriteRemappedTags`). `<b>` is pasted as `<strong>`, `<i>` as
  *   `<em>` and `<button>` as `<a>`; type selectors are rewritten to match. `button` becomes
  *   `:is(button,a:where([data-h2w-button]))`, which keeps its (0,0,1) specificity and still matches
@@ -240,6 +242,11 @@ export interface EmbedRewriteInput {
   styled: Set<string>;
   /** Class lists of elements placed inside Code Embeds (never renamed by Webflow). */
   embeddedClassLists: string[][];
+  /**
+   * Classes that scripts add or toggle at runtime (`classList.toggle('is-open')`): they are never
+   * in an element's `data-h2w-class`, so they are matched as `:is(.x,[data-h2w-class~="x"])`.
+   */
+  scriptClasses?: ReadonlySet<string>;
   /** Source tags pasted as another tag (`b`, `i`, `button`). */
   remappedTags: Set<string>;
   embedSpecificityParity: boolean;
@@ -273,7 +280,7 @@ export function planEmbedRewrite(input: EmbedRewriteInput): EmbedRewritePlan {
     for (const c of used) {
       if (!input.styled.has(c)) continue;
       attr.add(c);
-      if (inEmbeds.has(c)) both.add(c);
+      if (inEmbeds.has(c) || input.scriptClasses?.has(c)) both.add(c);
     }
   }
   const tags = new Map<string, string>();

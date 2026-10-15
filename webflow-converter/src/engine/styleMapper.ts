@@ -29,6 +29,7 @@
 
 import { declarationsToCss, type CssDeclaration, type CssStyleRule, type ParsedCss } from './cssParser';
 import { prepareDeclaration, type NativeDecl } from './cssValues';
+import { sortDeclarations } from './propertyOrder';
 import { bandDomain, mediaToBands, snapMediaStack, type Band } from './media';
 import { uuid } from './ids';
 import { classifySelector, isWebflowSafeClassName } from './selectors';
@@ -535,9 +536,13 @@ function toDecls(map: Map<string, string>): NativeDecl[] {
   return [...map].map(([property, value]) => ({ property, value }));
 }
 
-/** Serialises declarations to Webflow `styleLess`: `"prop: value; prop2: value2;"`. */
+/**
+ * Serialises declarations to Webflow `styleLess`: `"prop: value; prop2: value2;"`, in Webflow's
+ * canonical property order (./propertyOrder), so the string equals what Webflow stores for it and
+ * a later paste of the same output reuses the class instead of creating "name 2" (spec 3.6).
+ */
 export function toStyleLess(decls: NativeDecl[]): string {
-  return decls.map((d) => `${d.property}: ${d.value};`).join(' ');
+  return sortDeclarations(decls).map((d) => `${d.property}: ${d.value};`).join(' ');
 }
 
 /**

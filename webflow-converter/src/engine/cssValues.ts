@@ -52,7 +52,42 @@ export function prepareDeclaration(decl: CssDeclaration): PreparedDecl {
   if (/^(expression|behavior)$/i.test(property)) return { kind: 'embed', code: 'other', reason: `legacy property ${property}` };
 
   const expanded = expandShorthand(property, value);
-  return { kind: 'native', decls: expanded.map((d) => ({ property: d.property, value: wrapRaw(d.value) })) };
+  return {
+    kind: 'native',
+    decls: expanded.map((d) => ({ property: d.property, value: wrapRaw(d.property === 'font-family' ? unquoteFontFamilies(d.value) : d.value) })),
+  };
+}
+
+/** Generic family names and CSS-wide keywords: a family with one of these names must stay quoted. */
+const FONT_KEYWORDS = new Set([
+  'serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'ui-serif', 'ui-sans-serif', 'ui-monospace',
+  'ui-rounded', 'emoji', 'math', 'fangsong', 'inherit', 'initial', 'unset', 'default', 'revert', 'revert-layer',
+]);
+
+/**
+ * When a `font-family` has two or more quoted names, removes the quotes around those that are valid
+ * unquoted (a sequence of CSS identifiers, e.g. `"Bebas Neue"` -> `Bebas Neue`), as the CSS spec
+ * allows. Webflow drops a `font-family` whose value has two or more quoted names: `"Bebas Neue",
+ * Impact, "Arial Narrow", sans-serif` is stored but neither published nor shown in the Style panel
+ * (GreenIron v5 paste test; `"Inter", Arial, sans-serif` and `Georgia, "Times New Roman", serif`
+ * were kept), so the text fell back to the inherited font. Names that need their quotes keep them.
+ */
+export function unquoteFontFamilies(value: string): string {
+  if (/var\(/i.test(value)) return value;
+  const parts = splitTopLevel(value, ',');
+  // One quoted name is published fine (and keeps matching classes earlier pastes created).
+  if (parts.filter((p) => /^\s*["']/.test(p)).length < 2) return value;
+  return parts
+    .map((part) => {
+      const name = part.trim();
+      const m = /^(["'])((?:(?!\1)[^\\])*)\1$/.exec(name);
+      if (!m) return name;
+      const inner = m[2]!.trim().replace(/\s+/g, ' ');
+      const words = inner.split(' ');
+      const plain = words.every((w) => /^-?[a-zA-Z_][\w-]*$/.test(w) && !/^--/.test(w) && !FONT_KEYWORDS.has(w.toLowerCase()));
+      return plain ? inner : name;
+    })
+    .join(', ');
 }
 
 /** Wraps values that reference CSS variables in Webflow's `@raw<|…|>` marker (spec 3.5). */

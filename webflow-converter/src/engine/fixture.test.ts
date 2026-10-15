@@ -219,7 +219,7 @@ describe('AI-generated landing page fixture', () => {
   it('maps the nav with hover state and combo class natively', () => {
     const link = style(res, 'nav_link');
     expect(link.styleLess).toBe(
-      'color: rgba(245, 245, 247, 0.7); text-decoration: none; transition-property: color; transition-duration: 0.2s; transition-timing-function: ease;',
+      'transition-property: color; transition-duration: 0.2s; transition-timing-function: ease; color: rgba(245, 245, 247, 0.7); text-decoration: none;',
     );
     expect(link.variants).toEqual({ main_hover: { styleLess: 'color: @raw<|var(--text)|>;' } });
     expect(style(res, 'is-active', '&').styleLess).toBe('color: @raw<|var(--accent)|>;');
@@ -228,7 +228,7 @@ describe('AI-generated landing page fixture', () => {
 
   it('maps the card grid with breakpoints and hover', () => {
     const grid = style(res, 'features_grid');
-    expect(grid.styleLess).toBe('display: grid; grid-template-columns: 1fr 1fr 1fr; grid-row-gap: 1.5rem; grid-column-gap: 1.5rem;');
+    expect(grid.styleLess).toBe('display: grid; grid-column-gap: 1.5rem; grid-row-gap: 1.5rem; grid-template-columns: 1fr 1fr 1fr;');
     expect(grid.variants).toEqual({
       medium: { styleLess: 'grid-template-columns: 1fr 1fr;' },
       small: { styleLess: 'grid-template-columns: 1fr;' },
@@ -255,7 +255,7 @@ describe('AI-generated landing page fixture', () => {
   it('moves the Three.js canvas layout (absolute, inset 0, 100%) onto a classed wrapper Block', () => {
     const wrap = style(res, 'hero_canvas-embed');
     expect(wrap.styleLess).toBe(
-      'display: grid; position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; z-index: 0;',
+      'position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 0; display: grid; width: 100%; height: 100%;',
     );
     const block = elements(res).find((e) => e.classes[0] === wrap._id)!;
     expect(block.type).toBe('Block');

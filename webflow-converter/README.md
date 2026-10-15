@@ -186,6 +186,16 @@ Details:
 - **Combos.** A new combo (`button is-large`) is chained under the reused base's `_id`. A combo the
   site already has under that same base (`button is-secondary`) is reused too. Webflow scopes combos
   to their parent, so a site combo under another base is not reused.
+- **Numbered site classes.** A site class that earlier pastes left as `padding-global 5` still
+  stands for `padding-global` (Webflow ignores the suffix when matching); the unnumbered one is
+  preferred, then the lowest number.
+- **Pasting the same output again** reuses the classes the first paste created: declarations are
+  emitted in the order Webflow stores them (§3.6), so the stored and pasted styles are identical.
+  A class whose source CSS changed in between still becomes "name 2". Before the copy, the app
+  warns when the input has classes that are likely already in your site (Client-First utilities,
+  and classes copied to Webflow from this browser before) and that the import does not cover, with
+  an **Import site styles** button; after the copy, it names the classes copied before with
+  different styles.
 - **Without an import**, Client-First utilities still risk "name 2" unless their styles are
   byte-identical to your site's. "Empty styles (experimental)" (`skipClientFirstUtilityStyles`)
   pastes utilities that are not in the import with no styles, so that the site's values apply

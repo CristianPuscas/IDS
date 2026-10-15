@@ -117,6 +117,15 @@ export function siteClassKey(name: string): string {
   return toWebflowClassName(name);
 }
 
+/**
+ * Splits Webflow's duplicate suffix off a class name (S1 `getPrefix`): `"padding-global 5"` ->
+ * `{ base: "padding-global", n: 5 }`; a name without one has `n: 0`.
+ */
+export function splitDuplicateSuffix(name: string): { base: string; n: number } {
+  const m = /^(.*\S)\s+(\d+)$/.exec(name.trim());
+  return m ? { base: m[1]!, n: Number(m[2]) } : { base: name.trim(), n: 0 };
+}
+
 /* ------------------------------------------------------------------------------------------------
  * Matching
  * ---------------------------------------------------------------------------------------------- */
@@ -147,12 +156,24 @@ export function matchSiteStyles(chains: readonly ChainStyle[], siteStyles: reado
   const bases = new Map<string, WfStyle>();
   const byId = new Map<string, WfStyle>();
   for (const s of siteStyles) byId.set(s._id, s);
+  // A site class that Webflow itself numbered ("padding-global 5", left by earlier pastes) still
+  // stands for "padding-global": Webflow ignores the suffix when matching (spec 3.6), so pasting
+  // that style verbatim reuses it. The base name wins over numbered ones, then the lowest number,
+  // then the exact spelling over another one that slugs the same ("Button" vs "button").
+  const rank = (s: WfStyle): [number, number] => {
+    const { base, n } = splitDuplicateSuffix(s.name);
+    return [n, base === toWebflowClassName(base) ? 0 : 1];
+  };
   for (const s of siteStyles) {
     if ((s.comb ?? '') !== '') continue;
-    const key = siteClassKey(s.name);
+    const key = siteClassKey(splitDuplicateSuffix(s.name).base);
     const prev = bases.get(key);
-    // Prefer the exact name over another spelling that slugs the same ("Button" vs "button").
-    if (!prev || (prev.name !== key && s.name === key)) bases.set(key, s);
+    if (!prev) {
+      bases.set(key, s);
+      continue;
+    }
+    const [a, b] = [rank(s), rank(prev)];
+    if (a[0] < b[0] || (a[0] === b[0] && a[1] < b[1])) bases.set(key, s);
   }
 
   const matchedByChain = new Map<string, WfStyle>();
@@ -161,7 +182,7 @@ export function matchSiteStyles(chains: readonly ChainStyle[], siteStyles: reado
   for (const { classes, style } of chains) {
     let site: WfStyle | undefined;
     if (classes.length === 1) {
-      site = bases.get(siteClassKey(style.name));
+      site = bases.get(siteClassKey(splitDuplicateSuffix(style.name).base));
     } else {
       const parent = matchedByChain.get(classes.slice(0, -1).join('\u0001'));
       if (parent) {
