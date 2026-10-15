@@ -25,6 +25,7 @@ import { buildEmbedNode, buildScriptEmbeds, buildStyleEmbeds } from './embedBuil
 import { parseHtml, type ParsedHtml } from './htmlParser';
 import { uuid } from './ids';
 import { extractJs } from './jsExtractor';
+import { loadTerserMinifier } from './jsMinify';
 import { buildNodes } from './nodeBuilder';
 import { createStyleRegistry, mapStyles, type MapStylesHooks, type StyleRegistry } from './styleMapper';
 import {
@@ -57,6 +58,12 @@ export function resolveOptions(options: Partial<ConvertOptions> = {}): ConvertOp
   if (!Number.isFinite(out.maxEmbedChars) || out.maxEmbedChars < 100) {
     out.maxEmbedChars = Number.isFinite(out.maxEmbedChars) ? 100 : DEFAULT_CONVERT_OPTIONS.maxEmbedChars;
   }
+  if (!Number.isFinite(out.maxScriptEmbedChars) || out.maxScriptEmbedChars < 100) {
+    out.maxScriptEmbedChars = Number.isFinite(out.maxScriptEmbedChars) ? 100 : DEFAULT_CONVERT_OPTIONS.maxScriptEmbedChars;
+  }
+  if (!['auto', 'native', 'embed'].includes(out.forms)) out.forms = DEFAULT_CONVERT_OPTIONS.forms;
+  if (!['button', 'linkBlock', 'customElement'].includes(out.buttonMode)) out.buttonMode = DEFAULT_CONVERT_OPTIONS.buttonMode;
+  if (typeof out.jsMinifier !== 'function') out.jsMinifier = null;
   return out;
 }
 
@@ -111,7 +118,31 @@ export function convert(input: ConvertInput, options?: Partial<ConvertOptions>):
         },
       ],
       stats: { nodes: 1, styles: 0, embeds: 0, embeddedCssRules: 0, jsBytes: 0 },
+      externalScripts: [],
     };
+  }
+}
+
+/** Results whose scripts needed minifying without an injected minifier (see `convertAsync`). */
+const WANTS_MINIFIER = new WeakSet<ConvertResult>();
+
+/**
+ * `convert()` with terser available for oversized scripts. Runs `convert()`; when a script was too
+ * large for one Code Embed and no `jsMinifier` was given, loads terser (a separate chunk, loaded
+ * once) and converts again with it. Falls back to the first result (built-in stripper) when terser
+ * cannot be loaded, e.g. from a single-file build opened over `file://`. Never rejects.
+ *
+ * In a click handler, the extra await only happens for oversized scripts, and is short enough to
+ * stay inside the browser's user-activation window for `copyToWebflow()`.
+ */
+export async function convertAsync(input: ConvertInput, options?: Partial<ConvertOptions>): Promise<ConvertResult> {
+  const first = convert(input, options);
+  if (!WANTS_MINIFIER.has(first) || options?.minifyScripts === false) return first;
+  try {
+    const jsMinifier = await loadTerserMinifier();
+    return convert(input, { ...options, jsMinifier });
+  } catch {
+    return first;
   }
 }
 
@@ -158,6 +189,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
     rootClasses: parsed.bodyClasses,
     reservedClassNames: reserved,
     cssRules: css.rules,
+    scriptText: scriptsText.join('\n'),
   });
   warnings.push(...built.warnings);
 
@@ -222,7 +254,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
   const styleEmbeds = opts.keepUnsupportedInEmbed ? buildStyleEmbeds(styleMap.leftoverCss, opts.maxEmbedChars) : { nodes: [], warnings: [] };
   headEmbeds.push(...styleEmbeds.nodes);
   warnings.push(...styleEmbeds.warnings);
-  const scriptEmbeds = buildScriptEmbeds(js, opts.maxEmbedChars);
+  const scriptEmbeds = buildScriptEmbeds(js, opts.maxScriptEmbedChars, { minify: opts.minifyScripts, minifier: opts.jsMinifier });
   warnings.push(...scriptEmbeds.warnings);
 
   const { root, nodes: builtNodes, topLevel } = built;
@@ -249,7 +281,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
   const json = JSON.stringify(data);
   const embedCount = nodes.filter((n) => !isTextNode(n) && n.type === 'HtmlEmbed').length;
 
-  return {
+  const result: ConvertResult = {
     data,
     json,
     warnings,
@@ -260,7 +292,10 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
       embeddedCssRules: opts.keepUnsupportedInEmbed ? styleMap.leftoverRuleCount : 0,
       jsBytes: js.totalBytes,
     },
+    externalScripts: scriptEmbeds.external,
   };
+  if (scriptEmbeds.wantsMinifier) WANTS_MINIFIER.add(result);
+  return result;
 }
 
 /**
@@ -363,6 +398,7 @@ function collisionWarnings(registry: StyleRegistry): ConvertWarning[] {
       message:
         'Some classes may already exist in your Webflow site. Webflow renames a pasted class that clashes to "name 2", and a combo class merges with a site class of the same name (its styles apply too). Paste into a clean site, or set the classPrefix option.',
       detail: detail.join('\n'),
+      items: [...core, ...combos],
     },
   ];
 }

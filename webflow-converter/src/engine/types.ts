@@ -523,8 +523,26 @@ export interface ConvertOptions {
    * When `false` it is dropped with a warning. Default `true`.
    */
   keepUnsupportedInEmbed: boolean;
-  /** Max characters per HtmlEmbed; larger CSS/JS is split across several embeds. Default 10000 (spec 5). */
+  /** Max characters per CSS/element HtmlEmbed; larger CSS is split across several embeds. Default 10000 (spec 5). */
   maxEmbedChars: number;
+  /**
+   * Max characters per `<script>` HtmlEmbed (the Designer rejects Code Embeds over 50,000
+   * characters). Larger classic scripts are split between top-level statements; a statement that is
+   * still too large (one big IIFE) is minified (see `jsMinifier`), and a script that cannot get under
+   * the cap goes to `ConvertResult.externalScripts`, leaving a placeholder comment embed. Default 50000.
+   */
+  maxScriptEmbedChars: number;
+  /**
+   * Minify a script that is too large for one embed. The engine first tries `jsMinifier` (e.g.
+   * terser, injected by `convertAsync`), then a conservative comment/whitespace stripper. Output is
+   * only used when it parses (`new Function` check for classic scripts). Default `true`.
+   */
+  minifyScripts: boolean;
+  /**
+   * Synchronous minifier for oversized scripts, or `null` for the built-in stripper only.
+   * `convertAsync` loads terser lazily and passes it here. Returns `null` to decline.
+   */
+  jsMinifier: JsMinifier | null;
   /**
    * Emit `large`/`xl`/`xxl` variants for min-width media queries. Pasting them adds breakpoints
    * to the whole destination site (spec 3.2), so the default is `false` (rules go to the embed).
@@ -537,11 +555,22 @@ export interface ConvertOptions {
    *   that restore what the source rendered for every `.w-button` property the CSS did not set.
    *   A classless button gets a generated `button` class for them.
    * - `'linkBlock'`: a Link Block (no `.w-button`) whose text sits in a Text Block.
+   * - `'customElement'`: a `<button>` stays a real `<button>` (a Custom Element, `DOM` node with
+   *   `data.tag: "button"`, every attribute kept and an explicit `type`, default `"button"`). Its
+   *   classes stay native; no `.w-button`, no click shim. `<a>` elements convert as in `'button'`.
+   *   Not yet paste-tested.
    */
   buttonMode: ButtonMode;
   /**
    * How `<form>` is converted.
-   * - `'native'` (default): Webflow Form Block (FormWrapper > FormForm + success and error
+   * - `'auto'` (default): native, except forms that custom JavaScript drives. Webflow's webflow.js
+   *   takes over the submit of every native form (alerts on empty required fields, POST to Webflow
+   *   Forms, hides the form, Turnstile), so a form stays a Code Embed of its original HTML when it
+   *   has `novalidate`; or has no `action` and has `data-*` attributes on it or its controls; or the
+   *   scripts listen for `submit` (`addEventListener('submit'`, `.onsubmit`, `requestSubmit`); or
+   *   the scripts mention its id or its `data-*` attribute names. Its class rules are copied to the
+   *   `<style>` embed so it keeps its look.
+   * - `'native'`: Webflow Form Block (FormWrapper > FormForm + success and error
    *   messages) with native inputs, textareas, selects, checkboxes, radios, labels and submit
    *   button (spec 2.4 Forms). Unsupported controls (file, hidden, date… inputs) stay as Code
    *   Embeds inside the form, with a warning.
@@ -627,10 +656,26 @@ export type ExternalImageMode = 'customElement' | 'embed' | 'image';
 export type BreakpointSnap = 'up' | 'off';
 
 /** `ConvertOptions.buttonMode`. */
-export type ButtonMode = 'button' | 'linkBlock';
+export type ButtonMode = 'button' | 'linkBlock' | 'customElement';
 
 /** `ConvertOptions.forms`. */
-export type FormMode = 'native' | 'embed';
+export type FormMode = 'auto' | 'native' | 'embed';
+
+/**
+ * A synchronous JavaScript minifier (`ConvertOptions.jsMinifier`). Returns the minified code, or
+ * `null` to decline. It may throw; the engine then falls back to its stripper.
+ */
+export type JsMinifier = (code: string, options: { module: boolean }) => string | null;
+
+/** A script too large for a Code Embed, to host as a file (`ConvertResult.externalScripts`). */
+export interface ExternalScript {
+  /** Suggested file name (`script.js`, `script-2.js`…). */
+  name: string;
+  /** The script source, as written. */
+  code: string;
+  /** `type` attribute of the source `<script>` (e.g. `"module"`), or `""`. */
+  type: string;
+}
 
 /** `ConvertOptions.embedSizing`. */
 export type EmbedSizing = 'wrapper' | 'none';
@@ -641,9 +686,12 @@ export const DEFAULT_CONVERT_OPTIONS: Readonly<ConvertOptions> = Object.freeze({
   embedPlacement: 'root',
   keepUnsupportedInEmbed: true,
   maxEmbedChars: 10000,
+  maxScriptEmbedChars: 50000,
+  minifyScripts: true,
+  jsMinifier: null,
   includeLargeBreakpoints: false,
   buttonMode: 'button',
-  forms: 'native',
+  forms: 'auto',
   embedSizing: 'wrapper',
   normalizeClassNames: true,
   externalImages: 'customElement',
@@ -697,6 +745,8 @@ export interface ConvertWarning {
   message: string;
   /** Optional offending snippet, selector, tag or media query. */
   detail?: string;
+  /** Optional list of the names involved (e.g. the classes of a `class-collision-risk` warning). */
+  items?: string[];
 }
 
 /** Counters shown in the result panel. */
@@ -720,4 +770,9 @@ export interface ConvertResult {
   json: string;
   warnings: ConvertWarning[];
   stats: ConvertStats;
+  /**
+   * Scripts too large for a Code Embed even after minifying. Each left a placeholder comment embed;
+   * host the file and add `<script src>` in Page Settings → Before `</body>`. Usually empty.
+   */
+  externalScripts: ExternalScript[];
 }

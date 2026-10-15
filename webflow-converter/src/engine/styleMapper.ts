@@ -66,9 +66,9 @@ export interface StyleRegistry {
    * Registers low-priority declarations for a class (e.g. neutralizing Webflow's `.w-button`
    * defaults). Every source rule for the class overrides them.
    */
-  addDefaults(className: string, decls: NativeDecl[]): void;
-  /** Defaults registered with `addDefaults`, in order. */
-  defaults(): [string, NativeDecl[]][];
+  addDefaults(className: string, decls: NativeDecl[], state?: string): void;
+  /** Defaults registered with `addDefaults`, in order, with their state (`'focus'`…, or `''`). */
+  defaults(): [string, NativeDecl[], string][];
 }
 
 /** Creates an empty registry. */
@@ -77,7 +77,7 @@ export function createStyleRegistry(): StyleRegistry {
   const order: WfStyle[] = [];
   const chains = new Map<string, string[]>();
   const inline: [string, CssDeclaration[]][] = [];
-  const defaults: [string, NativeDecl[]][] = [];
+  const defaults: [string, NativeDecl[], string][] = [];
 
   const getOrCreate = (classes: string[]): WfStyle => {
     const key = classes.join(SEP);
@@ -124,8 +124,8 @@ export function createStyleRegistry(): StyleRegistry {
       inline.push([className, decls]);
     },
     inlineStyles: () => [...inline],
-    addDefaults(className, decls) {
-      if (decls.length) defaults.push([className, decls]);
+    addDefaults(className, decls, state = '') {
+      if (decls.length) defaults.push([className, decls, state]);
     },
     defaults: () => [...defaults],
   };
@@ -255,9 +255,9 @@ export function mapStyles(
   }));
 
   // Defaults rank below every source rule (specificity 0, before everything in source order).
-  const defaultRules: CssStyleRule[] = registry.defaults().map(([name, decls], i) => ({
+  const defaultRules: CssStyleRule[] = registry.defaults().map(([name, decls, state], i) => ({
     kind: 'style',
-    selectors: [`.${name}`],
+    selectors: [`.${name}${state ? `:${state}` : ''}`],
     declarations: decls.map((d) => ({ property: d.property, value: d.value, important: false })),
     media: null,
     mediaStack: [],

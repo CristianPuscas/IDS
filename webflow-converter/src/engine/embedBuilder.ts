@@ -2,19 +2,22 @@
  * HtmlEmbed (Code Embed) builders (spec 2.4 HtmlEmbed). Used for leftover CSS (`<style>`),
  * scripts (`<script>`), head links and elements kept as raw code (e.g. `<svg>`, `<canvas>`).
  *
- * Embeds over `maxChars` are split into several embeds (spec 5: keep each under 10k chars):
- * - CSS is split between rules (a rule is never cut).
- * - Classic inline scripts are split between top-level statements into several `<script>` tags.
- *   Classic scripts share one global scope, so top-level `const`/`function` declarations stay
- *   visible across tags. Modules, import maps and single giant statements (e.g. one IIFE) cannot
- *   be split; they are emitted whole with an `embed-too-large` warning.
+ * Embeds over `maxChars` are split into several embeds (spec 5):
+ * - CSS is split between rules (a rule is never cut), at `maxEmbedChars` (10k).
+ * - Scripts use `maxScriptEmbedChars` (50k, the Designer's Code Embed limit). Classic inline
+ *   scripts are split between top-level statements into several `<script>` tags. Classic scripts
+ *   share one global scope, so top-level `const`/`function` declarations stay visible across tags.
+ *   Modules, import maps and single giant statements (e.g. one IIFE) cannot be split; they are
+ *   minified (./jsMinify), and when that is not enough the script is returned as an external file
+ *   to host, with a placeholder comment embed and an `embed-too-large` warning.
  *
  * Ownership: engine.
  */
 
 import { uuid } from './ids';
 import type { JsBundle, ScriptEntry } from './jsExtractor';
-import type { ConvertWarning, WfElementNode } from './types';
+import { minifyScript } from './jsMinify';
+import type { ConvertWarning, ExternalScript, JsMinifier, WfElementNode } from './types';
 
 /** Embed nodes plus any warnings produced while splitting. */
 export interface EmbedBuildResult {
@@ -86,16 +89,40 @@ export function buildStyleEmbeds(cssChunks: string[], maxChars: number): EmbedBu
   return { nodes: codes.map((c) => buildEmbedNode(c)), warnings };
 }
 
+/** Options for `buildScriptEmbeds`. */
+export interface ScriptEmbedOptions {
+  /** Minify scripts that cannot be split under the cap (default `true`). */
+  minify?: boolean;
+  /** Injected minifier (terser), tried before the built-in stripper. */
+  minifier?: JsMinifier | null;
+}
+
+/** `buildScriptEmbeds` output: embeds, warnings, and scripts that must be hosted as files. */
+export interface ScriptEmbedResult extends EmbedBuildResult {
+  /** Scripts too large for an embed even after minifying (each left a placeholder comment embed). */
+  external: ExternalScript[];
+  /** A script needed minifying and no injected minifier was available (`convertAsync` retries with terser). */
+  wantsMinifier: boolean;
+}
+
 /**
  * Turns a script bundle into `<script>` embeds, in bundle order: tags are packed into as few
  * embeds as fit under `maxChars`, and oversized classic scripts are split between statements.
+ * A statement that is still too large (one big IIFE), or an oversized module, is minified
+ * (./jsMinify: the injected minifier, then the comment/whitespace stripper; output must parse).
+ * A script that still does not fit is left out: it is returned in `external` (to host as a file)
+ * and a placeholder comment embed takes its place.
  *
  * @param bundle Output of `extractJs`.
- * @param maxChars Max characters per embed.
+ * @param maxChars Max characters per script embed (`maxScriptEmbedChars`, 50000 by default).
  */
-export function buildScriptEmbeds(bundle: JsBundle, maxChars: number): EmbedBuildResult {
+export function buildScriptEmbeds(bundle: JsBundle, maxChars: number, options: ScriptEmbedOptions = {}): ScriptEmbedResult {
   const warnings: ConvertWarning[] = [];
   const tags: string[] = [];
+  const external: ExternalScript[] = [];
+  const minify = options.minify !== false;
+  const minifier = options.minifier ?? null;
+  let wantsMinifier = false;
   let splitScripts = 0;
 
   for (const s of bundle.scripts) {
@@ -105,27 +132,74 @@ export function buildScriptEmbeds(bundle: JsBundle, maxChars: number): EmbedBuil
       tags.push(`<script src="${escapeAttr(s.src)}"${renderAttrs(s)}></script>`);
       continue;
     }
-    const code = s.code.replace(/<\/script/gi, '<\\/script').trim();
-    const whole = `${open}\n${code}\n${close}`;
-    if (whole.length <= maxChars) {
-      tags.push(whole);
+    const code = escapeScript(s.code).trim();
+    const wrap = (p: string): string => `${open}\n${p}\n${close}`;
+    const fits = (p: string): boolean => wrap(p).length <= maxChars;
+    if (fits(code)) {
+      tags.push(wrap(code));
       continue;
     }
     const budget = maxChars - open.length - close.length - 2;
-    const pieces = isSplittable(s) ? splitJsStatements(code, budget) : [code];
-    if (pieces.length > 1) splitScripts++;
-    for (const p of pieces) {
-      const tag = `${open}\n${p}\n${close}`;
-      if (tag.length > maxChars) {
-        warnings.push({
-          code: 'embed-too-large',
-          severity: 'warning',
-          message: `A script block of ${tag.length} characters cannot be split below the ${maxChars}-character embed limit; it may be rejected on free Webflow plans.`,
-          detail: p.slice(0, 120),
-        });
+    const splittable = isSplittable(s);
+    const module = scriptType(s) === 'module';
+    let pieces = splittable ? splitJsStatements(code, budget) : [code];
+
+    if (!pieces.every(fits)) {
+      if (!minifier) wantsMinifier = true;
+      if (minify) {
+        let method = '';
+        // Minify only the statements that are too large; they are complete top-level statements.
+        const piecewise = splittable
+          ? pieces.map((p) => {
+              if (fits(p)) return p;
+              const m = minifyScript(p, module, minifier);
+              if (m) method = m.method;
+              return m ? escapeScript(m.code) : p;
+            })
+          : pieces;
+        if (splittable && piecewise.every(fits)) {
+          pieces = piecewise;
+        } else {
+          // Minify the script as a whole, then split again if needed.
+          const m = minifyScript(code, module, minifier);
+          if (m) {
+            method = m.method;
+            const min = escapeScript(m.code).trim();
+            const again = splittable ? splitJsStatements(min, budget) : [min];
+            if (again.every(fits)) pieces = again;
+          }
+        }
+        if (pieces.every(fits)) {
+          const after = pieces.reduce((n, p) => n + p.length, 0);
+          warnings.push({
+            code: 'script-extracted',
+            severity: 'info',
+            message: `A script of ${code.length.toLocaleString('en-US')} characters is over the ${maxChars.toLocaleString('en-US')}-character Code Embed limit, so it was minified (${
+              method === 'minifier' ? 'terser' : 'comments and whitespace removed'
+            }) to ${after.toLocaleString('en-US')} characters.`,
+            detail: code.slice(0, 120),
+          });
+        }
       }
-      tags.push(tag);
     }
+
+    if (!pieces.every(fits)) {
+      const name = external.length === 0 ? 'script.js' : `script-${external.length + 1}.js`;
+      const type = scriptType(s);
+      external.push({ name, code: s.code.trim(), type });
+      tags.push(placeholder(name, s.code.trim().length, type));
+      warnings.push({
+        code: 'embed-too-large',
+        severity: 'warning',
+        message: `A script of ${s.code.trim().length.toLocaleString('en-US')} characters is too large for a Webflow Code Embed (limit ${maxChars.toLocaleString('en-US')}) even after minifying, so it was left out. Download ${name}, host it (e.g. GitHub + jsDelivr) and add <script${
+          type ? ` type="${type}"` : ''
+        } src="…/${name}"></script> in Page Settings → Before </body>.`,
+        detail: s.code.trim().slice(0, 120),
+      });
+      continue;
+    }
+    if (pieces.length > 1) splitScripts++;
+    for (const p of pieces) tags.push(wrap(p));
   }
 
   const codes = packChunks(tags, maxChars, '', '', '\n');
@@ -136,12 +210,27 @@ export function buildScriptEmbeds(bundle: JsBundle, maxChars: number): EmbedBuil
       message: `${splitScripts} large script${splitScripts > 1 ? 's were' : ' was'} split between top-level statements across several <script> tags.`,
     });
   }
-  return { nodes: codes.map((c) => buildEmbedNode(c)), warnings };
+  return { nodes: codes.map((c) => buildEmbedNode(c)), warnings, external, wantsMinifier };
+}
+
+/** Escapes `</script` so inline code cannot close its tag early. */
+function escapeScript(code: string): string {
+  return code.replace(/<\/script/gi, '<\\/script');
+}
+
+/** The comment embed left where an external script was. */
+function placeholder(name: string, chars: number, type: string): string {
+  // No literal "<script" here: the embed must not be flagged as a script.
+  return `<!-- h2w: ${name} (${chars} characters${type ? `, type ${type}` : ''}) was too large for a Code Embed. Host the file and load it with a script src tag in Page Settings, Before body end. -->`;
+}
+
+function scriptType(s: ScriptEntry): string {
+  return (s.attributes.find((a) => a.name.toLowerCase() === 'type')?.value ?? '').trim().toLowerCase();
 }
 
 /** Only classic JavaScript can be split into several tags without changing scope. */
 function isSplittable(s: ScriptEntry): boolean {
-  const type = (s.attributes.find((a) => a.name.toLowerCase() === 'type')?.value ?? '').trim().toLowerCase();
+  const type = scriptType(s);
   return type === '' || type === 'text/javascript' || type === 'application/javascript';
 }
 

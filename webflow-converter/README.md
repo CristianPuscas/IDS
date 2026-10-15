@@ -21,7 +21,20 @@ verified and what is uncertain.
 - Native Webflow elements: Div Blocks, Sections, Headings, Paragraphs, Text Links, Link Blocks,
   Buttons, Images, Lists, and inline Span/Strong/Emphasized/Superscript/Subscript/Line Break.
 - Native Webflow forms: Form Block with text inputs, textareas, selects, checkboxes, radios, labels,
-  a submit button and the success and error messages Webflow requires.
+  a submit button and the success and error messages Webflow requires. Native fields keep the
+  source look: every webflow.css `.w-input`/`.w-select`/`.w-checkbox` default your CSS does not set
+  (38px height, 10px bottom margin, grey border, 14px text, blue focus border…) is overridden on the
+  field's class with what the browser rendered (`height: auto`, `margin-bottom: 0`…).
+- Forms driven by your own JavaScript stay HTML (`forms: 'auto'`, the default). Webflow's
+  webflow.js takes over the submit of every native form (an `alert` for empty required fields, a
+  POST to Webflow Forms, the form hidden on success, Turnstile disabling the button), so a form
+  with `novalidate`, with data hooks and no `action`, or that your scripts listen to (`submit`
+  listeners, its id, its `data-*` hooks) becomes a Code Embed of its original HTML, and its class
+  rules are copied to the `<style>` embed. Forms are named from their id, `aria-label` or data hook.
+- Scripts over the Designer's 50,000-character Code Embed limit are split between statements, then
+  minified (terser, loaded on demand; or a comment/whitespace stripper; output must parse). A
+  script that still does not fit is offered as a file to host (Download / Copy), with a placeholder
+  comment where it was.
 - Buttons keep the source look: every Webflow `.w-button` default (blue background, padding,
   white text…) that your CSS does not set is overridden on the button's class, and a `<button>`
   keeps its browser font (13.33px Arial, centred, `line-height: normal`). When an
@@ -52,12 +65,17 @@ verified and what is uncertain.
   writes, and `repeat(N, …)` grid tracks are expanded.
 - Mobile-first `min-width` CSS is re-encoded desktop-first onto Webflow's breakpoints.
 - In-page links (`href="#id"`) to an element inside the pasted tree become Webflow section links.
-- Everything else goes into Code Embeds, split to stay under 10,000 characters each: leftover CSS
-  as `<style>` (first child of the root) and JS as `<script>` (last child).
+- Everything else goes into Code Embeds: leftover CSS as `<style>` (first child of the root, split
+  under 10,000 characters each) and JS as `<script>` (last child, under 50,000 characters each, the
+  limit on paid sites; set `maxScriptEmbedChars: 10000` for a free site, spec section 5).
 - Structural validation before copying, then a summary with node, class and embed counts, plus
   warnings that explain every piece sent to an embed.
 - Fallbacks: Download JSON, and copy the raw JSON as text for debugging.
 - An "ideal AI prompt" you can give Claude or ChatGPT so the code it writes converts cleanly.
+- **Advanced options** (saved in the browser): forms (auto / native / embed), buttons (Button /
+  Link Block / Custom Element), class prefix, off-grid breakpoint snapping, the browser-default
+  reset and external images. A yellow notice after converting lists classes that may clash with
+  the site's classes and links to the class prefix.
 
 ## How to use
 
@@ -77,8 +95,9 @@ verified and what is uncertain.
 | `section` | Section |
 | `h1`–`h6`, `p`, `blockquote` | Heading, Paragraph, Block Quote |
 | `a` | Text Link; Link Block when it wraps block elements or images; Button when it looks like one (`btn`, `button`, `*-btn` classes or `role="button"`) |
-| `button` | Webflow Button (an `<a>` with `role="button"` and `data-h2w-button`); Link Block if it wraps block elements. Option `buttonMode: 'linkBlock'` makes button-like elements Link Blocks |
+| `button` | Webflow Button (an `<a>` with `role="button"` and `data-h2w-button`); Link Block if it wraps block elements. Option `buttonMode: 'linkBlock'` makes button-like elements Link Blocks; `buttonMode: 'customElement'` keeps a real `<button>` (Custom Element, explicit `type`) |
 | `form` and its `input`/`textarea`/`select`/`label`/submit `button` | Native Form Block: FormWrapper > FormForm (+ success and error messages), FormTextInput, FormTextarea, FormSelect, FormBlockLabel, Checkbox/Radio wrappers, FormButton |
+| `form` driven by custom JS (`forms: 'auto'`: `novalidate`; no `action` + `data-*` hooks; `submit` listeners; scripts that use its id or hooks) | Code Embed with the form's HTML; its class rules go to the `<style>` embed |
 | File, hidden, date, range… inputs, reset buttons, `<optgroup>` selects inside a form | Code Embed inside the native form, with a warning |
 | `img` with an external URL | Custom Element `<img>` with `src`, `srcset`, `sizes`, `alt`, `loading`, `width`, `height` kept verbatim (option `externalImages`: `'embed'` or `'image'`) |
 | `img` with a `data:` URI or Webflow CDN URL | Image (`data.attr.src`, no asset record) |
@@ -97,7 +116,7 @@ verified and what is uncertain.
 | `:root`/custom property definitions, `@keyframes`, `@font-face`, `@import`, other `@media` | `<style>` embed |
 | Vendor-prefixed properties or values, `!important` | `<style>` embed |
 | Class combinations not on any element (usually toggled by JS) | `<style>` embed |
-| `<script>` (inline or `src`) and the JS editor | `<script>` embed, last child of the root |
+| `<script>` (inline or `src`) and the JS editor | `<script>` embed, last child of the root (split or minified to stay under 50,000 characters; otherwise a file to host, `externalScripts`) |
 | `<link rel="stylesheet">` | Embed, first child of the root |
 
 The payload is always one tree. If the input has several top-level elements or needs embeds, they
@@ -128,13 +147,20 @@ are wrapped in one classless Div Block.
   get the button defaults).
 - **Converted `<button>`s** publish as `<a href="#">`. The click shim (`buttonClickShim`) is a
   script, so it runs only in Preview and on the published site.
-- **Forms** are native (`forms: 'native'`). The node shapes come from real Designer dumps (spec
-  2.4); the radio wrapper and radio label types are inferred from the checkbox pair. Native fields
-  pick up Webflow's `.w-input`/`.w-select`/`.w-checkbox` defaults (height 38px, padding, grey
-  border…) where your CSS does not set them, and a submit button with icons becomes a plain-text
-  Form Button. File, hidden, date and other unsupported controls stay as Code Embeds inside the
-  form, so Webflow form handling does not see their files. The pasted form uses the destination
-  site's notification settings. Use `forms: 'embed'` to keep the original HTML.
+- **Forms** are native unless custom JavaScript drives them (`forms: 'auto'`). The node shapes
+  come from real Designer dumps (spec 2.4); the radio wrapper and radio label types are inferred
+  from the checkbox pair. A submit button with icons becomes a plain-text Form Button (an
+  `<input>`, so scripts that set its `textContent` break; `forms: 'native'` warns about forms that
+  scripts use). A default `value` on a native input is kept as a custom attribute; that Webflow
+  keeps it is unverified. The field-default overrides use Chromium's form-control defaults (select
+  padding and textarea font are heuristic). File, hidden, date and other unsupported controls stay
+  as Code Embeds inside the form, so Webflow form handling does not see their files. The pasted
+  form uses the destination site's notification settings. Embedded forms sit inside Webflow's
+  `.w-embed` div and get no Webflow form handling (their own script must submit them).
+- **Large scripts**: the stripper only removes comments and whitespace; terser (a ~140 KB gzip
+  chunk, loaded only when a script is over 50,000 characters) also renames local variables.
+  Scripts handed out as files must be hosted and added in Page Settings → Before `</body>`; they
+  then run after every embed.
 - **Code Embed sizing**: Webflow wraps each Code Embed in an unsized `.w-embed` div. Embedded
   elements with percentage sizes or absolute positioning are therefore placed in a classed Div
   Block that takes over their layout declarations (from every matching rule and breakpoint), and
@@ -162,8 +188,8 @@ are wrapped in one classless Div Block.
   to "name 2", and a combo class merges with a same-named class of the site (whose styles then
   apply too: a combo `.navbar_component` picked up a site's navy navbar). Native styles still apply
   after a rename, and `<style>` embed CSS reaches native classes through `data-h2w-class`, but site styles
-  can still leak in through merged combos. Set `classPrefix` (engine option, not in the UI yet) or
-  paste into a clean site. Scripts that query classes by name are not rewritten.
+  can still leak in through merged combos. Set a class prefix (Advanced options) or paste into a
+  clean site. Scripts that query classes by name are not rewritten.
 - **Baseline reset** (`neutralizeDefaults`, full documents only) uses bare tag selectors, so it
   applies to the whole page you paste on, like the page's own `body`/tag rules do.
 - **`data-h2w-class` / `data-h2w-button`** are custom attributes; that Webflow keeps them on paste and
@@ -238,11 +264,13 @@ webflow-converter/
     │   ├── jsExtractor.ts      extractJs(): <script> tags + JS editor -> ordered bundle
     │   ├── embedBuilder.ts     HtmlEmbed builders for <style>/<script>/raw code, with size splitting
     │   ├── embedSizing.ts      Layout wrapper Block for sized canvas/svg/video/iframe embeds
-    │   ├── forms.ts            Native Form Block (FormWrapper, FormForm, fields, messages)
+    │   ├── forms.ts            Native Form Block (FormWrapper, FormForm, fields, messages); JS-driven form detection
+    │   ├── fieldDefaults.ts    .w-input/.w-select/.w-checkbox neutralizers for native fields
+    │   ├── jsMinify.ts         Comment/whitespace stripper, parse check, lazy terser loader
     │   ├── buttonDefaults.ts   .w-button neutralizers (and <button> UA font) for Webflow Buttons
     │   ├── baseline.ts         Browser-default tag reset for full documents
     │   ├── embedCss.ts         <style> embed selector rewriting (data-h2w-class, specificity, b/i/button)
-    │   ├── __fixtures__/       Real pages used as regression fixtures (ferma.html)
+    │   ├── __fixtures__/       Real pages used as regression fixtures (ferma.html, greeniron-snippets.html)
     │   ├── classNames.ts       Webflow class-name rule, renames, CSS selector rewriting
     │   ├── cascade.ts          Which source declarations apply to an element (specificity)
     │   ├── validate.ts         validateXscp(): structural checks before copying
@@ -258,7 +286,8 @@ webflow-converter/
             ├── PromptHelper.tsx Shows and copies the AI prompt
             ├── ConvertButton.tsx
             ├── Toast.tsx
-            └── ResultPanel.tsx Stats and warnings
+            ├── AdvancedOptions.tsx Collapsible options panel (persisted by lib/options.ts)
+            └── ResultPanel.tsx Stats, collision notice, external scripts, warnings
 ```
 
 ## Module ownership
@@ -278,12 +307,14 @@ Rules:
   only. It never imports engine internals such as `cssParser`.
 - The engine never imports from `src/ui/` or React.
 - `convert()` is pure, synchronous and never throws. It reports problems in `warnings`.
+  `convertAsync()` wraps it and loads terser only when a script is too large for one embed.
 - `copyToWebflow()` must run inside the click handler, with no `await` before it.
 
 ## Engine contract
 
 ```ts
 convert(input: ConvertInput, options?: Partial<ConvertOptions>): ConvertResult
+convertAsync(input: ConvertInput, options?: Partial<ConvertOptions>): Promise<ConvertResult> // terser on demand
 copyToWebflow(json: string): Promise<boolean>
 
 type ConvertInput =
@@ -294,10 +325,13 @@ interface ConvertOptions {
   breakpointTolerancePx: number;   // 20: max-width media within ±20px of 991/767/479 maps to medium/small/tiny
   embedPlacement: 'root';          // embeds are children of the root wrapper (CSS first, JS last)
   keepUnsupportedInEmbed: boolean; // true: unmappable CSS goes into a <style> embed
-  maxEmbedChars: number;           // 10000: split larger embeds
+  maxEmbedChars: number;           // 10000: split larger CSS embeds
+  maxScriptEmbedChars: number;     // 50000: script embed cap (split, then minify, then externalScripts)
+  minifyScripts: boolean;          // true: minify scripts that cannot be split under the cap
+  jsMinifier: JsMinifier | null;   // null: built-in stripper only (convertAsync passes terser)
   includeLargeBreakpoints: boolean;// false: min-width 1280/1440/1920 rules go to the embed, not large/xl/xxl
-  buttonMode: 'button' | 'linkBlock'; // 'button': native Button + .w-button neutralizers; 'linkBlock': Link Block, no .w-button
-  forms: 'native' | 'embed';          // 'native': Webflow Form Block; 'embed': form HTML in a Code Embed
+  buttonMode: 'button' | 'linkBlock' | 'customElement'; // 'customElement': real <button> Custom Element
+  forms: 'auto' | 'native' | 'embed'; // 'auto': native unless custom JS drives the form (then embed)
   embedSizing: 'wrapper' | 'none';    // 'wrapper': sized canvas/svg/video/iframe get a classed layout Div Block
   normalizeClassNames: boolean;       // true: rename classes to Webflow's published form, rewrite CSS
   externalImages: 'customElement' | 'embed' | 'image'; // 'customElement': external <img> keeps its URL as a Custom Element
@@ -315,6 +349,7 @@ interface ConvertResult {
   json: string;
   warnings: ConvertWarning[];
   stats: { nodes; styles; embeds; embeddedCssRules; jsBytes };
+  externalScripts: { name; code; type }[]; // scripts too large for any embed, to host as files
 }
 ```
 
@@ -324,6 +359,8 @@ interface ConvertResult {
   conversions validated with `validateXscp()`. `src/engine/__fixtures__/ferma.html` is a real page
   whose paste test found the issues fixed in the external-image, breakpoint-snap, baseline-reset,
   embed-CSS and button-shim changes; `ferma.test.ts` guards them.
+  `greeniron-snippets.html` holds parts of the GreenIron page (JS-driven forms, number inputs with
+  values, a 61 KB IIFE); `greeniron.test.ts` guards the forms, values and script-size fixes.
 - A browser check (Playwright, not a project dependency) has been run against `npm run preview`.
   It loads each tab's example, presses Convert, captures the `application/json` clipboard entry
   from the copy event and checks the invariants: single pre-order root, unique UUID ids, no

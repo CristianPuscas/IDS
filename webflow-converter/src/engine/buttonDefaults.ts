@@ -130,7 +130,7 @@ const WIDE = new Set(['inherit', 'initial', 'unset', 'revert', 'revert-layer']);
  * The value `decl` gives `prop`, or `undefined` when it does not touch `prop`, or `null` when it
  * does but the value cannot be worked out (the property then counts as "user-set").
  */
-function coveredValue(decl: CssDeclaration, prop: string): string | null | undefined {
+export function coveredValue(decl: CssDeclaration, prop: string): string | null | undefined {
   const p = decl.property;
   const v = decl.value.trim();
   if (p === 'all') return resolveKeyword(prop, v.toLowerCase());
@@ -208,11 +208,64 @@ export interface ButtonTarget {
   value: string | null;
   /** What the property renders as in Webflow when no class declaration sets it. */
   natural: string;
+  /** State the declaration belongs to (`'focus'` -> a `:focus` variant); resting state when absent. */
+  state?: string;
 }
 
 /** The value a property has on a converted button when no class declaration sets it. */
 export function naturalButtonValue(prop: string): string {
   return W_BUTTON_DEFAULTS.find(([p]) => p === prop)?.[1] ?? 'inherit';
+}
+
+/**
+ * What webflow.css gives one kind of element, and what the source browser rendered instead.
+ * Used for Webflow Buttons here and for native form fields (./fieldDefaults).
+ */
+export interface DefaultsSpec {
+  /**
+   * Class-level webflow.css declarations (`.w-button`, `.w-input`…) as `[property, value]`. A source
+   * rule of class specificity or higher beats them; a weaker source rule (`input {}`) does not, so
+   * its value is copied; with no source rule the browser default (`ua`) is used.
+   */
+  webflow: ReadonlyArray<readonly [string, string]>;
+  /** What the source browser renders for a `webflow` property when no author CSS sets it. */
+  ua(prop: string): string;
+  /**
+   * Tag-level webflow.css resets (`font: inherit`, `button { border: 0 }`) as
+   * `[property, browser default, Webflow value]`. Any source rule that sets the property counts as
+   * set (it keeps applying from the embed); otherwise the browser default is restored.
+   */
+  weak?: ReadonlyArray<readonly [string, string, string]>;
+}
+
+/**
+ * Per-property targets for one element: `value` is what its class must declare to render like the
+ * source (`null` = left to the user's CSS), `natural` what Webflow renders without it.
+ *
+ * @param el Source element in the parsed document.
+ * @param rules All parsed style rules (after class-name normalization).
+ */
+export function defaultTargets(el: Element, rules: CssStyleRule[], spec: DefaultsSpec): ButtonTarget[] {
+  const matched = matchedDeclarations(el, rules).filter((m) => m.mediaStack.length === 0);
+  const out: ButtonTarget[] = [];
+  for (const [prop, wValue] of spec.webflow) {
+    let winner: { value: string | null; strong: boolean } | null = null;
+    for (const m of matched) {
+      const value = coveredValue(m.decl, prop);
+      if (value === undefined) continue;
+      winner = { value, strong: m.inline || m.decl.important || atLeastClass(m.specificity) };
+    }
+    let value: string | null;
+    if (winner) value = winner.strong || winner.value === null ? null : winner.value;
+    else value = spec.ua(prop) || wValue;
+    out.push({ property: prop, value: value === null ? null : wrapRaw(value), natural: wValue });
+  }
+  for (const [prop, ua, natural] of spec.weak ?? []) {
+    // Any source rule (even `button {}` or `*`, which keep applying from the embed) counts as set.
+    const covered = matched.some((m) => coveredValue(m.decl, prop) !== undefined);
+    out.push({ property: prop, value: covered ? null : ua, natural });
+  }
+  return out;
 }
 
 /**
@@ -226,28 +279,31 @@ export function naturalButtonValue(prop: string): string {
 export function buttonTargets(el: Element, rules: CssStyleRule[]): ButtonTarget[] {
   const tag = el.tagName.toLowerCase();
   const hasHref = tag === 'a' && el.hasAttribute('href');
-  const matched = matchedDeclarations(el, rules).filter((m) => m.mediaStack.length === 0);
-  const out: ButtonTarget[] = [];
-  for (const [prop, wValue] of W_BUTTON_DEFAULTS) {
-    let winner: { value: string | null; strong: boolean } | null = null;
-    for (const m of matched) {
-      const value = coveredValue(m.decl, prop);
-      if (value === undefined) continue;
-      winner = { value, strong: m.inline || m.decl.important || atLeastClass(m.specificity) };
-    }
-    let value: string | null;
-    if (winner) value = winner.strong || winner.value === null ? null : winner.value;
-    else value = userAgentValue(prop, tag, hasHref) || wValue;
-    out.push({ property: prop, value: value === null ? null : wrapRaw(value), natural: wValue });
-  }
-  if (tag !== 'a') {
-    // Any source rule (even `button {}` or `*`, which keep applying from the embed) counts as set.
-    for (const [prop, ua] of BUTTON_UA_FONT) {
-      const covered = matched.some((m) => coveredValue(m.decl, prop) !== undefined);
-      out.push({ property: prop, value: covered ? null : ua, natural: 'inherit' });
-    }
-  }
-  return out;
+  return defaultTargets(el, rules, {
+    webflow: W_BUTTON_DEFAULTS,
+    ua: (prop) => userAgentValue(prop, tag, hasHref) || (W_BUTTON_DEFAULTS.find(([p]) => p === prop)?.[1] ?? ''),
+    weak: tag !== 'a' ? BUTTON_UA_FONT.map(([p, v]) => [p, v, 'inherit'] as const) : [],
+  });
+}
+
+/**
+ * Targets for a `<button>` kept as a real `<button>` (`buttonMode: 'customElement'`). webflow.css
+ * only touches it with tag-level resets (`font: inherit; color: inherit` from normalize,
+ * `button { border: 0; cursor: pointer }`), so every source rule wins; the browser defaults are
+ * restored for what the source left unset.
+ */
+export function domButtonTargets(el: Element, rules: CssStyleRule[]): ButtonTarget[] {
+  const weak: (readonly [string, string, string])[] = [
+    ['color', '#000000', 'inherit'],
+    ['cursor', 'default', 'pointer'],
+    ...BUTTON_UA_FONT.filter(([p]) => p !== 'text-align' && p !== 'letter-spacing').map(([p, v]) => [p, v, 'inherit'] as const),
+    ...SIDES.flatMap((s) => [
+      [`border-${s}-width`, '2px', '0px'] as const,
+      [`border-${s}-style`, 'outset', 'none'] as const,
+      [`border-${s}-color`, '#767676', 'currentcolor'] as const,
+    ]),
+  ];
+  return defaultTargets(el, rules, { webflow: [], ua: () => '', weak });
 }
 
 /**

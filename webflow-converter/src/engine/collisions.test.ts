@@ -68,3 +68,11 @@ describe('classPrefix (F7)', () => {
     expect(res.warnings.some((w) => w.message.includes('classPrefix "9x"'))).toBe(true);
   });
 });
+
+describe('class-collision-risk items', () => {
+  it('lists the risky class names in items', () => {
+    const res = convert({ mode: 'separate', html: '<div class="container-large"><a class="button" href="#">x</a></div>', css: '.container-large{max-width:80rem}', js: '' });
+    const w = res.warnings.find((x) => x.code === 'class-collision-risk')!;
+    expect(w.items).toEqual(expect.arrayContaining(['container-large', 'button']));
+  });
+});

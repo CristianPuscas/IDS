@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { convert } from '../engine';
+import { convertAsync } from '../engine';
 import { copyToWebflow, isSafari } from '../engine/clipboard';
 import type { ConvertResult, InputMode } from '../engine/types';
+import { AdvancedOptionsPanel, CLASS_PREFIX_INPUT_ID } from './components/AdvancedOptions';
 import { CodeEditor } from './components/CodeEditor';
 import { ConvertButton, type ConvertStatus } from './components/ConvertButton';
 import { HowItWorks } from './components/HowItWorks';
@@ -15,6 +16,7 @@ import { EXAMPLE_COMBINED, EXAMPLE_SEPARATE } from './examples';
 import { copyText } from './lib/clipboardText';
 import { downloadText } from './lib/download';
 import { buildConvertInput, EMPTY_DRAFTS, hasConvertibleInput, loadPersisted, savePersisted, type Drafts } from './lib/drafts';
+import { loadAdvanced, saveAdvanced, toConvertOptions, type AdvancedOptions } from './lib/options';
 import { isConvertShortcut, isMacPlatform } from './lib/platform';
 
 const TABS_ID = 'input';
@@ -34,6 +36,8 @@ export default function App() {
   const [result, setResult] = useState<{ id: number; value: ConvertResult } | null>(null);
   const [status, setStatus] = useState<ConvertStatus>('idle');
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [options, setOptions] = useState<AdvancedOptions>(() => loadAdvanced());
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const toastSeq = useRef(0);
   const statusTimer = useRef<number | undefined>(undefined);
 
@@ -47,7 +51,21 @@ export default function App() {
     return () => window.clearTimeout(t);
   }, [mode, drafts]);
 
+  // Persist the advanced options. saveAdvanced swallows quota / privacy-mode errors.
+  useEffect(() => {
+    saveAdvanced(options);
+  }, [options]);
+
   useEffect(() => () => window.clearTimeout(statusTimer.current), []);
+
+  const focusClassPrefix = useCallback(() => {
+    setAdvancedOpen(true);
+    window.setTimeout(() => {
+      const input = document.getElementById(CLASS_PREFIX_INPUT_ID) as HTMLInputElement | null;
+      input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input?.focus({ preventScroll: true });
+    }, 50);
+  }, []);
 
   const showToast = useCallback((t: Omit<ToastMessage, 'id'>) => {
     toastSeq.current += 1;
@@ -115,25 +133,26 @@ export default function App() {
     setStatus('busy');
     window.clearTimeout(statusTimer.current);
 
-    let res: ConvertResult;
-    try {
-      res = convert(buildConvertInput(mode, drafts));
-    } catch (err) {
-      setStatus('idle');
-      showToast({
-        kind: 'error',
-        title: 'Conversion failed',
-        message: err instanceof Error ? err.message : 'The converter hit an unexpected error. Check the input and try again.',
+    // convertAsync settles right away unless a script needs terser (loaded once, on demand); the
+    // copy then still runs within the click's user-activation window.
+    convertAsync(buildConvertInput(mode, drafts), toConvertOptions(options))
+      .then((res: ConvertResult) => {
+        setResult((prev) => ({ id: (prev?.id ?? 0) + 1, value: res }));
+        return copyResult(res);
+      })
+      .then((ok) => {
+        setStatus(ok ? 'done' : 'idle');
+        if (ok) statusTimer.current = window.setTimeout(() => setStatus('idle'), 1800);
+      })
+      .catch((err: unknown) => {
+        setStatus('idle');
+        showToast({
+          kind: 'error',
+          title: 'Conversion failed',
+          message: err instanceof Error ? err.message : 'The converter hit an unexpected error. Check the input and try again.',
+        });
       });
-      return;
-    }
-
-    setResult((prev) => ({ id: (prev?.id ?? 0) + 1, value: res }));
-    void copyResult(res).then((ok) => {
-      setStatus(ok ? 'done' : 'idle');
-      if (ok) statusTimer.current = window.setTimeout(() => setStatus('idle'), 1800);
-    });
-  }, [copyResult, drafts, mode, showToast, status]);
+  }, [copyResult, drafts, mode, options, showToast, status]);
 
   // Global shortcut: Ctrl/Cmd+Enter. A keydown is a user gesture, so the copy is allowed.
   const convertRef = useRef(handleConvert);
@@ -259,12 +278,15 @@ export default function App() {
             </div>
           </section>
 
+          <AdvancedOptionsPanel value={options} onChange={setOptions} open={advancedOpen} onOpenChange={setAdvancedOpen} />
+
           {result ? (
             <ResultPanel
               key={result.id}
               result={result.value}
               onCopyAgain={() => void copyResult(result.value)}
               onDownload={() => download(result.value.json)}
+              onSetPrefix={focusClassPrefix}
             />
           ) : (
             <div className="rounded-xl border border-dashed border-line px-4 py-6 text-center text-[13px] text-muted">

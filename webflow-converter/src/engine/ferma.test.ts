@@ -37,7 +37,8 @@ describe('ferma.html (real paste-test regression)', () => {
     expect(style(res, 'navbar_menu-button').styleLess).toContain('display: none;');
     expect(style(res, 'navbar_menu-button').variants.small).toEqual({ styleLess: 'display: block;' });
     expect(css).toContain('@media (max-width: 991px) {');
-    expect(css).toContain('[data-h2w-class~="navbar_component"][data-h2w-class~="navbar_component"]>[data-h2w-class~="button"] {\n  display: none;');
+    // `.button` is also used by the contact form, which stays a Code Embed (forms: 'auto').
+    expect(css).toContain('[data-h2w-class~="navbar_component"][data-h2w-class~="navbar_component"]>:is(.button,[data-h2w-class~="button"]) {\n  display: none;');
     expect(css).toMatch(/@media \(max-width: 767px\) \{\nnav \{\n {2}display: none;/);
     expect(css).not.toMatch(/max-width: ?(850|640)px/);
   });
@@ -67,7 +68,18 @@ describe('ferma.html (real paste-test regression)', () => {
   it('gives the <button> toggles their user-agent font without touching the <a class="button"> links', () => {
     expect(style(res, 'navbar_menu-button').styleLess).toContain('font-family: Arial, sans-serif;');
     expect(style(res, 'button').styleLess).not.toMatch(/font-family|line-height|cursor/);
-    expect(classNames(res, byXattr('contactToggle'))).toEqual(['button', 'is-outline', 'is-button-ua']);
+    // `.button` is shared with the embedded contact form's <button>, so the overrides sit on combos.
+    const names = classNames(res, byXattr('contactToggle'));
+    expect(names.slice(0, 2)).toEqual(['button', 'is-outline']);
+    expect(names[2]).toMatch(/^is-button-ua(-\d+)?$/);
+    expect(style(res, names[2]!, '&').styleLess).toContain('font-family: Arial, sans-serif;');
+  });
+
+  it('keeps the JS-driven contact form as a Code Embed with its original <button type=submit>', () => {
+    expect(elements(res).some((e) => e.type === 'FormForm')).toBe(false);
+    const form = elements(res).find((e) => e.type === 'HtmlEmbed' && e.v!.startsWith('<form id="messageForm"'))!;
+    expect(form.v).toContain('<button class="button" type="submit">');
+    expect(css).toContain('.contact_form-grid {');
   });
 
   it('flags the class names that clashed in the destination site', () => {

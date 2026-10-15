@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import type { ConvertResult, ConvertWarningSeverity } from '../../engine/types';
+import type { ConvertResult, ConvertWarningSeverity, ExternalScript } from '../../engine/types';
 import { copyText } from '../lib/clipboardText';
+import { downloadText } from '../lib/download';
 import { countBySeverity, formatBytes, groupWarnings } from '../lib/format';
-import { CheckIcon, ChevronIcon, CopyIcon, DownloadIcon, RetryIcon } from './icons';
+import { AlertIcon, CheckIcon, ChevronIcon, CopyIcon, DownloadIcon, RetryIcon } from './icons';
 
 /** Props for {@link ResultPanel}. */
 export interface ResultPanelProps {
@@ -12,6 +13,8 @@ export interface ResultPanelProps {
   onCopyAgain: () => void;
   /** Downloads `result.json` as a file. */
   onDownload: () => void;
+  /** Opens the advanced options and focuses the class prefix input. */
+  onSetPrefix?: () => void;
 }
 
 const SEV_DOT: Record<ConvertWarningSeverity, string> = { error: 'bg-err', warning: 'bg-warn', info: 'bg-sky-400' };
@@ -24,8 +27,14 @@ const PREVIEW_LIMIT = 150_000;
  * Shows conversion stats, grouped warnings and a JSON preview.
  * Ownership: ui.
  */
-export function ResultPanel({ result, onCopyAgain, onDownload }: ResultPanelProps) {
+export function ResultPanel({ result, onCopyAgain, onDownload, onSetPrefix }: ResultPanelProps) {
   const { stats, warnings } = result;
+  const collisions = useMemo(() => {
+    const names = new Set<string>();
+    for (const w of warnings) if (w.code === 'class-collision-risk') for (const n of w.items ?? []) names.add(n);
+    return [...names];
+  }, [warnings]);
+  const external = result.externalScripts ?? [];
   const groups = useMemo(() => groupWarnings(warnings), [warnings]);
   const counts = useMemo(() => countBySeverity(warnings), [warnings]);
 
@@ -61,6 +70,13 @@ export function ResultPanel({ result, onCopyAgain, onDownload }: ResultPanelProp
           </button>
         </div>
       </div>
+
+      {(external.length > 0 || collisions.length > 0) && (
+        <div className="space-y-2 px-4 pt-4">
+          {external.length > 0 && <ExternalScripts scripts={external} />}
+          {collisions.length > 0 && <CollisionNotice names={collisions} onSetPrefix={onSetPrefix} />}
+        </div>
+      )}
 
       <dl className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3 lg:grid-cols-5">
         {chips.map((c) => (
@@ -121,6 +137,76 @@ export function ResultPanel({ result, onCopyAgain, onDownload }: ResultPanelProp
 
       <JsonPreview json={result.json} data={result.data} />
     </section>
+  );
+}
+
+/** Yellow notice for classes that may clash with the destination site's classes. */
+function CollisionNotice({ names, onSetPrefix }: { names: string[]; onSetPrefix?: () => void }) {
+  const shown = names.slice(0, 8);
+  return (
+    <div role="note" className="flex flex-col gap-2 rounded-lg border border-warn/30 bg-warn/5 px-3 py-2.5 text-[13px] leading-snug text-amber-200 sm:flex-row sm:items-start">
+      <AlertIcon width={16} height={16} className="mt-0.5 shrink-0 text-warn" />
+      <div className="min-w-0 flex-1">
+        <p>
+          <strong className="font-semibold">
+            {names.length} class{names.length === 1 ? '' : 'es'} may clash with existing site classes;
+          </strong>{' '}
+          Webflow will rename them (name-2) or merge combos.
+        </p>
+        <p className="mt-1 break-words font-mono text-[11.5px] text-amber-200/70">
+          {shown.join(', ')}
+          {names.length > shown.length ? ` +${names.length - shown.length} more` : ''}
+        </p>
+      </div>
+      {onSetPrefix && (
+        <button type="button" onClick={onSetPrefix} className="btn-secondary shrink-0 self-start">
+          Set a class prefix
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Scripts too large for a Code Embed: download or copy them to host as files. */
+function ExternalScripts({ scripts }: { scripts: ExternalScript[] }) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = async (s: ExternalScript) => {
+    const ok = await copyText(s.code);
+    setCopied(ok ? s.name : null);
+    if (ok) window.setTimeout(() => setCopied((c) => (c === s.name ? null : c)), 1800);
+  };
+  return (
+    <div role="note" className="rounded-lg border border-warn/40 bg-warn/10 px-3 py-2.5 text-[13px] leading-snug text-amber-100">
+      <div className="flex gap-2">
+        <AlertIcon width={16} height={16} className="mt-0.5 shrink-0 text-warn" />
+        <p>
+          <strong className="font-semibold">This script is too large for a Webflow embed.</strong> Download {scripts.length === 1 ? scripts[0]!.name : 'each file'}, host it
+          (e.g. GitHub + jsDelivr), and add <code className="font-mono text-[12px]">&lt;script src&gt;</code> in Page Settings → Before{' '}
+          <code className="font-mono text-[12px]">&lt;/body&gt;</code>. A placeholder comment marks its place in the pasted page.
+        </p>
+      </div>
+      <ul className="mt-2 space-y-1.5">
+        {scripts.map((s) => (
+          <li key={s.name} className="flex flex-wrap items-center gap-2 rounded-md border border-line bg-canvas/60 px-2.5 py-1.5">
+            <span className="font-mono text-[12px] text-zinc-100">{s.name}</span>
+            <span className="font-mono text-[11px] text-muted">
+              {formatBytes(new Blob([s.code]).size)}
+              {s.type ? ` · type="${s.type}"` : ''}
+            </span>
+            <span className="ml-auto flex gap-1.5">
+              <button type="button" className="btn-secondary" aria-label={`Download ${s.name}`} onClick={() => downloadText(s.code, s.name, 'text/javascript')}>
+                <DownloadIcon width={13} height={13} />
+                Download
+              </button>
+              <button type="button" className="btn-secondary" aria-label={`Copy ${s.name}`} onClick={() => void copy(s)}>
+                {copied === s.name ? <CheckIcon width={13} height={13} /> : <CopyIcon width={13} height={13} />}
+                {copied === s.name ? 'Copied' : 'Copy'}
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

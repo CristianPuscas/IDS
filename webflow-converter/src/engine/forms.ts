@@ -29,6 +29,7 @@
  * Ownership: engine.
  */
 
+import type { FieldKind } from './fieldDefaults';
 import type { WfAttr, WfElementNode, WfFormData, WfNode, WfNodeData, WfSelectOption, WfXattr } from './types';
 import { uuid } from './ids';
 
@@ -61,6 +62,8 @@ export interface FormBuilderApi {
   embed(el: Element, reason: string): string;
   /** Records the Webflow `.w-button` neutralization for a submit button; returns extra class names. */
   submitButtonClasses(el: Element): string[];
+  /** Records the `.w-input`/`.w-select`/`.w-checkbox`… neutralization for a field; returns extra class names. */
+  fieldClasses(el: Element, kind: FieldKind): string[];
   /** Registers low-priority declarations on a generated class; returns the class name. */
   defaultsClass(base: string, decls: { property: string; value: string }[]): string;
   warn(message: string, detail?: string, severity?: 'info' | 'warning'): void;
@@ -75,7 +78,7 @@ export function buildForm(api: FormBuilderApi, form: Element): string {
   api.push(wrapper);
 
   const id = form.getAttribute('id') ?? '';
-  const name = form.getAttribute('data-name') || form.getAttribute('name') || id || 'Form';
+  const name = formName(form);
   const attr: WfAttr = {
     id,
     name: form.getAttribute('name') || slug(name),
@@ -140,15 +143,31 @@ function buildInput(api: FormBuilderApi, el: Element): string {
       disabled: el.hasAttribute('disabled'),
       autofocus: el.hasAttribute('autofocus'),
     };
-    const n = node('FormTextInput', 'input', api.resolveClasses(el), { form: { type: 'input', name, passwordPage: false } }, attr, api.xattr(el, RESERVED_INPUT));
+    const xattr = api.xattr(el, RESERVED_INPUT);
+    const value = el.getAttribute('value');
+    if (value !== null && value !== '') {
+      // No real dump shows a default value on FormTextInput (spec 2.4), so it rides along as a
+      // custom attribute; the browser reads it as the input's initial value.
+      xattr.push({ name: 'value', value });
+      api.warn(
+        `A default value (value="${value}") was kept as a custom attribute on the native input. That Webflow keeps a "value" custom attribute is unverified: check the field after pasting, or use forms: 'embed'.`,
+        el.outerHTML.slice(0, 120),
+      );
+    }
+    const n = node('FormTextInput', 'input', api.resolveClasses(el, api.fieldClasses(el, 'input')), { form: { type: 'input', name, passwordPage: false } }, attr, xattr);
     api.push(n);
-    if (el.getAttribute('value')) api.warn('A default value on a form input was dropped (Webflow inputs have no default value field).', el.outerHTML.slice(0, 120));
     return n._id;
   }
   if (type === 'checkbox' || type === 'radio') {
-    // A bare checkbox/radio still needs its Webflow wrapper (a <label>).
+    // A bare checkbox/radio still needs its Webflow wrapper (a <label>); the source had none, so
+    // its .w-checkbox/.w-radio padding and margin are cancelled on a generated class.
     const kind = type === 'checkbox' ? 'checkbox' : 'radio';
-    const wrapper = node(kind === 'checkbox' ? 'FormCheckboxWrapper' : 'FormRadioWrapper', 'label', [], { form: { type: kind } }, {});
+    const wrapperClass = api.defaultsClass(`${kind}-field`, [
+      { property: 'margin-bottom', value: '0px' },
+      { property: 'padding-left', value: '0px' },
+      { property: 'display', value: 'inline' },
+    ]);
+    const wrapper = node(kind === 'checkbox' ? 'FormCheckboxWrapper' : 'FormRadioWrapper', 'label', api.resolveNames([wrapperClass]), { form: { type: kind } }, {});
     api.push(wrapper);
     wrapper.children = [buildChoiceInput(api, el, kind)];
     return wrapper._id;
@@ -171,7 +190,7 @@ function buildChoiceInput(api: FormBuilderApi, el: Element, kind: 'checkbox' | '
   const n = node(
     kind === 'checkbox' ? 'FormCheckboxInput' : 'FormRadioInput',
     'input',
-    api.resolveClasses(el),
+    api.resolveClasses(el, api.fieldClasses(el, kind)),
     { form: { type: kind === 'checkbox' ? 'checkbox-input' : 'radio-input', name } },
     attr,
     api.xattr(el, [...RESERVED_INPUT, 'value', 'checked']),
@@ -191,7 +210,7 @@ function buildTextarea(api: FormBuilderApi, el: Element): string {
     required: el.hasAttribute('required'),
     autofocus: el.hasAttribute('autofocus'),
   };
-  const n = node('FormTextarea', 'textarea', api.resolveClasses(el), { form: { type: 'textarea', name } }, attr, api.xattr(el, [...RESERVED_INPUT, 'rows', 'cols']));
+  const n = node('FormTextarea', 'textarea', api.resolveClasses(el, api.fieldClasses(el, 'textarea')), { form: { type: 'textarea', name } }, attr, api.xattr(el, [...RESERVED_INPUT, 'rows', 'cols']));
   api.push(n);
   if ((el.textContent ?? '').trim()) api.warn('Default text inside a <textarea> was dropped.', (el.textContent ?? '').trim().slice(0, 120));
   return n._id;
@@ -211,7 +230,7 @@ function buildSelect(api: FormBuilderApi, el: Element): string {
     required: el.hasAttribute('required'),
     multiple: el.hasAttribute('multiple'),
   };
-  const n = node('FormSelect', 'select', api.resolveClasses(el), { form: { type: 'select', name, opts } }, attr, api.xattr(el, RESERVED_INPUT));
+  const n = node('FormSelect', 'select', api.resolveClasses(el, api.fieldClasses(el, 'select')), { form: { type: 'select', name, opts } }, attr, api.xattr(el, RESERVED_INPUT));
   api.push(n);
   return n._id;
 }
@@ -220,7 +239,14 @@ function buildLabel(api: FormBuilderApi, el: Element): string[] {
   const choice = el.querySelector('input[type="checkbox" i], input[type="radio" i]');
   if (choice) {
     const kind = (choice.getAttribute('type') ?? '').toLowerCase() === 'radio' ? 'radio' : 'checkbox';
-    const wrapper = node(kind === 'checkbox' ? 'FormCheckboxWrapper' : 'FormRadioWrapper', 'label', api.resolveClasses(el), { form: { type: kind } }, {}, api.xattr(el, ['for']));
+    const wrapper = node(
+      kind === 'checkbox' ? 'FormCheckboxWrapper' : 'FormRadioWrapper',
+      'label',
+      api.resolveClasses(el, api.fieldClasses(el, kind === 'checkbox' ? 'checkbox-wrapper' : 'radio-wrapper')),
+      { form: { type: kind } },
+      {},
+      api.xattr(el, ['for']),
+    );
     api.push(wrapper);
     const ids = [buildChoiceInput(api, choice, kind)];
     // The rest of the label's content becomes the inline label (a span).
@@ -319,6 +345,80 @@ function fieldName(el: Element, fallback: string): string {
 function numberAttr(el: Element, name: string, fallback: number): number {
   const v = parseInt(el.getAttribute(name) ?? '', 10);
   return Number.isFinite(v) && v > 0 ? v : fallback;
+}
+
+/**
+ * The form's name in the Designer and in form submissions: `data-name`, `name`, `id`,
+ * `aria-label`, the text of its `aria-labelledby` element, or its first custom `data-*` attribute
+ * (`data-contact-form` -> "Contact Form"); "Form" only when none exists.
+ */
+export function formName(form: Element): string {
+  const direct = form.getAttribute('data-name') || form.getAttribute('name') || form.getAttribute('id') || form.getAttribute('aria-label');
+  if (direct && direct.trim()) return direct.trim();
+  const labelledBy = (form.getAttribute('aria-labelledby') ?? '').split(/\s+/).filter(Boolean);
+  const text = labelledBy
+    .map((id) => form.ownerDocument.getElementById(id)?.textContent ?? '')
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (text) return text.slice(0, 60);
+  const data = customDataAttributes(form)[0];
+  if (data) {
+    const words = data.slice('data-'.length).split(/[-_]+/).filter(Boolean);
+    if (words.length) return words.map((w) => w[0]!.toUpperCase() + w.slice(1)).join(' ');
+  }
+  return 'Form';
+}
+
+/** `data-*` attribute names an author added (Webflow's own and the converter's are left out). */
+function customDataAttributes(el: Element): string[] {
+  return Array.from(el.attributes)
+    .map((a) => a.name.toLowerCase())
+    .filter((n) => n.startsWith('data-') && !/^data-(name|wait|redirect|h2w-.*|wf-.*)$/.test(n));
+}
+
+/** Script patterns that handle form submission. */
+const SUBMIT_JS = /addEventListener\s*\(\s*['"`]submit['"`]|\.onsubmit\b|\brequestSubmit\b|\.on\(\s*['"`]submit['"`]|\.submit\(\s*function/;
+
+/**
+ * Reasons to think custom JavaScript drives a form (option `forms: 'auto'` keeps such forms as
+ * Code Embeds; `'native'` warns). Empty when none apply. Webflow's webflow.js binds a delegated
+ * submit handler to every native form that ignores `defaultPrevented`, so a native form and a
+ * custom submit handler fight.
+ *
+ * @param form The source `<form>`.
+ * @param scriptText All inline script source of the page.
+ */
+export function scriptedFormReasons(form: Element, scriptText: string): string[] {
+  const reasons: string[] = [];
+  if (form.hasAttribute('novalidate')) reasons.push('it has novalidate');
+  const controls = Array.from(form.querySelectorAll('input, select, textarea, button'));
+  const dataAttrs = [...new Set([form, ...controls].flatMap(customDataAttributes))];
+  if (!(form.getAttribute('action') ?? '').trim() && dataAttrs.length > 0) {
+    reasons.push(`it has no action and has data attributes (${dataAttrs.slice(0, 3).join(', ')}${dataAttrs.length > 3 ? '…' : ''})`);
+  }
+  if (SUBMIT_JS.test(scriptText)) reasons.push('the scripts handle submit events');
+  const id = form.getAttribute('id');
+  if (id && mentionsId(scriptText, id)) reasons.push(`the scripts refer to its id "${id}"`);
+  const used = customDataAttributes(form).filter((name) => mentionsDataAttr(scriptText, name));
+  if (used.length) reasons.push(`the scripts use its ${used.join(', ')} attribute${used.length > 1 ? 's' : ''}`);
+  return reasons;
+}
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** `#id`, `'id'`/`"id"`/`` `id` `` as a whole string, or `forms.id` in the scripts. */
+function mentionsId(js: string, id: string): boolean {
+  const e = escapeRe(id);
+  return new RegExp(`#${e}(?![\\w-])|['"\`]${e}['"\`]|\\bforms\\.${e}\\b`).test(js);
+}
+
+/** `data-foo-bar` (not `data-foo-bar-baz`) or `dataset.fooBar` in the scripts. */
+function mentionsDataAttr(js: string, name: string): boolean {
+  const camel = name.slice('data-'.length).replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+  return new RegExp(`${escapeRe(name)}(?![\\w-])|dataset\\.${escapeRe(camel)}\\b|dataset\\[['"]${escapeRe(camel)}['"]`).test(js);
 }
 
 function slug(s: string): string {

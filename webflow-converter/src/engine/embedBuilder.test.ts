@@ -92,7 +92,7 @@ describe('embed size limits', () => {
 
   it('splits a large classic script between top-level statements', () => {
     const code = Array.from({ length: 80 }, (_, i) => `function f${i}() {\n  return ${i} / 2;\n}\nconst v${i} = f${i}();`).join('\n');
-    const res = convert({ mode: 'separate', html: '<div></div>', css: '', js: code }, { maxEmbedChars: 1000 });
+    const res = convert({ mode: 'separate', html: '<div></div>', css: '', js: code }, { maxScriptEmbedChars: 1000 });
     expect(validateXscp(res.data)).toEqual([]);
     const scripts = embedCodes(res).filter((c) => c.includes('<script'));
     expect(scripts.length).toBeGreaterThan(2);

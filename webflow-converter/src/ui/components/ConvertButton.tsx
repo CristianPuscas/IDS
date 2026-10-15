@@ -6,8 +6,8 @@ export type ConvertStatus = 'idle' | 'busy' | 'done';
 /** Props for {@link ConvertButton}. */
 export interface ConvertButtonProps {
   /**
-   * Click handler. Must stay synchronous up to the clipboard write: the App runs `convert()`
-   * and then `copyToWebflow()` inside this same user gesture.
+   * Click handler. The App runs `convertAsync()` (synchronous unless a script needs terser) and
+   * then `copyToWebflow()` within this same user gesture's activation window.
    */
   onClick: () => void;
   disabled?: boolean;

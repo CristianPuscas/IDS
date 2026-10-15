@@ -152,10 +152,14 @@ describe('buttonMode: "button" (default)', () => {
     expect(style(res, 'button').styleLess).toBe('color: red;');
   });
 
-  it('skips a base class shared with non-button elements, with a warning', () => {
+  it('puts the overrides on a combo when the base class is shared with non-button elements', () => {
     const res = run('<a class="btn" href="#">A</a><div class="btn">B</div>', '.btn { color: red }');
     expect(style(res, 'btn').styleLess).toBe('color: red;');
-    expect(res.warnings.some((w) => w.severity === 'warning' && w.detail === 'btn' && w.message.includes('.w-button'))).toBe(true);
+    const link = first(res, 'Link');
+    expect(classNames(res, link)).toEqual(['btn', 'is-button-ua']);
+    expect(style(res, 'is-button-ua', '&').styleLess).toContain('background-color: transparent;');
+    expect(classNames(res, elements(res).find((e) => e.type === 'Block' && e.classes.length > 0)!)).toEqual(['btn']);
+    expect(res.warnings.some((w) => w.message.includes('"btn" is also used by other elements'))).toBe(true);
   });
 
   it('adds nothing for a fully styled button', () => {
@@ -255,3 +259,48 @@ describe('buttonMode: "linkBlock"', () => {
     expect(res.data.payload.styles.map((s) => s.name)).toEqual(['menu-toggle']);
   });
 });
+
+describe('buttonMode: "customElement"', () => {
+  const opts = { buttonMode: 'customElement' } as const;
+
+  it('keeps <button> as a Custom Element with all attributes and an explicit type', () => {
+    const res = run('<button class="btn" id="go" aria-expanded="false" data-x>Go <span class="icon">→</span></button><button class="btn" type="submit">Send</button>', '.btn { padding: 1rem; background-color: #000; color: #fff; border: 0; font: 600 1rem Inter }', opts);
+    const [a, b] = elements(res).filter((e) => e.type === 'DOM' && e.data?.tag === 'button');
+    expect(a!.tag).toBe('div');
+    expect(a!.data!.attributes).toEqual([
+      { name: 'id', value: 'go' },
+      { name: 'type', value: 'button' },
+      { name: 'aria-expanded', value: 'false' },
+      { name: 'data-x', value: '' },
+    ]);
+    expect(b!.data!.attributes).toContainEqual({ name: 'type', value: 'submit' });
+    expect(classNames(res, a!)).toEqual(['btn']);
+    expect(textOf(res, a!)).toBe('Go →');
+    expect(elements(res).some((e) => e.type === 'Link')).toBe(false);
+    expect(res.json).not.toContain('data-h2w-button');
+    expect(embedJs(res)).not.toContain(BUTTON_CLICK_SHIM);
+  });
+
+  it('keeps the class styles native and restores what webflow.css resets on <button>', () => {
+    const res = run('<button class="btn">Go</button>', '.btn { padding: 1rem; background-color: #000 }', opts);
+    const s = style(res, 'btn').styleLess;
+    expect(s).toContain('padding-top: 1rem;');
+    expect(s).toContain('background-color: #000;');
+    expect(s).toContain('font-family: Arial, sans-serif;');
+    expect(s).toContain('border-top-style: outset;');
+    expect(s).toContain('color: #000000;');
+    expect(s).not.toMatch(/display|text-decoration/);
+  });
+
+  it('leaves <a class="button"> as a Webflow Button', () => {
+    const res = run('<a class="button" href="/x">X</a>', '.button { padding: 1rem }', opts);
+    expect(first(res, 'Link').data!.button).toBe(true);
+  });
+});
+
+function embedJs(res: ReturnType<typeof convert>): string {
+  return elements(res)
+    .filter((e) => e.type === 'HtmlEmbed')
+    .map((e) => e.v ?? '')
+    .join('\n');
+}

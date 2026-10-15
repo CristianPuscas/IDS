@@ -8,8 +8,9 @@
  * | h1–h6                                                     | `Heading`                                 |
  * | p                                                         | `Paragraph`                               |
  * | a                                                         | `Link`: text link, Link Block (`block:"inline"`) or Button (`button:true`) |
- * | button                                                    | `Link` with `button:true` + `role="button"` (Link Block if it holds elements) |
- * | form (option `forms: 'native'`)                           | FormWrapper > FormForm + messages (see ./forms) |
+ * | button                                                    | `Link` with `button:true` + `role="button"` (Link Block if it holds elements); `DOM` `<button>` with `buttonMode: 'customElement'` |
+ * | form (option `forms`: 'native', or 'auto' without custom JS) | FormWrapper > FormForm + messages (see ./forms) |
+ * | form driven by custom JS (`forms: 'auto'`), any form with `'embed'` | `HtmlEmbed` of the form (class rules copied to the `<style>` embed) |
  * | img (external URL, option `externalImages`)               | `DOM` Custom Element `<img>` (default), HtmlEmbed, or `Image` |
  * | img (`data:` URI or Webflow CDN URL)                      | `Image` (`data.attr.src`, no asset record) |
  * | ul/ol, li                                                 | `List`, `ListItem`                        |
@@ -31,12 +32,13 @@
  * Ownership: engine.
  */
 
-import { buttonTargets, naturalButtonValue, sameValue, type ButtonTarget } from './buttonDefaults';
+import { buttonTargets, domButtonTargets, naturalButtonValue, sameValue, type ButtonTarget } from './buttonDefaults';
 import { parseDeclarations, type CssStyleRule } from './cssParser';
 import type { NativeDecl } from './cssValues';
 import { buildEmbedNode } from './embedBuilder';
 import { planEmbedSizing, SIZED_EMBED_TAGS } from './embedSizing';
-import { buildForm, buildFormControl, FORM_CONTROL_TAGS, type FormBuilderApi } from './forms';
+import { fieldTargets } from './fieldDefaults';
+import { buildForm, buildFormControl, FORM_CONTROL_TAGS, scriptedFormReasons, type FormBuilderApi } from './forms';
 import { uuid } from './ids';
 import type { ClassUsage, StyleRegistry } from './styleMapper';
 import { isTextNode, type ConvertOptions, type ConvertWarning, type WfElementNode, type WfLink, type WfNode, type WfNodeData, type WfXattr } from './types';
@@ -67,6 +69,8 @@ export interface BuildNodesExtra {
   reservedClassNames?: Set<string>;
   /** Parsed source rules, used to work out what the source rendered (buttons, embed sizing). */
   cssRules?: CssStyleRule[];
+  /** All inline script source (to spot forms driven by custom JS, option `forms: 'auto'`). */
+  scriptText?: string;
 }
 
 /** Tags that become a Block with a matching `data.tag` (spec 2.4 Block). */
@@ -123,9 +127,12 @@ interface Ctx {
   rules: CssStyleRule[];
   /** True while converting the inside of a native form. */
   inForm: boolean;
-  /** Buttons with their own base class; their `.w-button` neutralizers are applied at the end. */
+  /** Buttons and fields with their own base class; their neutralizers are applied at the end. */
   buttonDefaults: PendingButton[];
   pendingByElement: Map<Element, PendingButton>;
+  /** Source elements whose classes take neutralizers (buttons, native fields). */
+  defaultsElements: Set<Element>;
+  scriptText: string;
   remappedTags: Set<string>;
   convertedButtons: number;
   /** Class names used by anything that is not a Webflow Button (native or embedded). */
@@ -135,8 +142,12 @@ interface Ctx {
   extraRules: CssStyleRule[];
 }
 
-/** A converted button with its own classes, waiting for `applyButtonDefaults`. */
+/** What a pending element is: a Webflow Button, a native form field, or a `<button>` Custom Element. */
+type DefaultsKind = 'button' | 'field' | 'dom-button';
+
+/** A converted button or field with its own classes, waiting for `applyButtonDefaults`. */
 interface PendingButton {
+  kind: DefaultsKind;
   base: string;
   targets: ButtonTarget[];
   /** Class names of the element's chain, and the style-id array its node holds (patched in place). */
@@ -174,6 +185,8 @@ export function buildNodes(
     inForm: false,
     buttonDefaults: [],
     pendingByElement: new Map(),
+    defaultsElements: new Set(),
+    scriptText: extra.scriptText ?? '',
     remappedTags: new Set(),
     convertedButtons: 0,
     otherClasses: new Set(),
@@ -233,79 +246,114 @@ export function buildNodes(
 }
 
 /**
- * Registers the `.w-button` neutralizers of buttons that have their own classes. Per base class, a
- * value every button agrees on goes on the base class; when buttons sharing the base need
- * different values (typically `<a class="button">` next to `<button class="button">`), the base
- * keeps the natural value and each differing button gets a generated `is-button-ua` combo with
- * its own values. A base class that is also used by something other than a Button is left alone:
- * the neutralizers (e.g. `display: inline`) would change that element too.
+ * Registers the neutralizers of buttons and native form fields that have their own classes (the
+ * `.w-button` / `.w-input` / `.w-select`… defaults, see ./buttonDefaults and ./fieldDefaults). Per
+ * base class, a value every element agrees on goes on the base class; when elements sharing the
+ * base need different values (typically `<a class="button">` next to `<button class="button">`),
+ * the base keeps the natural value and each differing element gets a generated `is-button-ua` /
+ * `is-field-ua` combo with its own values. A base class that is also used by something else (an
+ * element inside a Code Embed, a Div Block, or both a button and a field) is left alone, because
+ * the neutralizers (e.g. `display: inline`) would change those elements too: each button or field
+ * then carries all of its values on its own combo.
  */
 function applyButtonDefaults(ctx: Ctx): void {
   for (const list of ctx.embeddedClassLists) for (const c of list) ctx.otherClasses.add(c);
+  const kindsByBase = new Map<string, Set<DefaultsKind>>();
+  for (const b of ctx.buttonDefaults) kindsByBase.set(b.base, (kindsByBase.get(b.base) ?? new Set<DefaultsKind>()).add(b.kind));
+  type ByState = Map<string, NativeDecl[]>;
+  const add = (map: ByState, state: string, d: NativeDecl): void => {
+    map.set(state, [...(map.get(state) ?? []), d]);
+  };
+  const baseDecls = new Map<string, { kind: DefaultsKind; decls: ByState }>();
+  const comboDecls = new Map<PendingButton, ByState>();
   const groups = new Map<string, PendingButton[]>();
-  const skipped = new Set<string>();
+  const shared = new Set<string>();
   for (const b of ctx.buttonDefaults) {
-    if (ctx.otherClasses.has(b.base)) {
-      if (b.targets.some((t) => t.value !== null && !sameValue(t.value, t.natural))) skipped.add(b.base);
+    if (ctx.otherClasses.has(b.base) || kindsByBase.get(b.base)!.size > 1) {
+      // The base class is shared with other elements: everything goes on the element's own combo.
+      shared.add(b.base);
+      const own: ByState = new Map();
+      for (const t of b.targets) if (t.value !== null && !sameValue(t.value, t.natural)) add(own, t.state ?? '', { property: t.property, value: t.value });
+      if (own.size) comboDecls.set(b, own);
       continue;
     }
     groups.set(b.base, [...(groups.get(b.base) ?? []), b]);
   }
 
-  const baseDecls = new Map<string, NativeDecl[]>();
-  const comboDecls = new Map<PendingButton, NativeDecl[]>();
   for (const [base, members] of groups) {
-    const props: string[] = [];
-    for (const m of members) for (const t of m.targets) if (!props.includes(t.property)) props.push(t.property);
-    const onBase: NativeDecl[] = [];
-    for (const prop of props) {
-      const natural = naturalButtonValue(prop);
+    const keys: [string, string][] = [];
+    for (const m of members) {
+      for (const t of m.targets) {
+        const state = t.state ?? '';
+        if (!keys.some(([s, p]) => s === state && p === t.property)) keys.push([state, t.property]);
+      }
+    }
+    const onBase: ByState = new Map();
+    for (const [state, prop] of keys) {
+      const target = (m: PendingButton): ButtonTarget | undefined => m.targets.find((x) => x.property === prop && (x.state ?? '') === state);
+      // What Webflow renders for the member without a declaration (`null`: not affected).
+      const naturalOf = (m: PendingButton): string | null => target(m)?.natural ?? (m.kind === 'button' && !state ? naturalButtonValue(prop) : null);
       // What each member wants; `null` = its own CSS sets it (compatible with anything).
       const wants = members.map((m) => {
-        const t = m.targets.find((x) => x.property === prop);
-        return t ? t.value : natural;
+        const t = target(m);
+        return t ? t.value : naturalOf(m);
       });
       const live = wants.filter((w): w is string => w !== null);
       if (live.length === 0) continue;
+      const natural = members.map(naturalOf).find((n): n is string => n !== null) ?? live[0]!;
       const uniform = live.every((w) => sameValue(w, live[0]!));
       const baseValue = uniform || !live.some((w) => sameValue(w, natural)) ? live[0]! : natural;
-      if (!sameValue(baseValue, natural)) onBase.push({ property: prop, value: baseValue });
+      if (members.some((m) => {
+        const n = naturalOf(m);
+        return n !== null && !sameValue(baseValue, n);
+      })) {
+        add(onBase, state, { property: prop, value: baseValue });
+      }
       members.forEach((m, i) => {
         const w = wants[i];
         if (w === null || w === undefined || sameValue(w, baseValue)) return;
-        comboDecls.set(m, [...(comboDecls.get(m) ?? []), { property: prop, value: w }]);
+        const map = comboDecls.get(m) ?? new Map<string, NativeDecl[]>();
+        add(map, state, { property: prop, value: w });
+        comboDecls.set(m, map);
       });
     }
-    if (onBase.length) baseDecls.set(base, onBase);
+    if (onBase.size) baseDecls.set(base, { kind: members[0]!.kind, decls: onBase });
   }
 
   // Base defaults first: a combo's defaults must come later to override them at the combo level.
-  for (const [base, decls] of baseDecls) ctx.registry.addDefaults(base, decls);
+  for (const [base, { decls }] of baseDecls) for (const [state, d] of decls) ctx.registry.addDefaults(base, d, state);
   const combos = new Map<PendingButton, string>();
   for (const [m, decls] of comboDecls) {
     if (!m.names || !m.ids) continue;
-    const name = defaultsClass(ctx, 'is-button-ua', decls);
+    const name = defaultsClassStates(ctx, m.kind === 'field' ? 'is-field-ua' : 'is-button-ua', decls);
     combos.set(m, name);
     m.ids.splice(0, m.ids.length, ...ctx.registry.resolve([...m.names, name]));
   }
 
-  if (baseDecls.size > 0 || comboDecls.size > 0) {
-    const detail = [...baseDecls].map(([b, d]) => `.${b} { ${d.map((x) => `${x.property}: ${x.value};`).join(' ')} }`);
-    for (const [m, name] of combos) detail.push(`.${m.base} … .${name} { ${comboDecls.get(m)!.map((x) => `${x.property}: ${x.value};`).join(' ')} }`);
-    const classes = [...new Set([...baseDecls.keys(), ...combos.values()])];
+  const fmt = (decls: ByState): string =>
+    [...decls].map(([state, d]) => `${state ? `:${state} ` : ''}{ ${d.map((x) => `${x.property}: ${x.value};`).join(' ')} }`).join(' ');
+  for (const kind of ['button', 'field', 'dom-button'] as const) {
+    const bases = [...baseDecls].filter(([, v]) => v.kind === kind);
+    const kindCombos = [...combos].filter(([m]) => m.kind === kind);
+    if (bases.length === 0 && kindCombos.length === 0) continue;
+    const detail = bases.map(([b, v]) => `.${b} ${fmt(v.decls)}`);
+    for (const [m, name] of kindCombos) detail.push(`.${m.base} … .${name} ${fmt(comboDecls.get(m)!)}`);
+    const classes = [...new Set([...bases.map(([b]) => b), ...kindCombos.map(([, n]) => n)])];
+    const list = `${classes.length === 1 ? 'class' : 'classes'} ${classes.map((b) => `"${b}"`).join(', ')}`;
+    const message = {
+      button: `Webflow Buttons get .w-button defaults (blue background, padding, white text) and a <button> loses its own font when it becomes a link; ${list} got declarations that keep the source look.`,
+      field: `Native form fields get webflow.css defaults (.w-input/.w-select: 38px height, 10px bottom margin, grey border, 14px text, blue focus border; .w-checkbox/.w-radio offsets); ${list} got declarations that keep the source look.`,
+      'dom-button': `<button> Custom Elements lose their browser font, colour and border to webflow.css resets; ${list} got declarations that keep the source look.`,
+    }[kind];
+    ctx.warnings.push({ code: 'other', severity: 'info', message, detail: [...new Set(detail)].join('\n') });
+  }
+  if (shared.size > 0) {
     ctx.warnings.push({
       code: 'other',
       severity: 'info',
-      message: `Webflow Buttons get .w-button defaults (blue background, padding, white text) and a <button> loses its own font when it becomes a link; ${classes.length === 1 ? 'class' : 'classes'} ${classes.map((b) => `"${b}"`).join(', ')} got declarations that keep the source look.`,
-      detail: [...new Set(detail)].join('\n'),
-    });
-  }
-  for (const base of skipped) {
-    ctx.warnings.push({
-      code: 'other',
-      severity: 'warning',
-      message: `Class "${base}" is used on a Button and on other elements, so Webflow's .w-button defaults (blue background, padding, white text) were not neutralized on it.`,
-      detail: base,
+      message: `${shared.size === 1 ? 'Class' : 'Classes'} ${[...shared].map((b) => `"${b}"`).join(', ')} ${
+        shared.size === 1 ? 'is' : 'are'
+      } also used by other elements (or inside a Code Embed), so the Webflow default overrides went on generated combo classes of the buttons and fields only.`,
     });
   }
 }
@@ -322,12 +370,18 @@ function uniqueClassName(ctx: Ctx, base: string): string {
 
 /** A generated class holding low-priority declarations; identical requests share one class. */
 function defaultsClass(ctx: Ctx, base: string, decls: NativeDecl[]): string {
-  const key = `${base}\u0001${JSON.stringify(decls)}`;
+  return defaultsClassStates(ctx, base, new Map([['', decls]]));
+}
+
+/** `defaultsClass` with declarations per state (`''` resting, `'focus'`…). */
+function defaultsClassStates(ctx: Ctx, base: string, byState: Map<string, NativeDecl[]>): string {
+  const entries = [...byState].filter(([, d]) => d.length > 0);
+  const key = `${base}\u0001${JSON.stringify(entries)}`;
   const existing = ctx.generated.get(key);
   if (existing) return existing;
   const name = uniqueClassName(ctx, base);
   ctx.generated.set(key, name);
-  ctx.registry.addDefaults(name, decls);
+  for (const [state, decls] of entries) ctx.registry.addDefaults(name, decls, state);
   return name;
 }
 
@@ -336,7 +390,26 @@ function buildElement(ctx: Ctx, el: Element): string[] {
   const tag = el.tagName.toLowerCase();
   if (SKIP_TAGS.has(tag)) return [];
 
-  if (tag === 'form' && ctx.options.forms === 'native' && !ctx.inForm) {
+  if (tag === 'form' && ctx.options.forms !== 'embed' && !ctx.inForm) {
+    const reasons = scriptedFormReasons(el, ctx.scriptText);
+    const label = formLabel(el);
+    if (reasons.length > 0 && ctx.options.forms === 'auto') {
+      ctx.warnings.push({
+        code: 'unsupported-element',
+        severity: 'info',
+        message: `Form ${label} is driven by custom JavaScript (${reasons.join('; ')}), so it was kept as a Code Embed of its original HTML: Webflow's form handler would take over its submit (alerts, POST to Webflow Forms, hiding the form, Turnstile). Its class rules were copied to the <style> embed. Use forms: 'native' to get a Webflow Form Block instead.`,
+        detail: el.outerHTML.slice(0, 160),
+      });
+      return [buildElementEmbed(ctx, el, tag, false)];
+    }
+    if (reasons.length > 0) {
+      ctx.warnings.push({
+        code: 'unsupported-element',
+        severity: 'warning',
+        message: `Form ${label} looks driven by custom JavaScript (${reasons.join('; ')}), but became a native Webflow form (forms: 'native'). Webflow's form handler also runs on it: it shows alerts for empty required fields, posts to Webflow Forms, hides the form on success and adds Turnstile. Its submit button is an <input>, so scripts that set its textContent break. Use forms: 'auto' or 'embed' to keep the original HTML.`,
+        detail: el.outerHTML.slice(0, 160),
+      });
+    }
     ctx.inForm = true;
     try {
       return [buildForm(formApi(ctx), el)];
@@ -456,8 +529,9 @@ function formApi(ctx: Ctx): FormBuilderApi {
     resolveClasses: (el, extra) => {
       const tag = el.tagName.toLowerCase();
       const submit = tag === 'button' || (tag === 'input' && (el.getAttribute('type') ?? '').toLowerCase() === 'submit');
-      return resolveClasses(ctx, el, { generated: extra, button: submit });
+      return resolveClasses(ctx, el, { generated: extra, button: submit || ctx.defaultsElements.has(el) });
     },
+    fieldClasses: (el, kind) => defaultsFor(ctx, el, 'field', fieldTargets(el, ctx.rules, kind), 'field'),
     resolveNames: (names) => {
       for (const n of names) ctx.otherClasses.add(n);
       return ctx.registry.resolve(names);
@@ -485,20 +559,57 @@ function formApi(ctx: Ctx): FormBuilderApi {
  * neutralizers go to its existing base class at the end of the build.
  */
 function buttonClasses(ctx: Ctx, el: Element): string[] {
-  const targets = buttonTargets(el, ctx.rules);
+  return defaultsFor(ctx, el, 'button', buttonTargets(el, ctx.rules), 'button');
+}
+
+/**
+ * Records neutralizers (`targets`) for an element: pending on its own base class (applied by
+ * `applyButtonDefaults`), or, for a classless element, a generated class named after `generated`
+ * that is returned to be put first in its class list.
+ */
+function defaultsFor(ctx: Ctx, el: Element, kind: DefaultsKind, targets: ButtonTarget[], generated: string): string[] {
+  ctx.defaultsElements.add(el);
   const own = classNamesOf(el);
   if (own.length > 0) {
     // Recorded even with nothing to add: it still takes part in the base class's agreement.
-    const pending: PendingButton = { base: own[0]!, targets };
+    const pending: PendingButton = { kind, base: own[0]!, targets };
     ctx.buttonDefaults.push(pending);
     ctx.pendingByElement.set(el, pending);
     return [];
   }
-  const decls = targets
-    .filter((t): t is ButtonTarget & { value: string } => t.value !== null && !sameValue(t.value, t.natural))
-    .map((t) => ({ property: t.property, value: t.value }));
-  if (decls.length === 0) return [];
-  return [defaultsClass(ctx, 'button', decls)];
+  const byState = new Map<string, NativeDecl[]>();
+  for (const t of targets) {
+    if (t.value === null || sameValue(t.value, t.natural)) continue;
+    const state = t.state ?? '';
+    byState.set(state, [...(byState.get(state) ?? []), { property: t.property, value: t.value }]);
+  }
+  if (byState.size === 0) return [];
+  return [defaultsClassStates(ctx, generated, byState)];
+}
+
+/**
+ * `<button>` with `buttonMode: 'customElement'`: a Custom Element (`DOM`, `data.tag: "button"`) with
+ * every attribute and an explicit `type` (default `"button"`, so it never submits a form by
+ * accident). Its classes stay native and get the browser defaults webflow.css resets
+ * (./buttonDefaults `domButtonTargets`). No `.w-button`, no click shim.
+ */
+function buildDomButton(ctx: Ctx, el: Element, id: string): string {
+  const attributes: WfXattr[] = [];
+  if (id) attributes.push({ name: 'id', value: id });
+  attributes.push({ name: 'type', value: (el.getAttribute('type') || 'button').toLowerCase() });
+  attributes.push(...collectXattr(ctx, el, ['type']));
+  const generated = defaultsFor(ctx, el, 'dom-button', domButtonTargets(el, ctx.rules), 'button');
+  const classes = resolveClasses(ctx, el, { generated, button: true });
+  ctx.domTags.set('button', (ctx.domTags.get('button') ?? 0) + 1);
+  const node: WfElementNode = {
+    _id: uuid(),
+    type: 'DOM',
+    tag: 'div',
+    classes,
+    children: [],
+    data: { tag: 'button', attributes, text: false, slot: '', visibility: { conditions: [] } },
+  };
+  return emit(ctx, node, el, true);
 }
 
 /**
@@ -507,6 +618,7 @@ function buttonClasses(ctx: Ctx, el: Element): string[] {
  * Text Block, so it never gets `.w-button`.
  */
 function buildLink(ctx: Ctx, el: Element, tag: 'a' | 'button', id: string): string {
+  if (tag === 'button' && ctx.options.buttonMode === 'customElement') return buildDomButton(ctx, el, id);
   const hasBlockChild = Array.from(el.children).some((c) => {
     const t = c.tagName.toLowerCase();
     return BLOCK_LEVEL.has(t) || t === 'img' || EMBED_TAGS.has(t) || c.namespaceURI === 'http://www.w3.org/2000/svg';
@@ -817,6 +929,16 @@ function collapse(s: string): string {
 /** True when the element has a non-whitespace text node as a direct child. */
 function hasDirectText(el: Element): boolean {
   return Array.from(el.childNodes).some((n) => n.nodeType === 3 && (n.textContent ?? '').trim() !== '');
+}
+
+/** How a form is named in warnings: its id, name or first class. */
+function formLabel(el: Element): string {
+  const id = el.getAttribute('id');
+  if (id) return `#${id}`;
+  const name = el.getAttribute('name') || el.getAttribute('data-name');
+  if (name) return `"${name}"`;
+  const cls = classNamesOf(el)[0];
+  return cls ? `.${cls}` : '<form>';
 }
 
 /** The element's own class names, minus Webflow state classes. */

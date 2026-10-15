@@ -266,6 +266,9 @@ The common converter mapping follows.
 
 - **VERIFIED [S4]:** Native form nodes (FormWrapper, FormTextInput, FormSelect, FormRadio\*) paste completely. Use the full Wrapper → Form + Success + Error structure. S4 reports that a form control emitted as `Block` crashes on paste.
 - **VERIFIED [S7]:** A pasted form takes the destination site's notification settings.
+- **Observed in our GreenIron paste test (2026-10-15):** on the published site, webflow.js binds a delegated `submit` handler to `.w-form form`. It ignores `defaultPrevented`, calls `window.alert` for empty required fields, POSTs to Webflow Forms, hides the `<form>` (and any custom success element inside it) and adds Turnstile, which disables the submit button. A form driven by its own script therefore must not be a native form; the converter keeps such forms as Code Embeds (`forms: 'auto'`).
+- **UNCERTAIN:** a default value on `FormTextInput`. None of the 53 real `FormTextInput` nodes in S3 has `attr.value`, and S1 shows no value field. The converter emits it as a custom attribute (`xattr` `value`), unverified.
+- **VERIFIED [S2 `style-presets.css`, a copy of webflow.css]:** `.w-input, .w-select { color:#333; vertical-align:middle; background-color:#fff; border:1px solid #ccc; width:100%; height:38px; margin-bottom:10px; padding:8px 12px; font-size:14px; line-height:1.42857; display:block }`, `.w-select { background-color:#f3f3f3 }`, `textarea.w-input { height:auto }`, `.w-input:focus { border-color:#3898ec; outline:0 }`, `.w-checkbox { margin-bottom:5px; padding-left:20px; display:block }`, `.w-checkbox-input { float:left; margin:4px 0 0 -20px }`, `.w-radio-input { float:left; margin:3px 0 0 -20px }`.
 
 #### Navbar, Dropdown, Tabs, Slider, Lightbox, Dynamo (CMS)
 - **VERIFIED (types exist) [S3]:** Their `data` holds widget configuration (`navbar`, `dropdown`, `tabs`, `slider`, `lightbox`, `dyn`).
