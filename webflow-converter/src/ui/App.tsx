@@ -312,7 +312,7 @@ export default function App() {
                       : `${risk.likely.length} class${risk.likely.length === 1 ? '' : 'es'} already likely exist${risk.likely.length === 1 ? 's' : ''} in your site — import site styles to avoid duplicates`}
                   </p>
                   <p className="mt-1 text-amber-100/80">
-                    Webflow pastes a class whose name your site already has with different styles as "name 2".
+                    Webflow pastes a class whose name your site already has with different styles as "name 2" (an unchanged class is reused).
                     {risk.copiedBefore.length > 0 && ` ${risk.copiedBefore.length} ${risk.copiedBefore.length === 1 ? 'was' : 'were'} copied to Webflow from this browser before.`}
                     {risk.utilities.length > 0 && ` ${risk.utilities.length} ${risk.utilities.length === 1 ? 'is a' : 'are'} Client-First utilit${risk.utilities.length === 1 ? 'y' : 'ies'}.`}
                     {' '}In the Designer, copy an element that uses them (or a fresh blank page's style guide), then paste it under "Reuse classes from your Webflow site".
