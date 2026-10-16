@@ -334,6 +334,15 @@ export default function App() {
                 {canConvert ? (
                   <>
                     Then select an element in the Webflow Designer and press <kbd className="kbd">{modKey}+V</kbd>.
+                    {site && (
+                      <span className="mt-1 block text-emerald-300/90" data-testid="site-in-use">
+                        Using the {site.styles.length} imported classes of “{site.label}”: same-named classes reuse that site’s
+                        {options.siteClassConflicts === 'rename' ? ' (different designs are renamed)' : ''}.{' '}
+                        <button type="button" className="underline underline-offset-2 hover:text-emerald-200" onClick={focusSiteImport}>
+                          Change
+                        </button>
+                      </span>
+                    )}
                   </>
                 ) : (
                   'Paste your code, or load the example, to get started.'
@@ -348,6 +357,8 @@ export default function App() {
             saved={siteSaved}
             overrides={options.siteClassOverrides}
             onOverridesChange={(v) => setOptions((o) => ({ ...o, siteClassOverrides: v }))}
+            conflicts={options.siteClassConflicts}
+            onConflictsChange={(v) => setOptions((o) => ({ ...o, siteClassConflicts: v }))}
             emptyUtilities={options.skipClientFirstUtilityStyles}
             onEmptyUtilitiesChange={(v) => setOptions((o) => ({ ...o, skipClientFirstUtilityStyles: v }))}
             open={siteOpen}

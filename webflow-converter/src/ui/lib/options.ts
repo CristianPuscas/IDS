@@ -6,6 +6,7 @@ import {
   type ConvertOptions,
   type ExternalImageMode,
   type FormMode,
+  type SiteClassConflicts,
   type SiteClassOverrides,
 } from '../../engine/types';
 import { getStorage } from './drafts';
@@ -21,6 +22,8 @@ export interface AdvancedOptions {
   externalImages: ExternalImageMode;
   /** Where a reused site class differs from the source CSS (see the site styles panel). */
   siteClassOverrides: SiteClassOverrides;
+  /** When an imported site class has the same name but another design (see the site styles panel). */
+  siteClassConflicts: SiteClassConflicts;
   /** Experimental: empty Client-First utility styles so the site's apply. */
   skipClientFirstUtilityStyles: boolean;
   /** Deterministic style ids. */
@@ -36,6 +39,7 @@ export const DEFAULT_ADVANCED: Readonly<AdvancedOptions> = Object.freeze({
   neutralizeDefaults: DEFAULT_CONVERT_OPTIONS.neutralizeDefaults,
   externalImages: DEFAULT_CONVERT_OPTIONS.externalImages,
   siteClassOverrides: DEFAULT_CONVERT_OPTIONS.siteClassOverrides,
+  siteClassConflicts: DEFAULT_CONVERT_OPTIONS.siteClassConflicts,
   skipClientFirstUtilityStyles: DEFAULT_CONVERT_OPTIONS.skipClientFirstUtilityStyles,
   stableClassIds: DEFAULT_CONVERT_OPTIONS.stableClassIds,
 });
@@ -48,6 +52,7 @@ const CF_UTILITIES: readonly ClientFirstUtilities[] = ['keep', 'prefix'];
 const SNAPS: readonly BreakpointSnap[] = ['up', 'off'];
 const IMAGES: readonly ExternalImageMode[] = ['customElement', 'embed', 'image'];
 const OVERRIDES: readonly SiteClassOverrides[] = ['embed', 'drop'];
+const CONFLICTS: readonly SiteClassConflicts[] = ['rename', 'reuse'];
 const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback);
 
 const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T => (allowed.includes(v as T) ? (v as T) : fallback);
@@ -63,7 +68,10 @@ export function sanitizeAdvanced(raw: unknown): AdvancedOptions {
     breakpointSnap: pick(o.breakpointSnap, SNAPS, DEFAULT_ADVANCED.breakpointSnap),
     neutralizeDefaults: typeof o.neutralizeDefaults === 'boolean' ? o.neutralizeDefaults : DEFAULT_ADVANCED.neutralizeDefaults,
     externalImages: pick(o.externalImages, IMAGES, DEFAULT_ADVANCED.externalImages),
-    siteClassOverrides: pick(o.siteClassOverrides, OVERRIDES, DEFAULT_ADVANCED.siteClassOverrides),
+    // Options saved before v7 have no siteClassConflicts: their "Use the site's" choice was made
+    // when every same-named class was reused, so it falls back to the default with the new policy.
+    siteClassOverrides: o.siteClassConflicts === undefined ? DEFAULT_ADVANCED.siteClassOverrides : pick(o.siteClassOverrides, OVERRIDES, DEFAULT_ADVANCED.siteClassOverrides),
+    siteClassConflicts: pick(o.siteClassConflicts, CONFLICTS, DEFAULT_ADVANCED.siteClassConflicts),
     skipClientFirstUtilityStyles: bool(o.skipClientFirstUtilityStyles, DEFAULT_ADVANCED.skipClientFirstUtilityStyles),
     stableClassIds: bool(o.stableClassIds, DEFAULT_ADVANCED.stableClassIds),
   };

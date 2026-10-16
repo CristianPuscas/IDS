@@ -458,6 +458,31 @@ function buildElement(ctx: Ctx, el: Element): string[] {
   }
 
   if (tag === 'p') {
+    const embedded = embeddedDescendant(ctx, el);
+    if (embedded) {
+      // Webflow wraps every Code Embed in a <div class="w-embed">, and a <div> start tag closes an
+      // open <p>: browsers split the published paragraph and move the icon and the text after it
+      // out of the (flex) paragraph (hero-construction paste test: the trust line icon landed on
+      // its own line above the text). A Div Block keeps them together; its class keeps the styles.
+      if (!ctx.notes.has('p-with-embed')) {
+        ctx.notes.add('p-with-embed');
+        ctx.warnings.push({
+          code: 'other',
+          severity: 'info',
+          message: `A <p> containing <${embedded}> became a Div Block: the <${embedded}> goes into a Code Embed, which Webflow wraps in a <div>, and browsers do not allow a <div> inside a <p> (they would split the paragraph). Its class keeps the styles; browser paragraph margins the class did not set no longer apply.`,
+          detail: el.outerHTML.slice(0, 160),
+        });
+      }
+      const node: WfElementNode = {
+        _id: uuid(),
+        type: 'Block',
+        tag: 'div',
+        classes,
+        children: [],
+        data: { tag: 'div', text: hasDirectText(el), ...commonData(ctx, el, id, []) },
+      };
+      return [emit(ctx, node, el, true)];
+    }
     return [emit(ctx, element('Paragraph', 'p', classes, commonData(ctx, el, id, [])), el, true)];
   }
 
@@ -869,6 +894,21 @@ function buildElementEmbed(ctx: Ctx, el: Element, tag: string, count = true): st
     });
   }
   return wrapper ? wrapper._id : node._id;
+}
+
+/**
+ * Tag of the first descendant of `el` that becomes a Code Embed (rendered as `<div class="w-embed">`),
+ * or `null`. Mirrors the embed rules of {@link buildElement}.
+ */
+function embeddedDescendant(ctx: Ctx, el: Element): string | null {
+  for (const d of Array.from(el.querySelectorAll('*'))) {
+    const tag = d.tagName.toLowerCase();
+    if (d.namespaceURI === 'http://www.w3.org/2000/svg') return 'svg';
+    if (ctx.inForm && FORM_CONTROL_TAGS.has(tag)) continue;
+    if (EMBED_TAGS.has(tag)) return tag;
+    if (tag === 'img' && ctx.options.externalImages === 'embed' && !isNativeImageSrc(d.getAttribute('src') ?? '')) return tag;
+  }
+  return null;
 }
 
 /** Pushes `node`, then builds its children (pre-order). */

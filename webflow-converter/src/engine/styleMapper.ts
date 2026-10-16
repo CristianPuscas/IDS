@@ -149,6 +149,11 @@ export interface StyleMapResult {
   /** Number of style rules (not at-rules) placed in `leftoverCss`. Feeds `stats.embeddedCssRules`. */
   leftoverRuleCount: number;
   warnings: ConvertWarning[];
+  /**
+   * Chains (class names joined by U+0001) whose own class is styled by a source rule, as opposed
+   * to only generated defaults (e.g. `.w-button` neutralizers) or not at all.
+   */
+  sourceStyledChains: Set<string>;
 }
 
 /** Optional extras for `mapStyles`. */
@@ -180,6 +185,8 @@ interface Candidate {
   mediaStack: string[];
   /** Already copied to the embed. */
   embedded: boolean;
+  /** From `registry.addDefaults`, not from the source CSS. */
+  fromDefaults: boolean;
 }
 
 /** A piece of CSS destined for the embed. */
@@ -342,6 +349,7 @@ export function mapStyles(
           selector,
           mediaStack: stack,
           embedded: false,
+          fromDefaults: defaultSet.has(rule),
         });
       }
     });
@@ -384,13 +392,16 @@ export function mapStyles(
   // delta), but for those it carries every band: in Webflow `.a.b` outranks `.a` at all widths, so
   // a combo value set in `main` would otherwise mask the parent's breakpoint overrides.
   const targets = new Map<string, Map<string, Resolved>>(); // prefix key -> state -> per-band values
+  const sourceStyledChains = new Set<string>();
   for (const { classes, style } of registry.prefixes()) {
     const group = [...live].filter((c) => isSubset(c.classes, classes));
+    const own = classes[classes.length - 1]!;
+    if (group.some((c) => !c.fromDefaults && c.classes.includes(own))) sourceStyledChains.add(classes.join(SEP));
     const byState = new Map<string, Candidate[]>();
     for (const c of group) byState.set(c.state, [...(byState.get(c.state) ?? []), c]);
     const parent = classes.length > 1 ? targets.get(classes.slice(0, -1).join(SEP)) : undefined;
-    const own = new Map<string, Resolved>();
-    targets.set(classes.join(SEP), own);
+    const ownTargets = new Map<string, Resolved>();
+    targets.set(classes.join(SEP), ownTargets);
 
     const variants: WfStyle['variants'] = {};
     let styleLess = '';
@@ -415,7 +426,7 @@ export function mapStyles(
         }
         resolved = resolveBands(alive, domain);
       }
-      own.set(state, resolved);
+      ownTargets.set(state, resolved);
       const inherited = parent?.get(state);
       if (inherited) resolved = comboDelta(resolved, inherited, domain);
       for (const [band, decls] of encodeDesktopFirst(resolved, domain)) {
@@ -450,7 +461,7 @@ export function mapStyles(
   if (keep && hooks.prelude) pieces.push({ order: -2e9, sub: 0, mediaStack: [], raw: hooks.prelude });
 
   const leftover = keep ? assembleChunks(pieces, options.maxEmbedChars) : { chunks: [], ruleCount: 0 };
-  return { leftoverCss: leftover.chunks, leftoverRuleCount: leftover.ruleCount, warnings };
+  return { leftoverCss: leftover.chunks, leftoverRuleCount: leftover.ruleCount, warnings, sourceStyledChains };
 }
 
 /** Property values per band: `band -> property -> value`. */

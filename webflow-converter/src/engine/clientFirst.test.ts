@@ -104,8 +104,9 @@ describe("clientFirstUtilities with a classPrefix", () => {
     expect(w.message).toContain('identical styles');
     expect(w.message).toContain('classPrefix');
     expect(w.message).toContain("import your site's styles");
-    expect(w.detail).toBe('Client-First utility / core classes: padding-global, container-large, heading-style-h2, text-size-large');
-    expect(w.items).toEqual(['padding-global', 'container-large', 'heading-style-h2', 'text-size-large']);
+    expect(w.detail).toBe('Client-First utility / core classes: padding-global, container-large, heading-style-h2, text-size-large\nStyled is-* combo classes: is-dark');
+    expect(w.message).toContain('is-dark may merge with a same-named combo in your site');
+    expect(w.items).toEqual(['padding-global', 'container-large', 'heading-style-h2', 'text-size-large', 'is-dark']);
   });
 });
 

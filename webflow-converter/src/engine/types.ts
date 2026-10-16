@@ -672,6 +672,16 @@ export interface ConvertOptions {
    */
   siteClassOverrides: SiteClassOverrides;
   /**
+   * What to do when an imported site class has the same name as one of ours but a DIFFERENT design
+   * (a layout-critical property differs, or, for a custom class, more than 3 declarations do; see
+   * `matchConflicts` in ./siteStyles). `'rename'` (default): ours is NOT reused; it is emitted with
+   * its own styles under a new name (`section_hero` -> `section_hero-<title word>`), and a combo
+   * that the site has with other styles is renamed too (Webflow merges combos by name). Equal and
+   * compatible classes are still reused (with `siteClassOverrides`). `'reuse'`: every same-named
+   * class is reused (the behaviour before v7).
+   */
+  siteClassConflicts: SiteClassConflicts;
+  /**
    * Derive each style `_id` from its class chain and declarations instead of a random UUID, so the
    * same output always carries the same style ids. Webflow ignores pasted style ids when it matches
    * classes (spec 3.6), so this is harmless. Node ids stay random. Default `true`.
@@ -689,6 +699,9 @@ export interface ConvertOptions {
 
 /** `ConvertOptions.siteClassOverrides`. */
 export type SiteClassOverrides = 'embed' | 'drop';
+
+/** `ConvertOptions.siteClassConflicts`. */
+export type SiteClassConflicts = 'rename' | 'reuse';
 
 /** `ConvertOptions.externalImages`. */
 export type ExternalImageMode = 'customElement' | 'embed' | 'image';
@@ -749,6 +762,7 @@ export const DEFAULT_CONVERT_OPTIONS: Readonly<ConvertOptions> = Object.freeze({
   buttonClickShim: true,
   reuseSiteClasses: true,
   siteClassOverrides: 'embed',
+  siteClassConflicts: 'rename',
   stableClassIds: true,
   skipClientFirstUtilityStyles: false,
 });
@@ -816,6 +830,8 @@ export interface ConvertStats {
   reusedClasses: number;
   /** Styles this output creates (`styles - reusedClasses`). */
   newClasses: number;
+  /** Classes renamed because the imported site has the name with a different design. */
+  renamedClasses?: number;
 }
 
 /** Output of `convert()`. */

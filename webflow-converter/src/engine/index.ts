@@ -29,7 +29,18 @@ import { extractJs } from './jsExtractor';
 import { loadTerserMinifier } from './jsMinify';
 import { buildNodes } from './nodeBuilder';
 import { createStyleRegistry, mapStyles, type MapStylesHooks, type StyleRegistry } from './styleMapper';
-import { buildOverrideCss, emptyClientFirstUtilities, finalizeStyles, matchSiteStyles, siteReuseWarnings, type SiteMatch } from './siteStyles';
+import {
+  buildOverrideCss,
+  conflictingCombos,
+  emptyClientFirstUtilities,
+  finalizeStyles,
+  matchConflicts,
+  matchSiteStyles,
+  planRenames,
+  renameSuffix,
+  siteReuseWarnings,
+  type SiteMatch,
+} from './siteStyles';
 import {
   DEFAULT_CONVERT_OPTIONS,
   isTextNode,
@@ -40,6 +51,7 @@ import {
   type ConvertWarning,
   type WfElementNode,
   type WfNode,
+  type WfStyle,
   type XscpData,
 } from './types';
 
@@ -70,6 +82,7 @@ export function resolveOptions(options: Partial<ConvertOptions> = {}): ConvertOp
   if (out.clientFirstUtilities !== 'keep' && out.clientFirstUtilities !== 'prefix') out.clientFirstUtilities = DEFAULT_CONVERT_OPTIONS.clientFirstUtilities;
   if (!Array.isArray(out.siteStyles)) delete out.siteStyles;
   if (out.siteClassOverrides !== 'embed' && out.siteClassOverrides !== 'drop') out.siteClassOverrides = DEFAULT_CONVERT_OPTIONS.siteClassOverrides;
+  if (out.siteClassConflicts !== 'rename' && out.siteClassConflicts !== 'reuse') out.siteClassConflicts = DEFAULT_CONVERT_OPTIONS.siteClassConflicts;
   return out;
 }
 
@@ -246,7 +259,31 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
   // Reuse the destination site's classes (spec 3.6): matched classes become the site's style objects
   // verbatim at the end (finalizeStyles); where the source differs, its values go to the embed.
   const chainStyles = registry.prefixes();
-  const matches: SiteMatch[] = opts.reuseSiteClasses && opts.siteStyles?.length ? matchSiteStyles(chainStyles, opts.siteStyles) : [];
+  const importOn = !!(opts.reuseSiteClasses && opts.siteStyles?.length);
+  let matches: SiteMatch[] = importOn ? matchSiteStyles(chainStyles, opts.siteStyles!) : [];
+  // Same name, different design (layout-critical differences): with 'rename' such a class is not
+  // reused but emitted with its own styles under a new name, and so are its combos (their site
+  // parent no longer applies) and combos the site has under that name with other styles.
+  let renames = new Map<string, string>();
+  if (importOn && opts.siteClassConflicts === 'rename') {
+    const sourceStyled = styleMap.sourceStyledChains;
+    const conflicts = new Map<string, string[]>();
+    const dropped = new Set<string>();
+    const kept: SiteMatch[] = [];
+    for (const m of matches) {
+      const parentKey = m.chain.slice(0, -1).join('\u0001');
+      const reasons = matchConflicts(m, sourceStyled);
+      if (reasons.length > 0) conflicts.set(m.ours._id, reasons);
+      if (reasons.length > 0 || (m.chain.length > 1 && dropped.has(parentKey))) dropped.add(m.chain.join('\u0001'));
+      else kept.push(m);
+    }
+    const keptIds = new Set(kept.map((m) => m.ours._id));
+    const toRename = new Set(conflicts.keys());
+    for (const id of conflictingCombos(chainStyles, opts.siteStyles!, keptIds, sourceStyled)) toRename.add(id);
+    renames = planRenames(chainStyles, toRename, opts.siteStyles!, renameSuffix(parsed.document.title ?? ''));
+    matches = kept;
+    if (renames.size > 0) warnings.push(...renameWarnings(chainStyles, renames, conflicts, scriptsText));
+  }
   const reusedIds = new Set(matches.map((m) => m.ours._id));
   let overrideRules = 0;
   if (matches.length > 0) {
@@ -275,7 +312,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
       });
     }
   }
-  warnings.push(...collisionWarnings(registry, opts, reusedIds));
+  warnings.push(...collisionWarnings(registry, opts, new Set([...reusedIds, ...renames.keys()])));
 
   const js = extractJs(parsed.scripts, editorJs);
   warnings.push(...js.warnings);
@@ -322,7 +359,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
     registry.styles(),
     chainStyles,
     nodes.filter((n): n is WfElementNode => !isTextNode(n)),
-    { matches, stableIds: opts.stableClassIds },
+    { matches, renames, stableIds: opts.stableClassIds },
   );
   const data = createXscpData(nodes, styles);
   const json = JSON.stringify(data);
@@ -340,6 +377,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
       jsBytes: js.totalBytes,
       reusedClasses: matches.length,
       newClasses: styles.length - matches.length,
+      ...(renames.size > 0 ? { renamedClasses: renames.size } : {}),
     },
     externalScripts: scriptEmbeds.external,
   };
@@ -430,6 +468,45 @@ const OTHER_COMMON_CLASS = [
 ];
 
 /**
+ * The note listing classes renamed so they do not reuse a different site class, plus a warning
+ * when a script mentions one of the old names (scripts are not rewritten).
+ */
+function renameWarnings(chains: readonly { classes: string[]; style: WfStyle }[], renames: ReadonlyMap<string, string>, conflicts: ReadonlyMap<string, string[]>, scripts: readonly string[]): ConvertWarning[] {
+  const lines: string[] = [];
+  const pairs = new Map<string, string>();
+  for (const { classes, style } of chains) {
+    const to = renames.get(style._id);
+    if (!to) continue;
+    const from = classes.join('.');
+    const why = conflicts.get(style._id);
+    lines.push(`${from} → ${to}${why ? ` (site's version differs in ${why.slice(0, 6).join(', ')}${why.length > 6 ? '…' : ''})` : " (the site has this combo with other styles; Webflow would merge them)"}`);
+    pairs.set(style.name, to);
+  }
+  const n = pairs.size;
+  const shown = [...pairs].slice(0, 3).map(([a, b]) => `${a} → ${b}`).join(', ');
+  const out: ConvertWarning[] = [
+    {
+      code: 'site-classes',
+      severity: 'warning',
+      message: `${n} class${n === 1 ? ' was' : 'es were'} renamed to avoid clashing with different site classes: ${shown}${pairs.size > 3 ? '…' : '.'} Your site has ${n === 1 ? 'this name' : 'these names'} with another design, so reusing ${n === 1 ? 'it' : 'them'} would change the pasted section (choose "Reuse the site's" to reuse them anyway).`,
+      detail: lines.join('\n'),
+      items: [...new Set(renames.values())],
+    },
+  ];
+  const text = scripts.join('\n');
+  const inScripts = [...pairs.keys()].filter((name) => new RegExp(`(^|[^\\w-])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`).test(text));
+  if (inScripts.length > 0) {
+    out.push({
+      code: 'site-classes',
+      severity: 'warning',
+      message: `A script mentions ${inScripts.length === 1 ? 'a renamed class' : 'renamed classes'} (${inScripts.join(', ')}); scripts are not rewritten, so update ${inScripts.length === 1 ? 'it' : 'them'} to the new name${inScripts.length === 1 ? '' : 's'}.`,
+      detail: inScripts.map((c) => `${c} → ${pairs.get(c)}`).join('\n'),
+    });
+  }
+  return out;
+}
+
+/**
  * Class clash warnings. Without a prefix: Client-First utilities (expected in a Client-First site),
  * other common names and combos not named `is-*`. With a prefix and `clientFirstUtilities: 'keep'`:
  * an info about the utilities that kept their names. With `'prefix'`: nothing.
@@ -438,6 +515,8 @@ function collisionWarnings(registry: StyleRegistry, opts: ConvertOptions, reused
   const utilities: string[] = [];
   const common: string[] = [];
   const combos: string[] = [];
+  const isCombos: string[] = [];
+  const importOn = !!(opts.siteStyles?.length && opts.reuseSiteClasses);
   const add = (list: string[], name: string) => {
     if (!list.includes(name)) list.push(name);
   };
@@ -447,6 +526,10 @@ function collisionWarnings(registry: StyleRegistry, opts: ConvertOptions, reused
     if (isClientFirstUtility(s.name)) add(utilities, s.name);
     else if (s.comb === '' && OTHER_COMMON_CLASS.some((re) => re.test(s.name))) add(common, s.name);
     else if (s.comb === '&' && !s.name.startsWith('is-') && !/^inline-style-\d+$/.test(s.name)) add(combos, s.name);
+    // Without an import nothing tells us which is-* combos the site has. Webflow merges a pasted
+    // combo with a same-named one even under a new parent (hero-construction paste test:
+    // .hero_button.is-secondary came out with the site's green is-secondary).
+    else if (s.comb === '&' && s.name.startsWith('is-') && !importOn && (s.styleLess.trim() || Object.keys(s.variants).length > 0)) add(isCombos, s.name);
   }
 
   if (opts.classPrefix) {
@@ -461,11 +544,12 @@ function collisionWarnings(registry: StyleRegistry, opts: ConvertOptions, reused
     ];
   }
 
-  if (utilities.length === 0 && common.length === 0 && combos.length === 0) return [];
+  if (utilities.length === 0 && common.length === 0 && combos.length === 0 && isCombos.length === 0) return [];
   const detail: string[] = [];
   if (utilities.length) detail.push(`Client-First utility / core classes: ${utilities.join(', ')}`);
   if (common.length) detail.push(`Other common Client-First / Relume names: ${common.join(', ')}`);
   if (combos.length) detail.push(`Combo classes not named is-*: ${combos.join(', ')}`);
+  if (isCombos.length) detail.push(`Styled is-* combo classes: ${isCombos.join(', ')}`);
   const parts: string[] = [];
   if (utilities.length) {
     parts.push(
@@ -474,6 +558,11 @@ function collisionWarnings(registry: StyleRegistry, opts: ConvertOptions, reused
   }
   if (common.length || combos.length) {
     parts.push('Other names may clash the same way, and a combo class merges with a site class of the same name (its styles apply too).');
+  }
+  if (isCombos.length) {
+    parts.push(
+      `Combo class${isCombos.length > 1 ? 'es' : ''} ${isCombos.slice(0, 3).join(', ')}${isCombos.length > 3 ? '…' : ''} may merge with a same-named combo in your site and take its styles, even on a new parent class.`,
+    );
   }
   parts.push(
     opts.siteStyles?.length && opts.reuseSiteClasses
@@ -486,7 +575,7 @@ function collisionWarnings(registry: StyleRegistry, opts: ConvertOptions, reused
       severity: 'warning',
       message: parts.join(' '),
       detail: detail.join('\n'),
-      items: [...utilities, ...common, ...combos],
+      items: [...utilities, ...common, ...combos, ...isCombos],
     },
   ];
 }

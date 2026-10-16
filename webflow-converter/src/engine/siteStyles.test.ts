@@ -111,15 +111,23 @@ describe('reusing site classes', () => {
   });
 
   it('does not reuse a site combo under a different base', () => {
-    const res = run('<div class="card is-secondary">x</div>', '.card { color: red } .card.is-secondary { color: blue }', { siteStyles: SITE });
+    const res = run('<div class="card is-secondary">x</div>', '.card { color: red } .card.is-secondary { color: blue }', { siteStyles: SITE, siteClassConflicts: 'reuse' });
     expect(SITE.some((s) => s._id === style(res, 'is-secondary', '&')._id)).toBe(false);
+  });
+
+  it('renames a combo that the site has with other styles (Webflow merges combos by name)', () => {
+    const res = run('<div class="card is-secondary">x</div>', '.card { color: red } .card.is-secondary { color: blue }', { siteStyles: SITE });
+    const combo = style(res, 'is-secondary-new', '&');
+    expect(combo.styleLess).toBe('color: blue;');
+    expect(res.data.payload.styles.some((s) => s.name === 'is-secondary')).toBe(false);
+    expect(res.stats.renamedClasses).toBe(1);
   });
 
   it('keeps the site class unchanged and moves differing source CSS to a scoped embed override', () => {
     const res = run(
       '<div class="container-large"><p>x</p></div>',
       '.container-large { max-width: 70rem; margin-left: auto; margin-right: auto; width: 100% } @media (max-width: 767px) { .container-large { max-width: 100% } }',
-      { siteStyles: SITE },
+      { siteStyles: SITE, siteClassConflicts: 'reuse' },
     );
     const s = style(res, 'container-large');
     expect(s.styleLess).toBe(site('container-large').styleLess);
@@ -136,13 +144,13 @@ describe('reusing site classes', () => {
   });
 
   it("siteClassOverrides 'drop' uses the site's styles as they are", () => {
-    const res = run('<div class="container-large">x</div>', '.container-large { max-width: 70rem }', { siteStyles: SITE, siteClassOverrides: 'drop' });
+    const res = run('<div class="container-large">x</div>', '.container-large { max-width: 70rem }', { siteStyles: SITE, siteClassOverrides: 'drop', siteClassConflicts: 'reuse' });
     expect(embeddedCss(res)).toBe('');
     expect(res.warnings.find((x) => x.code === 'site-classes' && x.severity === 'warning')!.message).toContain('dropped');
   });
 
   it('overrides states of reused classes with the matching pseudo-class', () => {
-    const res = run('<a class="button" href="#">x</a>', '.button:hover { background-color: #ff0000 }', { siteStyles: SITE, buttonMode: 'linkBlock' });
+    const res = run('<a class="button" href="#">x</a>', '.button:hover { background-color: #ff0000 }', { siteStyles: SITE, buttonMode: 'linkBlock', siteClassConflicts: 'reuse' });
     expect(embeddedCss(res)).toContain('[data-h2w-class~="button"]:hover {\n  background-color: #ff0000;\n}');
   });
 
@@ -200,7 +208,7 @@ describe('skipClientFirstUtilityStyles', () => {
     const res = run(
       '<div class="padding-global"><div class="container-large"><p class="hero_text">x</p></div></div>',
       '.padding-global { padding-left: 5% } .container-large { max-width: 80rem } .hero_text { color: red }',
-      { skipClientFirstUtilityStyles: true, siteStyles: SITE.filter((s) => s.name === 'container-large') },
+      { skipClientFirstUtilityStyles: true, siteStyles: SITE.filter((s) => s.name === 'container-large'), siteClassConflicts: 'reuse' },
     );
     expect(style(res, 'padding-global').styleLess).toBe('');
     expect(style(res, 'hero_text').styleLess).toBe('color: red;');
@@ -224,8 +232,9 @@ describe('payload with site styles stays valid', () => {
     );
     expect(validateXscp(res.data)).toEqual([]);
     const link = first(res, 'Link');
-    expect(classNames(res, link)).toEqual(['button', 'is-secondary', 'is-small']);
-    // is-small is a site combo of `button`, not of `button.is-secondary`: a new combo is created.
+    // is-small is a site combo of `button`, not of `button.is-secondary`: a new combo is created,
+    // under a new name because the site's is-small has other styles (Webflow merges by name).
+    expect(classNames(res, link)).toEqual(['button', 'is-secondary', 'is-small-new']);
     expect(link.classes[2]).not.toBe(site('is-small')._id);
   });
 });

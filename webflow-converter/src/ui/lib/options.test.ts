@@ -39,9 +39,18 @@ describe('advanced options', () => {
       neutralizeDefaults: true,
       externalImages: 'customElement',
       siteClassOverrides: 'embed',
+      siteClassConflicts: 'rename',
       skipClientFirstUtilityStyles: false,
       stableClassIds: true,
     });
+  });
+
+  it('resets a pre-v7 "Use the site\'s" choice and defaults conflicts to rename', () => {
+    const old = sanitizeAdvanced({ siteClassOverrides: 'drop' });
+    expect(old.siteClassOverrides).toBe('embed');
+    expect(old.siteClassConflicts).toBe('rename');
+    const now = sanitizeAdvanced({ siteClassOverrides: 'drop', siteClassConflicts: 'reuse' });
+    expect([now.siteClassOverrides, now.siteClassConflicts]).toEqual(['drop', 'reuse']);
   });
 
   it('round-trips through storage', () => {

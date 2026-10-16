@@ -16,6 +16,12 @@
  * the `<style>` embed under `[data-h2w-class~="name"]` (same specificity as `.name`, later in the
  * cascade, matches only the pasted elements), so the site's class itself stays untouched.
  *
+ * Only when the designs agree: a site class that has the same name but another design (a
+ * layout-critical property differs, `matchConflicts`) is not reused by default
+ * (`siteClassConflicts: 'rename'`); ours keeps its CSS under a new name (`planRenames`). Combos the
+ * site has under the same name with other styles are renamed too, because Webflow merges a pasted
+ * combo with a same-named one (`conflictingCombos`). Evidence: hero-construction paste test (diag4).
+ *
  * Also here: `stableClassIds` (deterministic style ids) and `skipClientFirstUtilityStyles`.
  *
  * Ownership: engine.
@@ -145,6 +151,8 @@ export interface SiteMatch {
   overrides: Map<string, Map<string, string>>;
   /** Properties the site's class sets that the source does not (they now apply too). */
   siteOnly: string[];
+  /** `siteOnly` as variant key (`''` = main) and property. */
+  siteOnlyDecls: { key: string; prop: string }[];
 }
 
 /**
@@ -250,7 +258,7 @@ function declsByKey(style: WfStyle): Map<string, Map<string, string>> {
   return out;
 }
 
-function diffStyles(ours: WfStyle, site: WfStyle): Pick<SiteMatch, 'overrides' | 'siteOnly'> {
+function diffStyles(ours: WfStyle, site: WfStyle): Pick<SiteMatch, 'overrides' | 'siteOnly' | 'siteOnlyDecls'> {
   const mine = declsByKey(ours);
   const theirs = declsByKey(site);
   const overrides = new Map<string, Map<string, string>>();
@@ -264,11 +272,157 @@ function diffStyles(ours: WfStyle, site: WfStyle): Pick<SiteMatch, 'overrides' |
       overrides.get(key)!.set(prop, value);
     }
   }
+  const siteOnlyDecls: { key: string; prop: string }[] = [];
   for (const [key, decls] of theirs) {
     const own = mine.get(key);
-    for (const prop of decls.keys()) if (!own?.has(prop)) siteOnly.add(key ? `${prop} (${key})` : prop);
+    for (const prop of decls.keys()) {
+      if (own?.has(prop)) continue;
+      siteOnly.add(key ? `${prop} (${key})` : prop);
+      siteOnlyDecls.push({ key, prop });
+    }
   }
-  return { overrides, siteOnly: [...siteOnly] };
+  return { overrides, siteOnly: [...siteOnly], siteOnlyDecls };
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Conflicts: same name, different design
+ * ---------------------------------------------------------------------------------------------- */
+
+/**
+ * Properties that decide layout or the look of a whole box: a site class that differs from the
+ * source in one of these is a different design that happens to share a generic name
+ * (`section_hero`, `hero_component`). Hero-construction paste test (diag4): the site's
+ * `section_hero` (dark green background, 100vh flex) and an EMPTY `hero_component` were reused for
+ * a white two-column hero; the override embed cannot undo a background the source never set.
+ */
+const LAYOUT_CRITICAL =
+  /^(display|position|top|right|bottom|left|inset(-.+)?|z-index|float|clear|order|grid(-.+)?|flex(-.+)?|gap|row-gap|column-gap|justify-.+|align-.+|place-.+|(min-|max-)?(width|height)|aspect-ratio|overflow(-.+)?|background(-.+)?|object-fit|columns|column-count|visibility|opacity|transform|filter|backdrop-filter|mix-blend-mode)$/;
+
+/** More differing declarations than this (custom classes) also make a conflict. */
+export const MAX_COMPATIBLE_DIFFERENCES = 3;
+
+/** True for a property in {@link LAYOUT_CRITICAL}. */
+export function isLayoutCritical(prop: string): boolean {
+  return LAYOUT_CRITICAL.test(prop.trim().toLowerCase());
+}
+
+/**
+ * Why reusing the site's class for this match would change the design, or `[]` when the site's
+ * class is equal or compatible: every differing declaration (either side) is non-critical and, for
+ * a custom class, there are at most {@link MAX_COMPATIBLE_DIFFERENCES} of them. Client-First
+ * utilities (`padding-global`, `heading-style-h1`…) are meant to be shared, so only the critical
+ * properties count for them.
+ */
+export function matchConflicts(m: Pick<SiteMatch, 'chain' | 'ours' | 'overrides' | 'siteOnlyDecls'>, sourceStyled?: ReadonlySet<string>): string[] {
+  // A class the source uses without styling it (only generated defaults, if any) defers to the
+  // site's. `sourceStyled` holds chain keys (class names joined by U+0001).
+  if (isEmptyStyle(m.ours) || (sourceStyled && !sourceStyled.has(m.chain.join('\u0001')))) return [];
+  const label = (key: string, prop: string) => (key ? `${prop} (${key})` : prop);
+  const critical: string[] = [];
+  let count = 0;
+  for (const [key, decls] of m.overrides) {
+    for (const prop of decls.keys()) {
+      count++;
+      if (isLayoutCritical(prop)) critical.push(label(key, prop));
+    }
+  }
+  for (const { key, prop } of m.siteOnlyDecls) {
+    count++;
+    if (isLayoutCritical(prop)) critical.push(label(key, prop));
+  }
+  if (critical.length > 0) return critical;
+  const name = m.chain[m.chain.length - 1] ?? '';
+  if (m.chain.length === 1 && isClientFirstUtility(name)) return [];
+  return count > MAX_COMPATIBLE_DIFFERENCES ? [`${count} differing declarations`] : [];
+}
+
+/** True when a style has no declarations in any variant. */
+function isEmptyStyle(style: WfStyle): boolean {
+  return [...declsByKey(style).values()].every((d) => d.size === 0);
+}
+
+/** Declarations of a style, normalized, for equality checks. */
+function signature(style: WfStyle): string {
+  const parts: string[] = [];
+  for (const [key, decls] of [...declsByKey(style)].sort(([a], [b]) => a.localeCompare(b))) {
+    const list = [...decls].map(([p, v]) => `${p}:${normValue(v)}`).sort();
+    if (list.length) parts.push(`${key}{${list.join(';')}}`);
+  }
+  return parts.join('');
+}
+
+/**
+ * Combo classes of ours that the site has under the same name with DIFFERENT styles (on any
+ * parent). Webflow merges a pasted combo with an existing same-named one instead of renaming it:
+ * in the hero-construction paste test, `.hero_button.is-secondary` (a new parent) came out with the
+ * site's green `is-secondary` (color #3ddc84) instead of the source's. Returns our style ids.
+ */
+export function conflictingCombos(chains: readonly ChainStyle[], siteStyles: readonly WfStyle[], skip: ReadonlySet<string>, sourceStyled?: ReadonlySet<string>): Set<string> {
+  const byName = new Map<string, Set<string>>();
+  for (const s of siteStyles) {
+    if (s.comb !== '&') continue;
+    const key = siteClassKey(s.name);
+    if (!byName.has(key)) byName.set(key, new Set());
+    byName.get(key)!.add(signature(s));
+  }
+  const out = new Set<string>();
+  for (const { classes, style } of chains) {
+    if (classes.length < 2 || skip.has(style._id) || isEmptyStyle(style)) continue;
+    if (sourceStyled && !sourceStyled.has(classes.join('\u0001'))) continue;
+    const sigs = byName.get(siteClassKey(style.name));
+    if (!sigs) continue;
+    const mine = signature(style);
+    if ([...sigs].some((sig) => sig !== mine)) out.add(style._id);
+  }
+  return out;
+}
+
+/**
+ * New, non-clashing names for classes that must not reuse the site's: `name-<suffix>`, then
+ * `name-<suffix>-2`… when that is taken by a site class (any "name N" spelling) or by another class
+ * of ours. Deterministic for the same input. Returns our style id -> new name.
+ */
+export function planRenames(
+  chains: readonly ChainStyle[],
+  ids: ReadonlySet<string>,
+  siteStyles: readonly WfStyle[],
+  suffix: string,
+): Map<string, string> {
+  const taken = new Set<string>();
+  for (const s of siteStyles) {
+    taken.add(siteClassKey(s.name));
+    taken.add(siteClassKey(splitDuplicateSuffix(s.name).base));
+  }
+  for (const { style } of chains) taken.add(siteClassKey(style.name));
+  const out = new Map<string, string>();
+  const done = new Map<string, string>();
+  for (const { style } of chains) {
+    if (!ids.has(style._id) || out.has(style._id)) continue;
+    // A combo name used under several parents gets one new name.
+    const key = `${style.comb}\u0001${style.name}`;
+    let name = done.get(key);
+    if (!name) {
+      const base = `${style.name}-${suffix}`;
+      name = base;
+      for (let n = 2; taken.has(siteClassKey(name)); n++) name = `${base}-${n}`;
+      taken.add(siteClassKey(name));
+      done.set(key, name);
+    }
+    out.set(style._id, name);
+  }
+  return out;
+}
+
+/**
+ * Suffix for renamed classes: the first word of the page `<title>` (`"Corbel Builders – …"` ->
+ * `corbel`), else `new`.
+ */
+export function renameSuffix(title: string): string {
+  const generic = new Set(['home', 'index', 'page', 'untitled', 'document', 'the', 'a', 'an', 'my', 'new']);
+  for (const word of title.toLowerCase().split(/[^a-z0-9]+/)) {
+    if (word.length >= 2 && !generic.has(word) && /^[a-z]/.test(word)) return word.slice(0, 16);
+  }
+  return 'new';
 }
 
 /* ------------------------------------------------------------------------------------------------
@@ -368,6 +522,8 @@ export function buildOverrideCss(matches: readonly SiteMatch[], maxChars: number
 /** Options for {@link finalizeStyles}. */
 export interface FinalizeStylesOptions {
   matches: readonly SiteMatch[];
+  /** Our style id -> new class name (classes renamed so they do not clash with the site's). */
+  renames?: ReadonlyMap<string, string>;
   /** Replace our style ids with {@link stableStyleId}. */
   stableIds: boolean;
 }
@@ -389,7 +545,11 @@ export function finalizeStyles(
   for (const s of styles) {
     const site = siteFor.get(s._id);
     if (site) idMap.set(s._id, site._id);
-    else if (opts.stableIds) idMap.set(s._id, stableStyleId(chainOf.get(s._id) ?? [s.name], s));
+    else if (opts.stableIds) {
+      const chain = chainOf.get(s._id) ?? [s.name];
+      const renamed = opts.renames?.get(s._id);
+      idMap.set(s._id, stableStyleId(renamed ? [...chain.slice(0, -1), renamed] : chain, s));
+    }
   }
   const mapId = (id: string) => idMap.get(id) ?? id;
 
@@ -397,7 +557,8 @@ export function finalizeStyles(
     const site = siteFor.get(s._id);
     const children = s.children.map(mapId);
     if (site) return { ...cloneStyle(site), children };
-    return { ...s, _id: mapId(s._id), children };
+    const name = opts.renames?.get(s._id) ?? s.name;
+    return { ...s, _id: mapId(s._id), name, children };
   });
   for (const n of nodes) if (Array.isArray(n.classes) && n.classes.length) n.classes = n.classes.map(mapId);
   return out;
