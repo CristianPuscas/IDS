@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { convert, validateXscp } from './index';
 import { isTextNode, type WfElementNode } from './types';
-import { classNames, elements, first, kids, style, textOf } from './testHelpers';
+import { PRE_V8, classNames, elements, first, kids, style, textOf } from './testHelpers';
 
 const html = (h: string) => {
-  const res = convert({ mode: 'combined', html: h });
+  const res = convert({ mode: 'combined', html: h }, PRE_V8);
   expect(validateXscp(res.data)).toEqual([]);
   return res;
 };

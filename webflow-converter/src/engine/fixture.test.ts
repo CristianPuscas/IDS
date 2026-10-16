@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { convert, validateXscp } from './index';
 import { isTextNode, type ConvertResult, type WfElementNode, type WfNode } from './types';
-import { elements, embedCodes, embeddedCss, first, style } from './testHelpers';
+import { PRE_V8, elements, embedCodes, embeddedCss, first, style } from './testHelpers';
 
 /** A typical AI-generated landing page: nav with hover, hero with a Three.js canvas, card grid, GSAP. */
 const LANDING = `<!DOCTYPE html>
@@ -153,7 +153,7 @@ function outline(res: ConvertResult): string {
 }
 
 describe('AI-generated landing page fixture', () => {
-  const res = convert({ mode: 'combined', html: LANDING });
+  const res = convert({ mode: 'combined', html: LANDING }, PRE_V8);
 
   it('passes structural validation', () => {
     expect(validateXscp(res.data)).toEqual([]);

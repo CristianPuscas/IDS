@@ -22,6 +22,7 @@ import { isClientFirstUtility, missingCoreStructure } from './clientFirst';
 import { cssClassNames, findJsClassReferences, isWebflowClassName, planClassRenames, renameClassesInDocument, rewriteCssClasses, scriptToggledClasses } from './classNames';
 import { attrSelector, isEmptyPlan, planEmbedRewrite, rewriteEmbedSelector } from './embedCss';
 import { parseCss } from './cssParser';
+import { planCssVariables } from './cssVariables';
 import { buildEmbedNode, buildScriptEmbeds, buildStyleEmbeds } from './embedBuilder';
 import { parseHtml, type ParsedHtml } from './htmlParser';
 import { uuid } from './ids';
@@ -34,11 +35,15 @@ import {
   conflictingCombos,
   emptyClientFirstUtilities,
   finalizeStyles,
+  isEmptyStyle,
   matchConflicts,
   matchSiteStyles,
   planRenames,
   renameSuffix,
   siteReuseWarnings,
+  stableStyleId,
+  styleDeclarations,
+  type ChainStyle,
   type SiteMatch,
 } from './siteStyles';
 import {
@@ -83,6 +88,8 @@ export function resolveOptions(options: Partial<ConvertOptions> = {}): ConvertOp
   if (!Array.isArray(out.siteStyles)) delete out.siteStyles;
   if (out.siteClassOverrides !== 'embed' && out.siteClassOverrides !== 'drop') out.siteClassOverrides = DEFAULT_CONVERT_OPTIONS.siteClassOverrides;
   if (out.siteClassConflicts !== 'rename' && out.siteClassConflicts !== 'reuse') out.siteClassConflicts = DEFAULT_CONVERT_OPTIONS.siteClassConflicts;
+  if (out.cssVariables !== 'inline' && out.cssVariables !== 'scope' && out.cssVariables !== 'global') out.cssVariables = DEFAULT_CONVERT_OPTIONS.cssVariables;
+  if (typeof out.uniqueCombos !== 'boolean') out.uniqueCombos = DEFAULT_CONVERT_OPTIONS.uniqueCombos;
   return out;
 }
 
@@ -201,6 +208,32 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
   const css = parseCss(cssText);
   warnings.push(...css.warnings);
 
+  // Page-wide CSS variables: scoped to the pasted root and/or replaced by their values, so neither
+  // the site's variables nor another section's :root can change the pasted colours (./cssVariables).
+  // Without an embed there is nowhere to put scoped definitions, so 'scope' substitutes values too.
+  const varMode = opts.cssVariables === 'scope' && !opts.keepUnsupportedInEmbed ? 'inline' : opts.cssVariables;
+  const vars = planCssVariables(css.rules, varMode);
+  css.rules = vars.rules;
+  if (vars.scopeId) {
+    const parts = [
+      varMode === 'inline' && vars.inlined.length > 0
+        ? `${vars.inlined.length} CSS variable${vars.inlined.length === 1 ? ' was' : 's were'} replaced by ${vars.inlined.length === 1 ? 'its value' : 'their values'} in the class styles (option cssVariables 'inline'), so the classes keep the source's colours on any page.`
+        : '',
+      opts.keepUnsupportedInEmbed
+        ? `The source's :root variables are defined on the pasted root element ([data-h2w-vars]) instead of :root, so your site's variables and other sections cannot override them, and they do not change the rest of the page.`
+        : '',
+    ].filter(Boolean);
+    if (parts.length > 0) {
+      warnings.push({
+        code: 'css-variable',
+        severity: 'info',
+        message: parts.join(' '),
+      });
+      const detail = [vars.inlined.length ? `Inlined: ${vars.inlined.join(', ')}` : '', vars.kept.length ? `Kept as var(): ${vars.kept.join(', ')}` : ''].filter(Boolean).join('\n');
+      if (detail) warnings[warnings.length - 1]!.detail = detail;
+    }
+  }
+
   // Class names used anywhere, so generated names (inline-style-N, button, *-embed) never clash.
   const reserved = new Set(parsed.classNames);
   for (const name of cssClassNames(cssText)) reserved.add(name);
@@ -228,6 +261,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
       });
     }
   }
+  if (vars.scopedCss && opts.keepUnsupportedInEmbed) hooks.prelude = [hooks.prelude, vars.scopedCss].filter(Boolean).join('\n');
   hooks.prepareEmbed = (selectors) => {
     const plan = planEmbedRewrite({
       selectors,
@@ -261,7 +295,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
   const chainStyles = registry.prefixes();
   const importOn = !!(opts.reuseSiteClasses && opts.siteStyles?.length);
   let matches: SiteMatch[] = importOn ? matchSiteStyles(chainStyles, opts.siteStyles!) : [];
-  // Same name, different design (layout-critical differences): with 'rename' such a class is not
+  // Same name, different CSS (any difference, `matchConflicts`): with 'rename' such a class is not
   // reused but emitted with its own styles under a new name, and so are its combos (their site
   // parent no longer applies) and combos the site has under that name with other styles.
   let renames = new Map<string, string>();
@@ -285,7 +319,28 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
     if (renames.size > 0) warnings.push(...renameWarnings(chainStyles, renames, conflicts, scriptsText));
   }
   const reusedIds = new Set(matches.map((m) => m.ours._id));
+  // Combos: Webflow never renames a pasted combo, it merges it with a same-named one of the site
+  // (whose styles win). A styled combo gets a suffix derived from its CSS, unless a script adds or
+  // toggles it: that one keeps its name and its CSS is repeated in the embed (option uniqueCombos).
+  const comboRenames = opts.uniqueCombos ? planUniqueCombos(chainStyles, new Set([...reusedIds, ...renames.keys()]), styleMap.sourceStyledChains, scriptMentions(scriptsText), reserved) : null;
+  if (comboRenames) {
+    for (const [id, name] of comboRenames.renames) renames.set(id, name);
+    warnings.push(...uniqueComboWarnings(chainStyles, comboRenames));
+  }
   let overrideRules = 0;
+  if (comboRenames && comboRenames.scripted.length > 0 && opts.keepUnsupportedInEmbed) {
+    // `[data-h2w-class~="parent"].is-open`: the parent may become "parent 2", the combo keeps its name.
+    const comboCss = buildOverrideCss(
+      comboRenames.scripted.map(({ classes, style }) => ({ chain: classes, overrides: styleDeclarations(style) })),
+      opts.maxEmbedChars,
+      (chain) => chain.slice(0, -1).map(attrSelector).join('') + '.' + cssIdent(chain[chain.length - 1]!),
+    );
+    if (comboCss.chunks.length > 0) {
+      tagDataWfc(built.nodes, registry, new Set(comboRenames.scripted.flatMap(({ classes }) => classes.slice(0, -1))));
+      styleMap.leftoverCss.unshift(...comboCss.chunks);
+      overrideRules += comboCss.rules;
+    }
+  }
   if (matches.length > 0) {
     const differing = matches.filter((m) => m.overrides.size > 0);
     const embedAllowed = opts.keepUnsupportedInEmbed;
@@ -297,7 +352,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
       tagDataWfc(built.nodes, registry, new Set(differing.flatMap((m) => m.chain)));
       // First, so later embed rules of equal specificity (unmatched media…) still win as in the source.
       styleMap.leftoverCss.unshift(...override.chunks);
-      overrideRules = override.rules;
+      overrideRules += override.rules;
     }
     warnings.push(...siteReuseWarnings(matches, { rules: override.rules, skipped: override.skipped, mode: opts.siteClassOverrides, embedAllowed }));
   }
@@ -353,6 +408,11 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
         message: `${topLevel.length} top-level elements were wrapped in one root Div Block (Webflow pastes a single tree).`,
       });
     }
+  }
+
+  if (vars.scopeId && vars.scopedCss && opts.keepUnsupportedInEmbed) {
+    const top = nodes[0];
+    if (top && !isTextNode(top)) setAttribute(top, 'data-h2w-vars', vars.scopeId);
   }
 
   const styles = finalizeStyles(
@@ -467,6 +527,111 @@ const OTHER_COMMON_CLASS = [
   /^[a-z]+\d+_/, // Relume component names: navbar1_component, header5_content…
 ];
 
+/** Sets one custom attribute on an element node (`data.attributes` on Custom Elements, `data.xattr` elsewhere). */
+function setAttribute(n: WfElementNode, name: string, value: string): void {
+  const attr = { name, value };
+  if (n.type === 'DOM') {
+    n.data = n.data ?? {};
+    n.data.attributes = [...(n.data.attributes ?? []).filter((a) => a.name !== name), attr];
+  } else {
+    n.data = n.data ?? { attr: { id: '' } };
+    n.data.xattr = [...(n.data.xattr ?? []).filter((a) => a.name !== name), attr];
+  }
+}
+
+/** A class name as a CSS identifier (escapes what is not a name character). */
+function cssIdent(name: string): string {
+  return name.replace(/[^\w-]/g, (c) => `\\${c}`).replace(/^(\d)/, '\\3$1 ');
+}
+
+/**
+ * Whether scripts may refer to a class name: added or toggled through `classList`/jQuery, an
+ * `is-*` string, or the name as a whole token anywhere in the code (`querySelector('.x.is-open')`).
+ */
+function scriptMentions(scripts: readonly string[]): (name: string) => boolean {
+  const toggled = scriptToggledClasses(scripts);
+  const text = scripts.join('\n');
+  return (name) => toggled.has(name) || new RegExp(`(^|[^\\w-])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`).test(text);
+}
+
+/** Result of {@link planUniqueCombos}. */
+interface UniqueCombos {
+  /** Our combo style id -> new name. */
+  renames: Map<string, string>;
+  /** Styled combos that keep their name because scripts add or toggle them. */
+  scripted: ChainStyle[];
+}
+
+/**
+ * New names for styled combo classes: `<name>-<4 base-36 chars of a hash of the combo's CSS>`, so
+ * a pasted combo never merges with a same-named combo of the site (Webflow merges combos by name
+ * and never renames them: /testhero, `.hero_button-2.is-secondary` got GreenIron's green values).
+ * Skips combos in `skip` (reused from an import, or already renamed), combos without source CSS,
+ * and combos named in `scripted` (returned separately).
+ */
+function planUniqueCombos(
+  chains: readonly ChainStyle[],
+  skip: ReadonlySet<string>,
+  sourceStyled: ReadonlySet<string>,
+  scripted: (name: string) => boolean,
+  reserved: ReadonlySet<string>,
+): UniqueCombos {
+  const out: UniqueCombos = { renames: new Map(), scripted: [] };
+  const taken = new Set([...reserved, ...chains.map((c) => c.style.name)]);
+  const byCss = new Map<string, string>();
+  for (const chain of chains) {
+    const { classes, style } = chain;
+    if (classes.length < 2 || skip.has(style._id) || isEmptyStyle(style)) continue;
+    if (!sourceStyled.has(classes.join('\u0001'))) continue;
+    if (scripted(style.name)) {
+      out.scripted.push(chain);
+      continue;
+    }
+    const sig = `${style.name}\u0002${style.styleLess}\u0002${JSON.stringify(style.variants ?? {})}`;
+    let name = byCss.get(sig);
+    if (!name) {
+      const hash = parseInt(stableStyleId([style.name], style).replace(/-/g, '').slice(0, 10), 16).toString(36);
+      const base = `${style.name}-${hash.slice(-4).padStart(4, '0')}`;
+      name = base;
+      for (let n = 2; taken.has(name); n++) name = `${base}-${n}`;
+      taken.add(name);
+      byCss.set(sig, name);
+    }
+    out.renames.set(style._id, name);
+  }
+  return out;
+}
+
+/** Notes for {@link planUniqueCombos}: the renamed combos, and the script-toggled ones that kept their name. */
+function uniqueComboWarnings(chains: readonly ChainStyle[], plan: UniqueCombos): ConvertWarning[] {
+  const out: ConvertWarning[] = [];
+  const pairs = new Map<string, string>();
+  for (const { style } of chains) {
+    const to = plan.renames.get(style._id);
+    if (to) pairs.set(`${style.name} → ${to}`, to);
+  }
+  if (pairs.size > 0) {
+    const shown = [...pairs.keys()].slice(0, 3).join(', ');
+    out.push({
+      code: 'site-classes',
+      severity: 'info',
+      message: `${pairs.size} combo class${pairs.size === 1 ? '' : 'es'} got a suffix from ${pairs.size === 1 ? 'its' : 'their'} CSS (${shown}${pairs.size > 3 ? '…' : ''}), because Webflow never renames a pasted combo: it would merge it with a same-named combo of your site and use that one's styles (option uniqueCombos).`,
+      detail: [...pairs.keys()].join('\n'),
+      items: [...new Set(pairs.values())],
+    });
+  }
+  if (plan.scripted.length > 0) {
+    const names = [...new Set(plan.scripted.map((c) => c.classes.join('.')))];
+    out.push({
+      code: 'site-classes',
+      severity: 'warning',
+      message: `${names.length === 1 ? 'A combo class keeps its name because a script adds or toggles it' : `${names.length} combo classes keep their names because scripts add or toggle them`} (${names.slice(0, 3).join(', ')}${names.length > 3 ? '…' : ''}). If your site has a combo of the same name, Webflow merges them; the source's values for ${names.length === 1 ? 'it' : 'them'} are repeated in the <style> embed so they still win on the pasted elements, but properties only your site's combo sets will apply too.`,
+      detail: names.join('\n'),
+    });
+  }
+  return out;
+}
+
 /**
  * The note listing classes renamed so they do not reuse a different site class, plus a warning
  * when a script mentions one of the old names (scripts are not rewritten).
@@ -488,7 +653,7 @@ function renameWarnings(chains: readonly { classes: string[]; style: WfStyle }[]
     {
       code: 'site-classes',
       severity: 'warning',
-      message: `${n} class${n === 1 ? ' was' : 'es were'} renamed to avoid clashing with different site classes: ${shown}${pairs.size > 3 ? '…' : '.'} Your site has ${n === 1 ? 'this name' : 'these names'} with another design, so reusing ${n === 1 ? 'it' : 'them'} would change the pasted section (choose "Reuse the site's" to reuse them anyway).`,
+      message: `${n} class${n === 1 ? ' was' : 'es were'} renamed to avoid clashing with different site classes: ${shown}${pairs.size > 3 ? '…' : '.'} Your site has ${n === 1 ? 'this name' : 'these names'} with other CSS, so ${n === 1 ? 'it is a separate class' : 'they are separate classes'} with your CSS (choose "Use the site's class" to take your site's styles instead).`,
       detail: lines.join('\n'),
       items: [...new Set(renames.values())],
     },

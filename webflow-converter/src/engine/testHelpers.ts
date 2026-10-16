@@ -2,7 +2,13 @@
  * Helpers for engine tests (not used by the app).
  */
 
-import { isTextNode, type ConvertResult, type WfElementNode, type WfNode, type WfStyle } from './types';
+import { isTextNode, type ConvertOptions, type ConvertResult, type WfElementNode, type WfNode, type WfStyle } from './types';
+
+/**
+ * Options that restore the pre-v8 output for tests about other features: combos keep their source
+ * names (no `uniqueCombos` suffix) and `:root` variables stay global `var()`s.
+ */
+export const PRE_V8: Readonly<Partial<ConvertOptions>> = Object.freeze({ uniqueCombos: false, cssVariables: 'global' });
 
 /** Element nodes of the payload. */
 export function elements(res: ConvertResult): WfElementNode[] {

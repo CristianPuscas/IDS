@@ -15,6 +15,17 @@
  *   site's `is-secondary` combo although `hero_button` was a new class;
  * - the trust line split: its `<p>` held an SVG Code Embed (`<div class="w-embed">`), so the browser
  *   closed the paragraph and the icon and text fell out of the flex row.
+ *
+ * v7 renamed classes whose design differed, yet the next paste on a NEW page (/testhero, diag5)
+ * still had the GreenIron colours: `section_hero 2`, `hero_card 2`, the EMPTY `hero_component`,
+ * `hero_content`, `hero_stat(-label)`, `hero_image`, `hero_card-label/-title` were the site's
+ * GreenIron style objects (exactly what the converter emits when an import is active and same-named
+ * classes are reused), and `.hero_button-2.is-secondary`, a combo Webflow created that day under a
+ * brand-new parent, carried GreenIron's green values. The user's rule since v8: "if a class name
+ * repeats and the CSS is different, create a duplicate of that class" -- for base classes AND
+ * combos, with or without an import. So: any CSS difference means a separate class, combos get a
+ * name derived from their CSS (`uniqueCombos`), and :root variables are inlined/scoped
+ * (`cssVariables`) so no site variable or other section can recolour the hero.
  */
 import { describe, expect, it } from 'vitest';
 import HERO from './__fixtures__/hero-construction.html?raw';
@@ -56,7 +67,7 @@ const GREENIRON_SITE: WfStyle[] = [
   // Identical to the source: reused.
   cls('cf-padding-global', 'padding-global', 'padding-right: 2.5rem; padding-left: 2.5rem;', { small: { styleLess: 'padding-right: 1.25rem; padding-left: 1.25rem;' } }),
   cls('cf-container-large', 'container-large', 'width: 100%; max-width: 80rem; margin-right: auto; margin-left: auto;'),
-  // Same design, other values (a Client-First utility): compatible, reused with the source's values in the embed.
+  // Same design, other values (a Client-First utility): different CSS, so a separate class since v8.
   cls('cf-padding-section-large', 'padding-section-large', 'padding-top: 7rem; padding-bottom: 7rem;', {
     medium: { styleLess: 'padding-top: 6rem; padding-bottom: 6rem;' },
     small: { styleLess: 'padding-top: 4rem; padding-bottom: 4rem;' },
@@ -75,20 +86,110 @@ const byClass = (res: ConvertResult, name: string): WfElementNode => {
   return el;
 };
 
+/** GreenIron's colour variables, as its :root embed / site Variables would define them on the page. */
+const GREENIRON_ROOT_CSS = `:root {
+  --background-color--primary: #04140c;
+  --background-color--secondary: #082015;
+  --background-color--alternate: #082015;
+  --background-color--accent: #3ddc84;
+  --text-color--primary: #ecfff3;
+  --text-color--secondary: #7fb895;
+  --text-color--alternate: #ecfff3;
+  --border-color--primary: #174a30;
+  --border-color--accent: #3ddc84;
+}`;
+
+/** Corbel's colours (hero-construction.html :root). */
+const CORBEL = { white: '#ffffff', lightest: '#f4f5f7', dark: '#4a5260', darkest: '#14181f', amber: '#f5a524' };
+
+/**
+ * The value a custom property has on a pasted element: its nearest definition among the pasted
+ * root's scoped block (`[data-h2w-vars]`, an ancestor of every pasted element) and the page's
+ * `:root` blocks (GreenIron's, then ours if they are still global). Enough for these blocks.
+ */
+function customPropertyOnPastedElement(res: ConvertResult, name: string): string | undefined {
+  const css = embedCodes(res).join('\n');
+  const decl = (block: string) => new RegExp(`${name.replace(/-/g, '\\-')}:\\s*([^;]+);`).exec(block)?.[1]?.trim();
+  const scoped = /\[data-h2w-vars="[^"]+"\]\s*\{([^}]*)\}/.exec(css)?.[1];
+  const fromScope = scoped ? decl(scoped) : undefined;
+  if (fromScope) return fromScope;
+  // Global blocks: the pasted embed comes after the site's CSS, so its :root wins over GreenIron's.
+  const ownRoot = /:root\s*\{([^}]*)\}/.exec(css)?.[1];
+  return (ownRoot ? decl(ownRoot) : undefined) ?? decl(GREENIRON_ROOT_CSS);
+}
+
+/** Resolves `var()` in a class value the way the pasted page would (one level of nesting is enough here). */
+function resolveOnPage(res: ConvertResult, value: string): string {
+  return value.replace(/@raw<\|var\((--[\w-]+)\)\|>|var\((--[\w-]+)\)/g, (_m, a: string | undefined, b: string | undefined) => {
+    const v = customPropertyOnPastedElement(res, (a ?? b)!) ?? '';
+    const inner = /^var\((--[\w-]+)\)$/.exec(v);
+    return inner ? (customPropertyOnPastedElement(res, inner[1]!) ?? v) : v;
+  });
+}
+
+const prop = (s: WfStyle, name: string): string | undefined => new RegExp(`(?:^|; )${name}: ([^;]+);`).exec(s.styleLess)?.[1];
+
 describe('hero-construction paste test', () => {
-  it('converts without site styles: own classes, var() colours, :root embed before the section', () => {
+  it('converts without site styles: own classes with the source colours as values, :root variables scoped to the pasted root', () => {
     const res = run();
     const section = style(res, 'section_hero');
     expect(section.styleLess).not.toContain('background');
-    expect(section.styleLess).toContain('color: @raw<|var(--text-color--primary)|>;');
-    expect(style(res, 'hero_eyebrow').styleLess).toContain('background-color: @raw<|var(--background-color--secondary)|>;');
-    // The :root variables are in the first embed, before the section.
+    expect(prop(section, 'color')).toBe(CORBEL.darkest);
+    expect(prop(style(res, 'hero_eyebrow'), 'background-color')).toBe(CORBEL.lightest);
+    expect(prop(style(res, 'hero_button'), 'background-color')).toBe(CORBEL.amber);
+    expect(prop(style(res, 'hero_card'), 'background-color')).toBe(CORBEL.darkest);
+    expect(prop(style(res, 'hero_card'), 'color')).toBe(CORBEL.white);
+    expect(JSON.stringify(res.data.payload.styles)).not.toContain('var(--');
+    // The variables are defined on the pasted root, never on :root.
     const root = res.data.payload.nodes[0] as WfElementNode;
+    const scope = root.data?.xattr?.find((a) => a.name === 'data-h2w-vars')?.value;
+    expect(scope).toMatch(/^v[0-9a-f]{8}$/);
     const [first, second] = kids(res, root) as WfElementNode[];
     expect(first!.type).toBe('HtmlEmbed');
-    expect(first!.v).toMatch(/:root\s*\{[^}]*--background-color--primary:\s*var\(--neutral--white\)/);
+    expect(first!.v).toContain(`[data-h2w-vars="${scope}"] {\n  --neutral--white: #ffffff;`);
+    expect(first!.v).not.toMatch(/:root\s*\{/);
     expect(classNames(res, second!)).toEqual(['section_hero']);
     expect(res.stats.reusedClasses).toBe(0);
+    expect(res.warnings.some((w) => w.code === 'css-variable' && /21 CSS variables were replaced by their values/.test(w.message))).toBe(true);
+  });
+
+  it('keeps the Corbel colours on a page that holds GreenIron classes, combos and :root variables', () => {
+    for (const siteStyles of [undefined, GREENIRON_SITE]) {
+      const res = run(siteStyles ? { siteStyles } : {});
+      const cls = (name: string) => style(res, res.data.payload.styles.find((s) => s.comb === '' && (s.name === name || s.name === `${name}-corbel`))!.name);
+      // White background: the section sets none (the page shows through), never GreenIron's #04140c.
+      expect(cls('section_hero').styleLess).not.toContain('background');
+      expect(JSON.stringify(res.data.payload.styles)).not.toMatch(/#04140c|#3ddc84|#ecfff3|#7fb895|rgba\(8, 32, 21/);
+      // Amber primary button, dark card, dark text: the values themselves, whatever the page defines.
+      expect(resolveOnPage(res, prop(cls('hero_button'), 'background-color')!)).toBe(CORBEL.amber);
+      expect(resolveOnPage(res, prop(cls('hero_card'), 'background-color')!)).toBe(CORBEL.darkest);
+      expect(resolveOnPage(res, prop(cls('hero_stat-label'), 'color')!)).toBe(CORBEL.dark);
+      // The secondary button combo has a name no site combo has, so Webflow cannot merge it.
+      const combo = res.data.payload.styles.find((s) => s.comb === '&')!;
+      expect(combo.name).toMatch(/^is-secondary-(corbel|[0-9a-z]{4})$/);
+      expect(res.data.payload.styles.some((s) => s.comb === '&' && s.name === 'is-secondary')).toBe(false);
+      expect(resolveOnPage(res, prop(combo, 'border-top-color')!)).toBe(CORBEL.darkest);
+    }
+  });
+
+  it("cssVariables 'scope' keeps var() in the classes and resolves them from the pasted root, not GreenIron's :root", () => {
+    const res = run({ cssVariables: 'scope' });
+    const button = style(res, 'hero_button');
+    expect(prop(button, 'background-color')).toBe('@raw<|var(--background-color--accent)|>');
+    expect(customPropertyOnPastedElement(res, '--background-color--accent')).toBe('var(--brand--primary)');
+    expect(resolveOnPage(res, prop(button, 'background-color')!)).toBe(CORBEL.amber);
+    expect(resolveOnPage(res, prop(style(res, 'hero_card'), 'background-color')!)).toBe(CORBEL.darkest);
+    expect(embedCodes(res).join('\n')).not.toMatch(/:root\s*\{/);
+    // The trust icon rule in the embed is outside the classes but inside the pasted root: var() stays.
+    expect(embedCodes(res).join('\n')).toContain('color: var(--text-color--primary);');
+  });
+
+  it("cssVariables 'global' keeps the :root block (pre-v8): GreenIron's variables could then win", () => {
+    const res = run({ cssVariables: 'global' });
+    expect(prop(style(res, 'hero_button'), 'background-color')).toBe('@raw<|var(--background-color--accent)|>');
+    const root = res.data.payload.nodes[0] as WfElementNode;
+    expect(root.data?.xattr?.some((a) => a.name === 'data-h2w-vars')).toBe(false);
+    expect(embedCodes(res)[0]).toMatch(/:root\s*\{[^}]*--background-color--primary:\s*var\(--neutral--white\)/);
   });
 
   it('keeps the DOM order: content, then the figure with the image and the card', () => {
@@ -117,51 +218,51 @@ describe('hero-construction paste test', () => {
     expect(byClass(res, 'hero_paragraph').type).toBe('Paragraph');
   });
 
-  it('renames classes the site has with another design instead of reusing them', () => {
+  it('creates a separate class for every site class with the same name and different CSS', () => {
     const res = run({ siteStyles: GREENIRON_SITE });
     const names = res.data.payload.styles.map((s) => s.name);
-    for (const name of ['section_hero', 'hero_component', 'hero_content', 'hero_card', 'hero_image']) {
+    for (const name of ['section_hero', 'hero_component', 'hero_content', 'hero_card', 'hero_image', 'padding-section-large']) {
       expect(names).not.toContain(name);
       expect(names).toContain(`${name}-corbel`);
     }
-    // No site style object of a conflicting class is in the payload.
+    // No site style object of a differing class is in the payload.
     const ids = new Set(res.data.payload.styles.map((s) => s._id));
-    for (const id of ['gi-section-hero', 'gi-hero-component', 'gi-hero-component-2', 'gi-hero-content', 'gi-hero-card', 'gi-hero-image']) expect(ids.has(id)).toBe(false);
+    for (const id of ['gi-section-hero', 'gi-hero-component', 'gi-hero-component-2', 'gi-hero-content', 'gi-hero-card', 'gi-hero-image', 'cf-padding-section-large']) {
+      expect(ids.has(id)).toBe(false);
+    }
     // The renamed section carries the source's CSS, not the site's dark green background.
     const section = style(res, 'section_hero-corbel');
     expect(section.styleLess).not.toContain('#04140c');
     expect(section.styleLess).not.toContain('min-height');
-    expect(JSON.stringify(res.data.payload.styles)).not.toContain('#04140c');
     expect(embedCodes(res).join('\n')).not.toContain('[data-h2w-class~="section_hero"]');
     expect(style(res, 'hero_card-corbel').styleLess).toContain('left: 1.5rem;');
+    expect(style(res, 'padding-section-large-corbel').styleLess).toBe('padding-top: 8rem; padding-bottom: 8rem;');
     // The combo the site has under another parent with other styles is renamed too.
     expect(classNames(res, byClass(res, 'hero_button-group').children.map((id) => elements(res).find((e) => e._id === id)!)[1]!)).toEqual(['hero_button', 'is-secondary-corbel']);
     const w = res.warnings.find((x) => x.code === 'site-classes' && /renamed to avoid clashing/.test(x.message))!;
     expect(w.severity).toBe('warning');
-    expect(w.message).toMatch(/^6 classes were renamed to avoid clashing with different site classes: section_hero → section_hero-corbel/);
-    expect(w.detail).toContain('section_hero → section_hero-corbel (site\'s version differs in position, display');
-    expect(res.stats.renamedClasses).toBe(6);
+    expect(w.message).toMatch(/^7 classes were renamed to avoid clashing with different site classes: section_hero → section_hero-corbel/);
+    expect(w.detail).toContain("section_hero → section_hero-corbel (site's version differs in position, display");
+    expect(w.detail).toContain('padding-section-large → padding-section-large-corbel');
+    expect(res.stats.renamedClasses).toBe(7);
   });
 
-  it('reuses equal and compatible site classes', () => {
+  it('reuses only the site classes whose CSS is identical', () => {
     const res = run({ siteStyles: GREENIRON_SITE });
     const payloadIds = new Set(res.data.payload.styles.map((s) => s._id));
-    for (const id of ['cf-padding-global', 'cf-container-large', 'cf-padding-section-large']) expect(payloadIds.has(id)).toBe(true);
-    expect(res.stats.reusedClasses).toBe(3);
-    // padding-section-large differs only in padding values: the source's go to the scoped embed.
-    const css = embedCodes(res).join('\n');
-    expect(css).toMatch(/\[data-h2w-class~="padding-section-large"\] \{\n {2}padding-top: 8rem;\n {2}padding-bottom: 8rem;/);
-    // The 8rem override applies at every narrower width too, so the source's breakpoint values are
-    // re-asserted where the site's would otherwise lose to it (paste test: 8rem on mobile).
-    expect(css).toMatch(/@media \(max-width: 991px\) \{\n\[data-h2w-class~="padding-section-large"\] \{\n {2}padding-top: 6rem;\n {2}padding-bottom: 6rem;/);
-    expect(css).toMatch(/@media \(max-width: 767px\) \{\n\[data-h2w-class~="padding-section-large"\] \{\n {2}padding-top: 4rem;\n {2}padding-bottom: 4rem;/);
+    for (const id of ['cf-padding-global', 'cf-container-large']) expect(payloadIds.has(id)).toBe(true);
+    expect(res.stats.reusedClasses).toBe(2);
+    // Nothing of the site's needs undoing: no override rules in the embed.
+    expect(embedCodes(res).join('\n')).not.toContain('[data-h2w-class~=');
   });
 
-  it("siteClassConflicts 'reuse' keeps the pre-v7 behaviour (every same-named class reused)", () => {
+  it("siteClassConflicts 'reuse' (\"Use the site's class\") still reuses every same-named base class", () => {
     const res = run({ siteStyles: GREENIRON_SITE, siteClassConflicts: 'reuse' });
     expect(style(res, 'section_hero')._id).toBe('gi-section-hero');
     expect(style(res, 'hero_component')._id).toBe('gi-hero-component');
-    expect(res.stats.renamedClasses).toBeUndefined();
+    // Combos keep a CSS-derived name even then: Webflow would merge them silently.
+    expect(res.stats.renamedClasses).toBe(1);
+    expect(res.data.payload.styles.find((s) => s.comb === '&')!.name).toMatch(/^is-secondary-[0-9a-z]{4}$/);
   });
 
   it('renames deterministically, and avoids names the site already has', () => {
@@ -170,5 +271,41 @@ describe('hero-construction paste test', () => {
     const b = run({ siteStyles: taken });
     expect(style(a, 'section_hero-corbel-2')._id).toBe(style(b, 'section_hero-corbel-2')._id);
     expect(a.data.payload.styles.some((s) => s.name === 'section_hero-corbel')).toBe(false);
+    const c = run();
+    const d = run();
+    expect(c.data.payload.styles.find((s) => s.comb === '&')!.name).toBe(d.data.payload.styles.find((s) => s.comb === '&')!.name);
+  });
+});
+
+describe('uniqueCombos', () => {
+  const html = (script = '') =>
+    `<style>.btn{padding:1rem}.btn.is-dark{background-color:#111;color:#fff}.btn.is-open{color:red}.btn.is-empty{}</style><div><a class="btn is-dark" href="#">a</a><a class="btn is-open" href="#">b</a><a class="btn is-empty" href="#">c</a></div>${script}`;
+
+  it('suffixes styled combos with a hash of their CSS; unstyled combos keep their name', () => {
+    const res = convert({ mode: 'combined', html: html() });
+    const combos = res.data.payload.styles.filter((s) => s.comb === '&').map((s) => s.name);
+    expect(combos).toHaveLength(3);
+    expect(combos.find((n) => n.startsWith('is-dark'))).toMatch(/^is-dark-[0-9a-z]{4}$/);
+    expect(combos.find((n) => n.startsWith('is-open'))).toMatch(/^is-open-[0-9a-z]{4}$/);
+    expect(combos).toContain('is-empty');
+    const note = res.warnings.find((w) => /got a suffix from their CSS/.test(w.message))!;
+    expect(note.message).toMatch(/^2 combo classes got a suffix/);
+  });
+
+  it('keeps the name of a combo a script toggles and repeats its CSS in the embed', () => {
+    const res = convert({ mode: 'combined', html: html(`<script>document.querySelector('.btn').classList.toggle('is-open')</script>`) });
+    const combos = res.data.payload.styles.filter((s) => s.comb === '&').map((s) => s.name);
+    expect(combos).toContain('is-open');
+    expect(combos.find((n) => n.startsWith('is-dark'))).toMatch(/^is-dark-[0-9a-z]{4}$/);
+    const css = embedCodes(res).join('\n');
+    expect(css).toMatch(/\[data-h2w-class~="btn"\]\.is-open \{\n {2}color: red;\n\}/);
+    const w = res.warnings.find((x) => /keeps its name because a script adds or toggles it/.test(x.message))!;
+    expect(w.severity).toBe('warning');
+    expect(w.message).toContain('btn.is-open');
+  });
+
+  it('is off with uniqueCombos: false', () => {
+    const res = convert({ mode: 'combined', html: html() }, { uniqueCombos: false });
+    expect(res.data.payload.styles.filter((s) => s.comb === '&').map((s) => s.name).sort()).toEqual(['is-dark', 'is-empty', 'is-open']);
   });
 });

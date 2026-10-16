@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { cssClassNames, findJsClassReferences, planClassRenames, rewriteCssClasses, scriptToggledClasses, toWebflowClassName } from './classNames';
 import { convert, validateXscp } from './index';
-import { classNames, embedCodes, embeddedCss, first, style } from './testHelpers';
+import { PRE_V8, classNames, embedCodes, embeddedCss, first, style } from './testHelpers';
 
 describe('toWebflowClassName (Webflow Designer toClassName, spec 3.1)', () => {
   it.each([
@@ -92,7 +92,7 @@ describe('findJsClassReferences', () => {
 
 describe('class name normalization in convert()', () => {
   const run = (html: string, options = {}) => {
-    const res = convert({ mode: 'combined', html }, options);
+    const res = convert({ mode: 'combined', html }, { ...PRE_V8, ...options });
     expect(validateXscp(res.data)).toEqual([]);
     return res;
   };

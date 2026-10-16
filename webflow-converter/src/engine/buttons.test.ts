@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { buttonNeutralizers } from './buttonDefaults';
 import { parseCss } from './cssParser';
 import { BUTTON_CLICK_SHIM, convert, validateXscp, type ConvertOptions } from './index';
-import { classNames, elements, first, kids, style, textOf } from './testHelpers';
+import { PRE_V8, classNames, elements, first, kids, style, textOf } from './testHelpers';
 import type { WfElementNode } from './types';
 
 const run = (html: string, css = '', options: Partial<ConvertOptions> = {}) => {
-  const res = convert({ mode: 'separate', html, css, js: '' }, options);
+  const res = convert({ mode: 'separate', html, css, js: '' }, { ...PRE_V8, ...options });
   expect(validateXscp(res.data)).toEqual([]);
   return res;
 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countChanged, DEFAULT_ADVANCED, loadAdvanced, OPTIONS_STORAGE_KEY, sanitizeAdvanced, saveAdvanced, toConvertOptions } from './options';
+import { countChanged, DEFAULT_ADVANCED, loadAdvanced, OPTIONS_STORAGE_KEY, sanitizeAdvanced, saveAdvanced, SITE_POLICY_VERSION, toConvertOptions } from './options';
 
 function memoryStorage(init: Record<string, string> = {}): Storage {
   const m = new Map(Object.entries(init));
@@ -38,19 +38,27 @@ describe('advanced options', () => {
       breakpointSnap: 'up',
       neutralizeDefaults: true,
       externalImages: 'customElement',
-      siteClassOverrides: 'embed',
       siteClassConflicts: 'rename',
+      cssVariables: 'inline',
+      uniqueCombos: true,
       skipClientFirstUtilityStyles: false,
       stableClassIds: true,
     });
   });
 
-  it('resets a pre-v7 "Use the site\'s" choice and defaults conflicts to rename', () => {
-    const old = sanitizeAdvanced({ siteClassOverrides: 'drop' });
-    expect(old.siteClassOverrides).toBe('embed');
-    expect(old.siteClassConflicts).toBe('rename');
-    const now = sanitizeAdvanced({ siteClassOverrides: 'drop', siteClassConflicts: 'reuse' });
-    expect([now.siteClassOverrides, now.siteClassConflicts]).toEqual(['drop', 'reuse']);
+  it('resets a site-class choice saved before v8 to "Create a separate class"', () => {
+    expect(sanitizeAdvanced({ siteClassOverrides: 'drop' }).siteClassConflicts).toBe('rename');
+    expect(sanitizeAdvanced({ siteClassOverrides: 'drop', siteClassConflicts: 'reuse' }).siteClassConflicts).toBe('rename');
+    expect(sanitizeAdvanced({ siteClassConflicts: 'reuse', sitePolicy: SITE_POLICY_VERSION }).siteClassConflicts).toBe('reuse');
+    // A v8 save keeps the choice.
+    const storage = memoryStorage();
+    saveAdvanced({ ...DEFAULT_ADVANCED, siteClassConflicts: 'reuse' }, storage);
+    expect(loadAdvanced(storage).siteClassConflicts).toBe('reuse');
+  });
+
+  it('maps "Use the site\'s class" to the site\'s styles as they are', () => {
+    expect(toConvertOptions({ ...DEFAULT_ADVANCED, siteClassConflicts: 'reuse' })).toMatchObject({ siteClassConflicts: 'reuse', siteClassOverrides: 'drop' });
+    expect(toConvertOptions(DEFAULT_ADVANCED)).toMatchObject({ siteClassConflicts: 'rename', cssVariables: 'inline', uniqueCombos: true });
   });
 
   it('round-trips through storage', () => {

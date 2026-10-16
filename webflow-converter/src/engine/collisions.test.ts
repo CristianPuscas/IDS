@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { convert, validateXscp, type ConvertOptions } from './index';
-import { classNames, elements, embedCodes, embeddedCss, first, style } from './testHelpers';
+import { PRE_V8, classNames, elements, embedCodes, embeddedCss, first, style } from './testHelpers';
 
 const run = (html: string, css = '', options: Partial<ConvertOptions> = {}) => {
-  const res = convert({ mode: 'separate', html, css, js: '' }, options);
+  const res = convert({ mode: 'separate', html, css, js: '' }, { ...PRE_V8, ...options });
   expect(validateXscp(res.data)).toEqual([]);
   return res;
 };

@@ -51,6 +51,17 @@ const ID_CHOICES: Choice<'stable' | 'random'>[] = [
   { value: 'random', label: 'Random', hint: 'A new random id for every class on every conversion.' },
 ];
 
+const VARIABLE_CHOICES: Choice<AdvancedOptions['cssVariables']>[] = [
+  { value: 'inline', label: 'Inline values', hint: 'var(--x) from :root becomes its value in the class styles, so your site’s variables or another section’s :root cannot recolour them. The variables are also defined on the pasted section only.' },
+  { value: 'scope', label: 'Scope', hint: 'Classes keep var(--x); the :root variables are defined on the pasted section only, so they neither override nor get overridden by the rest of the page.' },
+  { value: 'global', label: 'Global :root', hint: 'The variables stay in a global :root block (before v8): your site’s variables or another pasted section can override them, and they change the whole page.' },
+];
+
+const COMBO_CHOICES: Choice<'unique' | 'keep'>[] = [
+  { value: 'unique', label: 'Unique names', hint: 'Styled combo classes get a short suffix from their CSS (is-secondary-k3f9). Webflow never renames a pasted combo: it merges it with a same-named combo of your site and uses that one’s styles.' },
+  { value: 'keep', label: 'Keep names', hint: 'Combos keep their names. If your site has a combo of the same name, Webflow merges them and your site’s styles win.' },
+];
+
 const IMAGE_CHOICES: Choice<AdvancedOptions['externalImages']>[] = [
   { value: 'customElement', label: 'Custom Element', hint: 'External images keep their exact URL, srcset and sizes as an <img> Custom Element.' },
   { value: 'embed', label: 'Embed', hint: 'External images go into Code Embeds with their original HTML.' },
@@ -96,6 +107,14 @@ export function AdvancedOptionsPanel({ value, onChange, open, onOpenChange }: Ad
           onChange={(v) => set('neutralizeDefaults', v === 'on')}
         />
         <Segmented legend="External images" name="adv-images" choices={IMAGE_CHOICES} value={value.externalImages} onChange={(v) => set('externalImages', v)} />
+        <Segmented legend="CSS variables (:root)" name="adv-css-vars" choices={VARIABLE_CHOICES} value={value.cssVariables} onChange={(v) => set('cssVariables', v)} />
+        <Segmented
+          legend="Combo classes"
+          name="adv-combos"
+          choices={COMBO_CHOICES}
+          value={value.uniqueCombos ? 'unique' : 'keep'}
+          onChange={(v) => set('uniqueCombos', v === 'unique')}
+        />
         <Segmented
           legend="Class ids"
           name="adv-class-ids"

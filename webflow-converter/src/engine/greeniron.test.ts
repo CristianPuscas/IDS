@@ -185,7 +185,7 @@ describe('greeniron.html (full original, v5 paste-test regression)', () => {
       siteStyle('ef2d92f1-d48c-70a8-1483-af21d2565c04', 'padding-section-large 2', STORED['padding-section-large'], { medium: 'padding-top: 5rem; padding-bottom: 5rem;' }),
       siteStyle('47e53913-eb45-d5ea-b09a-1fceda151969', 'padding-section-large', 'padding-top: 7rem; padding-bottom: 7rem;', { medium: 'padding-top: 6rem; padding-bottom: 6rem;' }),
     ];
-    const reused: ConvertResult = convert({ mode: 'combined', html: GREENIRON_FULL }, { siteStyles: SITE });
+    const reused: ConvertResult = convert({ mode: 'combined', html: GREENIRON_FULL }, { siteStyles: SITE, siteClassConflicts: 'reuse' });
     const usesStyle = (id: string) => elements(reused).some((e: WfElementNode) => e.classes.includes(id));
 
     it('pastes each matched class as the site\'s own style object and never its own under that name', () => {

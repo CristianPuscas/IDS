@@ -16,11 +16,12 @@
  * the `<style>` embed under `[data-h2w-class~="name"]` (same specificity as `.name`, later in the
  * cascade, matches only the pasted elements), so the site's class itself stays untouched.
  *
- * Only when the designs agree: a site class that has the same name but another design (a
- * layout-critical property differs, `matchConflicts`) is not reused by default
- * (`siteClassConflicts: 'rename'`); ours keeps its CSS under a new name (`planRenames`). Combos the
- * site has under the same name with other styles are renamed too, because Webflow merges a pasted
- * combo with a same-named one (`conflictingCombos`). Evidence: hero-construction paste test (diag4).
+ * Only when the CSS is identical: a site class that has the same name but other CSS (any declaration
+ * differs, `matchConflicts`) is not reused by default (`siteClassConflicts: 'rename'`, the user's
+ * rule "same name, different CSS -> a separate class"); ours keeps its CSS under a new name
+ * (`planRenames`). Combos the site has under the same name with other styles are renamed too,
+ * because Webflow merges a pasted combo with a same-named one (`conflictingCombos`). Evidence:
+ * hero-construction paste tests (diag4, diag5 /testhero).
  *
  * Also here: `stableClassIds` (deterministic style ids) and `skipClientFirstUtilityStyles`.
  *
@@ -328,46 +329,42 @@ function diffStyles(ours: WfStyle, site: WfStyle): Pick<SiteMatch, 'overrides' |
 const LAYOUT_CRITICAL =
   /^(display|position|top|right|bottom|left|inset(-.+)?|z-index|float|clear|order|grid(-.+)?|flex(-.+)?|gap|row-gap|column-gap|justify-.+|align-.+|place-.+|(min-|max-)?(width|height)|aspect-ratio|overflow(-.+)?|background(-.+)?|object-fit|columns|column-count|visibility|opacity|transform|filter|backdrop-filter|mix-blend-mode)$/;
 
-/** More differing declarations than this (custom classes) also make a conflict. */
-export const MAX_COMPATIBLE_DIFFERENCES = 3;
-
 /** True for a property in {@link LAYOUT_CRITICAL}. */
 export function isLayoutCritical(prop: string): boolean {
   return LAYOUT_CRITICAL.test(prop.trim().toLowerCase());
 }
 
 /**
- * Why reusing the site's class for this match would change the design, or `[]` when the site's
- * class is equal or compatible: every differing declaration (either side) is non-critical and, for
- * a custom class, there are at most {@link MAX_COMPATIBLE_DIFFERENCES} of them. Client-First
- * utilities (`padding-global`, `heading-style-h1`…) are meant to be shared, so only the critical
- * properties count for them.
+ * Why reusing the site's class for this match would change the pasted design, or `[]` when it
+ * would not. The user's rule (v8): "if a class name repeats and the CSS is different, create a
+ * separate class". So EVERY difference counts: a declaration whose value differs, and one that only
+ * the site's class sets (it would apply too). Layout-critical properties ({@link isLayoutCritical})
+ * are listed first. A class the source uses without styling it defers to the site's (there is no
+ * CSS of ours to keep).
+ *
+ * Evidence: /testhero paste (diag5): reusing same-named GreenIron classes whose colours differed
+ * (hero_card-title #ecfff3, hero_stat-label #7fb895…) gave the Corbel hero the GreenIron design.
  */
 export function matchConflicts(m: Pick<SiteMatch, 'chain' | 'ours' | 'overrides' | 'siteOnlyDecls'>, sourceStyled?: ReadonlySet<string>): string[] {
-  // A class the source uses without styling it (only generated defaults, if any) defers to the
-  // site's. `sourceStyled` holds chain keys (class names joined by U+0001).
+  // `sourceStyled` holds chain keys (class names joined by U+0001).
   if (isEmptyStyle(m.ours) || (sourceStyled && !sourceStyled.has(m.chain.join('\u0001')))) return [];
   const label = (key: string, prop: string) => (key ? `${prop} (${key})` : prop);
   const critical: string[] = [];
-  let count = 0;
+  const other: string[] = [];
   for (const [key, decls] of m.overrides) {
-    for (const prop of decls.keys()) {
-      count++;
-      if (isLayoutCritical(prop)) critical.push(label(key, prop));
-    }
+    for (const prop of decls.keys()) (isLayoutCritical(prop) ? critical : other).push(label(key, prop));
   }
-  for (const { key, prop } of m.siteOnlyDecls) {
-    count++;
-    if (isLayoutCritical(prop)) critical.push(label(key, prop));
-  }
-  if (critical.length > 0) return critical;
-  const name = m.chain[m.chain.length - 1] ?? '';
-  if (m.chain.length === 1 && isClientFirstUtility(name)) return [];
-  return count > MAX_COMPATIBLE_DIFFERENCES ? [`${count} differing declarations`] : [];
+  for (const { key, prop } of m.siteOnlyDecls) (isLayoutCritical(prop) ? critical : other).push(label(key, prop));
+  return [...critical, ...other];
+}
+
+/** Every declaration of a style, per variant key (`''` = main), in the shape of `SiteMatch.overrides`. */
+export function styleDeclarations(style: WfStyle): Map<string, Map<string, string>> {
+  return new Map([...declsByKey(style)].filter(([, d]) => d.size > 0));
 }
 
 /** True when a style has no declarations in any variant. */
-function isEmptyStyle(style: WfStyle): boolean {
+export function isEmptyStyle(style: WfStyle): boolean {
   return [...declsByKey(style).values()].every((d) => d.size === 0);
 }
 
@@ -504,12 +501,16 @@ function variantTarget(key: string): { bp: string; suffix: string } | null {
  * specificity as `.a.b`). Returns self-contained chunks (each with its `@media`), at most
  * ~`maxChars` each, desktop-first order (main, medium, small, tiny, then min-width ones).
  */
-export function buildOverrideCss(matches: readonly SiteMatch[], maxChars: number): { chunks: string[]; rules: number; skipped: string[] } {
+export function buildOverrideCss(
+  matches: readonly Pick<SiteMatch, 'chain' | 'overrides'>[],
+  maxChars: number,
+  selectorFor: (chain: readonly string[]) => string = (chain) => chain.map(attrSelector).join(''),
+): { chunks: string[]; rules: number; skipped: string[] } {
   const byMedia = new Map<string, string[]>();
   const skipped: string[] = [];
   let rules = 0;
   for (const m of matches) {
-    const base = m.chain.map(attrSelector).join('');
+    const base = selectorFor(m.chain);
     for (const [key, decls] of m.overrides) {
       const target = variantTarget(key);
       if (!target) {

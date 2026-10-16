@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isClientFirstCore, isClientFirstUtility, missingCoreStructure } from './clientFirst';
 import { convert, validateXscp, type ConvertOptions } from './index';
-import { classNames, elements, embeddedCss, style } from './testHelpers';
+import { PRE_V8, classNames, elements, embeddedCss, style } from './testHelpers';
 
 describe('Client-First class list', () => {
   it('detects core and utility classes', () => {
@@ -54,7 +54,7 @@ describe('Client-First class list', () => {
 });
 
 const run = (html: string, css = '', options: Partial<ConvertOptions> = {}) => {
-  const res = convert({ mode: 'separate', html, css, js: '' }, options);
+  const res = convert({ mode: 'separate', html, css, js: '' }, { ...PRE_V8, ...options });
   expect(validateXscp(res.data)).toEqual([]);
   return res;
 };

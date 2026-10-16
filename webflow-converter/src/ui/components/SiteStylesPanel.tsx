@@ -1,6 +1,6 @@
 import { useId, useState, type ClipboardEvent } from 'react';
 import { parseSiteStyles } from '../../engine/siteStyles';
-import type { SiteClassConflicts, SiteClassOverrides } from '../../engine/types';
+import type { SiteClassConflicts } from '../../engine/types';
 import { activeSite, classCount, importIntoLibrary, readClipboardPayload, removeFromLibrary, type SiteLibrary } from '../lib/siteLibrary';
 import { ChevronIcon, CloseIcon } from './icons';
 
@@ -13,8 +13,6 @@ export interface SiteStylesPanelProps {
   onLibraryChange: (next: SiteLibrary) => void;
   /** `false` when the last save to localStorage failed. */
   saved: boolean;
-  overrides: SiteClassOverrides;
-  onOverridesChange: (v: SiteClassOverrides) => void;
   conflicts: SiteClassConflicts;
   onConflictsChange: (v: SiteClassConflicts) => void;
   emptyUtilities: boolean;
@@ -43,7 +41,7 @@ export function siteStatus(library: SiteLibrary): string {
  * Ownership: ui.
  */
 export function SiteStylesPanel(props: SiteStylesPanelProps) {
-  const { library, onLibraryChange, saved, overrides, onOverridesChange, conflicts, onConflictsChange, emptyUtilities, onEmptyUtilitiesChange, open, onOpenChange, modKey } = props;
+  const { library, onLibraryChange, saved, conflicts, onConflictsChange, emptyUtilities, onEmptyUtilitiesChange, open, onOpenChange, modKey } = props;
   const current = activeSite(library);
   const [label, setLabel] = useState(current?.label ?? 'My site');
   const [replace, setReplace] = useState(false);
@@ -178,27 +176,21 @@ export function SiteStylesPanel(props: SiteStylesPanelProps) {
 
         <div className="grid gap-x-6 gap-y-4 md:grid-cols-2">
           <Choice
-            legend="Same name, different design"
+            legend="Same class name, different CSS"
             name="site-conflicts"
             value={conflicts}
             onChange={onConflictsChange}
             choices={[
               {
                 value: 'rename',
-                label: 'Rename mine',
-                hint: 'When your site has a class of the same name with another layout or background (e.g. another hero’s section_hero), yours is pasted under a new name (section_hero-corbel) with your CSS. Matching classes are still reused.',
+                label: 'Create a separate class',
+                hint: 'When your site has a class of the same name with any other CSS (e.g. another hero’s section_hero), yours is pasted as a separate class (section_hero-corbel) with your CSS. Only classes with identical CSS are reused.',
               },
-              { value: 'reuse', label: 'Reuse the site’s', hint: 'Every class with a matching name reuses your site’s; the option on the right decides what happens to your differing CSS.' },
-            ]}
-          />
-          <Choice
-            legend="When a reused class differs from your CSS"
-            name="site-overrides"
-            value={overrides}
-            onChange={onOverridesChange}
-            choices={[
-              { value: 'embed', label: 'Keep my CSS', hint: 'The site’s class stays unchanged; your differing values go to the <style> embed and apply only to the pasted elements.' },
-              { value: 'drop', label: 'Use the site’s', hint: 'The pasted elements look like the rest of your site; your differing values are dropped.' },
+              {
+                value: 'reuse',
+                label: 'Use the site’s class',
+                hint: 'Same-named classes take your site’s styles; your differing CSS is dropped, so the pasted section looks like your site. Combo classes still get their own names.',
+              },
             ]}
           />
           <Choice

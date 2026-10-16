@@ -672,13 +672,14 @@ export interface ConvertOptions {
    */
   siteClassOverrides: SiteClassOverrides;
   /**
-   * What to do when an imported site class has the same name as one of ours but a DIFFERENT design
-   * (a layout-critical property differs, or, for a custom class, more than 3 declarations do; see
-   * `matchConflicts` in ./siteStyles). `'rename'` (default): ours is NOT reused; it is emitted with
-   * its own styles under a new name (`section_hero` -> `section_hero-<title word>`), and a combo
-   * that the site has with other styles is renamed too (Webflow merges combos by name). Equal and
-   * compatible classes are still reused (with `siteClassOverrides`). `'reuse'`: every same-named
-   * class is reused (the behaviour before v7).
+   * What to do when an imported site class has the same name as one of ours but DIFFERENT CSS (any
+   * declaration differs, or the site's class sets a property ours does not; see `matchConflicts` in
+   * ./siteStyles). `'rename'` (default, "Create a separate class"): ours is NOT reused; it is
+   * emitted with its own styles under a new name (`section_hero` -> `section_hero-<title word>`), and
+   * so is a combo that the site has with other styles (Webflow merges combos by name). Only classes
+   * whose CSS is identical to the site's (or that the source does not style at all) are reused.
+   * `'reuse'` ("Use the site's class"): every same-named class is reused, and `siteClassOverrides`
+   * decides what happens to the source's differing values.
    */
   siteClassConflicts: SiteClassConflicts;
   /**
@@ -695,7 +696,27 @@ export interface ConvertOptions {
    * gets an empty "name 2" class. The source CSS of those classes is dropped. Default `false`.
    */
   skipClientFirstUtilityStyles: boolean;
+  /**
+   * CSS custom properties the source defines on `:root` / `html` / `body` (see ./cssVariables).
+   * `'inline'` (default): `var(--x)` is replaced by its value wherever `--x` has one unconditional
+   * definition, and the definitions are kept on `[data-h2w-vars]` (the pasted root element) for the
+   * rest. `'scope'`: only moved to `[data-h2w-vars]`, so they neither override nor get overridden by
+   * the site's variables or another section's `:root`. `'global'`: kept on `:root` (before v8).
+   */
+  cssVariables: CssVariablesMode;
+  /**
+   * Give every styled combo class a short suffix derived from its styles (`is-secondary` ->
+   * `is-secondary-k3f9`). Webflow never renames a pasted combo: it merges it with a same-named
+   * combo of the site, whose styles then win, so without an import there is no other way to keep
+   * the source's combo CSS. Combos reused from an imported site class (identical CSS), combos
+   * without styles and combos that scripts add or toggle (their name must stay; their CSS is
+   * repeated in the `<style>` embed instead) keep their names. Default `true`.
+   */
+  uniqueCombos: boolean;
 }
+
+/** `ConvertOptions.cssVariables`. */
+export type CssVariablesMode = 'inline' | 'scope' | 'global';
 
 /** `ConvertOptions.siteClassOverrides`. */
 export type SiteClassOverrides = 'embed' | 'drop';
@@ -765,6 +786,8 @@ export const DEFAULT_CONVERT_OPTIONS: Readonly<ConvertOptions> = Object.freeze({
   siteClassConflicts: 'rename',
   stableClassIds: true,
   skipClientFirstUtilityStyles: false,
+  cssVariables: 'inline',
+  uniqueCombos: true,
 });
 
 /** Machine-readable warning categories. The UI may group or filter by these. */

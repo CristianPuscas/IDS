@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { convert, mergeSiteStyles, parseSiteStyles, siteClassKey, validateXscp, type ConvertOptions, type WfStyle } from './index';
 import { isUuidShaped, stableUuid } from './ids';
 import { matchSiteStyles, parseStyleLess, splitDuplicateSuffix } from './siteStyles';
-import { classNames, elements, embeddedCss, first, style } from './testHelpers';
+import { PRE_V8, classNames, elements, embeddedCss, first, style } from './testHelpers';
 import SITE_COPY from './__fixtures__/client-first-site-copy.json?raw';
 
 
@@ -10,7 +10,7 @@ const SITE = parseSiteStyles(SITE_COPY).styles;
 const site = (name: string): WfStyle => SITE.find((s) => s.name === name)!;
 
 const run = (html: string, css = '', options: Partial<ConvertOptions> = {}) => {
-  const res = convert({ mode: 'separate', html, css, js: '' }, options);
+  const res = convert({ mode: 'separate', html, css, js: '' }, { ...PRE_V8, ...options });
   expect(validateXscp(res.data)).toEqual([]);
   return res;
 };
@@ -256,13 +256,33 @@ describe('matching site classes that Webflow numbered', () => {
     expect(matchSiteStyles([ours('container-large')], [cls('c', 'Container Large 2')]).map((m) => m.site._id)).toEqual(['c']);
   });
 
-  it('pastes the numbered site class verbatim (name included) and routes differences to the embed', () => {
+  it("with 'reuse', pastes the numbered site class verbatim (name included) and routes differences to the embed", () => {
     const SITE_N: WfStyle[] = [{ ...site('padding-global'), _id: 'pg5', name: 'padding-global 5' }];
-    const res = run('<div class="padding-global">x</div>', '.padding-global { padding-left: 3rem; padding-right: 3rem; }', { siteStyles: SITE_N });
+    const res = run('<div class="padding-global">x</div>', '.padding-global { padding-left: 3rem; padding-right: 3rem; }', { siteStyles: SITE_N, siteClassConflicts: 'reuse' });
     const out = res.data.payload.styles.filter((s) => s.name.startsWith('padding-global'));
     expect(out).toHaveLength(1);
     expect(out[0]!.name).toBe('padding-global 5');
     expect(classNames(res, elements(res).find((e) => e.classes.length > 0)!)).toEqual(['padding-global 5']);
     expect(embeddedCss(res)).toContain('[data-h2w-class~="padding-global"] {');
+  });
+
+  it("by default ('rename'), a numbered site class with other CSS is not reused: ours is a separate class", () => {
+    const SITE_N: WfStyle[] = [{ ...site('padding-global'), _id: 'pg5', name: 'padding-global 5' }];
+    const res = run('<div class="padding-global">x</div>', '.padding-global { padding-left: 3rem; padding-right: 3rem; }', { siteStyles: SITE_N });
+    expect(res.data.payload.styles.some((s) => s._id === 'pg5')).toBe(false);
+    const [name] = classNames(res, elements(res).find((e) => e.classes.length > 0)!);
+    expect(name).not.toBe('padding-global 5');
+    expect(style(res, name!).styleLess).toContain('padding-left: 3rem;');
+    expect(embeddedCss(res)).not.toContain('[data-h2w-class~="padding-global"]');
+  });
+
+  it("by default ('rename'), a site class that differs in one colour only is not reused either", () => {
+    const SITE_C: WfStyle[] = [{ ...site('container-large'), _id: 'cl', styleLess: 'max-width: 80rem; color: #3ddc84;', variants: {} }];
+    const res = run('<div class="container-large">x</div>', '.container-large { max-width: 80rem; }', { siteStyles: SITE_C });
+    expect(res.data.payload.styles.some((s) => s._id === 'cl')).toBe(false);
+    expect(res.stats.reusedClasses).toBe(0);
+    expect(res.stats.renamedClasses).toBe(1);
+    const same = run('<div class="container-large">x</div>', '.container-large { max-width: 80rem; color: #3ddc84; }', { siteStyles: SITE_C });
+    expect(same.data.payload.styles.some((s) => s._id === 'cl')).toBe(true);
   });
 });

@@ -4,10 +4,10 @@ import {
   type ButtonMode,
   type ClientFirstUtilities,
   type ConvertOptions,
+  type CssVariablesMode,
   type ExternalImageMode,
   type FormMode,
   type SiteClassConflicts,
-  type SiteClassOverrides,
 } from '../../engine/types';
 import { getStorage } from './drafts';
 
@@ -20,10 +20,15 @@ export interface AdvancedOptions {
   breakpointSnap: BreakpointSnap;
   neutralizeDefaults: boolean;
   externalImages: ExternalImageMode;
-  /** Where a reused site class differs from the source CSS (see the site styles panel). */
-  siteClassOverrides: SiteClassOverrides;
-  /** When an imported site class has the same name but another design (see the site styles panel). */
+  /**
+   * "Same class name, different CSS" (site styles panel): `'rename'` = create a separate class
+   * (default), `'reuse'` = use the site's class (its styles; the source's differing CSS is dropped).
+   */
   siteClassConflicts: SiteClassConflicts;
+  /** `:root` CSS variables: inline values (default), scope to the pasted section, or keep global. */
+  cssVariables: CssVariablesMode;
+  /** Give styled combo classes a CSS-derived suffix so Webflow cannot merge them with the site's. */
+  uniqueCombos: boolean;
   /** Experimental: empty Client-First utility styles so the site's apply. */
   skipClientFirstUtilityStyles: boolean;
   /** Deterministic style ids. */
@@ -38,21 +43,29 @@ export const DEFAULT_ADVANCED: Readonly<AdvancedOptions> = Object.freeze({
   breakpointSnap: DEFAULT_CONVERT_OPTIONS.breakpointSnap,
   neutralizeDefaults: DEFAULT_CONVERT_OPTIONS.neutralizeDefaults,
   externalImages: DEFAULT_CONVERT_OPTIONS.externalImages,
-  siteClassOverrides: DEFAULT_CONVERT_OPTIONS.siteClassOverrides,
   siteClassConflicts: DEFAULT_CONVERT_OPTIONS.siteClassConflicts,
+  cssVariables: DEFAULT_CONVERT_OPTIONS.cssVariables,
+  uniqueCombos: DEFAULT_CONVERT_OPTIONS.uniqueCombos,
   skipClientFirstUtilityStyles: DEFAULT_CONVERT_OPTIONS.skipClientFirstUtilityStyles,
   stableClassIds: DEFAULT_CONVERT_OPTIONS.stableClassIds,
 });
 
 export const OPTIONS_STORAGE_KEY = 'wf-converter:options:v1';
 
+/**
+ * Version of the site-class policy stored with the options. Choices saved under an older policy
+ * fall back to the default: before v8, "Reuse the site's" / "Use the site's" adopted the site's
+ * styles for same-named classes, which gave a new paste another project's colours (/testhero).
+ */
+export const SITE_POLICY_VERSION = 8;
+
 const FORMS: readonly FormMode[] = ['auto', 'native', 'embed'];
 const BUTTONS: readonly ButtonMode[] = ['button', 'linkBlock', 'customElement'];
 const CF_UTILITIES: readonly ClientFirstUtilities[] = ['keep', 'prefix'];
 const SNAPS: readonly BreakpointSnap[] = ['up', 'off'];
 const IMAGES: readonly ExternalImageMode[] = ['customElement', 'embed', 'image'];
-const OVERRIDES: readonly SiteClassOverrides[] = ['embed', 'drop'];
 const CONFLICTS: readonly SiteClassConflicts[] = ['rename', 'reuse'];
+const VARIABLES: readonly CssVariablesMode[] = ['inline', 'scope', 'global'];
 const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback);
 
 const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T => (allowed.includes(v as T) ? (v as T) : fallback);
@@ -68,10 +81,10 @@ export function sanitizeAdvanced(raw: unknown): AdvancedOptions {
     breakpointSnap: pick(o.breakpointSnap, SNAPS, DEFAULT_ADVANCED.breakpointSnap),
     neutralizeDefaults: typeof o.neutralizeDefaults === 'boolean' ? o.neutralizeDefaults : DEFAULT_ADVANCED.neutralizeDefaults,
     externalImages: pick(o.externalImages, IMAGES, DEFAULT_ADVANCED.externalImages),
-    // Options saved before v7 have no siteClassConflicts: their "Use the site's" choice was made
-    // when every same-named class was reused, so it falls back to the default with the new policy.
-    siteClassOverrides: o.siteClassConflicts === undefined ? DEFAULT_ADVANCED.siteClassOverrides : pick(o.siteClassOverrides, OVERRIDES, DEFAULT_ADVANCED.siteClassOverrides),
-    siteClassConflicts: pick(o.siteClassConflicts, CONFLICTS, DEFAULT_ADVANCED.siteClassConflicts),
+    // A choice saved under an older site-class policy (or none) falls back to "Create a separate class".
+    siteClassConflicts: o.sitePolicy === SITE_POLICY_VERSION ? pick(o.siteClassConflicts, CONFLICTS, DEFAULT_ADVANCED.siteClassConflicts) : DEFAULT_ADVANCED.siteClassConflicts,
+    cssVariables: pick(o.cssVariables, VARIABLES, DEFAULT_ADVANCED.cssVariables),
+    uniqueCombos: bool(o.uniqueCombos, DEFAULT_ADVANCED.uniqueCombos),
     skipClientFirstUtilityStyles: bool(o.skipClientFirstUtilityStyles, DEFAULT_ADVANCED.skipClientFirstUtilityStyles),
     stableClassIds: bool(o.stableClassIds, DEFAULT_ADVANCED.stableClassIds),
   };
@@ -92,7 +105,7 @@ export function loadAdvanced(storage: Storage | null = getStorage()): AdvancedOp
 export function saveAdvanced(options: AdvancedOptions, storage: Storage | null = getStorage()): boolean {
   if (!storage) return false;
   try {
-    storage.setItem(OPTIONS_STORAGE_KEY, JSON.stringify(options));
+    storage.setItem(OPTIONS_STORAGE_KEY, JSON.stringify({ ...options, sitePolicy: SITE_POLICY_VERSION }));
     return true;
   } catch {
     return false;
@@ -101,7 +114,9 @@ export function saveAdvanced(options: AdvancedOptions, storage: Storage | null =
 
 /** The `convert()` options for the panel's choices (the prefix is trimmed). */
 export function toConvertOptions(options: AdvancedOptions): Partial<ConvertOptions> {
-  return { ...options, classPrefix: options.classPrefix.trim() };
+  // "Use the site's class" means the site's styles as they are; with "Create a separate class" only
+  // identical classes are reused, so there is nothing to override either way.
+  return { ...options, classPrefix: options.classPrefix.trim(), siteClassOverrides: options.siteClassConflicts === 'reuse' ? 'drop' : 'embed' };
 }
 
 /** How many options differ from the defaults. */

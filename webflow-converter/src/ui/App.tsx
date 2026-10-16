@@ -336,8 +336,10 @@ export default function App() {
                     Then select an element in the Webflow Designer and press <kbd className="kbd">{modKey}+V</kbd>.
                     {site && (
                       <span className="mt-1 block text-emerald-300/90" data-testid="site-in-use">
-                        Using the {site.styles.length} imported classes of “{site.label}”: same-named classes reuse that site’s
-                        {options.siteClassConflicts === 'rename' ? ' (different designs are renamed)' : ''}.{' '}
+                        Using the {site.styles.length} imported classes of “{site.label}”:{' '}
+                        {options.siteClassConflicts === 'rename'
+                          ? 'a class with the same name and identical CSS reuses that site’s; different CSS gets a separate class.'
+                          : 'same-named classes use that site’s styles.'}{' '}
                         <button type="button" className="underline underline-offset-2 hover:text-emerald-200" onClick={focusSiteImport}>
                           Change
                         </button>
@@ -355,8 +357,6 @@ export default function App() {
             library={siteLibrary}
             onLibraryChange={setSiteLibrary}
             saved={siteSaved}
-            overrides={options.siteClassOverrides}
-            onOverridesChange={(v) => setOptions((o) => ({ ...o, siteClassOverrides: v }))}
             conflicts={options.siteClassConflicts}
             onConflictsChange={(v) => setOptions((o) => ({ ...o, siteClassConflicts: v }))}
             emptyUtilities={options.skipClientFirstUtilityStyles}

@@ -7,11 +7,11 @@ import { describe, expect, it } from 'vitest';
 import FERMA from './__fixtures__/ferma.html?raw';
 import { isNativeImageSrc } from './nodeBuilder';
 import { convert, validateXscp } from './index';
-import { classNames, elements, embeddedCss, style } from './testHelpers';
+import { PRE_V8, classNames, elements, embeddedCss, style } from './testHelpers';
 import type { WfElementNode } from './types';
 
 describe('ferma.html (real paste-test regression)', () => {
-  const res = convert({ mode: 'combined', html: FERMA });
+  const res = convert({ mode: 'combined', html: FERMA }, PRE_V8);
   const css = embeddedCss(res);
   const byXattr = (id: string): WfElementNode =>
     elements(res).find((e) => e.data?.attr?.id === id || e.data?.attributes?.some((a) => a.name === 'id' && a.value === id))!;
