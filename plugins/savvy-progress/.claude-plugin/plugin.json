@@ -1,0 +1,26 @@
+{
+  "name": "savvy-progress",
+  "version": "1.2.0-local.4",
+  "description": "Local fork of savvy-progress: progress bar above the prompt for /savvy-flow, plus one Agents pane (/agents-info or /filetree) with running, finished and planned subagents and, below them, the project file tree with the files Claude touched.",
+  "author": {
+    "name": "johnnyvizz",
+    "url": "https://github.com/johnnyvizz"
+  },
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "language": {
+      "type": "string",
+      "title": "Panel language",
+      "description": "auto follows Claude Code's language setting, then the system locale",
+      "default": "auto",
+      "options": [
+        "auto",
+        "en",
+        "ru"
+      ]
+    }
+  },
+  "homepage": "https://github.com/johnnyvizz/claude-kit/tree/main/plugins/savvy-progress",
+  "repository": "https://github.com/johnnyvizz/claude-kit",
+  "license": "MIT"
+}
