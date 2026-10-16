@@ -1,0 +1,13 @@
+{
+  "name": "local-agents",
+  "description": "Local fork of savvy-progress with the project file tree merged into its Agents pane.",
+  "owner": {
+    "name": "t1tannn1"
+  },
+  "plugins": [
+    {
+      "name": "savvy-progress",
+      "source": "./"
+    }
+  ]
+}
