@@ -258,18 +258,48 @@ function declsByKey(style: WfStyle): Map<string, Map<string, string>> {
   return out;
 }
 
+/** Variant keys of the desktop-first cascade, widest first (`''` = main). */
+const CASCADE_KEYS = ['', 'medium', 'small', 'tiny'];
+
 function diffStyles(ours: WfStyle, site: WfStyle): Pick<SiteMatch, 'overrides' | 'siteOnly' | 'siteOnlyDecls'> {
   const mine = declsByKey(ours);
   const theirs = declsByKey(site);
   const overrides = new Map<string, Map<string, string>>();
   const siteOnly = new Set<string>();
+  const set = (key: string, prop: string, value: string) => {
+    if (!overrides.has(key)) overrides.set(key, new Map());
+    overrides.get(key)!.set(prop, value);
+  };
+  // Desktop-first breakpoints cascade: an override rule in the embed applies at every narrower
+  // width too and beats the site's own breakpoint values there (it comes later in the page). So per
+  // property, re-assert the source's value wherever what would show differs from it.
+  const cascade = (map: Map<string, Map<string, string>>, i: number, prop: string): string | undefined => {
+    for (let j = i; j >= 0; j--) {
+      const v = map.get(CASCADE_KEYS[j]!)?.get(prop);
+      if (v !== undefined) return v;
+    }
+    return undefined;
+  };
+  const props = new Set<string>();
+  for (const key of CASCADE_KEYS) for (const map of [mine, theirs]) for (const prop of map.get(key)?.keys() ?? []) props.add(prop);
+  for (const prop of props) {
+    let embedded: string | undefined;
+    CASCADE_KEYS.forEach((key, i) => {
+      const o = cascade(mine, i, prop);
+      if (o === undefined) return;
+      const shown = embedded ?? cascade(theirs, i, prop);
+      if (shown !== undefined && normValue(shown) === normValue(o)) return;
+      set(key, prop, o);
+      embedded = o;
+    });
+  }
   for (const [key, decls] of mine) {
+    if (CASCADE_KEYS.includes(key)) continue;
     const other = theirs.get(key) ?? new Map<string, string>();
     for (const [prop, value] of decls) {
       const s = other.get(prop);
       if (s !== undefined && normValue(s) === normValue(value)) continue;
-      if (!overrides.has(key)) overrides.set(key, new Map());
-      overrides.get(key)!.set(prop, value);
+      set(key, prop, value);
     }
   }
   const siteOnlyDecls: { key: string; prop: string }[] = [];

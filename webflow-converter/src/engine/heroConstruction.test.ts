@@ -149,7 +149,12 @@ describe('hero-construction paste test', () => {
     for (const id of ['cf-padding-global', 'cf-container-large', 'cf-padding-section-large']) expect(payloadIds.has(id)).toBe(true);
     expect(res.stats.reusedClasses).toBe(3);
     // padding-section-large differs only in padding values: the source's go to the scoped embed.
-    expect(embedCodes(res).join('\n')).toMatch(/\[data-h2w-class~="padding-section-large"\] \{\n {2}padding-top: 8rem;\n {2}padding-bottom: 8rem;/);
+    const css = embedCodes(res).join('\n');
+    expect(css).toMatch(/\[data-h2w-class~="padding-section-large"\] \{\n {2}padding-top: 8rem;\n {2}padding-bottom: 8rem;/);
+    // The 8rem override applies at every narrower width too, so the source's breakpoint values are
+    // re-asserted where the site's would otherwise lose to it (paste test: 8rem on mobile).
+    expect(css).toMatch(/@media \(max-width: 991px\) \{\n\[data-h2w-class~="padding-section-large"\] \{\n {2}padding-top: 6rem;\n {2}padding-bottom: 6rem;/);
+    expect(css).toMatch(/@media \(max-width: 767px\) \{\n\[data-h2w-class~="padding-section-large"\] \{\n {2}padding-top: 4rem;\n {2}padding-bottom: 4rem;/);
   });
 
   it("siteClassConflicts 'reuse' keeps the pre-v7 behaviour (every same-named class reused)", () => {
