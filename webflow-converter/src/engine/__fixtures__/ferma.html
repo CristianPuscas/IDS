@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Roșii cherry proaspete, cultivate cu grijă în sera noastră. Descoperă soiurile și contactează ferma pentru comenzi.">
+  <title>Tomate Cherry — Fermă locală</title>
+  <style>
+    :root{--green:#174b25;--green2:#2f7a36;--lime:#e6f0dc;--cream:#fbfaf4;--ink:#17251a;--muted:#5d665e;--red:#d94332}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;scroll-padding-top:82px}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--cream);line-height:1.6}
+    a{color:inherit;text-decoration:none}
+    img{display:block;width:100%;object-fit:cover}
+    .container-large{width:min(1160px,calc(100% - 40px));margin:auto}
+    header{position:sticky;top:0;z-index:20;background:rgba(251,250,244,.94);backdrop-filter:blur(12px);border-bottom:1px solid #e6e8df}
+    .navbar_component{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+    .navbar_brand{display:flex;align-items:center;gap:10px;font-weight:800;line-height:1.1}
+    .navbar_logo{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#e8f2df;font-size:24px}
+    .navbar_brand small{display:block;font-size:10px;letter-spacing:.13em;font-weight:700;color:var(--muted);margin-top:4px}
+    nav{display:flex;align-items:center;gap:25px;font-size:13px;font-weight:650}
+    nav a:hover{color:var(--green2)}
+    .button{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 21px;border-radius:999px;background:var(--green2);color:white;font-weight:750;font-size:14px;border:1px solid var(--green2);transition:transform .2s,background .2s}
+    .button:hover{transform:translateY(-2px);background:var(--green)}
+    .button.is-outline{background:transparent;border-color:rgba(255,255,255,.8);color:white}
+    .button.is-outline:hover{background:white;color:var(--green)}
+    .navbar_menu-button{display:none;border:0;background:transparent;font-size:26px;color:var(--green);cursor:pointer}
+    .section_hero{position:relative;min-height:610px;display:flex;align-items:center;color:white;background:#183b1b url('https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&w=2000&q=85') center/cover no-repeat}
+    .section_hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,28,12,.86) 0%,rgba(8,28,12,.64) 42%,rgba(8,28,12,.08) 100%)}
+    .hero_content{position:relative;z-index:1;padding:88px 0;max-width:650px}
+    .text-style-eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:850;color:#b9e5a8}
+    h1,h2,h3,p{margin-top:0}
+    h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(43px,6vw,76px);line-height:1.02;letter-spacing:-.04em;margin:18px 0}
+    .section_hero p{max-width:510px;font-size:18px;color:#f0f2ec}
+    .button-group{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+    .hero_features{display:flex;gap:26px;flex-wrap:wrap;margin-top:35px;font-size:12px;color:#f2f4ef}
+    .hero_features span{display:flex;align-items:center;gap:8px}.hero_features b{font-size:19px}
+    .padding-section-large{padding:78px 0}
+    section{padding:0}
+    .about_layout{display:grid;grid-template-columns:1fr 1.1fr;gap:55px;align-items:center}
+    .about_image-wrapper{height:390px;border-radius:24px;overflow:hidden}
+    .about_image-wrapper img{height:100%;transition:transform .5s}.about_image-wrapper:hover img{transform:scale(1.035)}
+    .text-style-label{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--green2);font-weight:850;margin-bottom:9px}
+    h2{font-family:Georgia,"Times New Roman",serif;font-size:clamp(31px,4vw,46px);line-height:1.12;letter-spacing:-.025em;margin-bottom:16px}
+    .text-size-medium{font-size:16px;color:var(--muted);max-width:660px}
+    .about_features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px}
+    .about_feature{display:flex;gap:11px;align-items:center;font-size:13px;font-weight:650}
+    .about_feature-icon{width:43px;height:43px;border:1px solid #8eaf83;border-radius:50%;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+    .section_products{background:linear-gradient(135deg,#e8f1df,#f5f8ee)}
+    .section_heading{text-align:center;max-width:700px;margin:0 auto 34px}
+    .section_heading .text-size-medium{margin:0 auto}
+    .products_grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+    .products_card{background:rgba(255,255,255,.88);border:1px solid #e6ebdf;border-radius:17px;padding:10px;overflow:hidden;transition:transform .25s,box-shadow .25s}
+    .products_card:hover{transform:translateY(-5px);box-shadow:0 14px 30px #254a1b14}
+    .products_card img{height:190px;border-radius:11px}
+    .products_card-content{padding:15px 9px 12px}
+    .products_card-content h3{font-family:Georgia,serif;font-size:20px;margin-bottom:7px}
+    .products_card-content p{font-size:14px;color:var(--muted);margin:0}
+    .section_benefits{padding:58px 0;background:var(--green);color:white}
+    .benefits_grid{display:grid;grid-template-columns:repeat(4,1fr);gap:25px}
+    .benefits_item{padding:8px}
+    .benefits_item .benefits_icon{font-size:28px;margin-bottom:10px}
+    .benefits_item h3{font-family:Georgia,serif;font-size:19px;margin-bottom:5px}
+    .benefits_item p{color:#d8e4d5;font-size:13px;margin:0}
+    .process_grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:35px}
+    .process_item{text-align:center;position:relative;padding:0 8px}
+    .process_icon{margin:0 auto 13px;width:64px;height:64px;border:1px solid #7da874;border-radius:50%;display:grid;place-items:center;color:var(--green2);font-size:25px;background:white}
+    .process_item h3{font-size:16px;margin-bottom:5px}.process_item p{font-size:13px;color:var(--muted)}
+    .section_gallery{padding-top:20px}
+    .gallery_grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+    .gallery_grid img{height:160px;border-radius:13px}
+    .section_contact{padding:58px 0;background:linear-gradient(110deg,rgba(11,48,19,.96),rgba(25,73,32,.95)),url('https://images.unsplash.com/photo-1592841200221-a6898f307baa?auto=format&fit=crop&w=1500&q=80') center/cover;color:white}
+    .contact_layout{display:flex;align-items:center;justify-content:space-between;gap:30px}
+    .section_contact h2{font-size:clamp(28px,3.5vw,40px);margin-bottom:9px}.section_contact p{color:#e1eadf;margin-bottom:0}
+    footer{background:#102b16;color:#cdd9ca;padding:23px 0;font-size:12px}
+    .footer_layout{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}
+    .contact_form-wrapper{max-width:720px;margin:32px auto 0;padding:25px;border-radius:18px;background:#fff;color:var(--ink);display:none}
+    .contact_form-wrapper.open{display:block}
+    .contact_form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}
+    input,textarea,select{width:100%;padding:12px 13px;border:1px solid #d7dfd3;border-radius:9px;font:inherit;background:#fff}
+    textarea{min-height:100px;resize:vertical}.form_field-full{grid-column:1/-1}
+    .text-size-small{font-size:12px;color:var(--muted);margin:10px 0 0}
+    @media(max-width:850px){nav{gap:14px;font-size:12px}.navbar_component>.button{display:none}.about_layout{gap:30px}.about_features{grid-template-columns:1fr}.products_grid{grid-template-columns:repeat(2,1fr)}.gallery_grid{grid-template-columns:repeat(3,1fr)}.gallery_grid img{height:150px}}
+    @media(max-width:640px){.container-large{width:min(100% - 30px,1160px)}.navbar_component{min-height:68px}.navbar_menu-button{display:block}nav{display:none;position:absolute;top:68px;left:0;right:0;padding:18px 22px 24px;background:var(--cream);border-bottom:1px solid #e6e8df;flex-direction:column;align-items:flex-start;font-size:15px}nav.open{display:flex}.section_hero{min-height:620px;background-position:62% center}.section_hero:before{background:linear-gradient(90deg,rgba(7,25,10,.86),rgba(7,25,10,.43))}.hero_content{padding:75px 0}.section_hero p{font-size:16px}.padding-section-large{padding:57px 0}
+    section{padding:0}.about_layout{grid-template-columns:1fr}.about_image-wrapper{height:280px}.products_grid{gap:10px}.products_card img{height:140px}.products_card-content{padding:12px 5px}.products_card-content h3{font-size:17px}.products_card-content p{font-size:13px}.benefits_grid{grid-template-columns:repeat(2,1fr);gap:18px}.process_grid{grid-template-columns:repeat(2,1fr);row-gap:25px}.gallery_grid{grid-template-columns:repeat(2,1fr)}.gallery_grid img{height:145px}.contact_layout{align-items:flex-start;flex-direction:column}.contact_form-grid{grid-template-columns:1fr}.form_field-full{grid-column:auto}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="container-large navbar_component">
+    <a class="navbar_brand" href="#acasa" aria-label="Tomate Cherry - pagina principală"><span class="navbar_logo">🍅</span><span>Tomate Cherry<small>FERMĂ LOCALĂ</small></span></a>
+    <button class="navbar_menu-button" id="menuToggle" aria-label="Deschide meniul" aria-expanded="false">☰</button>
+    <nav id="mainNav" aria-label="Navigare principală">
+      <a href="#acasa">Acasă</a><a href="#despre">Despre noi</a><a href="#produse">Produse</a><a href="#proces">Procesul nostru</a><a href="#galerie">Galerie</a><a href="#contact">Contact</a>
+    </nav>
+    <a class="button" href="#contact">Contactează-ne ↗</a>
+  </div>
+</header>
+<main>
+  <section class="section_hero" id="acasa">
+    <div class="container-large"><div class="hero_content">
+      <div class="text-style-eyebrow">Proaspăt culese. Cu grijă cultivate.</div>
+      <h1>Roșii Cherry<br>cu Gust Autentic</h1>
+      <p>Cultivăm cu pasiune roșii cherry proaspete, sănătoase și pline de savoare, direct din sera noastră până la masa ta.</p>
+      <div class="button-group"><a class="button" href="#produse">Descoperă produsele <span>→</span></a><a class="button button is-outline" href="#despre">Despre fermă</a></div>
+      <div class="hero_features"><span><b>🌱</b> Cultivate cu grijă</span><span><b>☀️</b> Soare și prospețime</span><span><b>♡</b> Gust autentic</span></div>
+    </div></div>
+  </section>
+
+  <section class="padding-section-large" id="despre">
+    <div class="container-large about_layout">
+      <div class="about_image-wrapper"><img loading="lazy" src="https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1000&q=85" alt="Plante cultivate în sera fermei"></div>
+      <div><div class="text-style-label">Despre noi</div><h2>O fermă dedicată calității</h2><p class="text-size-medium">Suntem o fermă locală dedicată cultivării roșiilor cherry gustoase și proaspete. Îmbinăm atenția pentru fiecare plantă cu practici responsabile, pentru ca tu să te bucuri de gustul autentic al legumelor bine cultivate.</p>
+        <div class="about_features"><div class="about_feature"><span class="about_feature-icon">🌿</span><span>Grijă pentru fiecare plantă</span></div><div class="about_feature"><span class="about_feature-icon">☀</span><span>Cultivare în seră</span></div><div class="about_feature"><span class="about_feature-icon">♧</span><span>Respect pentru natură</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section_products padding-section-large" id="produse">
+    <div class="container-large"><div class="section_heading"><div class="text-style-label">Produsele noastre</div><h2>Roșii Cherry pentru toate gusturile</h2><p class="text-size-medium">De la dulci și delicate la aromate și intense — alege preferatele tale sau încearcă un mix colorat.</p></div>
+      <div class="products_grid">
+        <article class="products_card"><img loading="lazy" src="https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=700&q=85" alt="Roșii cherry roșii"><div class="products_card-content"><h3>Cherry Roșu Clasic</h3><p>Dulci, suculente și versatile — perfecte pentru salate și gustări.</p></div></article>
+        <article class="products_card"><img loading="lazy" src="https://images.unsplash.com/photo-1591073113125-e46713c829ed?auto=format&fit=crop&w=700&q=85" alt="Roșii cherry galbene"><div class="products_card-content"><h3>Cherry Galben</h3><p>Aromă delicată și culoare luminoasă pentru farfurii pline de viață.</p></div></article>
+        <article class="products_card"><img loading="lazy" src="https://images.unsplash.com/photo-1561136594-7f68413baa99?auto=format&fit=crop&w=700&q=85" alt="Roșii cherry în nuanțe închise"><div class="products_card-content"><h3>Cherry Chocolate</h3><p>Gust intens și nuanțe deosebite, ideale pentru combinații gourmet.</p></div></article>
+        <article class="products_card"><img loading="lazy" src="https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?auto=format&fit=crop&w=700&q=85" alt="Mix de roșii proaspete"><div class="products_card-content"><h3>Mix Cherry</h3><p>Un amestec colorat, cu texturi și arome care se completează.</p></div></article>
+      </div>
+    </div>
+  </section>
+
+  <div class="section_benefits"><div class="container-large"><div class="benefits_grid">
+    <div class="benefits_item"><div class="benefits_icon">✧</div><h3>Calitate atent aleasă</h3><p>Fiecare recoltă este verificată cu grijă.</p></div>
+    <div class="benefits_item"><div class="benefits_icon">🌿</div><h3>Gust autentic</h3><p>Roșii cultivate pentru savoare și prospețime.</p></div>
+    <div class="benefits_item"><div class="benefits_icon">☀</div><h3>Recoltare sezonieră</h3><p>Recoltate la momentul potrivit.</p></div>
+    <div class="benefits_item"><div class="benefits_icon">♧</div><h3>Colaborări locale</h3><p>Deschiși către magazine și restaurante.</p></div>
+  </div></div></div>
+
+  <section class="padding-section-large" id="proces">
+    <div class="container-large"><div class="section_heading"><div class="text-style-label">Procesul nostru</div><h2>De la sămânță la masa ta</h2><p class="text-size-medium">Fiecare etapă contează pentru o recoltă frumoasă și gustoasă.</p></div>
+      <div class="process_grid">
+        <div class="process_item"><div class="process_icon">❋</div><h3>1. Sămânță</h3><p>Alegem soiuri potrivite și pornim cu grijă fiecare cultură.</p></div>
+        <div class="process_item"><div class="process_icon">🌱</div><h3>2. Cultivare</h3><p>Îngrijim plantele și urmărim atent dezvoltarea lor.</p></div>
+        <div class="process_item"><div class="process_icon">🍅</div><h3>3. Recoltare</h3><p>Culegem fructele când sunt coapte și aromate.</p></div>
+        <div class="process_item"><div class="process_icon">♧</div><h3>4. Livrare</h3><p>Pregătim comenzile pentru a ajunge proaspete la tine.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section_gallery padding-section-large" id="galerie"><div class="container-large"><div class="text-style-label">Galerie</div><h2>Momente din ferma noastră</h2>
+    <div class="gallery_grid">
+      <img loading="lazy" src="https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=500&q=80" alt="Cultură de plante în seră">
+      <img loading="lazy" src="https://images.unsplash.com/photo-1546094096-0df4bcaaa337?auto=format&fit=crop&w=500&q=80" alt="Roșii cherry roșii coapte">
+      <img loading="lazy" src="https://images.unsplash.com/photo-1591073113125-e46713c829ed?auto=format&fit=crop&w=500&q=80" alt="Roșii galbene">
+      <img loading="lazy" src="https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?auto=format&fit=crop&w=500&q=80" alt="Roșii proaspete pentru livrare">
+      <img loading="lazy" src="https://images.unsplash.com/photo-1561136594-7f68413baa99?auto=format&fit=crop&w=500&q=80" alt="Roșii cherry colorate">
+    </div>
+  </div></section>
+
+  <section class="section_contact" id="contact"><div class="container-large"><div class="contact_layout"><div><div class="text-style-eyebrow">Hai să colaborăm</div><h2>Roșii Cherry proaspete,<br>direct de la fermă</h2><p>Scrie-ne pentru comenzi, oferte sau colaborări.</p></div><button class="button button is-outline" id="contactToggle" type="button">✉ Contactează-ne</button></div>
+    <div class="contact_form-wrapper" id="contactForm"><h3>Trimite-ne un mesaj</h3><form id="messageForm"><div class="contact_form-grid">
+      <div><label for="name">Numele tău</label><input id="name" name="name" required placeholder="Cum te numești?"></div>
+      <div><label for="email">Email</label><input id="email" name="email" type="email" required placeholder="nume@email.com"></div>
+      <div class="form_field-full"><label for="interest">Sunt interesat(ă) de</label><select id="interest" name="interest"><option>Comandă personală</option><option>Colaborare cu magazin / restaurant</option><option>Informații despre produse</option></select></div>
+      <div class="form_field-full"><label for="message">Mesaj</label><textarea id="message" name="message" required placeholder="Spune-ne cu ce te putem ajuta..."></textarea></div>
+      <div class="form_field-full"><button class="button" type="submit">Pregătește mesajul ↗</button><p class="text-size-small">Demo: butonul va deschide aplicația ta de email. Adaugă adresa reală a fermei în cod înainte de publicare.</p></div>
+    </div></form></div>
+  </div></section>
+</main>
+<footer><div class="container-large footer_layout"><span>© <span id="year"></span> Tomate Cherry · Fermă locală</span><span>Cultivate cu grijă, savurate cu drag. 🍅</span></div></footer>
+<script>
+  const menuToggle = document.getElementById('menuToggle');
+  const mainNav = document.getElementById('mainNav');
+  menuToggle.addEventListener('click', () => {
+    const open = mainNav.classList.toggle('open');
+    menuToggle.setAttribute('aria-expanded', String(open));
+    menuToggle.textContent = open ? '×' : '☰';
+  });
+  mainNav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+    mainNav.classList.remove('open');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    menuToggle.textContent = '☰';
+  }));
+  document.getElementById('contactToggle').addEventListener('click', () => {
+    document.getElementById('contactForm').classList.toggle('open');
+    document.getElementById('contactForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+  document.getElementById('year').textContent = new Date().getFullYear();
+  document.getElementById('messageForm').addEventListener('submit', event => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    const subject = encodeURIComponent('Solicitare — Tomate Cherry');
+    const body = encodeURIComponent(
+      'Nume: ' + data.get('name') + '\\nEmail: ' + data.get('email') +
+      '\\nInteres: ' + data.get('interest') + '\\n\\nMesaj:\\n' + data.get('message')
+    );
+    // Înlocuiește adresa de mai jos cu emailul real al fermei.
+    window.location.href = 'mailto:contact@ferma-ta.md?subject=' + subject + '&body=' + body;
+  });
+</script>
+</body>
+</html>
