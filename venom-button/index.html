@@ -58,7 +58,7 @@
   #btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
 
   #cursor {
-    position: fixed; left: 0; top: 0; width: 30px; height: 30px; z-index: 3;
+    position: fixed; left: 0; top: 0; width: 32px; height: 32px; z-index: 3;
     pointer-events: none; opacity: 0; will-change: transform;
     filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));
   }
@@ -229,7 +229,7 @@
     for (let i = 0; i <= SAMPLES; i++) pts.push({ x: root.x, y: root.y });
     return {
       s, sOff, root, nodes, pts, state: 'wait', start: now + delay, t0: 0,
-      w0: rand(6, 10), w1: rand(2.8, 3.8), ringA, ringR: rand(6, 14), spin: rand(-1, 1),
+      w0: rand(4.5, 7.5), w1: rand(2.6, 3.2), ringA, ringR: rand(6, 14), spin: rand(-1, 1),
       phase: rand(0, TAU), freq: rand(0.004, 0.008), amp: reduced ? 0 : rand(2, 6),
       k: rand(0.13, 0.2), damp: rand(0.76, 0.84), life: reduced ? 0 : 1, grab: 0
     };
@@ -342,7 +342,7 @@
       const rr = t.ringR * (inside ? 0.65 : 1) * (reduced ? 1 : 1 + 0.18 * Math.sin(now * 0.005 + t.phase));
       tx = center.x + Math.cos(a) * rr; ty = center.y + Math.sin(a) * rr;
     } else if (t.state === 'stretch') {
-      tx = ptr.x + 4 + Math.cos(t.ringA) * t.ringR; ty = ptr.y + 14 + Math.sin(t.ringA) * t.ringR;
+      tx = ptr.x + 4.5 + Math.cos(t.ringA) * t.ringR; ty = ptr.y + 15 + Math.sin(t.ringA) * t.ringR;
       const dx = tx - root.x, dy = ty - root.y, d = Math.hypot(dx, dy), max = VENOM_ZONE + 110;
       if (d > max) { tx = root.x + dx / d * max; ty = root.y + dy / d * max; }
       if (now >= t.snapAt) snap(t);
@@ -363,7 +363,7 @@
 
     // middle nodes chase a bulging, wobbling rest shape -> organic lag
     const dx = tip.x - root.x, dy = tip.y - root.y, len = Math.hypot(dx, dy) || 1;
-    const px = -dy / len, py = dx / len, bulge = Math.min(len * 0.35, 16);
+    const px = -dy / len, py = dx / len, bulge = Math.min(len * 0.3, 12);
     const md = Math.pow(0.72, f);
     for (let i = 1; i < N - 1; i++) {
       const u = i / (N - 1), env = Math.sin(Math.PI * u);
@@ -440,15 +440,17 @@
     dot(gctx, pts[n - 1].x, pts[n - 1].y, (w1 * 0.7 + 1.2) * t.life); // sucker at the tip
 
     // gloss: thin light streak on the upper side of the near half
-    if (len > 14 && t.life > 0.5) {
+    if (len > 14 && t.life > 0.5 && t.w0 > 5.5) {
       const mid = pts[n >> 1], a = pts[(n >> 1) - 1];
       let nx = -(mid.y - a.y), ny = mid.x - a.x; const d = Math.hypot(nx, ny) || 1;
       nx /= d; ny /= d; if (ny > 0) { nx = -nx; ny = -ny; }
       sctx.beginPath();
-      for (let k = 2; k <= Math.round(SAMPLES * 0.6); k++) {
+      let pen = false;
+      for (let k = 2; k <= Math.round(SAMPLES * 0.5); k++) {
         const u = k / SAMPLES, off = (w0 + (w1 - w0) * u) * 0.22 * neck;
         const x = pts[k].x + nx * off, y = pts[k].y + ny * off;
-        k === 2 ? sctx.moveTo(x, y) : sctx.lineTo(x, y);
+        if (distanceToPill(x, y) < 2) { pen = false; continue; }  // hidden behind the button
+        pen ? sctx.lineTo(x, y) : sctx.moveTo(x, y); pen = true;
       }
       sctx.stroke();
     }
@@ -456,13 +458,13 @@
 
   // strands that cross over the white hand: [from angle, to angle, bend]
   const WRAP_OUT = [[2.75, 0.35, 1], [3.75, 1.0, -1]];
-  const WRAP_IN = [[2.4, 5.9, 1], [4.0, 1.3, -1], [3.3, 0.15, 1], [1.9, 4.9, -1]];
+  const WRAP_IN = [[2.3, 5.8, 1]];
   const wpts = []; for (let i = 0; i <= 12; i++) wpts.push({ x: 0, y: 0 });
 
   function drawWrap(g) {
     if (g < 0.05) return;
     const list = inside ? WRAP_OUT.concat(WRAP_IN) : WRAP_OUT;
-    const R0 = inside ? 12 : 14;
+    const R0 = inside ? 13 : 15;
     for (const [a, b, bend] of list) {
       const wob = reduced ? 0 : Math.sin(now * 0.004 + a * 3) * 0.12;
       const ax = center.x + Math.cos(a + wob) * R0, ay = center.y + Math.sin(a + wob) * R0;
@@ -474,8 +476,8 @@
         wpts[k].x = v * v * ax + 2 * v * u * qx + u * u * bx;
         wpts[k].y = v * v * ay + 2 * v * u * qy + u * u * by;
       }
-      taper(wctx, wpts, 13, u => (3.2 + 1.6 * Math.sin(Math.PI * u)) * g);
-      dot(wctx, ax, ay, 3 * g); dot(wctx, bx, by, 3 * g);
+      taper(wctx, wpts, 13, u => (2.6 + 0.9 * Math.sin(Math.PI * u)) * g);
+      dot(wctx, ax, ay, 2.4 * g); dot(wctx, bx, by, 2.4 * g);
     }
   }
 
@@ -483,10 +485,10 @@
     for (const c of [gctx, wctx, sctx]) { c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H); }
     if (!tendrils.length && !drops.length) return;
     gctx.fillStyle = INK; wctx.fillStyle = INK;
-    sctx.strokeStyle = 'rgba(255,255,255,.22)'; sctx.lineWidth = 1.1; sctx.lineCap = 'round';
+    sctx.strokeStyle = 'rgba(255,255,255,.13)'; sctx.lineWidth = 1; sctx.lineCap = 'round';
     sctx.fillStyle = 'rgba(255,255,255,.35)';
 
-    if (tendrils.length) { pillPath(gctx, -3); gctx.fill(); }  // lets goo melt into the button edge
+    if (tendrils.length) { pillPath(gctx, -7); gctx.fill(); }  // lets goo melt into the button edge
     let g = 0, held = 0;
     for (const t of tendrils) {
       if (t.state === 'wait') continue;
@@ -500,10 +502,10 @@
     if (active && held) {
       g = (g / held) * (reduced ? Math.min(1, energy * 1.5) : 1);
       // goo mass + satellite droplets around the hand
-      dot(gctx, center.x, center.y, 7 * g);
+      dot(gctx, center.x, center.y, 5 * g);
       for (let k = 0; k < 4; k++) {
         const a = now * 0.002 * (k % 2 ? 1 : -1) + k * TAU / 4;
-        dot(gctx, center.x + Math.cos(a) * 15, center.y + Math.sin(a) * 13, 2.8 * g);
+        dot(gctx, center.x + Math.cos(a) * 15, center.y + Math.sin(a) * 14, 2.4 * g);
       }
       drawWrap(g);
     }
@@ -519,7 +521,7 @@
     const k = Math.min(1, 0.45 * f);
     view.x += (ptr.x + (px - ptr.x) * pull - view.x) * k;
     view.y += (ptr.y + (py - ptr.y) * pull - view.y) * k;
-    cursorEl.style.transform = `translate(${view.x - 10.3}px, ${view.y - 3.3}px)`;
+    cursorEl.style.transform = `translate(${view.x - 11}px, ${view.y - 3.5}px)`;
   }
 
   function animateButton(f) {
@@ -530,7 +532,7 @@
     const br = reduced ? 0 : Math.sin(now * 0.0055);
     const scx = 1 + e * (0.018 + 0.01 * br), scy = 1 - e * (0.035 + 0.015 * br);
     btn.style.transform =
-      `perspective(700px) translate(${(tx * 2.5 * e).toFixed(2)}px, ${(ty * 1.5 * e).toFixed(2)}px) ` +
+      `perspective(700px) translate(${(tx * 1.5 * e).toFixed(2)}px, ${(ty * 1 * e).toFixed(2)}px) ` +
       `rotateY(${(tx * 7 * e).toFixed(2)}deg) rotateX(${(-ty * 9 * e).toFixed(2)}deg) scale(${scx.toFixed(4)}, ${scy.toFixed(4)})`;
   }
 
@@ -547,7 +549,7 @@
     if (active) s0 = nearestS(ptr.x, ptr.y);
     updateView(f);
     animateButton(f);
-    center.x = view.x + 4; center.y = view.y + 14;     // hand body, below the fingertip hotspot
+    center.x = view.x + 4.5; center.y = view.y + 15;     // hand body, below the fingertip hotspot
     for (let i = tendrils.length - 1; i >= 0; i--) if (!stepTendril(tendrils[i], f)) tendrils.splice(i, 1);
     stepDrops(f);
     render();
