@@ -9,34 +9,29 @@
     --bg: #d6d3cc;
     --ink: #0b0b0d;
     --muted: #85827b;
-    /* button width: 300px on desktop, shrinks so button + 36px zone fit a 360px phone */
+    /* 300px on desktop, shrinks so button + 36px zone fit a 360px phone */
     --bw: max(200px, min(300px, calc(100vw - 104px)));
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); }
   body {
     font-family: Inter, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    color: var(--ink);
+    -webkit-font-smoothing: antialiased; color: var(--ink);
   }
   #stage {
-    position: fixed; inset: 0;
-    display: grid; place-items: center;
-    touch-action: none;
-    user-select: none; -webkit-user-select: none;
+    position: fixed; inset: 0; display: grid; place-items: center;
+    touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
     background: radial-gradient(120% 90% at 50% 45%, #dedbd5 0%, var(--bg) 55%, #c8c4bc 100%);
   }
   #stage.venom, #stage.venom * { cursor: none !important; }
 
-  canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; display: block; }
-  #goo   { z-index: 1; filter: url(#goo-filter); }  /* tendrils behind button + cursor */
-  #wrap  { z-index: 4; filter: url(#goo-filter); }  /* strands wrapped over the cursor */
-  #gloss { z-index: 5; }                             /* crisp glossy highlights */
+  canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; display: block; }
+  #back  { z-index: 1; }   /* tendrils, behind the button */
+  #front { z-index: 4; }   /* strands wrapped over the hand */
 
-  /* untransformed hit box: JS measures this, the inner button gets squash/tilt */
   #hit { position: relative; z-index: 2; display: block; width: var(--bw); height: calc(var(--bw) * .2533); }
   #btn {
-    position: absolute; inset: 0; margin: 0; padding: 0; border: 0;
+    position: absolute; left: 0; top: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0;
     border-radius: 9999px; cursor: pointer; overflow: hidden;
     font: inherit; font-weight: 700; font-size: calc(var(--bw) * .0933);
     letter-spacing: -.035em; color: #fff; white-space: nowrap;
@@ -46,10 +41,9 @@
       inset 0 -8px 16px rgba(0,0,0,.55),
       0 18px 30px -14px rgba(0,0,0,.55),
       0 5px 10px -2px rgba(0,0,0,.22);
-    transform-origin: 50% 50%; will-change: transform;
     -webkit-tap-highlight-color: transparent; outline: none;
   }
-  #btn::before { /* top glossy highlight */
+  #btn::before { /* glossy highlight */
     content: ""; position: absolute; left: 7%; right: 7%; top: 5%; height: 46%;
     border-radius: 9999px; pointer-events: none;
     background: linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.05) 70%, rgba(255,255,255,0));
@@ -57,12 +51,11 @@
   #btn span { position: relative; top: -.04em; }
   #btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
 
-  #cursor {
+  #hand {
     position: fixed; left: 0; top: 0; width: 32px; height: 32px; z-index: 3;
-    pointer-events: none; opacity: 0; will-change: transform;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));
+    pointer-events: none; display: none;
   }
-  #cursor.on { opacity: 1; }
+  #hand.on { display: block; }
 
   #zone {
     position: fixed; z-index: 6; display: none; pointer-events: none;
@@ -71,8 +64,7 @@
   body.debug #zone { display: block; }
   #zone b {
     position: absolute; right: 22px; top: -9px; padding: 0 6px;
-    font-size: 11px; font-weight: 600; letter-spacing: .02em;
-    color: #3a3833; background: var(--bg);
+    font-size: 11px; font-weight: 600; color: #3a3833; background: var(--bg);
   }
 
   #toast {
@@ -81,79 +73,63 @@
     transition: opacity .25s, transform .25s;
     background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px;
     font-size: 14px; font-weight: 600; white-space: nowrap; max-width: calc(100vw - 32px);
-    box-shadow: 0 8px 20px -8px rgba(0,0,0,.5);
   }
   #toast.show { opacity: 1; transform: translate(-50%, 0); }
 
   #hint {
-    position: fixed; left: 16px; right: 16px; z-index: 0;
+    position: fixed; left: 16px; right: 16px; z-index: 0; margin: 0;
     bottom: max(20px, env(safe-area-inset-bottom));
     text-align: center; color: var(--muted); font-size: 13px; line-height: 1.5;
   }
-  #hint kbd {
-    font: inherit; font-weight: 600; padding: 0 5px;
-    border: 1px solid #aaa69e; border-radius: 4px;
-  }
-  @media (hover: none) { #hint .kb { display: none; } }
+  #hint kbd { font: inherit; font-weight: 600; padding: 0 5px; border: 1px solid #aaa69e; border-radius: 4px; }
+  .touch-only { display: none; }
+  @media (hover: none) { .kb { display: none; } .touch-only { display: inline; } .mouse-only { display: none; } }
 </style>
 </head>
 <body>
-<!-- goo filter: blur, then sharpen alpha so shapes melt into each other -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <filter id="goo-filter" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
-    <feGaussianBlur in="SourceGraphic" stdDeviation="2.4" result="b"/>
-    <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8"/>
-  </filter>
-</svg>
-
 <div id="stage">
-  <canvas id="goo"></canvas>
+  <canvas id="back"></canvas>
   <span id="hit"><button id="btn" type="button"><span>let's collaborate</span></button></span>
-  <svg id="cursor" viewBox="0 0 32 32" aria-hidden="true">
+  <svg id="hand" viewBox="0 0 32 32" aria-hidden="true">
     <path d="M11 3.5c1.4 0 2.5 1.1 2.5 2.5v8.2c.4-.2.9-.3 1.4-.3 1.1 0 2 .6 2.4 1.5.4-.3 1-.5 1.6-.5 1.2 0 2.2.8 2.5 1.9.4-.2.8-.3 1.3-.3 1.5 0 2.6 1.2 2.6 2.6v4.4c0 4-3.2 7.3-7.3 7.3h-2.3c-2.4 0-4.6-1.2-6-3.1l-4.8-6.8c-.8-1.1-.5-2.6.6-3.4 1-.7 2.4-.5 3.2.4L8.5 18V6c0-1.4 1.1-2.5 2.5-2.5z"
           fill="#fff" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/>
     <path d="M13.5 15v4.5M17.3 16v4M21.4 17.4v3.2" stroke="#000" stroke-width="1.2" stroke-linecap="round" fill="none"/>
   </svg>
-  <canvas id="wrap"></canvas>
-  <canvas id="gloss"></canvas>
+  <canvas id="front"></canvas>
   <div id="zone"><b>36px</b></div>
   <div id="toast" role="status" aria-live="polite"></div>
-  <p id="hint">venom zone: 36px — hover close to the button<span class="kb"> · press <kbd>D</kbd> to show the zone</span></p>
+  <p id="hint">venom zone: 36px — <span class="mouse-only">hover close to the button, then pull away</span><span class="touch-only">drag your finger close to the button, then pull away</span><span class="kb"> · press <kbd>D</kbd> to show the zone</span></p>
 </div>
 
 <script>
-(() => {
+(function () {
   'use strict';
-  const VENOM_ZONE = 36;          // px from the pill edge where the venom grabs you
-  const N = 5;                    // verlet/spring nodes per tendril
-  const SAMPLES = 18;             // curve samples used to draw a tendril
-  const INK = '#0b0b0d';
-  const TAU = Math.PI * 2;
+  var VENOM_ZONE = 36;     // px from the pill edge where the venom grabs you
+  var STRETCH = 170;       // how far past the zone the goo stretches before it snaps
+  var M = 12;              // rope points per tendril
+  var INK = '#0b0b0d';
+  var TAU = Math.PI * 2;
+  var HOT_X = 11, HOT_Y = 3.5;    // fingertip hotspot inside the 32px hand svg
 
-  const $ = id => document.getElementById(id);
-  const stage = $('stage'), hit = $('hit'), btn = $('btn'), cursorEl = $('cursor');
-  const zoneEl = $('zone'), toast = $('toast');
-  const cvGoo = $('goo'), cvWrap = $('wrap'), cvGloss = $('gloss');
-  const gctx = cvGoo.getContext('2d'), wctx = cvWrap.getContext('2d'), sctx = cvGloss.getContext('2d');
+  var $ = function (id) { return document.getElementById(id); };
+  var stage = $('stage'), hit = $('hit'), btn = $('btn'), hand = $('hand'), zoneEl = $('zone'), toast = $('toast');
+  var cvB = $('back'), cvF = $('front');
+  var bctx = cvB.getContext('2d'), fctx = cvF.getContext('2d');
 
-  const mq = matchMedia('(prefers-reduced-motion: reduce)');
-  let reduced = mq.matches;
-  if (mq.addEventListener) mq.addEventListener('change', e => { reduced = e.matches; });
+  var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
 
-  const rand = (a, b) => a + Math.random() * (b - a);
-  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
-
-  /* ---------- geometry of the pill ---------- */
-  let W = 0, H = 0, dpr = 1;
-  const R = { cx: 0, cy: 0, w: 0, h: 0, r: 0, L: 0, P: 0, left: 0, top: 0 };
+  /* ---------- pill geometry ---------- */
+  var W = 0, H = 0, dpr = 1;
+  var R = { cx: 0, cy: 0, w: 0, h: 0, r: 0, L: 0, P: 0, left: 0, top: 0 };
 
   function measure() {
-    const b = hit.getBoundingClientRect();
+    var b = hit.getBoundingClientRect();
     R.left = b.left; R.top = b.top; R.w = b.width; R.h = b.height;
     R.cx = b.left + b.width / 2; R.cy = b.top + b.height / 2;
     R.r = R.h / 2; R.L = Math.max(0, R.w - R.h); R.P = 2 * R.L + TAU * R.r;
-    // debug outline: dashed line centred exactly VENOM_ZONE px outside the pill
-    const z = VENOM_ZONE, bw = 1.5;
+    var z = VENOM_ZONE, bw = 1.5;   // dashed outline centred exactly 36px outside the pill
     zoneEl.style.left = (R.left - z - bw / 2) + 'px';
     zoneEl.style.top = (R.top - z - bw / 2) + 'px';
     zoneEl.style.width = (R.w + 2 * z + bw) + 'px';
@@ -162,440 +138,365 @@
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = innerWidth; H = innerHeight;
-    for (const c of [cvGoo, cvWrap, cvGloss]) {
-      c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
-    }
+    W = window.innerWidth; H = window.innerHeight;
+    cvB.width = cvF.width = Math.round(W * dpr);
+    cvB.height = cvF.height = Math.round(H * dpr);
     measure(); wake();
   }
 
-  // signed distance to the rounded rect (radius = h/2). <0 inside.
+  // signed distance to the pill outline (<0 inside)
   function distanceToPill(x, y) {
-    const qx = Math.abs(x - R.cx) - R.L / 2;
-    const qy = Math.abs(y - R.cy) - (R.h / 2 - R.r);
+    var qx = Math.abs(x - R.cx) - R.L / 2;
+    var qy = Math.abs(y - R.cy);
     return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - R.r;
   }
 
-  // point + outward normal on the pill outline at arc-length s (clockwise from top-left)
+  // point + outward normal on the outline at arc length s (clockwise from top-left)
   function perimPoint(s, o) {
-    const { L, r, cx, cy, P } = R, hl = L / 2, arc = Math.PI * r;
-    s = ((s % P) + P) % P;
-    if (s < L) { o.x = cx - hl + s; o.y = cy - r; o.nx = 0; o.ny = -1; }
+    var L = R.L, r = R.r, hl = L / 2, arc = Math.PI * r, a;
+    s = ((s % R.P) + R.P) % R.P;
+    if (s < L) { o.x = R.cx - hl + s; o.y = R.cy - r; o.nx = 0; o.ny = -1; }
     else if (s < L + arc) {
-      const a = -Math.PI / 2 + (s - L) / r;
-      o.nx = Math.cos(a); o.ny = Math.sin(a); o.x = cx + hl + r * o.nx; o.y = cy + r * o.ny;
-    } else if (s < 2 * L + arc) { o.x = cx + hl - (s - L - arc); o.y = cy + r; o.nx = 0; o.ny = 1; }
+      a = -Math.PI / 2 + (s - L) / r;
+      o.nx = Math.cos(a); o.ny = Math.sin(a); o.x = R.cx + hl + r * o.nx; o.y = R.cy + r * o.ny;
+    } else if (s < 2 * L + arc) { o.x = R.cx + hl - (s - L - arc); o.y = R.cy + r; o.nx = 0; o.ny = 1; }
     else {
-      const a = Math.PI / 2 + (s - 2 * L - arc) / r;
-      o.nx = Math.cos(a); o.ny = Math.sin(a); o.x = cx - hl + r * o.nx; o.y = cy + r * o.ny;
+      a = Math.PI / 2 + (s - 2 * L - arc) / r;
+      o.nx = Math.cos(a); o.ny = Math.sin(a); o.x = R.cx - hl + r * o.nx; o.y = R.cy + r * o.ny;
     }
     return o;
   }
 
-  // arc-length of the outline point nearest to (x, y)
+  // arc length of the outline point nearest to (x, y)
   function nearestS(x, y) {
-    const { L, r, cx, cy } = R, hl = L / 2, arc = Math.PI * r;
-    if (x >= cx - hl && x <= cx + hl) return y < cy ? x - (cx - hl) : L + arc + (cx + hl - x);
-    if (x > cx + hl) return L + (Math.atan2(y - cy, x - (cx + hl)) + Math.PI / 2) * r;
-    let a = Math.atan2(y - cy, x - (cx - hl));
-    if (a < Math.PI / 2) a += TAU;             // left cap: a in [pi/2, 3pi/2]
+    var L = R.L, r = R.r, hl = L / 2, arc = Math.PI * r, a;
+    if (x >= R.cx - hl && x <= R.cx + hl) return y < R.cy ? x - (R.cx - hl) : L + arc + (R.cx + hl - x);
+    if (x > R.cx + hl) return L + (Math.atan2(y - R.cy, x - (R.cx + hl)) + Math.PI / 2) * r;
+    a = Math.atan2(y - R.cy, x - (R.cx - hl));
+    if (a < Math.PI / 2) a += TAU;
     return 2 * L + arc + (a - Math.PI / 2) * r;
   }
 
-  function pillPath(ctx, grow) {
-    const r = R.r + grow, hl = R.L / 2;
-    ctx.beginPath();
-    ctx.moveTo(R.cx - hl, R.cy - r);
-    ctx.lineTo(R.cx + hl, R.cy - r);
-    ctx.arc(R.cx + hl, R.cy, r, -Math.PI / 2, Math.PI / 2);
-    ctx.lineTo(R.cx - hl, R.cy + r);
-    ctx.arc(R.cx - hl, R.cy, r, Math.PI / 2, Math.PI * 1.5);
-    ctx.closePath();
-  }
-
   /* ---------- state ---------- */
-  const ptr = { x: -1e4, y: -1e4, type: 'mouse' };
-  const view = { x: 0, y: 0 };                 // drawn (pulled) cursor position
-  const center = { x: 0, y: 0 };               // centre of the grabbed hand
-  const tmp = { x: 0, y: 0, nx: 0, ny: 0 };
-  let active = false, inside = false, energy = 0, s0 = 0, debug = false;
-  let now = performance.now();
-  const tendrils = [], drops = [];
+  var ptr = { x: -1e4, y: -1e4, down: false, type: 'mouse' };
+  var handPos = { x: 0, y: 0 };      // where the hand is drawn (fingertip)
+  var body = { x: 0, y: 0 };         // centre of the hand, what the tendrils grab
+  var tmp = { x: 0, y: 0, nx: 0, ny: 0 };
+  var active = false, debug = false, s0 = 0, now = 0;
+  var tendrils = [], drops = [];
 
-  function makeTendril(s, sOff, delay, ringA) {
-    const root = perimPoint(s, { x: 0, y: 0, nx: 0, ny: 0 });
-    const nodes = [], pts = [];
-    for (let i = 0; i < N; i++) nodes.push({ x: root.x, y: root.y, vx: 0, vy: 0 });
-    for (let i = 0; i <= SAMPLES; i++) pts.push({ x: root.x, y: root.y });
+  function makeTendril(sOff, delay, ang) {
+    var root = perimPoint(s0 + sOff, { x: 0, y: 0, nx: 0, ny: 0 }), pts = [];
+    for (var i = 0; i < M; i++) pts.push({ x: root.x, y: root.y, px: root.x, py: root.y });
     return {
-      s, sOff, root, nodes, pts, state: 'wait', start: now + delay, t0: 0,
-      w0: rand(4.5, 7.5), w1: rand(2.6, 3.2), ringA, ringR: rand(6, 14), spin: rand(-1, 1),
-      phase: rand(0, TAU), freq: rand(0.004, 0.008), amp: reduced ? 0 : rand(2, 6),
-      k: rand(0.13, 0.2), damp: rand(0.76, 0.84), life: reduced ? 0 : 1, grab: 0
+      s: s0 + sOff, sOff: sOff, root: root, pts: pts, state: 'wait',
+      t0: now + delay, dur: rand(140, 230),
+      ang: ang, rad: rand(5, 12), spin: rand(-1, 1),
+      w0: rand(5, 9), w1: rand(1.8, 3.2), phase: rand(0, TAU), life: 1
     };
   }
 
-  function engage() {
-    now = performance.now();
+  function grab() {
     active = true;
     stage.classList.add('venom');
-    view.x = ptr.x; view.y = ptr.y;
-    cursorEl.classList.add('on');
-    // tendrils still stretching get to grab again
-    let regrab = 0;
-    for (const t of tendrils) if (t.state === 'stretch') { t.state = 'hold'; regrab++; }
-    const n = Math.max(0, (reduced ? 6 : 10 + Math.floor(Math.random() * 7)) - regrab);
+    hand.classList.add('on');
+    handPos.x = ptr.x; handPos.y = ptr.y;
     s0 = nearestS(ptr.x, ptr.y);
-    const spread = Math.min(R.P * 0.5, R.w * 0.5);   // ~half of the near edge
-    for (let i = 0; i < n; i++) {
-      const u = (i + 0.5) / n + rand(-0.3, 0.3) / n;
-      const sOff = (u - 0.5) * spread;
-      const ringA = (i / n) * TAU + rand(-0.25, 0.25);
-      tendrils.push(makeTendril(s0 + sOff, sOff, reduced ? 0 : rand(0, 150), ringA));
+    var n = reduced ? 6 : 10 + Math.floor(Math.random() * 6);
+    var spread = Math.min(R.w * 0.55, R.P * 0.4);
+    for (var i = 0; i < n; i++) {
+      var u = (i + 0.5) / n + rand(-0.3, 0.3) / n;
+      tendrils.push(makeTendril((u - 0.5) * spread, reduced ? 0 : rand(0, 150), (i / n) * TAU + rand(-0.3, 0.3)));
     }
     wake();
   }
 
-  function release() {
-    now = performance.now();
+  // goo breaks: outer halves drip away, inner halves spring back into the button
+  function snapAll() {
     active = false;
     stage.classList.remove('venom');
-    cursorEl.classList.remove('on');
-    for (let i = tendrils.length - 1; i >= 0; i--) {
-      const t = tendrils[i];
-      if (t.state === 'wait') tendrils.splice(i, 1);
-      else if (t.state === 'hold') {
-        if (reduced) t.state = 'fade';
-        else { t.state = 'stretch'; t.snapAt = now + 120; }
+    hand.classList.remove('on');
+    for (var i = tendrils.length - 1; i >= 0; i--) {
+      var t = tendrils[i];
+      if (t.state === 'wait') { tendrils.splice(i, 1); continue; }
+      if (t.state === 'retract') continue;
+      if (!reduced) {
+        for (var k = Math.floor(M * 0.55); k < M; k += 2) {
+          var p = t.pts[k];
+          if (Math.random() < 0.6) spawnDrop(p.x, p.y, (p.x - p.px) * 0.5 + rand(-0.5, 0.5), (p.y - p.py) * 0.5, rand(1.8, 3.4));
+        }
       }
+      t.state = 'retract'; t.t0 = now;
     }
     wake();
   }
 
   function evaluate() {
-    const d = distanceToPill(ptr.x, ptr.y);
-    inside = d <= 0;
-    const inZone = d <= VENOM_ZONE;
-    if (inZone && !active) engage();
-    else if (!inZone && active) release();
-    if (active) wake();
+    var d = distanceToPill(ptr.x, ptr.y);
+    var canGrab = ptr.type === 'mouse' || ptr.down;
+    if (!active && canGrab && d <= VENOM_ZONE) grab();
+    else if (active && d > VENOM_ZONE + STRETCH) snapAll();
+    wake();
   }
 
-  /* ---------- physics ---------- */
   function spawnDrop(x, y, vx, vy, r) {
-    if (drops.length < 80) drops.push({ x, y, vx, vy, r0: r, r, life: 1 });
+    if (drops.length < 90) drops.push({ x: x, y: y, vx: vx, vy: vy, r0: r, r: r, life: 1 });
   }
 
-  // Catmull-Rom through the chain nodes -> t.pts
-  function sampleChain(nodes, out) {
-    const m = nodes.length - 1, n = out.length - 1;
-    for (let k = 0; k <= n; k++) {
-      const u = (k / n) * m, i = Math.min(Math.floor(u), m - 1), t = u - i;
-      const p0 = nodes[Math.max(i - 1, 0)], p1 = nodes[i], p2 = nodes[i + 1], p3 = nodes[Math.min(i + 2, m)];
-      const t2 = t * t, t3 = t2 * t;
-      out[k].x = 0.5 * (2 * p1.x + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
-      out[k].y = 0.5 * (2 * p1.y + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+  /* ---------- simulation ---------- */
+  // where the hand is drawn: free inside the zone, then rubber-band resistance
+  function updateHand() {
+    var d = distanceToPill(ptr.x, ptr.y);
+    if (d <= 0) { handPos.x = ptr.x; handPos.y = ptr.y; }
+    else {
+      perimPoint(nearestS(ptr.x, ptr.y), tmp);
+      var dx = ptr.x - tmp.x, dy = ptr.y - tmp.y, len = Math.hypot(dx, dy) || 1;
+      var drag = d <= VENOM_ZONE ? d : VENOM_ZONE + (d - VENOM_ZONE) * 0.82;
+      handPos.x = tmp.x + dx / len * drag; handPos.y = tmp.y + dy / len * drag;
     }
+    body.x = handPos.x + 4.5; body.y = handPos.y + 14;
+    hand.style.transform = 'translate(' + (handPos.x - HOT_X).toFixed(1) + 'px,' + (handPos.y - HOT_Y).toFixed(1) + 'px)';
   }
 
-  // break the tendril at its midpoint: outer half drips, inner half recoils
-  function snap(t) {
-    sampleChain(t.nodes, t.pts);
-    const tip = t.nodes[N - 1];
-    const nd = Math.random() < 0.75 ? (Math.random() < 0.4 ? 2 : 1) : 0;
-    for (let i = 0; i < nd; i++) {
-      const p = t.pts[Math.round(SAMPLES * rand(0.6, 1))];
-      spawnDrop(p.x, p.y, tip.vx * 0.35 + rand(-1, 1), tip.vy * 0.35 + rand(-2, 0), rand(3, 5));
-    }
-    for (let i = 0; i < N; i++) {
-      const p = t.pts[Math.round(SAMPLES * 0.5 * i / (N - 1))], n = t.nodes[i];
-      n.x = p.x; n.y = p.y; n.vx = 0; n.vy = 0;
-    }
-    const r = t.root, e = t.nodes[N - 1], dx = r.x - e.x, dy = r.y - e.y, d = Math.hypot(dx, dy) || 1;
-    e.vx = dx / d * 3; e.vy = dy / d * 3;     // recoil kick
-    t.k = 0.09; t.damp = 0.86;                // softer, bouncier spring
-    t.state = 'retract'; t.t0 = now;
-  }
+  function easeOutBack(p) { var q = p - 1; return 1 + 2.4 * q * q * q + 1.4 * q * q; }
 
-  // returns false when the tendril is finished
+  // returns false when the tendril is gone
   function stepTendril(t, f) {
-    const root = perimPoint(t.s, t.root), nd = t.nodes, tip = nd[N - 1];
-    nd[0].x = root.x; nd[0].y = root.y;
-
     if (t.state === 'wait') {
-      if (now < t.start) return true;
-      t.state = 'hold'; t.t0 = now;
-      const dx = center.x - root.x, dy = center.y - root.y, d = Math.hypot(dx, dy) || 1, sp = rand(7, 12);
-      tip.vx = dx / d * sp; tip.vy = dy / d * sp;   // launch
+      if (now < t.t0) return true;
+      t.state = 'shoot';
     }
-
-    // roots slide slowly along the edge to follow the pointer
-    if (active && t.state === 'hold') {
-      let ds = (s0 + t.sOff) - t.s;
+    if (active && t.state !== 'retract') {           // roots slide along the edge to follow
+      var ds = (s0 + t.sOff) - t.s;
       ds -= Math.round(ds / R.P) * R.P;
-      t.s += ds * 0.025 * f;
+      t.s += ds * 0.04 * f;
     }
+    var root = perimPoint(t.s, t.root);
+    var rx = root.x - root.nx * 4, ry = root.y - root.ny * 4;   // emerge from just under the edge
+    var pts = t.pts, first = pts[0], last = pts[M - 1];
+    first.x = first.px = rx; first.y = first.py = ry;
 
-    let tx, ty;
-    if (t.state === 'hold' || t.state === 'fade') {
-      const a = t.ringA + now * 0.0007 * t.spin;
-      const rr = t.ringR * (inside ? 0.65 : 1) * (reduced ? 1 : 1 + 0.18 * Math.sin(now * 0.005 + t.phase));
-      tx = center.x + Math.cos(a) * rr; ty = center.y + Math.sin(a) * rr;
-    } else if (t.state === 'stretch') {
-      tx = ptr.x + 4.5 + Math.cos(t.ringA) * t.ringR; ty = ptr.y + 15 + Math.sin(t.ringA) * t.ringR;
-      const dx = tx - root.x, dy = ty - root.y, d = Math.hypot(dx, dy), max = VENOM_ZONE + 110;
-      if (d > max) { tx = root.x + dx / d * max; ty = root.y + dy / d * max; }
-      if (now >= t.snapAt) snap(t);
+    // target around the hand body
+    var a = t.ang + now * 0.0012 * t.spin;
+    var rr = t.rad * (1 + (reduced ? 0 : 0.15 * Math.sin(now * 0.006 + t.phase)));
+    var tx = body.x + Math.cos(a) * rr, ty = body.y + Math.sin(a) * rr * 0.8;
+    var pinned = true;
+    if (t.state === 'shoot') {
+      var p = clamp((now - t.t0) / t.dur, 0, 1), e = reduced ? p : easeOutBack(p);
+      tx = rx + (tx - rx) * e; ty = ry + (ty - ry) * e;
+      if (p >= 1) t.state = 'hold';
+    } else if (t.state === 'retract') {
+      pinned = false;
+      var age = now - t.t0;
+      t.life = 1 - clamp((age - 250) / 400, 0, 1);
+      if (age > 650) return false;
     }
-    if (t.state === 'retract') { tx = root.x - root.nx * 4; ty = root.y - root.ny * 4; }
+    if (pinned) { last.x = last.px = tx; last.y = last.py = ty; }
 
-    if (reduced) {
-      const k = Math.min(1, 0.3 * f);
-      tip.x += (tx - tip.x) * k; tip.y += (ty - tip.y) * k; tip.vx = tip.vy = 0;
-      if (t.state === 'fade') { t.life -= 0.06 * f; if (t.life <= 0) return false; }
-      else if (t.state === 'hold') t.life = Math.min(1, t.life + 0.08 * f);
-    } else {
-      const dmp = Math.pow(t.damp, f);
-      tip.vx = (tip.vx + (tx - tip.x) * t.k * f) * dmp;
-      tip.vy = (tip.vy + (ty - tip.y) * t.k * f) * dmp;
-      tip.x += tip.vx * f; tip.y += tip.vy * f;
-    }
+    // rest length: slightly slack while held (sags like goo), shrinking while retracting
+    var span = Math.hypot(last.x - rx, last.y - ry);
+    if (t.state === 'retract') t.rest = (t.rest || span / (M - 1)) * Math.pow(0.8, f);
+    else t.rest = span * 1.06 / (M - 1);
 
-    // middle nodes chase a bulging, wobbling rest shape -> organic lag
-    const dx = tip.x - root.x, dy = tip.y - root.y, len = Math.hypot(dx, dy) || 1;
-    const px = -dy / len, py = dx / len, bulge = Math.min(len * 0.3, 12);
-    const md = Math.pow(0.72, f);
-    for (let i = 1; i < N - 1; i++) {
-      const u = i / (N - 1), env = Math.sin(Math.PI * u);
-      const wob = t.amp * env * Math.sin(now * t.freq + t.phase + u * 3.2);
-      const out = bulge * (1 - u) * env * 1.4;
-      const bx = root.x + dx * u + px * wob + root.nx * out;
-      const by = root.y + dy * u + py * wob + root.ny * out + (reduced ? 0 : env * Math.min(len * 0.08, 5));
-      const n = nd[i];
-      if (reduced) { n.x = bx; n.y = by; continue; }
-      n.vx = (n.vx + (bx - n.x) * 0.28 * f) * md;
-      n.vy = (n.vy + (by - n.y) * 0.28 * f) * md;
-      n.x += n.vx * f; n.y += n.vy * f;
+    var g = reduced ? 0 : 0.18, damp = Math.pow(0.9, f);
+    for (var i = 1; i < M; i++) {
+      if (i === M - 1 && pinned) break;
+      var q = pts[i], vx = (q.x - q.px) * damp, vy = (q.y - q.py) * damp;
+      q.px = q.x; q.py = q.y;
+      q.x += vx; q.y += vy + g * f * f;
+      if (!reduced && t.state === 'hold') {       // living wobble
+        var w = Math.sin(now * 0.005 + t.phase + i * 0.9) * 0.12 * f;
+        q.x += w * -(ty - ry) / (span || 1); q.y += w * (tx - rx) / (span || 1);
+      }
     }
-    t.grab = clamp(1 - Math.hypot(tx - tip.x, ty - tip.y) / 30, 0, 1);
-
-    if (t.state === 'retract') {
-      const age = now - t.t0;
-      t.life = 1 - clamp((age - 350) / 550, 0, 1);
-      if (age > 900 || (len < 2.5 && Math.hypot(tip.vx, tip.vy) < 0.4)) return false;
+    for (var it = 0; it < 8; it++) {
+      for (var j = 0; j < M - 1; j++) {
+        var p1 = pts[j], p2 = pts[j + 1];
+        var dx = p2.x - p1.x, dy = p2.y - p1.y, d = Math.hypot(dx, dy) || 1e-6;
+        var diff = (d - t.rest) / d;
+        var lock1 = j === 0, lock2 = j + 1 === M - 1 && pinned;
+        if (lock1 && lock2) continue;
+        var k1 = lock1 ? 0 : lock2 ? 1 : 0.5, k2 = lock2 ? 0 : lock1 ? 1 : 0.5;
+        p1.x += dx * diff * k1; p1.y += dy * diff * k1;
+        p2.x -= dx * diff * k2; p2.y -= dy * diff * k2;
+      }
     }
-    // the odd drip while holding
-    if (!reduced && t.state === 'hold' && Math.random() < 0.0025 * f) {
-      const m = nd[2];
-      spawnDrop(m.x, m.y, m.vx * 0.3, Math.max(m.vy, 0) * 0.3, rand(2.6, 3.6));
+    if (!reduced && t.state === 'hold' && Math.random() < 0.002 * f) {   // the odd drip
+      var m = pts[Math.floor(M / 2)];
+      spawnDrop(m.x, m.y, 0, 0.5, rand(2, 3));
     }
     return true;
   }
 
   function stepDrops(f) {
-    for (let i = drops.length - 1; i >= 0; i--) {
-      const d = drops[i];
-      d.vy += 0.32 * f; d.vx *= Math.pow(0.98, f);
+    for (var i = drops.length - 1; i >= 0; i--) {
+      var d = drops[i];
+      d.vy += 0.3 * f; d.vx *= Math.pow(0.98, f);
       d.x += d.vx * f; d.y += d.vy * f;
-      d.life -= f / 75;
+      d.life -= f / 70;
       d.r = d.r0 * Math.sqrt(Math.max(d.life, 0));
       if (d.life <= 0 || d.y > H + 20) drops.splice(i, 1);
     }
   }
 
   /* ---------- drawing ---------- */
-  const Lx = new Float32Array(64), Ly = new Float32Array(64), Rx = new Float32Array(64), Ry = new Float32Array(64);
-
-  // filled polygon around a polyline with width w(u)
-  function taper(ctx, pts, n, wAt) {
-    for (let k = 0; k < n; k++) {
-      const a = pts[Math.max(k - 1, 0)], b = pts[Math.min(k + 1, n - 1)];
-      let tx = b.x - a.x, ty = b.y - a.y; const d = Math.hypot(tx, ty) || 1;
-      tx /= d; ty /= d;
-      const hw = wAt(k / (n - 1)) / 2, p = pts[k];
-      Lx[k] = p.x - ty * hw; Ly[k] = p.y + tx * hw;
-      Rx[k] = p.x + ty * hw; Ry[k] = p.y - tx * hw;
-    }
-    ctx.beginPath();
-    ctx.moveTo(Lx[0], Ly[0]);
-    for (let k = 1; k < n; k++) ctx.lineTo(Lx[k], Ly[k]);
-    for (let k = n - 1; k >= 0; k--) ctx.lineTo(Rx[k], Ry[k]);
-    ctx.closePath(); ctx.fill();
-  }
-
   function dot(ctx, x, y, r) {
     if (r <= 0.2) return;
     ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
   }
 
-  function drawTendril(t) {
-    const pts = t.pts, n = SAMPLES + 1;
-    sampleChain(t.nodes, pts);
-    let len = 0;
-    for (let k = 1; k < n; k++) len += Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y);
-    const neck = clamp((VENOM_ZONE + 30) / (len || 1), 0.45, 1);   // stretched goo thins out
-    const w0 = t.w0 * t.life, w1 = t.w1 * t.life;
-    taper(gctx, pts, n, u => (w0 + (w1 - w0) * Math.pow(u, 0.7)) * (1 - (1 - neck) * Math.sin(Math.PI * u)));
-    dot(gctx, pts[0].x, pts[0].y, w0 * 0.8);                       // fillet at the button edge
-    dot(gctx, pts[n - 1].x, pts[n - 1].y, (w1 * 0.7 + 1.2) * t.life); // sucker at the tip
-
-    // gloss: thin light streak on the upper side of the near half
-    if (len > 14 && t.life > 0.5 && t.w0 > 5.5) {
-      const mid = pts[n >> 1], a = pts[(n >> 1) - 1];
-      let nx = -(mid.y - a.y), ny = mid.x - a.x; const d = Math.hypot(nx, ny) || 1;
-      nx /= d; ny /= d; if (ny > 0) { nx = -nx; ny = -ny; }
-      sctx.beginPath();
-      let pen = false;
-      for (let k = 2; k <= Math.round(SAMPLES * 0.5); k++) {
-        const u = k / SAMPLES, off = (w0 + (w1 - w0) * u) * 0.22 * neck;
-        const x = pts[k].x + nx * off, y = pts[k].y + ny * off;
-        if (distanceToPill(x, y) < 2) { pen = false; continue; }  // hidden behind the button
-        pen ? sctx.lineTo(x, y) : sctx.moveTo(x, y); pen = true;
-      }
-      sctx.stroke();
+  // Catmull-Rom through the rope points -> smooth polyline
+  var SUB = 3, NS = (M - 1) * SUB + 1, sm = [];
+  for (var si = 0; si < NS; si++) sm.push({ x: 0, y: 0 });
+  var Lx = new Float32Array(NS), Ly = new Float32Array(NS), Rx = new Float32Array(NS), Ry = new Float32Array(NS);
+  function smooth(pts) {
+    for (var k = 0; k < NS; k++) {
+      var i = Math.min(Math.floor(k / SUB), M - 2), s = k / SUB - i;
+      var p0 = pts[Math.max(i - 1, 0)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(i + 2, M - 1)];
+      var s2 = s * s, s3 = s2 * s;
+      sm[k].x = 0.5 * (2 * p1.x + (p2.x - p0.x) * s + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * s2 + (3 * p1.x - p0.x - 3 * p2.x + p3.x) * s3);
+      sm[k].y = 0.5 * (2 * p1.y + (p2.y - p0.y) * s + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * s2 + (3 * p1.y - p0.y - 3 * p2.y + p3.y) * s3);
     }
   }
 
-  // strands that cross over the white hand: [from angle, to angle, bend]
-  const WRAP_OUT = [[2.75, 0.35, 1], [3.75, 1.0, -1]];
-  const WRAP_IN = [[2.3, 5.8, 1]];
-  const wpts = []; for (let i = 0; i <= 12; i++) wpts.push({ x: 0, y: 0 });
-
-  function drawWrap(g) {
-    if (g < 0.05) return;
-    const list = inside ? WRAP_OUT.concat(WRAP_IN) : WRAP_OUT;
-    const R0 = inside ? 13 : 15;
-    for (const [a, b, bend] of list) {
-      const wob = reduced ? 0 : Math.sin(now * 0.004 + a * 3) * 0.12;
-      const ax = center.x + Math.cos(a + wob) * R0, ay = center.y + Math.sin(a + wob) * R0;
-      const bx = center.x + Math.cos(b - wob) * R0, by = center.y + Math.sin(b - wob) * R0;
-      const dx = bx - ax, dy = by - ay, d = Math.hypot(dx, dy) || 1;
-      const qx = (ax + bx) / 2 - dy / d * bend * 5, qy = (ay + by) / 2 + dx / d * bend * 5;
-      for (let k = 0; k <= 12; k++) {
-        const u = k / 12, v = 1 - u;
-        wpts[k].x = v * v * ax + 2 * v * u * qx + u * u * bx;
-        wpts[k].y = v * v * ay + 2 * v * u * qy + u * u * by;
+  function drawTendril(t) {
+    var pts = t.pts, a = pts[0], b = pts[M - 1];
+    var span = Math.hypot(b.x - a.x, b.y - a.y);
+    var thin = clamp(70 / (span || 1), 0.32, 1);          // stretched goo gets thinner
+    smooth(pts);
+    // one filled tapered shape -> no seams between segments
+    for (var k = 0; k < NS; k++) {
+      var pa = sm[Math.max(k - 1, 0)], pb = sm[Math.min(k + 1, NS - 1)];
+      var dx = pb.x - pa.x, dy = pb.y - pa.y, d = Math.hypot(dx, dy) || 1;
+      var u = k / (NS - 1);
+      var neck = 1 - (1 - thin) * Math.sin(Math.PI * Math.min(u * 1.2, 1));
+      var hw = Math.max(0.35, (t.w0 + (t.w1 - t.w0) * Math.pow(u, 0.6)) * neck * t.life) / 2;
+      Lx[k] = sm[k].x - dy / d * hw; Ly[k] = sm[k].y + dx / d * hw;
+      Rx[k] = sm[k].x + dy / d * hw; Ry[k] = sm[k].y - dx / d * hw;
+    }
+    bctx.beginPath();
+    bctx.moveTo(Lx[0], Ly[0]);
+    for (var j1 = 1; j1 < NS; j1++) bctx.lineTo(Lx[j1], Ly[j1]);
+    for (var j2 = NS - 1; j2 >= 0; j2--) bctx.lineTo(Rx[j2], Ry[j2]);
+    bctx.closePath(); bctx.fill();
+    dot(bctx, a.x, a.y, t.w0 * 0.9 * t.life);             // fillet at the button edge
+    if (t.state !== 'retract') dot(bctx, b.x, b.y, (t.w1 * 0.5 + 0.8) * t.life);   // sucker on the hand
+    // faint gloss along the strand
+    if (t.life > 0.6 && span > 12) {
+      fctx.beginPath();
+      for (var j = 1; j < M - 3; j++) {
+        var x = pts[j].x - 1.2, y = pts[j].y - 1.2;
+        if (distanceToPill(x, y) < 2) { fctx.moveTo(pts[j + 1].x - 1.2, pts[j + 1].y - 1.2); continue; }
+        if (j === 1) fctx.moveTo(x, y); else fctx.lineTo(x, y);
       }
-      taper(wctx, wpts, 13, u => (2.6 + 0.9 * Math.sin(Math.PI * u)) * g);
-      dot(wctx, ax, ay, 2.4 * g); dot(wctx, bx, by, 2.4 * g);
+      fctx.stroke();
+    }
+  }
+
+  // strands wrapped across the hand, drawn above it
+  var WRAPS = [[2.7, 0.4, 1], [3.8, 1.1, -1]];
+  function drawWrap(g) {
+    for (var i = 0; i < WRAPS.length; i++) {
+      var a = WRAPS[i][0], b = WRAPS[i][1], bend = WRAPS[i][2];
+      var wob = reduced ? 0 : Math.sin(now * 0.004 + a * 3) * 0.12, r0 = 14;
+      var ax = body.x + Math.cos(a + wob) * r0, ay = body.y + Math.sin(a + wob) * r0;
+      var bx = body.x + Math.cos(b - wob) * r0, by = body.y + Math.sin(b - wob) * r0;
+      var dx = bx - ax, dy = by - ay, d = Math.hypot(dx, dy) || 1;
+      fctx.lineWidth = 2 * g;
+      fctx.beginPath();
+      fctx.moveTo(ax, ay);
+      fctx.quadraticCurveTo((ax + bx) / 2 - dy / d * bend * 5, (ay + by) / 2 + dx / d * bend * 5, bx, by);
+      fctx.stroke();
+      dot(fctx, ax, ay, 1.8 * g); dot(fctx, bx, by, 1.8 * g);
     }
   }
 
   function render() {
-    for (const c of [gctx, wctx, sctx]) { c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H); }
+    bctx.setTransform(dpr, 0, 0, dpr, 0, 0); bctx.clearRect(0, 0, W, H);
+    fctx.setTransform(dpr, 0, 0, dpr, 0, 0); fctx.clearRect(0, 0, W, H);
     if (!tendrils.length && !drops.length) return;
-    gctx.fillStyle = INK; wctx.fillStyle = INK;
-    sctx.strokeStyle = 'rgba(255,255,255,.13)'; sctx.lineWidth = 1; sctx.lineCap = 'round';
-    sctx.fillStyle = 'rgba(255,255,255,.35)';
-
-    if (tendrils.length) { pillPath(gctx, -7); gctx.fill(); }  // lets goo melt into the button edge
-    let g = 0, held = 0;
-    for (const t of tendrils) {
+    bctx.fillStyle = bctx.strokeStyle = INK;
+    bctx.lineCap = bctx.lineJoin = 'round';
+    fctx.lineCap = fctx.lineJoin = 'round';
+    fctx.strokeStyle = 'rgba(255,255,255,.16)'; fctx.lineWidth = 1;
+    var held = 0;
+    for (var i = 0; i < tendrils.length; i++) {
+      var t = tendrils[i];
       if (t.state === 'wait') continue;
       drawTendril(t);
-      if (t.state === 'hold') { g += t.grab; held++; }
+      if (t.state === 'hold') held++;
     }
-    for (const d of drops) {
-      dot(gctx, d.x, d.y, d.r);
-      if (d.r > 2) dot(sctx, d.x - d.r * 0.35, d.y - d.r * 0.35, d.r * 0.25);
-    }
+    for (var j = 0; j < drops.length; j++) dot(bctx, drops[j].x, drops[j].y, drops[j].r);
     if (active && held) {
-      g = (g / held) * (reduced ? Math.min(1, energy * 1.5) : 1);
-      // goo mass + satellite droplets around the hand
-      dot(gctx, center.x, center.y, 5 * g);
-      for (let k = 0; k < 4; k++) {
-        const a = now * 0.002 * (k % 2 ? 1 : -1) + k * TAU / 4;
-        dot(gctx, center.x + Math.cos(a) * 15, center.y + Math.sin(a) * 14, 2.4 * g);
-      }
+      var g = held / tendrils.length;
+      dot(bctx, body.x, body.y, 7 * g);                    // goo mass behind the hand
+      fctx.fillStyle = fctx.strokeStyle = INK;
       drawWrap(g);
     }
   }
 
-  /* ---------- cursor + button ---------- */
-  function updateView(f) {
-    if (!active) return;
-    let px, py;
-    if (inside) { px = R.cx; py = R.cy; }
-    else { perimPoint(nearestS(ptr.x, ptr.y), tmp); px = tmp.x; py = tmp.y; }
-    const pull = 0.15 * energy;                          // gently dragged toward the button
-    const k = Math.min(1, 0.45 * f);
-    view.x += (ptr.x + (px - ptr.x) * pull - view.x) * k;
-    view.y += (ptr.y + (py - ptr.y) * pull - view.y) * k;
-    cursorEl.style.transform = `translate(${view.x - 11}px, ${view.y - 3.5}px)`;
-  }
-
-  function animateButton(f) {
-    energy += ((active ? 1 : 0) - energy) * Math.min(1, 0.1 * f);
-    if (!active && energy < 0.003) { energy = 0; btn.style.transform = ''; return; }
-    const e = energy;
-    const tx = clamp((ptr.x - R.cx) / (R.w / 2), -1.4, 1.4), ty = clamp((ptr.y - R.cy) / (R.h / 2), -1.6, 1.6);
-    const br = reduced ? 0 : Math.sin(now * 0.0055);
-    const scx = 1 + e * (0.018 + 0.01 * br), scy = 1 - e * (0.035 + 0.015 * br);
-    btn.style.transform =
-      `perspective(700px) translate(${(tx * 1.5 * e).toFixed(2)}px, ${(ty * 1 * e).toFixed(2)}px) ` +
-      `rotateY(${(tx * 7 * e).toFixed(2)}deg) rotateX(${(-ty * 9 * e).toFixed(2)}deg) scale(${scx.toFixed(4)}, ${scy.toFixed(4)})`;
-  }
-
-  /* ---------- main loop (sleeps when idle) ---------- */
-  let running = false, last = 0;
+  /* ---------- loop (sleeps when idle) ---------- */
+  var running = false, lastTs = 0;
   function wake() {
     if (running) return;
-    running = true; last = performance.now();
+    running = true; lastTs = performance.now();
     requestAnimationFrame(frame);
   }
   function frame(ts) {
     now = ts;
-    const f = clamp((ts - last) / 16.667, 0.25, 3); last = ts;
-    if (active) s0 = nearestS(ptr.x, ptr.y);
-    updateView(f);
-    animateButton(f);
-    center.x = view.x + 4.5; center.y = view.y + 15;     // hand body, below the fingertip hotspot
-    for (let i = tendrils.length - 1; i >= 0; i--) if (!stepTendril(tendrils[i], f)) tendrils.splice(i, 1);
+    var f = clamp((ts - lastTs) / 16.667, 0.25, 3); lastTs = ts;
+    if (active) { s0 = nearestS(handPos.x, handPos.y); updateHand(); }
+    for (var i = tendrils.length - 1; i >= 0; i--) if (!stepTendril(tendrils[i], f)) tendrils.splice(i, 1);
     stepDrops(f);
     render();
-    if (active || tendrils.length || drops.length || energy > 0) requestAnimationFrame(frame);
+    if (active || tendrils.length || drops.length) requestAnimationFrame(frame);
     else running = false;
   }
 
   /* ---------- input ---------- */
-  function onPointer(e) {
+  function onMove(e) {
     ptr.x = e.clientX; ptr.y = e.clientY; ptr.type = e.pointerType || 'mouse';
+    if (e.type === 'pointerdown') ptr.down = true;
+    if (active) updateHand();
     evaluate();
   }
-  addEventListener('pointermove', onPointer, { passive: true });
-  addEventListener('pointerdown', onPointer, { passive: true });
-  addEventListener('pointerup', e => {
-    if (e.pointerType !== 'mouse') { ptr.x = e.clientX; ptr.y = e.clientY; if (active) release(); }
-  });
-  addEventListener('pointercancel', () => { if (active) release(); });
-  document.addEventListener('pointerout', e => { if (!e.relatedTarget && active) release(); });
-  addEventListener('blur', () => { if (active) release(); });
+  function onUp(e) {
+    ptr.down = false;
+    if (e.pointerType && e.pointerType !== 'mouse' && active) snapAll();
+  }
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerdown', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+  document.addEventListener('mouseleave', function () { if (active) snapAll(); });
+  window.addEventListener('blur', function () { if (active) snapAll(); });
 
-  let toastTimer = 0;
-  btn.addEventListener('click', () => {
+  var toastTimer = 0;
+  btn.addEventListener('click', function () {
     toast.textContent = "🕷️ you've been absorbed. let's collaborate.";
     toast.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2500);
   });
 
   function setDebug(v) { debug = v; document.body.classList.toggle('debug', v); }
-  addEventListener('keydown', e => {
+  window.addEventListener('keydown', function (e) {
     if ((e.key === 'd' || e.key === 'D') && !e.ctrlKey && !e.metaKey && !e.altKey) setDebug(!debug);
   });
-  setDebug(new URLSearchParams(location.search).get('debug') === '1');
+  setDebug(/[?&]debug=1/.test(location.search));
 
-  addEventListener('resize', resize);
-  addEventListener('scroll', measure, { passive: true });
+  window.addEventListener('resize', resize);
   if ('ResizeObserver' in window) new ResizeObserver(measure).observe(hit);
   resize();
 
   // test hooks
   window.__venom = {
-    VENOM_ZONE,
-    distanceToPill,
-    isActive: () => active,
-    tendrilCount: () => tendrils.length
+    VENOM_ZONE: VENOM_ZONE,
+    distanceToPill: distanceToPill,
+    isActive: function () { return active; },
+    tendrilCount: function () { return tendrils.length; },
+    handPos: function () { return { x: handPos.x, y: handPos.y }; },
+    tips: function () { return tendrils.map(function (t) { var p = t.pts[M - 1]; return { x: p.x, y: p.y, state: t.state }; }); }
   };
 })();
 </script>
