@@ -19,7 +19,8 @@ import { downloadText } from './lib/download';
 import { buildConvertInput, EMPTY_DRAFTS, hasConvertibleInput, loadPersisted, savePersisted, type Drafts } from './lib/drafts';
 import { loadAdvanced, saveAdvanced, toConvertOptions, type AdvancedOptions } from './lib/options';
 import { isConvertShortcut, isMacPlatform } from './lib/platform';
-import { activeSite, loadSiteLibrary, saveSiteLibrary, type SiteLibrary } from './lib/siteLibrary';
+import { loadStyleLibrary, saveStyleLibrary, type LibraryState, type SaveResult } from './lib/siteLibrary';
+import { baseClassCount, librarySiteStyles } from '../engine/styleLibrary';
 import { changedSinceCopied, duplicateRisk, inputClassNames, loadCopiedClasses, recordCopiedClasses, type CopiedClasses } from './lib/duplicateRisk';
 
 const TABS_ID = 'input';
@@ -41,8 +42,8 @@ export default function App() {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [options, setOptions] = useState<AdvancedOptions>(() => loadAdvanced());
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [siteLibrary, setSiteLibrary] = useState<SiteLibrary>(() => loadSiteLibrary());
-  const [siteSaved, setSiteSaved] = useState(true);
+  const [libraryState, setLibraryState] = useState<LibraryState>(() => loadStyleLibrary());
+  const [librarySave, setLibrarySave] = useState<SaveResult>('saved');
   const [siteOpen, setSiteOpen] = useState(false);
   const [copied, setCopied] = useState<CopiedClasses>(() => loadCopiedClasses());
   const copiedRef = useRef(copied);
@@ -53,11 +54,14 @@ export default function App() {
   const safari = useMemo(() => isSafari(), []);
   const modKey = useMemo(() => (isMacPlatform() ? '⌘' : 'Ctrl'), []);
   const canConvert = hasConvertibleInput(mode, drafts);
-  const site = activeSite(siteLibrary);
+  // The whole style guide library, as the site styles every conversion is checked against.
+  const siteStyles = useMemo(() => (libraryState.enabled ? librarySiteStyles(libraryState.library) : []), [libraryState]);
+  const libraryClasses = useMemo(() => baseClassCount([...libraryState.library.classes.values()]), [libraryState]);
+  const usingLibrary = siteStyles.length > 0;
 
   // Classes of the input that probably exist in the site already (spec 3.6): shown before the copy.
   const inputHtml = mode === 'combined' ? drafts.combined.html : drafts.separate.html;
-  const risk = useMemo(() => duplicateRisk(inputClassNames(inputHtml), copied.keys(), site?.styles ?? []), [inputHtml, copied, site]);
+  const risk = useMemo(() => duplicateRisk(inputClassNames(inputHtml), copied.keys(), siteStyles), [inputHtml, copied, siteStyles]);
 
   // Persist drafts (debounced). savePersisted swallows quota / privacy-mode errors.
   useEffect(() => {
@@ -70,10 +74,10 @@ export default function App() {
     saveAdvanced(options);
   }, [options]);
 
-  // Persist imported site styles. saveSiteLibrary swallows quota / privacy-mode errors.
+  // Persist the style guide library (compact form). saveStyleLibrary reports quota / privacy-mode errors.
   useEffect(() => {
-    setSiteSaved(saveSiteLibrary(siteLibrary) || siteLibrary.sites.length === 0);
-  }, [siteLibrary]);
+    setLibrarySave(saveStyleLibrary(libraryState));
+  }, [libraryState]);
 
   useEffect(() => () => window.clearTimeout(statusTimer.current), []);
 
@@ -120,7 +124,7 @@ export default function App() {
         if (ok) {
           const n = res.warnings.length;
           const styles = res.data.payload.styles;
-          const siteIds = new Set((activeSite(siteLibrary)?.styles ?? []).map((s) => s._id));
+          const siteIds = new Set(siteStyles.map((s) => s._id));
           const changed = changedSinceCopied(styles, copiedRef.current, new Set(styles.filter((s) => siteIds.has(s._id)).map((s) => s.name)));
           setCopied(recordCopiedClasses(styles));
           showToast({
@@ -129,9 +133,9 @@ export default function App() {
             message:
               `Select an element in the Designer and press ${modKey}+V.${n ? ` ${n} note${n === 1 ? '' : 's'} below.` : ''}` +
               (changed.length
-                ? ` Warning: ${changed.length} class${changed.length === 1 ? ' was' : 'es were'} copied before with different styles (${changed.slice(0, 4).join(', ')}${changed.length > 4 ? '…' : ''}); pasted into the same site, Webflow names ${changed.length === 1 ? 'it' : 'them'} "name 2". Import your site's styles first, or delete the old classes.`
+                ? ` Warning: ${changed.length} class${changed.length === 1 ? ' was' : 'es were'} copied before with different styles (${changed.slice(0, 4).join(', ')}${changed.length > 4 ? '…' : ''}); pasted into the same site, Webflow names ${changed.length === 1 ? 'it' : 'them'} "name 2". Add your site's style guide first, or delete the old classes.`
                 : ''),
-            actions: changed.length ? [{ label: 'Import site styles', onClick: () => focusSiteImport() }] : undefined,
+            actions: changed.length ? [{ label: 'Add style guide', onClick: () => focusSiteImport() }] : undefined,
           });
           return;
         }
@@ -162,7 +166,7 @@ export default function App() {
       });
       return pending;
     },
-    [download, focusSiteImport, modKey, safari, showToast, siteLibrary],
+    [download, focusSiteImport, modKey, safari, showToast, siteStyles],
   );
 
   const handleConvert = useCallback(() => {
@@ -172,8 +176,7 @@ export default function App() {
 
     // convertAsync settles right away unless a script needs terser (loaded once, on demand); the
     // copy then still runs within the click's user-activation window.
-    const siteStyles = activeSite(siteLibrary)?.styles;
-    convertAsync(buildConvertInput(mode, drafts), { ...toConvertOptions(options), siteStyles, reuseSiteClasses: !!siteStyles })
+    convertAsync(buildConvertInput(mode, drafts), { ...toConvertOptions(options), siteStyles: usingLibrary ? siteStyles : undefined, reuseSiteClasses: usingLibrary })
       .then((res: ConvertResult) => {
         setResult((prev) => ({ id: (prev?.id ?? 0) + 1, value: res }));
         return copyResult(res);
@@ -190,7 +193,7 @@ export default function App() {
           message: err instanceof Error ? err.message : 'The converter hit an unexpected error. Check the input and try again.',
         });
       });
-  }, [copyResult, drafts, mode, options, showToast, siteLibrary, status]);
+  }, [copyResult, drafts, mode, options, showToast, siteStyles, status, usingLibrary]);
 
   // Global shortcut: Ctrl/Cmd+Enter. A keydown is a user gesture, so the copy is allowed.
   const convertRef = useRef(handleConvert);
@@ -241,6 +244,21 @@ export default function App() {
             </div>
           )}
 
+          {/* Step 1: the site's style guide library, checked by every conversion. */}
+          <SiteStylesPanel
+            state={libraryState}
+            onStateChange={setLibraryState}
+            saveResult={librarySave}
+            conflicts={options.siteClassConflicts}
+            onConflictsChange={(v) => setOptions((o) => ({ ...o, siteClassConflicts: v }))}
+            emptyUtilities={options.skipClientFirstUtilityStyles}
+            onEmptyUtilitiesChange={(v) => setOptions((o) => ({ ...o, skipClientFirstUtilityStyles: v }))}
+            open={siteOpen}
+            onOpenChange={setSiteOpen}
+            modKey={modKey}
+          />
+
+          <h2 className="-mb-2 px-1 text-[13px] font-semibold text-zinc-200">2. Paste your code and convert</h2>
           <section aria-label="Code input" className="card">
             <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
               <InputTabs mode={mode} onModeChange={setMode} idPrefix={TABS_ID} />
@@ -307,15 +325,15 @@ export default function App() {
                 <AlertIcon width={16} height={16} className="mt-0.5 shrink-0 text-warn" />
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-amber-200">
-                    {site
-                      ? `${risk.likely.length} class${risk.likely.length === 1 ? '' : 'es'} likely already in your site ${risk.likely.length === 1 ? 'is' : 'are'} not in the imported styles of "${site.label}" — import ${risk.likely.length === 1 ? 'it' : 'them'} too to avoid duplicates`
-                      : `${risk.likely.length} class${risk.likely.length === 1 ? '' : 'es'} already likely exist${risk.likely.length === 1 ? 's' : ''} in your site — import site styles to avoid duplicates`}
+                    {usingLibrary
+                      ? `${risk.likely.length} class${risk.likely.length === 1 ? '' : 'es'} likely already in your site ${risk.likely.length === 1 ? 'is' : 'are'} not in your style guide library — add a page that uses ${risk.likely.length === 1 ? 'it' : 'them'} to avoid duplicates`
+                      : `${risk.likely.length} class${risk.likely.length === 1 ? '' : 'es'} already likely exist${risk.likely.length === 1 ? 's' : ''} in your site — add your style guide to avoid duplicates`}
                   </p>
                   <p className="mt-1 text-amber-100/80">
                     Webflow pastes a class whose name your site already has with different styles as "name 2" (an unchanged class is reused).
                     {risk.copiedBefore.length > 0 && ` ${risk.copiedBefore.length} ${risk.copiedBefore.length === 1 ? 'was' : 'were'} copied to Webflow from this browser before.`}
                     {risk.utilities.length > 0 && ` ${risk.utilities.length} ${risk.utilities.length === 1 ? 'is a' : 'are'} Client-First utilit${risk.utilities.length === 1 ? 'y' : 'ies'}.`}
-                    {' '}In the Designer, copy an element that uses them (or a fresh blank page's style guide), then paste it under "Reuse classes from your Webflow site".
+                    {' '}In the Designer, copy an element that uses them (or a fresh blank page's style guide), then paste it under "1. Your site's style guide".
                   </p>
                   <details className="mt-1">
                     <summary className="cursor-pointer text-amber-200/90">Show classes</summary>
@@ -323,7 +341,7 @@ export default function App() {
                   </details>
                 </div>
                 <button type="button" onClick={focusSiteImport} className="btn-secondary shrink-0 self-start">
-                  Import site styles
+                  Add style guide
                 </button>
               </div>
             )}
@@ -334,12 +352,12 @@ export default function App() {
                 {canConvert ? (
                   <>
                     Then select an element in the Webflow Designer and press <kbd className="kbd">{modKey}+V</kbd>.
-                    {site && (
+                    {usingLibrary && (
                       <span className="mt-1 block text-emerald-300/90" data-testid="site-in-use">
-                        Using the {site.styles.length} imported classes of “{site.label}”:{' '}
+                        Checking against your style guide library ({libraryClasses} classes from {libraryState.library.sources.length} source{libraryState.library.sources.length === 1 ? '' : 's'}):{' '}
                         {options.siteClassConflicts === 'rename'
-                          ? 'a class with the same name and identical CSS reuses that site’s; different CSS gets a separate class.'
-                          : 'same-named classes use that site’s styles.'}{' '}
+                          ? 'a class with the same name and identical CSS reuses your site’s; different CSS gets a separate class.'
+                          : 'same-named classes use your site’s styles.'}{' '}
                         <button type="button" className="underline underline-offset-2 hover:text-emerald-200" onClick={focusSiteImport}>
                           Change
                         </button>
@@ -353,19 +371,6 @@ export default function App() {
             </div>
           </section>
 
-          <SiteStylesPanel
-            library={siteLibrary}
-            onLibraryChange={setSiteLibrary}
-            saved={siteSaved}
-            conflicts={options.siteClassConflicts}
-            onConflictsChange={(v) => setOptions((o) => ({ ...o, siteClassConflicts: v }))}
-            emptyUtilities={options.skipClientFirstUtilityStyles}
-            onEmptyUtilitiesChange={(v) => setOptions((o) => ({ ...o, skipClientFirstUtilityStyles: v }))}
-            open={siteOpen}
-            onOpenChange={setSiteOpen}
-            modKey={modKey}
-          />
-
           <AdvancedOptionsPanel value={options} onChange={setOptions} open={advancedOpen} onOpenChange={setAdvancedOpen} />
 
           {result ? (
@@ -376,7 +381,7 @@ export default function App() {
               onDownload={() => download(result.value.json)}
               onSetPrefix={focusClassPrefix}
               onImportSite={focusSiteImport}
-              siteLabel={activeSite(siteLibrary)?.label ?? null}
+              siteLabel={usingLibrary ? 'your style guide' : null}
             />
           ) : (
             <div className="rounded-xl border border-dashed border-line px-4 py-6 text-center text-[13px] text-muted">

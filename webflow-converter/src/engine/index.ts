@@ -37,6 +37,7 @@ import {
   emptyClientFirstUtilities,
   finalizeStyles,
   isEmptyStyle,
+  isReferenceStyle,
   matchConflicts,
   matchSiteStyles,
   planRenames,
@@ -323,6 +324,9 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
     matches = kept;
     if (renames.size > 0) warnings.push(...renameWarnings(chainStyles, renames, conflicts, scriptsText));
   }
+  // Classes known only from the site's published CSS (style guide library) decided the renames
+  // above; they cannot be pasted as the site's own (no Designer copy), so ours keeps its own style.
+  matches = matches.filter((m) => !isReferenceStyle(m.site));
   const reusedIds = new Set(matches.map((m) => m.ours._id));
   // Combos: Webflow never renames a pasted combo, it merges it with a same-named one of the site
   // (whose styles win). A styled combo gets a suffix derived from its CSS, unless a script adds or
@@ -736,8 +740,8 @@ function collisionWarnings(registry: StyleRegistry, opts: ConvertOptions, reused
   }
   parts.push(
     opts.siteStyles?.length && opts.reuseSiteClasses
-      ? "These names are not in your imported site styles: import a copy that contains them (e.g. the style guide page) to reuse the site's classes, or set a classPrefix."
-      : "To reuse your site's classes instead, import your site's styles (\"Reuse classes from your Webflow site\": copy an element in the Designer and paste it into the app). Otherwise set a classPrefix (Client-First utilities keep their names by default).",
+      ? "These names are not in your site's style guide library: add a page that contains them to reuse the site's classes, or set a classPrefix."
+      : "To reuse your site's classes instead, add your site's style guide (\"1. Your site's style guide\": copy the page wrapper in the Designer and paste it into the app). Otherwise set a classPrefix (Client-First utilities keep their names by default).",
   );
   return [
     {
