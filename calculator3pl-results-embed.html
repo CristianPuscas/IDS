@@ -1,8 +1,8 @@
 <!--
   Saltbox 3PL Calculator — results card logic as one Webflow Code Embed.
-  Reads the left card (inputs with data-calc-input) and writes the right card
-  (native elements with IDs sb-3pl-annual, sb-sb-annual, sb-gap-num, sb-gap-pct,
-  sb-cpo-current, sb-cpo-saltbox, sb-insight). Logic and copy match the base coded calculator.
+  Does not depend on class names: elements are found by data attributes
+  (Webflow: Element settings → Custom attributes), with the current IDs as fallback.
+  All names live in the CONFIG block below, so they can be changed in one place.
   Place this Embed anywhere on the page (e.g. at the bottom of the results card).
 -->
 <script>
@@ -10,32 +10,65 @@
     if (window.__calc3plInit) return;
     window.__calc3plInit = true;
 
+    // ================= CONFIG =================
+    var CONFIG = {
+      // Left card: <input data-calc-input="orders"> etc.
+      inputAttr: 'data-calc-input',
+      inputs: {
+        orders:        'orders',
+        pickpack:      'pickpack',
+        storage:       'storage',
+        markupDollar:  'markup-dollar',
+        markupPercent: 'markup-percent',
+        account:       'account',
+        receiving:     'receiving',
+        returns:       'returns'
+      },
+
+      // Right card: data-calc-output="annual-3pl" etc.; the ID is used when the attribute is missing
+      outputAttr: 'data-calc-output',
+      outputs: {
+        annual3pl:     { attr: 'annual-3pl',     id: 'sb-3pl-annual' },
+        annualSaltbox: { attr: 'annual-saltbox', id: 'sb-sb-annual' },
+        gap:           { attr: 'gap',            id: 'sb-gap-num' },
+        gapPct:        { attr: 'gap-pct',        id: 'sb-gap-pct' },
+        cpoCurrent:    { attr: 'cpo-current',    id: 'sb-cpo-current' },
+        cpoSaltbox:    { attr: 'cpo-saltbox',    id: 'sb-cpo-saltbox' },
+        insight:       { attr: 'insight',        id: 'sb-insight' }
+      },
+
+      // Shipping markup toggle: buttons data-markup="dollar|percent", panels data-markup-input="dollar|percent"
+      toggleAttr:   'data-markup',
+      panelAttr:    'data-markup-input',
+      activeClass:  'is-active',   // visual state only; the logic does not depend on it
+      panelDisplay: 'flex',
+
+      // Modeling constants
+      returnsRate:    0.05,  // 5% returns rate applied to monthly order volume
+      avgCarrierRate: 8.00,  // baseline $/order when shipping markup is entered as a %
+      saltboxMonthly: 349    // Access plan published rate
+    };
+    // ===========================================
+
     function boot() {
       var fmt0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
       var fmt2 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
       var fmtPct = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+      var fmtInt = new Intl.NumberFormat('en-US');
 
-      // Modeling constants
-      var RETURNS_RATE = 0.05;      // 5% returns rate applied to monthly order volume
-      var AVG_CARRIER_RATE = 8.00;  // baseline $/order when shipping markup is entered as a %
-      var SALTBOX_MONTHLY = 349;    // Access plan published rate
+      function byAttr(attr, value) { return document.querySelector('[' + attr + '="' + value + '"]'); }
 
-      // Left card: inputs
       var inputs = {};
-      document.querySelectorAll('[data-calc-input]').forEach(function (el) { inputs[el.dataset.calcInput] = el; });
+      Object.keys(CONFIG.inputs).forEach(function (k) { inputs[k] = byAttr(CONFIG.inputAttr, CONFIG.inputs[k]); });
 
-      // Right card: outputs
-      var $ = function (id) { return document.getElementById(id); };
-      var out = {
-        threePLAnnual: $('sb-3pl-annual'),
-        sbAnnual:      $('sb-sb-annual'),
-        gapNum:        $('sb-gap-num'),
-        gapPct:        $('sb-gap-pct'),
-        cpoCurrent:    $('sb-cpo-current'),
-        cpoSaltbox:    $('sb-cpo-saltbox'),
-        insight:       $('sb-insight')
-      };
+      var out = {};
+      Object.keys(CONFIG.outputs).forEach(function (k) {
+        var o = CONFIG.outputs[k];
+        out[k] = byAttr(CONFIG.outputAttr, o.attr) || document.getElementById(o.id);
+      });
 
+      var toggleBtns = document.querySelectorAll('[' + CONFIG.toggleAttr + ']');
+      var panels     = document.querySelectorAll('[' + CONFIG.panelAttr + ']');
       var markupMode = 'dollar';
 
       // Missing field or empty value counts as 0; accepts "3,50" as well as "3.50"
@@ -57,23 +90,23 @@
         var returns   = n('returns');
 
         var markupPerOrder = markupMode === 'dollar'
-          ? n('markup-dollar')
-          : (n('markup-percent') / 100) * AVG_CARRIER_RATE;
+          ? n('markupDollar')
+          : (n('markupPercent') / 100) * CONFIG.avgCarrierRate;
 
         var monthlyPickpack = orders * pickpack;
         var monthlyShipping = orders * markupPerOrder;
-        var monthlyReturns  = orders * RETURNS_RATE * returns;
+        var monthlyReturns  = orders * CONFIG.returnsRate * returns;
         var monthlyAll      = storage + account + receiving + monthlyPickpack + monthlyShipping + monthlyReturns;
         var annual3pl       = monthlyAll * 12;
-        var annualSaltbox   = SALTBOX_MONTHLY * 12;
+        var annualSaltbox   = CONFIG.saltboxMonthly * 12;
         var gap             = annual3pl - annualSaltbox;
         var gapPct          = annual3pl > 0 ? (gap / annual3pl) * 100 : 0;
         var cpoCurrent      = orders > 0 ? monthlyAll / orders : 0;
-        var cpoSaltbox      = orders > 0 ? SALTBOX_MONTHLY / orders : 0;
+        var cpoSaltbox      = orders > 0 ? CONFIG.saltboxMonthly / orders : 0;
 
-        set(out.threePLAnnual, fmt0.format(annual3pl));
-        set(out.sbAnnual,      fmt0.format(annualSaltbox));
-        set(out.gapNum,        fmt0.format(Math.max(0, gap)));
+        set(out.annual3pl,     fmt0.format(annual3pl));
+        set(out.annualSaltbox, fmt0.format(annualSaltbox));
+        set(out.gap,           fmt0.format(Math.max(0, gap)));
         set(out.gapPct,        fmtPct.format(Math.max(0, gapPct)) + '%');
         set(out.cpoCurrent,    fmt2.format(cpoCurrent));
         set(out.cpoSaltbox,    fmt2.format(cpoSaltbox));
@@ -86,36 +119,37 @@
           } else if (gap <= 0) {
             msg = '<strong>Tight margins on your side.</strong> Your 3PL fees come in under or near a Saltbox membership floor. The fuller picture (carrier rates, labor flexibility) is worth a call to map out.';
           } else {
-            var ordersLabel = new Intl.NumberFormat('en-US').format(orders);
-            msg = '<strong>What this means.</strong> At ' + ordersLabel + ' orders/month, you\'re paying about ' + fmt2.format(cpoCurrent) + ' per order to your 3PL. The gap above shows the delta vs. a Saltbox membership floor, before Parsel shipping rates and Saltbox Operations Services labor are layered in.';
+            msg = '<strong>What this means.</strong> At ' + fmtInt.format(orders) + ' orders/month, you\'re paying about ' + fmt2.format(cpoCurrent) + ' per order to your 3PL. The gap above shows the delta vs. a Saltbox membership floor, before Parsel shipping rates and Saltbox Operations Services labor are layered in.';
           }
           out.insight.innerHTML = msg;
         }
       }
 
-      // Wire input listeners
-      Object.keys(inputs).forEach(function (k) { inputs[k].addEventListener('input', recalc); });
+      function setMode(mode) {
+        markupMode = mode;
+        toggleBtns.forEach(function (b) {
+          var on = b.getAttribute(CONFIG.toggleAttr) === mode;
+          b.classList.toggle(CONFIG.activeClass, on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        panels.forEach(function (p) {
+          p.style.display = p.getAttribute(CONFIG.panelAttr) === mode ? CONFIG.panelDisplay : 'none';
+        });
+        recalc();
+      }
 
-      // Wire markup toggle (native Webflow buttons with data-markup)
-      var toggleBtns  = document.querySelectorAll('.calculator3pl_toggle-button[data-markup]');
-      var dollarWrap  = document.querySelector('[data-markup-input="dollar"]');
-      var percentWrap = document.querySelector('[data-markup-input="percent"]');
+      // Wire input listeners
+      Object.keys(inputs).forEach(function (k) { if (inputs[k]) inputs[k].addEventListener('input', recalc); });
+
+      // Wire markup toggle
       toggleBtns.forEach(function (btn) {
         btn.addEventListener('click', function (e) {
           e.preventDefault();
-          markupMode = btn.dataset.markup;
-          toggleBtns.forEach(function (b) {
-            var on = b === btn;
-            b.classList.toggle('is-active', on);
-            b.setAttribute('aria-pressed', on ? 'true' : 'false');
-          });
-          if (dollarWrap)  dollarWrap.style.display  = markupMode === 'dollar'  ? 'flex' : 'none';
-          if (percentWrap) percentWrap.style.display = markupMode === 'percent' ? 'flex' : 'none';
-          recalc();
+          setMode(btn.getAttribute(CONFIG.toggleAttr));
         });
       });
 
-      recalc();
+      setMode('dollar');
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
