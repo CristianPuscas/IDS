@@ -1,0 +1,147 @@
+<!--
+  Saltbox 3PL Calculator — input embeds matched to the native Webflow card
+  (classes: calculator3pl_field / calculator3pl_input-wrap / calculator3pl_input / calculator3pl_affix)
+
+  How to use:
+    1. In each calculator3pl_field, inside calculator3pl_input-wrap, replace the Embed with the matching INPUT snippet below.
+    2. For the $ fields, put a native <span class="calculator3pl_affix is-prefix">$</span> before the Embed
+       (same as in the Shipping markup field).
+    3. Paste the SCRIPT into Page Settings → Custom Code → Before </body> tag.
+    The results use the IDs already on the page: sb-3pl-annual, sb-sb-annual, sb-gap-num, sb-gap-pct,
+    sb-cpo-current, sb-cpo-saltbox, sb-insight.
+-->
+
+
+<!-- ===================== INPUT SNIPPETS (one Embed each) ===================== -->
+
+<!-- 1. Monthly order volume (no affix) -->
+<input type="number" id="calc3pl-orders" class="calculator3pl_input" data-calc-input="orders" min="0" step="100" value="3000" inputmode="numeric" aria-label="Monthly order volume">
+
+<!-- 2. Per-order pick/pack fee ($ prefix) -->
+<input type="number" id="calc3pl-pickpack" class="calculator3pl_input is-prefix" data-calc-input="pickpack" min="0" step="0.25" value="3.50" inputmode="decimal" aria-label="Per-order pick/pack fee">
+
+<!-- 3. Monthly storage fees ($ prefix) -->
+<input type="number" id="calc3pl-storage" class="calculator3pl_input is-prefix" data-calc-input="storage" min="0" step="50" value="1200" inputmode="numeric" aria-label="Monthly storage fees">
+
+<!-- 4a. Shipping markup, $ per order ($ prefix) -->
+<input type="number" id="calc3pl-markup-dollar" class="calculator3pl_input is-prefix" data-calc-input="markup-dollar" min="0" step="0.25" value="2.00" inputmode="decimal" aria-label="Shipping markup in dollars per order">
+
+<!-- 4b. Shipping markup, % of rate (% suffix) -->
+<input type="number" id="calc3pl-markup-percent" class="calculator3pl_input is-suffix" data-calc-input="markup-percent" min="0" step="1" value="15" inputmode="numeric" aria-label="Shipping markup as percent of carrier rate">
+
+<!-- 5. Monthly account / platform fees ($ prefix) -->
+<input type="number" id="calc3pl-account" class="calculator3pl_input is-prefix" data-calc-input="account" min="0" step="25" value="250" inputmode="numeric" aria-label="Monthly account / platform fees">
+
+<!-- 6. Monthly receiving fees ($ prefix) -->
+<input type="number" id="calc3pl-receiving" class="calculator3pl_input is-prefix" data-calc-input="receiving" min="0" step="25" value="400" inputmode="numeric" aria-label="Monthly receiving fees">
+
+<!-- 7. Returns processing fee ($ prefix) -->
+<input type="number" id="calc3pl-returns" class="calculator3pl_input is-prefix" data-calc-input="returns" min="0" step="0.50" value="4.00" inputmode="decimal" aria-label="Returns processing fee">
+
+
+<!-- ===================== SCRIPT (Before </body>) ===================== -->
+<script>
+  (function () {
+    function boot() {
+      var fmt0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+      var fmt2 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      var fmtPct = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+      var fmtInt = new Intl.NumberFormat('en-US');
+
+      // Modeling constants
+      var RETURNS_RATE = 0.05;      // 5% returns rate applied to monthly order volume
+      var AVG_CARRIER_RATE = 8.00;  // baseline $/order when shipping markup is entered as a %
+      var SALTBOX_MONTHLY = 349;    // Access plan published rate
+
+      var inputs = {};
+      document.querySelectorAll('[data-calc-input]').forEach(function (el) { inputs[el.dataset.calcInput] = el; });
+      if (!inputs.orders) return;
+
+      var $ = function (id) { return document.getElementById(id); };
+      var out = {
+        threePLAnnual: $('sb-3pl-annual'),
+        sbAnnual:      $('sb-sb-annual'),
+        gapNum:        $('sb-gap-num'),
+        gapPct:        $('sb-gap-pct'),
+        cpoCurrent:    $('sb-cpo-current'),
+        cpoSaltbox:    $('sb-cpo-saltbox'),
+        insight:       $('sb-insight')
+      };
+
+      var markupMode = 'dollar';
+
+      // Missing field or empty value counts as 0; accepts "3,50" as well as "3.50"
+      function n(key) {
+        var el = inputs[key];
+        if (!el) return 0;
+        var v = parseFloat(String(el.value).replace(',', '.'));
+        return isFinite(v) && v >= 0 ? v : 0;
+      }
+
+      function set(key, text) { if (out[key]) out[key].textContent = text; }
+
+      function recalc() {
+        var orders = n('orders');
+        var markupPerOrder = markupMode === 'dollar'
+          ? n('markup-dollar')
+          : (n('markup-percent') / 100) * AVG_CARRIER_RATE;
+
+        var monthlyAll = n('storage') + n('account') + n('receiving')
+          + orders * n('pickpack')
+          + orders * markupPerOrder
+          + orders * RETURNS_RATE * n('returns');
+        var annual3pl     = monthlyAll * 12;
+        var annualSaltbox = SALTBOX_MONTHLY * 12;
+        var gap           = annual3pl - annualSaltbox;
+        var gapPct        = annual3pl > 0 ? (gap / annual3pl) * 100 : 0;
+        var cpoCurrent    = orders > 0 ? monthlyAll / orders : 0;
+        var cpoSaltbox    = orders > 0 ? SALTBOX_MONTHLY / orders : 0;
+
+        set('threePLAnnual', fmt0.format(annual3pl));
+        set('sbAnnual', fmt0.format(annualSaltbox));
+        set('gapNum', fmt0.format(Math.max(0, gap)));
+        set('gapPct', fmtPct.format(Math.max(0, gapPct)) + '%');
+        set('cpoCurrent', fmt2.format(cpoCurrent));
+        set('cpoSaltbox', fmt2.format(cpoSaltbox));
+
+        if (out.insight) {
+          var msg;
+          if (orders === 0 || monthlyAll === 0) {
+            msg = '<strong>Add your numbers.</strong> Even rough estimates work. The math is built to surface the gap, not catch you on a decimal.';
+          } else if (gap <= 0) {
+            msg = '<strong>Tight margins on your side.</strong> Your 3PL fees come in under or near a Saltbox membership floor. The fuller picture (carrier rates, labor flexibility) is worth a call to map out.';
+          } else {
+            msg = '<strong>What this means.</strong> At ' + fmtInt.format(orders) + ' orders/month, you\'re paying about ' + fmt2.format(cpoCurrent) + ' per order to your 3PL. The gap above shows the delta vs. a Saltbox membership floor, before Parsel shipping rates and Saltbox Operations Services labor are layered in.';
+          }
+          out.insight.innerHTML = msg;
+        }
+      }
+
+      Object.keys(inputs).forEach(function (k) { inputs[k].addEventListener('input', recalc); });
+
+      // Toggle: native Webflow buttons (.calculator3pl_toggle-button with data-markup)
+      var toggleBtns = document.querySelectorAll('.calculator3pl_toggle-button[data-markup]');
+      var dollarWrap  = document.querySelector('[data-markup-input="dollar"]');
+      var percentWrap = document.querySelector('[data-markup-input="percent"]');
+      toggleBtns.forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          markupMode = btn.dataset.markup;
+          toggleBtns.forEach(function (b) {
+            var on = b === btn;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+          if (dollarWrap)  dollarWrap.style.display  = markupMode === 'dollar'  ? 'flex' : 'none';
+          if (percentWrap) percentWrap.style.display = markupMode === 'percent' ? 'flex' : 'none';
+          recalc();
+        });
+      });
+
+      recalc();
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+</script>
