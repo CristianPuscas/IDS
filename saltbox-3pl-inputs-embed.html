@@ -1,0 +1,201 @@
+<!--
+  Saltbox 3PL Calculator — only the input fields, as separate Webflow embeds.
+
+  How to use:
+    A. Paste the CSS into Page Settings → Custom Code → Inside <head> tag.
+    B. Paste the SCRIPT into Page Settings → Custom Code → Before </body> tag.
+    C. In the Webflow card, under each label + help text, add an Embed element
+       and paste the matching INPUT snippet.
+    D. (Optional) For the results, add a custom attribute to Webflow text elements:
+       data-sb-out = threePLAnnual | sbAnnual | gapNum | gapPct | cpoCurrent | cpoSaltbox | insight
+-->
+
+
+<!-- ===================== A. CSS (Inside <head>) ===================== -->
+<style>
+  .sb-input-wrap { position: relative; display: flex; align-items: center; width: 100%; }
+  .sb-input-wrap .sb-prefix,
+  .sb-input-wrap .sb-suffix {
+    position: absolute; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500;
+    color: #5A6363; pointer-events: none;
+  }
+  .sb-input-wrap .sb-prefix { left: 12px; }
+  .sb-input-wrap .sb-suffix { right: 12px; }
+  .sb-input {
+    box-sizing: border-box; width: 100%; height: auto; margin: 0; padding: 11px 14px;
+    font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 500; line-height: 1.4;
+    color: #242B2B; background: #FFFFFF;
+    border: 1px solid #E4E2DC; border-radius: 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .sb-input--pf { padding-left: 26px; }
+  .sb-input--sf { padding-right: 36px; }
+  .sb-input:focus { outline: none; border-color: #425656; box-shadow: 0 0 0 3px rgba(66, 86, 86, 0.12); }
+  .sb-toggle { display: inline-flex; background: #F1F3F2; border-radius: 999px; padding: 3px; margin-bottom: 8px; }
+  .sb-toggle button {
+    border: none; background: transparent; padding: 6px 14px; margin: 0;
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: #5A6363;
+    border-radius: 999px; cursor: pointer; transition: all 0.15s ease;
+  }
+  .sb-toggle button.is-active { background: #242B2B; color: #FFFFFF; }
+</style>
+
+
+<!-- ===================== C. INPUT SNIPPETS (one Embed each) ===================== -->
+
+<!-- 1. Monthly order volume -->
+<div class="sb-input-wrap">
+  <input type="number" id="sb-orders" data-sb-input="orders" class="sb-input" min="0" step="100" value="3000" inputmode="numeric">
+</div>
+
+<!-- 2. Per-order pick/pack fee -->
+<div class="sb-input-wrap">
+  <span class="sb-prefix">$</span>
+  <input type="number" id="sb-pickpack" data-sb-input="pickpack" class="sb-input sb-input--pf" min="0" step="0.25" value="3.50" inputmode="decimal">
+</div>
+
+<!-- 3. Monthly storage fees -->
+<div class="sb-input-wrap">
+  <span class="sb-prefix">$</span>
+  <input type="number" id="sb-storage" data-sb-input="storage" class="sb-input sb-input--pf" min="0" step="50" value="1200" inputmode="numeric">
+</div>
+
+<!-- 4. Shipping markup (toggle + both inputs, keep together in one Embed) -->
+<div class="sb-toggle" role="tablist">
+  <button type="button" class="is-active" data-markup="dollar">$ per order</button>
+  <button type="button" data-markup="percent">% of rate</button>
+</div>
+<div class="sb-input-wrap" data-markup-input="dollar">
+  <span class="sb-prefix">$</span>
+  <input type="number" id="sb-markup-dollar" data-sb-input="markupDollar" class="sb-input sb-input--pf" min="0" step="0.25" value="2.00" inputmode="decimal">
+</div>
+<div class="sb-input-wrap" data-markup-input="percent" style="display:none;">
+  <input type="number" id="sb-markup-percent" data-sb-input="markupPercent" class="sb-input sb-input--sf" min="0" step="1" value="15" inputmode="numeric">
+  <span class="sb-suffix">%</span>
+</div>
+
+<!-- 5. Monthly account / platform fees -->
+<div class="sb-input-wrap">
+  <span class="sb-prefix">$</span>
+  <input type="number" id="sb-account" data-sb-input="account" class="sb-input sb-input--pf" min="0" step="25" value="250" inputmode="numeric">
+</div>
+
+<!-- 6. Monthly receiving fees -->
+<div class="sb-input-wrap">
+  <span class="sb-prefix">$</span>
+  <input type="number" id="sb-receiving" data-sb-input="receiving" class="sb-input sb-input--pf" min="0" step="25" value="400" inputmode="numeric">
+</div>
+
+<!-- 7. Returns processing fee -->
+<div class="sb-input-wrap">
+  <span class="sb-prefix">$</span>
+  <input type="number" id="sb-returns" data-sb-input="returns" class="sb-input sb-input--pf" min="0" step="0.50" value="4.00" inputmode="decimal">
+</div>
+
+
+<!-- ===================== B. SCRIPT (Before </body>) ===================== -->
+<script>
+  (function () {
+    function boot() {
+      var fmt0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+      var fmt2 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      var fmtPct = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+      var fmtInt = new Intl.NumberFormat('en-US');
+
+      // Modeling constants
+      var RETURNS_RATE = 0.05;      // 5% returns rate applied to monthly order volume
+      var AVG_CARRIER_RATE = 8.00;  // baseline $/order when shipping markup is entered as a %
+      var SALTBOX_MONTHLY = 349;    // Access plan published rate
+
+      var inputs = {};
+      document.querySelectorAll('[data-sb-input]').forEach(function (el) { inputs[el.dataset.sbInput] = el; });
+      var out = {};
+      document.querySelectorAll('[data-sb-out]').forEach(function (el) { out[el.dataset.sbOut] = el; });
+
+      var markupMode = 'dollar';
+
+      // Missing field or empty value counts as 0; accepts "3,50" as well as "3.50"
+      function n(key) {
+        var el = inputs[key];
+        if (!el) return 0;
+        var v = parseFloat(String(el.value).replace(',', '.'));
+        return isFinite(v) && v >= 0 ? v : 0;
+      }
+
+      function readValues() {
+        var orders = n('orders');
+        var markupPerOrder = markupMode === 'dollar'
+          ? n('markupDollar')
+          : (n('markupPercent') / 100) * AVG_CARRIER_RATE;
+        var monthlyAll = n('storage') + n('account') + n('receiving')
+          + orders * n('pickpack')
+          + orders * markupPerOrder
+          + orders * RETURNS_RATE * n('returns');
+        var annual3pl = monthlyAll * 12;
+        var annualSaltbox = SALTBOX_MONTHLY * 12;
+        var gap = annual3pl - annualSaltbox;
+        return {
+          orders: orders, pickpack: n('pickpack'), storage: n('storage'),
+          markup_mode: markupMode, markup_dollar: n('markupDollar'), markup_percent: n('markupPercent'),
+          account: n('account'), receiving: n('receiving'), returns: n('returns'),
+          monthly_3pl: monthlyAll,
+          annual_3pl: annual3pl,
+          annual_saltbox: annualSaltbox,
+          annual_gap: gap,
+          gap_pct: annual3pl > 0 ? (gap / annual3pl) * 100 : 0,
+          cpo_current: orders > 0 ? monthlyAll / orders : 0,
+          cpo_saltbox: orders > 0 ? SALTBOX_MONTHLY / orders : 0
+        };
+      }
+
+      function set(key, text) { if (out[key]) out[key].textContent = text; }
+
+      function recalc() {
+        var v = readValues();
+        set('threePLAnnual', fmt0.format(v.annual_3pl));
+        set('sbAnnual', fmt0.format(v.annual_saltbox));
+        set('gapNum', fmt0.format(Math.max(0, v.annual_gap)));
+        set('gapPct', fmtPct.format(Math.max(0, v.gap_pct)) + '%');
+        set('cpoCurrent', fmt2.format(v.cpo_current));
+        set('cpoSaltbox', fmt2.format(v.cpo_saltbox));
+
+        if (out.insight) {
+          var msg;
+          if (v.orders === 0 || v.monthly_3pl === 0) {
+            msg = '<strong>Add your numbers.</strong> Even rough estimates work. The math is built to surface the gap, not catch you on a decimal.';
+          } else if (v.annual_gap <= 0) {
+            msg = '<strong>Tight margins on your side.</strong> Your 3PL fees come in under or near a Saltbox membership floor. The fuller picture (carrier rates, labor flexibility) is worth a call to map out.';
+          } else {
+            msg = '<strong>What this means.</strong> At ' + fmtInt.format(v.orders) + ' orders/month, you\'re paying about ' + fmt2.format(v.cpo_current) + ' per order to your 3PL. The gap above shows the delta vs. a Saltbox membership floor, before Parsel shipping rates and Saltbox Operations Services labor are layered in.';
+          }
+          out.insight.innerHTML = msg;
+        }
+
+        document.dispatchEvent(new CustomEvent('sb-calc:change', { detail: v }));
+      }
+
+      Object.keys(inputs).forEach(function (k) { inputs[k].addEventListener('input', recalc); });
+
+      var toggleBtns = document.querySelectorAll('.sb-toggle button');
+      toggleBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          markupMode = btn.dataset.markup;
+          toggleBtns.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+          var d = document.querySelector('[data-markup-input="dollar"]');
+          var p = document.querySelector('[data-markup-input="percent"]');
+          if (d) d.style.display = markupMode === 'dollar' ? 'flex' : 'none';
+          if (p) p.style.display = markupMode === 'percent' ? 'flex' : 'none';
+          recalc();
+        });
+      });
+
+      // Current values from anywhere: window.sbCalcInputs()
+      window.sbCalcInputs = readValues;
+
+      recalc();
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+</script>
