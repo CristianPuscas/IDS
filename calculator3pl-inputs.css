@@ -1,0 +1,91 @@
+<style>
+  /* Saltbox 3PL calculator — input styling for the native Webflow card */
+
+  /* Wrapper: positions the $ / % affix over the input */
+  .calculator3pl_input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+  .calculator3pl_input-wrap > .w-embed {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  /* Input */
+  .calculator3pl_input {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 11px 14px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #242B2B;
+    background-color: #FFFFFF;
+    border: 1px solid #E4E2DC;
+    border-radius: 8px;
+    box-shadow: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .calculator3pl_input.is-prefix { padding-left: 26px; }
+  .calculator3pl_input.is-suffix { padding-right: 36px; }
+  .calculator3pl_input:hover { border-color: #CFCCC4; }
+  .calculator3pl_input:focus {
+    outline: none;
+    border-color: #425656;
+    box-shadow: 0 0 0 3px rgba(66, 86, 86, 0.12);
+  }
+
+  /* $ and % */
+  .calculator3pl_affix {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1;
+    color: #5A6363;
+    pointer-events: none;
+  }
+  .calculator3pl_affix.is-prefix { left: 12px; }
+  .calculator3pl_affix.is-suffix { right: 12px; }
+
+  /* $ per order / % of rate toggle (overrides Webflow's default .w-button look) */
+  .calculator3pl_toggle {
+    display: inline-flex;
+    gap: 0;
+    padding: 3px;
+    margin-bottom: 8px;
+    background-color: #F1F3F2;
+    border-radius: 999px;
+  }
+  .calculator3pl_toggle-button.w-button,
+  .calculator3pl_toggle-button {
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #5A6363;
+    background-color: transparent;
+    border: none;
+    border-radius: 999px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .calculator3pl_toggle-button:hover { color: #242B2B; }
+  .calculator3pl_toggle-button.is-active,
+  .calculator3pl_toggle-button.is-active:hover {
+    background-color: #242B2B;
+    color: #FFFFFF;
+  }
+</style>
