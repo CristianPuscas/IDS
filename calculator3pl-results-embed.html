@@ -58,8 +58,15 @@
 
       function byAttr(attr, value) { return document.querySelector('[' + attr + '="' + value + '"]'); }
 
+      // The attribute may sit on the input itself or on the Code Embed wrapper around it
+      function findInput(value) {
+        var el = byAttr(CONFIG.inputAttr, value);
+        if (el && el.tagName !== 'INPUT') el = el.querySelector('input');
+        return el;
+      }
+
       var inputs = {};
-      Object.keys(CONFIG.inputs).forEach(function (k) { inputs[k] = byAttr(CONFIG.inputAttr, CONFIG.inputs[k]); });
+      Object.keys(CONFIG.inputs).forEach(function (k) { inputs[k] = findInput(CONFIG.inputs[k]); });
 
       var out = {};
       Object.keys(CONFIG.outputs).forEach(function (k) {
