@@ -1,0 +1,326 @@
+/**
+ * Webflow Button defaults. A Webflow Button (`Link` with `button: true`, and `FormButton`) is
+ * published with the `w-button` class, and webflow.css gives `.w-button`:
+ *
+ *   display: inline-block; padding: 9px 15px; background-color: #3898EC; color: white; border: 0;
+ *   line-height: inherit; text-decoration: none; cursor: pointer; border-radius: 0;
+ *
+ * Any of these the source CSS did not set leak into the pasted design (a blue box with white text).
+ * `buttonNeutralizers` computes, for one source element, the longhands that restore what the
+ * *source* rendered for each of those properties:
+ *
+ * - The property is set by a rule of class specificity or higher (or inline / `!important`): the
+ *   user's value already beats `.w-button`, nothing to add.
+ * - It is set only by a weaker rule (`a {}`, `button {}`, `* {}`): `.w-button` would win in Webflow,
+ *   so that rule's value is copied.
+ * - It is not set: the browser default of the source tag is used. An `<a>` gets link defaults
+ *   (inline, no padding, transparent, link blue and underlined when it has an `href`); a
+ *   `<button>`/`<input>` gets the user-agent button styles (1px 6px padding, #efefef, black text,
+ *   2px outset border, `line-height: normal`, `cursor: default`).
+ *
+ * A `<button>`/`<input>` also loses its user-agent *font* styles when it becomes an `<a>` (or, for a
+ * Form Button, when webflow.css applies `font: inherit`): 13.33px Arial, normal weight and style,
+ * `letter-spacing: normal`, `text-transform: none`, `text-align: center`. Those are added too
+ * unless any source rule sets them (`BUTTON_UA_FONT`).
+ *
+ * Only the resting state outside `@media` decides; breakpoint rules keep overriding the result
+ * through the normal variant mapping.
+ *
+ * Ownership: engine.
+ */
+
+import { atLeastClass, matchedDeclarations } from './cascade';
+import type { CssDeclaration, CssStyleRule } from './cssParser';
+import { expandShorthand, wrapRaw, type NativeDecl } from './cssValues';
+import { splitTopLevel, splitValueTokens } from './cssParser';
+
+const SIDES = ['top', 'right', 'bottom', 'left'] as const;
+const CORNERS = ['top-left', 'top-right', 'bottom-right', 'bottom-left'] as const;
+
+/** `.w-button` from webflow.css, as longhands. */
+export const W_BUTTON_DEFAULTS: ReadonlyArray<readonly [string, string]> = [
+  ['display', 'inline-block'],
+  ...SIDES.map((s) => [`padding-${s}`, s === 'top' || s === 'bottom' ? '9px' : '15px'] as const),
+  ['background-color', '#3898ec'],
+  ['color', '#ffffff'],
+  ...SIDES.flatMap((s) => [
+    [`border-${s}-width`, '0px'] as const,
+    [`border-${s}-style`, 'none'] as const,
+    [`border-${s}-color`, 'currentcolor'] as const,
+  ]),
+  ['line-height', 'inherit'],
+  ['text-decoration', 'none'],
+  ['cursor', 'pointer'],
+  ...CORNERS.map((c) => [`border-${c}-radius`, '0px'] as const),
+];
+
+/**
+ * User-agent font styles of `<button>`/`<input type="submit">` (Chromium `font: -webkit-small-control`
+ * plus the form-control text resets). The measured family on Linux/Windows Chromium is Arial
+ * (macOS uses the system font).
+ */
+export const BUTTON_UA_FONT: ReadonlyArray<readonly [string, string]> = [
+  ['font-family', 'Arial, sans-serif'],
+  ['font-size', '13.3333px'],
+  ['font-weight', '400'],
+  ['font-style', 'normal'],
+  ['letter-spacing', 'normal'],
+  ['text-transform', 'none'],
+  ['text-align', 'center'],
+];
+
+const INHERITED = new Set(['color', 'line-height', 'cursor']);
+
+/** CSS initial values (used for `unset`/`initial`/`revert` on non-inherited properties). */
+function initialValue(prop: string): string {
+  if (prop === 'display') return 'inline';
+  if (prop === 'background-color') return 'transparent';
+  if (prop === 'text-decoration') return 'none';
+  if (/-style$/.test(prop)) return 'none';
+  if (/^border-.*-color$/.test(prop)) return 'currentcolor';
+  return '0px';
+}
+
+/** What the browser renders for the source tag when no author CSS sets the property. */
+function userAgentValue(prop: string, tag: string, hasHref: boolean): string {
+  if (tag === 'a') {
+    switch (prop) {
+      case 'display':
+        return 'inline';
+      case 'background-color':
+        return 'transparent';
+      case 'color':
+        return hasHref ? '#0000ee' : 'inherit';
+      case 'text-decoration':
+        return hasHref ? 'underline' : 'none';
+      case 'cursor':
+        return hasHref ? 'pointer' : 'auto';
+      case 'line-height':
+        return 'inherit';
+    }
+    if (prop.startsWith('padding-')) return '0px';
+    return W_BUTTON_DEFAULTS.find(([p]) => p === prop)?.[1] ?? '';
+  }
+  // <button>, <input type="submit">: the user-agent button styles.
+  switch (prop) {
+    case 'display':
+      return 'inline-block';
+    case 'background-color':
+      return '#efefef';
+    case 'color':
+      return '#000000';
+    case 'line-height':
+      return 'normal';
+    case 'cursor':
+      return 'default';
+    case 'text-decoration':
+      return 'none';
+  }
+  if (prop === 'padding-top' || prop === 'padding-bottom') return '1px';
+  if (prop === 'padding-left' || prop === 'padding-right') return '6px';
+  if (/^border-(top|right|bottom|left)-width$/.test(prop)) return '2px';
+  if (/^border-(top|right|bottom|left)-style$/.test(prop)) return 'outset';
+  if (/^border-(top|right|bottom|left)-color$/.test(prop)) return '#767676';
+  return '0px';
+}
+
+const WIDE = new Set(['inherit', 'initial', 'unset', 'revert', 'revert-layer']);
+
+/**
+ * The value `decl` gives `prop`, or `undefined` when it does not touch `prop`, or `null` when it
+ * does but the value cannot be worked out (the property then counts as "user-set").
+ */
+export function coveredValue(decl: CssDeclaration, prop: string): string | null | undefined {
+  const p = decl.property;
+  const v = decl.value.trim();
+  if (p === 'all') return resolveKeyword(prop, v.toLowerCase());
+  if (p === 'font' && prop === 'line-height') {
+    if (WIDE.has(v.toLowerCase())) return resolveKeyword(prop, v.toLowerCase());
+    const m = /\/\s*([^\s,]+)/.exec(v);
+    return m ? m[1]! : 'normal';
+  }
+  if (p === 'background' && prop === 'background-color') {
+    if (WIDE.has(v.toLowerCase())) return resolveKeyword(prop, v.toLowerCase());
+    const layers = splitTopLevel(v, ',');
+    const last = splitValueTokens((layers[layers.length - 1] ?? '').trim());
+    const color = last.find((t) => /^(#[0-9a-f]{3,8}|(rgb|rgba|hsl|hsla|hwb|lab|lch|oklab|oklch|color|color-mix)\(|var\()/i.test(t) || /^(transparent|currentcolor|white|black)$/i.test(t));
+    return color ?? 'transparent';
+  }
+  if (p.startsWith('text-decoration') && prop === 'text-decoration') {
+    return p === 'text-decoration' || p === 'text-decoration-line' ? v : undefined;
+  }
+  const expanded = expandShorthand(p, v);
+  const hit = expanded.find((d) => d.property === prop);
+  if (hit) return resolveKeyword(prop, hit.value.toLowerCase()) ?? hit.value;
+  if (!covers(p, prop)) return undefined;
+  // A shorthand kept whole (e.g. `padding: var(--x)`) sets the longhand to an unknown value; an
+  // expanded one that omits a component (`border: none`) resets it to its initial value.
+  return expanded.some((d) => d.property === p) ? null : initialValue(prop);
+}
+
+/** Shorthand -> longhand coverage for shorthands kept whole by `expandShorthand`. */
+function covers(shorthand: string, prop: string): boolean {
+  switch (shorthand) {
+    case 'padding':
+      return prop.startsWith('padding-');
+    case 'border':
+      return /^border-(top|right|bottom|left)-(width|style|color)$/.test(prop);
+    case 'border-width':
+    case 'border-style':
+    case 'border-color':
+      return prop.startsWith('border-') && prop.endsWith(shorthand.slice('border'.length));
+    case 'border-top':
+    case 'border-right':
+    case 'border-bottom':
+    case 'border-left':
+      return new RegExp(`^${shorthand}-(width|style|color)$`).test(prop);
+    case 'border-radius':
+      return /^border-.*-radius$/.test(prop);
+    case 'font':
+      return /^(font-(family|size|weight|style|variant|stretch)|line-height)$/.test(prop);
+    default:
+      return false;
+  }
+}
+
+/** Resolves `unset`/`initial`/`revert`/`inherit` to a concrete value; other values -> null. */
+function resolveKeyword(prop: string, value: string): string | null {
+  if (value === 'inherit') return 'inherit';
+  if (!WIDE.has(value)) return null;
+  return INHERITED.has(prop) ? 'inherit' : initialValue(prop);
+}
+
+const COLOR_ALIASES: Record<string, string> = { white: '#ffffff', '#fff': '#ffffff', black: '#000000', '#000': '#000000' };
+
+function same(a: string, b: string): boolean {
+  const norm = (x: string): string => {
+    const l = x.trim().toLowerCase();
+    if (/^0(px|rem|em)?$/.test(l)) return '0';
+    return COLOR_ALIASES[l] ?? l;
+  };
+  return norm(a) === norm(b);
+}
+
+/** What one converted button needs for one property. */
+export interface ButtonTarget {
+  property: string;
+  /** Value that reproduces the source, or `null` when the user's CSS already sets it on the button. */
+  value: string | null;
+  /** What the property renders as in Webflow when no class declaration sets it. */
+  natural: string;
+  /** State the declaration belongs to (`'focus'` -> a `:focus` variant); resting state when absent. */
+  state?: string;
+}
+
+/** The value a property has on a converted button when no class declaration sets it. */
+export function naturalButtonValue(prop: string): string {
+  return W_BUTTON_DEFAULTS.find(([p]) => p === prop)?.[1] ?? 'inherit';
+}
+
+/**
+ * What webflow.css gives one kind of element, and what the source browser rendered instead.
+ * Used for Webflow Buttons here and for native form fields (./fieldDefaults).
+ */
+export interface DefaultsSpec {
+  /**
+   * Class-level webflow.css declarations (`.w-button`, `.w-input`…) as `[property, value]`. A source
+   * rule of class specificity or higher beats them; a weaker source rule (`input {}`) does not, so
+   * its value is copied; with no source rule the browser default (`ua`) is used.
+   */
+  webflow: ReadonlyArray<readonly [string, string]>;
+  /** What the source browser renders for a `webflow` property when no author CSS sets it. */
+  ua(prop: string): string;
+  /**
+   * Tag-level webflow.css resets (`font: inherit`, `button { border: 0 }`) as
+   * `[property, browser default, Webflow value]`. Any source rule that sets the property counts as
+   * set (it keeps applying from the embed); otherwise the browser default is restored.
+   */
+  weak?: ReadonlyArray<readonly [string, string, string]>;
+}
+
+/**
+ * Per-property targets for one element: `value` is what its class must declare to render like the
+ * source (`null` = left to the user's CSS), `natural` what Webflow renders without it.
+ *
+ * @param el Source element in the parsed document.
+ * @param rules All parsed style rules (after class-name normalization).
+ */
+export function defaultTargets(el: Element, rules: CssStyleRule[], spec: DefaultsSpec): ButtonTarget[] {
+  const matched = matchedDeclarations(el, rules).filter((m) => m.mediaStack.length === 0);
+  const out: ButtonTarget[] = [];
+  for (const [prop, wValue] of spec.webflow) {
+    let winner: { value: string | null; strong: boolean } | null = null;
+    for (const m of matched) {
+      const value = coveredValue(m.decl, prop);
+      if (value === undefined) continue;
+      winner = { value, strong: m.inline || m.decl.important || atLeastClass(m.specificity) };
+    }
+    let value: string | null;
+    if (winner) value = winner.strong || winner.value === null ? null : winner.value;
+    else value = spec.ua(prop) || wValue;
+    out.push({ property: prop, value: value === null ? null : wrapRaw(value), natural: wValue });
+  }
+  for (const [prop, ua, natural] of spec.weak ?? []) {
+    // Any source rule (even `button {}` or `*`, which keep applying from the embed) counts as set.
+    const covered = matched.some((m) => coveredValue(m.decl, prop) !== undefined);
+    out.push({ property: prop, value: covered ? null : ua, natural });
+  }
+  return out;
+}
+
+/**
+ * Per-property targets for one converted button: every `.w-button` property, plus the user-agent
+ * font styles for a `<button>`/`<input>` source. `value` is what the class must declare to render
+ * like the source (`null` = left to the user's CSS).
+ *
+ * @param el Source element (`<a>`, `<button>` or `<input type="submit">`) in the parsed document.
+ * @param rules All parsed style rules (after class-name normalization).
+ */
+export function buttonTargets(el: Element, rules: CssStyleRule[]): ButtonTarget[] {
+  const tag = el.tagName.toLowerCase();
+  const hasHref = tag === 'a' && el.hasAttribute('href');
+  return defaultTargets(el, rules, {
+    webflow: W_BUTTON_DEFAULTS,
+    ua: (prop) => userAgentValue(prop, tag, hasHref) || (W_BUTTON_DEFAULTS.find(([p]) => p === prop)?.[1] ?? ''),
+    weak: tag !== 'a' ? BUTTON_UA_FONT.map(([p, v]) => [p, v, 'inherit'] as const) : [],
+  });
+}
+
+/**
+ * Targets for a `<button>` kept as a real `<button>` (`buttonMode: 'customElement'`). webflow.css
+ * only touches it with tag-level resets (`font: inherit; color: inherit` from normalize,
+ * `button { border: 0; cursor: pointer }`), so every source rule wins; the browser defaults are
+ * restored for what the source left unset.
+ */
+export function domButtonTargets(el: Element, rules: CssStyleRule[]): ButtonTarget[] {
+  const weak: (readonly [string, string, string])[] = [
+    ['color', '#000000', 'inherit'],
+    ['cursor', 'default', 'pointer'],
+    ...BUTTON_UA_FONT.filter(([p]) => p !== 'text-align' && p !== 'letter-spacing').map(([p, v]) => [p, v, 'inherit'] as const),
+    ...SIDES.flatMap((s) => [
+      [`border-${s}-width`, '2px', '0px'] as const,
+      [`border-${s}-style`, 'outset', 'none'] as const,
+      [`border-${s}-color`, '#767676', 'currentcolor'] as const,
+    ]),
+  ];
+  return defaultTargets(el, rules, { webflow: [], ua: () => '', weak });
+}
+
+/**
+ * Longhands to add to a converted button's class so it renders like the source element instead
+ * of picking up `.w-button` defaults (and, for a `<button>`, keeps its user-agent font). Empty when
+ * the user's CSS already covers them.
+ *
+ * @param el Source element (`<a>`, `<button>` or `<input type="submit">`) in the parsed document.
+ * @param rules All parsed style rules (after class-name normalization).
+ */
+export function buttonNeutralizers(el: Element, rules: CssStyleRule[]): NativeDecl[] {
+  return buttonTargets(el, rules)
+    .filter((t): t is ButtonTarget & { value: string } => t.value !== null && !sameValue(t.value, t.natural))
+    .map((t) => ({ property: t.property, value: t.value }));
+}
+
+/** Compares two CSS values loosely (case, `0` vs `0px`, white/#fff). */
+export function sameValue(a: string, b: string): boolean {
+  return same(a, b);
+}

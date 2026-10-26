@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GreenIron · Sală de forță în Cluj-Napoca</title>
+<!--
+  Regression fixture: representative parts of the "GreenIron" landing page whose v2 conversion was
+  pasted into Webflow and published (see greeniron.test.ts). Reconstructed in source form from the
+  published DOM: original class names, real <button> elements, the JS-driven contact form with
+  novalidate, the calculator forms with number inputs that carry a value, and the page script (a
+  single IIFE over 60 KB; the tail of the IIFE is synthetic padding).
+-->
+<style>
+:root { --green: #3ddc84; --green-light: #6ef0a6; --ink: #03140a; --line: #174a30; --bg: #04140c; }
+* { box-sizing: border-box; }
+body { margin: 0; background-color: var(--bg); color: #e8f5ec; font-family: "Inter", Arial, sans-serif; }
+.padding-global { padding-left: 2.5rem; padding-right: 2.5rem; }
+.container-large { width: 100%; max-width: 80rem; margin-left: auto; margin-right: auto; }
+.padding-section-large { padding-top: 7rem; padding-bottom: 7rem; }
+.eyebrow { margin: 0 0 1rem; color: #3ddc84; font-size: .875rem; letter-spacing: .12em; text-transform: uppercase; }
+.heading-style-h2 { margin: 0; font-family: "Bebas Neue", Impact, Arial, sans-serif; font-size: 4rem; line-height: 1; }
+.button { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 2rem; border: 1px solid #3ddc84; background-color: #3ddc84; color: #03140a; font-family: "Bebas Neue", Impact, Arial, sans-serif; font-size: 1.25rem; letter-spacing: .04em; text-decoration: none; transition: background-color .2s, color .2s; }
+.button:hover { background-color: #6ef0a6; border-color: #6ef0a6; }
+.button.is-small { padding: .625rem 1.25rem; font-size: 1rem; }
+.button.is-secondary { background-color: transparent; color: #3ddc84; }
+.button.is-booked { border-color: #3ddc84; background-color: #3ddc84; color: #03140a; }
+.schedule_tabs { display: flex; gap: .5rem; overflow-x: auto; }
+.schedule_tab { display: flex; flex-direction: column; gap: .25rem; padding: .875rem 1.25rem; border: 1px solid #174a30; background-color: transparent; color: #9fb8a8; cursor: pointer; }
+.schedule_tab.is-active { border-color: #3ddc84; color: #ffffff; }
+.schedule_tab-day { font-weight: 600; }
+.schedule_tab-count { font-size: .8125rem; }
+.schedule_item { display: grid; grid-template-columns: 6rem 1fr auto; align-items: center; gap: 1.5rem; padding: 1.25rem 0; border-bottom: 1px solid #174a30; }
+.schedule_time { font-family: "Bebas Neue", Impact, Arial, sans-serif; font-size: 1.75rem; }
+.calc_tool { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; padding: 2.5rem; border: 1px solid #174a30; }
+.calc_tabs { display: flex; gap: .5rem; grid-column: 1 / -1; }
+.calc_tab { padding: .75rem 1.25rem; border: 1px solid #174a30; background-color: transparent; color: #9fb8a8; font-size: 1rem; cursor: pointer; }
+.calc_tab.is-active { border-color: #3ddc84; background-color: #3ddc84; color: #03140a; }
+.calc_panel { display: none; }
+.calc_panel.is-active { display: contents; }
+.calc_form { display: flex; flex-direction: column; gap: 1.75rem; }
+.calc_field { display: flex; flex-direction: column; gap: .75rem; }
+.calc_field-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.calc_label { color: #9fb8a8; font-size: .875rem; letter-spacing: .08em; text-transform: uppercase; }
+.calc_input-wrap { display: flex; align-items: center; gap: .5rem; }
+.calc_number { width: 6rem; padding: .75rem; border: 1px solid #174a30; background-color: #000; color: #fff; font-size: 1.25rem; text-align: right; }
+.calc_number:focus { border-color: #3ddc84; outline: none; }
+.calc_unit { color: #9fb8a8; }
+.calc_range { display: block; width: 100%; height: 1.5rem; margin: 0; background-color: transparent; accent-color: #3ddc84; cursor: pointer; }
+.calc_range:focus-visible { outline: 2px solid #b8ffd6; outline-offset: .25rem; }
+.calc_range-scale { display: flex; justify-content: space-between; color: #6c8a78; font-size: .75rem; }
+.calc_select-wrap { position: relative; }
+.calc_select { width: 100%; padding: 1rem 1.25rem; border: 1px solid #174a30; appearance: none; background-color: #000; color: #fff; font-size: 1rem; }
+.calc_select-arrow { position: absolute; top: 50%; right: 1.25rem; transform: translateY(-50%); pointer-events: none; }
+.calc_hint { margin: 0; color: #6c8a78; font-size: .875rem; }
+.calc_result { padding: 2rem; background-color: #000; }
+.calc_result-value { font-family: "Bebas Neue", Impact, Arial, sans-serif; font-size: 6rem; line-height: 1; color: #3ddc84; }
+.calc_sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.contact_form-wrapper { padding: 2.5rem; border: 1px solid #174a30; background-color: #000; }
+.contact_form { display: flex; flex-direction: column; gap: 1.5rem; }
+.contact_form-title { margin: 0; font-family: "Bebas Neue", Impact, Arial, sans-serif; font-size: 2.25rem; }
+.contact_form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.contact_field { display: flex; flex-direction: column; gap: .5rem; }
+.contact_field.is-full { grid-column: 1 / -1; }
+.contact_label { font-size: .875rem; font-weight: 600; }
+.contact_required { color: #3ddc84; }
+.contact_input { width: 100%; padding: 1rem; border: 1px solid #174a30; background-color: #04140c; color: #fff; font-size: 1rem; }
+.contact_input:focus { border-color: #3ddc84; outline: none; }
+.contact_input.is-invalid { border-color: #b6f36a; }
+.contact_input.is-textarea { min-height: 8rem; resize: vertical; }
+.contact_select-wrapper { position: relative; }
+.contact_error { min-height: 1rem; margin: 0; color: #b6f36a; font-size: .8125rem; }
+.contact_consent { display: flex; align-items: flex-start; gap: .75rem; }
+.contact_checkbox { width: 1.25rem; height: 1.25rem; margin: 0; accent-color: #3ddc84; }
+.contact_form-footer { display: flex; align-items: center; gap: 1.5rem; }
+.contact_form-note { margin: 0; color: #6c8a78; font-size: .8125rem; }
+.contact_success { display: none; align-items: center; gap: .75rem; padding: 1rem; border: 1px solid #3ddc84; }
+.contact_success.is-visible { display: flex; }
+.footer_newsletter { display: flex; flex-direction: column; gap: .75rem; }
+.footer_newsletter-row { display: flex; gap: .5rem; }
+.footer_newsletter-input { flex: 1; padding: .875rem 1rem; border: 1px solid #174a30; background-color: #000; color: #fff; }
+.footer_newsletter-message { min-height: 1.25rem; margin: 0; font-size: .8125rem; }
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+@media (max-width: 991px) {
+  .calc_tool { grid-template-columns: 1fr; }
+}
+@media (max-width: 767px) {
+  .padding-global { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .contact_form-grid { grid-template-columns: 1fr; }
+  .schedule_item { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<main class="main-wrapper">
+<section id="orar" class="section_schedule"><div class="padding-global"><div class="container-large"><div class="padding-section-large"><div data-schedule class="schedule_component">
+  <p class="eyebrow">Orar</p><h2 class="heading-style-h2">Orarul clasei</h2>
+  <div role="tablist" aria-label="Zilele săptămânii" data-schedule-tablist class="schedule_tabs">
+    <button type="button" role="tab" id="schedule-tab-luni" aria-controls="schedule-panel-luni" aria-selected="true" tabindex="0" data-schedule-tab="1" class="schedule_tab is-active"><span class="schedule_tab-day">Luni</span> <span class="schedule_tab-count">5 clase</span></button>
+    <button type="button" role="tab" id="schedule-tab-marti" aria-controls="schedule-panel-marti" aria-selected="false" tabindex="-1" data-schedule-tab="2" class="schedule_tab"><span class="schedule_tab-day">Marți</span> <span class="schedule_tab-count">5 clase</span></button>
+  </div>
+  <div id="schedule-panel-luni" role="tabpanel" aria-labelledby="schedule-tab-luni" data-schedule-panel="1" class="schedule_panel">
+    <div class="schedule_item"><p class="schedule_time">07:00</p><p class="schedule_class-name">Powerlifting tehnic</p><button type="button" class="button is-small is-secondary" data-schedule-book aria-pressed="false">Rezervă loc</button></div>
+    <div class="schedule_item"><p class="schedule_time">18:30</p><p class="schedule_class-name">Forță funcțională</p><button type="button" class="button is-small is-secondary" data-schedule-book aria-pressed="false">Rezervă loc</button></div>
+  </div>
+</div></div></div></div></section>
+
+<section id="calculator" class="section_calc"><div class="padding-global"><div class="container-large"><div class="padding-section-large">
+  <div data-calc class="calc_tool">
+    <div role="tablist" aria-label="Alege calculatorul" class="calc_tabs">
+      <button type="button" role="tab" id="calc-tab-orm" aria-controls="calc-panel-orm" aria-selected="true" tabindex="0" data-calc-tab="orm" class="calc_tab is-active">Calculator 1RM</button>
+      <button type="button" role="tab" id="calc-tab-bmi" aria-controls="calc-panel-bmi" aria-selected="false" tabindex="-1" data-calc-tab="bmi" class="calc_tab">Calculator IMC</button>
+    </div>
+    <div id="calc-panel-orm" role="tabpanel" aria-labelledby="calc-tab-orm" data-calc-panel="orm" class="calc_panel is-active">
+      <form class="calc_form" data-calc-form novalidate>
+        <div class="calc_field" data-calc-field="orm-weight">
+          <div class="calc_field-head"><label class="calc_label" for="calc-orm-weight">Greutate ridicată</label><div class="calc_input-wrap"><input class="calc_number" type="number" id="calc-orm-weight" name="calc-orm-weight" min="20" max="300" step="0.5" value="100" inputmode="decimal" data-calc-number><span class="calc_unit" aria-hidden="true">kg</span></div></div>
+          <input class="calc_range" type="range" id="calc-orm-weight-range" min="20" max="300" step="2.5" value="100" aria-label="Greutate ridicată, glisor (kg)" data-calc-range>
+          <div class="calc_range-scale" aria-hidden="true"><span class="calc_range-tick">20 kg</span><span class="calc_range-tick">300 kg</span></div>
+        </div>
+        <div class="calc_field" data-calc-field="orm-reps">
+          <div class="calc_field-head"><label class="calc_label" for="calc-orm-reps">Repetări efectuate</label><div class="calc_input-wrap"><input class="calc_number" type="number" id="calc-orm-reps" name="calc-orm-reps" min="1" max="12" step="1" value="5" inputmode="numeric" data-calc-number><span class="calc_unit" aria-hidden="true">rep</span></div></div>
+          <input class="calc_range" type="range" id="calc-orm-reps-range" min="1" max="12" step="1" value="5" aria-label="Repetări efectuate, glisor" data-calc-range>
+        </div>
+        <div class="calc_field">
+          <label class="calc_label" for="calc-orm-exercise">Exercițiu</label>
+          <div class="calc_select-wrap"><select class="calc_select" id="calc-orm-exercise" name="calc-orm-exercise" data-calc-exercise><option value="genuflexiuni">Genuflexiuni</option><option value="impins">Împins la piept</option><option value="indreptari">Îndreptări</option></select><span class="calc_select-arrow" aria-hidden="true">▾</span></div>
+        </div>
+        <p class="calc_hint">Formula Epley: 1RM = greutate × (1 + repetări / 30).</p>
+      </form>
+      <div class="calc_result"><p class="calc_result-label">1RM estimat</p><p class="calc_result-value-row"><span class="calc_result-value" data-calc-orm-value aria-hidden="true">117</span> <span class="calc_result-unit" aria-hidden="true">kg</span></p><p class="calc_sr-only" data-calc-orm-live aria-live="polite">1RM estimat la Genuflexiuni: 117 kg.</p></div>
+    </div>
+    <div id="calc-panel-bmi" role="tabpanel" aria-labelledby="calc-tab-bmi" data-calc-panel="bmi" class="calc_panel">
+      <form class="calc_form" data-calc-form novalidate>
+        <div class="calc_field" data-calc-field="bmi-height">
+          <div class="calc_field-head"><label class="calc_label" for="calc-bmi-height">Înălțime</label><div class="calc_input-wrap"><input class="calc_number" type="number" id="calc-bmi-height" name="calc-bmi-height" min="140" max="220" step="1" value="178" inputmode="numeric" data-calc-number><span class="calc_unit" aria-hidden="true">cm</span></div></div>
+          <input class="calc_range" type="range" id="calc-bmi-height-range" min="140" max="220" step="1" value="178" aria-label="Înălțime, glisor (cm)" data-calc-range>
+        </div>
+        <div class="calc_field" data-calc-field="bmi-weight">
+          <div class="calc_field-head"><label class="calc_label" for="calc-bmi-weight">Greutate corporală</label><div class="calc_input-wrap"><input class="calc_number" type="number" id="calc-bmi-weight" name="calc-bmi-weight" min="40" max="180" step="0.5" value="75" inputmode="decimal" data-calc-number><span class="calc_unit" aria-hidden="true">kg</span></div></div>
+          <input class="calc_range" type="range" id="calc-bmi-weight-range" min="40" max="180" step="0.5" value="75" aria-label="Greutate corporală, glisor (kg)" data-calc-range>
+        </div>
+      </form>
+      <div class="calc_result"><p class="calc_result-label">Indicele tău de masă corporală</p><p class="calc_result-value-row"><span class="calc_result-value" data-calc-bmi-value aria-hidden="true">23,7</span></p></div>
+    </div>
+  </div>
+</div></div></div></section>
+
+<section id="contact" class="section_contact"><div class="padding-global"><div class="container-large"><div class="padding-section-large">
+  <div class="contact_form-wrapper">
+    <form class="contact_form" data-contact-form novalidate aria-labelledby="contact-form-title">
+      <div class="contact_form-header"><h3 id="contact-form-title" class="contact_form-title">Rezervă ședința gratuită</h3><p class="contact_form-text">Completează formularul și te sunăm pentru a stabili ziua și ora.</p></div>
+      <div class="contact_form-grid">
+        <div class="contact_field"><label class="contact_label" for="contact-name">Nume complet <span class="contact_required" aria-hidden="true">*</span></label><input class="contact_input" type="text" id="contact-name" name="nume" autocomplete="name" placeholder="Ex.: Andrei Pop" required aria-describedby="contact-name-error" data-validate="required" data-error-required="Te rugăm să îți scrii numele complet."><p class="contact_error" id="contact-name-error" data-contact-error></p></div>
+        <div class="contact_field"><label class="contact_label" for="contact-email">Email <span class="contact_required" aria-hidden="true">*</span></label><input class="contact_input" type="email" id="contact-email" name="email" autocomplete="email" inputmode="email" placeholder="nume@domeniu.ro" required aria-describedby="contact-email-error" data-validate="required email"><p class="contact_error" id="contact-email-error" data-contact-error></p></div>
+        <div class="contact_field"><label class="contact_label" for="contact-phone">Telefon <span class="contact_required" aria-hidden="true">*</span></label><input class="contact_input" type="tel" id="contact-phone" name="telefon" autocomplete="tel" inputmode="tel" placeholder="07xx xxx xxx" required aria-describedby="contact-phone-error" data-validate="required phone"><p class="contact_error" id="contact-phone-error" data-contact-error></p></div>
+        <div class="contact_field"><label class="contact_label" for="contact-goal">Obiectiv <span class="contact_required" aria-hidden="true">*</span></label><div class="contact_select-wrapper"><select class="contact_input is-select" id="contact-goal" name="obiectiv" required aria-describedby="contact-goal-error" data-validate="required"><option value="">Alege obiectivul</option><option value="forta">Forță</option><option value="masa-musculara">Masă musculară</option><option value="slabire">Slăbire</option></select></div><p class="contact_error" id="contact-goal-error" data-contact-error></p></div>
+        <div class="contact_field is-full"><label class="contact_label" for="contact-message">Mesaj <span class="contact_optional">(opțional)</span></label><textarea class="contact_input is-textarea" id="contact-message" name="mesaj" placeholder="Spune-ne pe scurt despre experiența ta."></textarea></div>
+        <div class="contact_field is-full"><div class="contact_consent"><input class="contact_checkbox" type="checkbox" id="contact-consent" name="gdpr" required aria-describedby="contact-consent-error" data-validate="checked"><label class="contact_consent-label" for="contact-consent">Sunt de acord cu prelucrarea datelor (GDPR) <span class="contact_required" aria-hidden="true">*</span></label></div><p class="contact_error" id="contact-consent-error" data-contact-error></p></div>
+      </div>
+      <div class="contact_form-footer"><button type="submit" class="button" data-contact-submit>Trimite cererea</button><p class="contact_form-note">Fără spam. Datele tale rămân doar la noi.</p></div>
+      <div class="contact_success" role="status" data-contact-success><span class="contact_success-badge" aria-hidden="true">✓</span><p class="contact_success-text" data-contact-success-text>Mulțumim! Te sunăm în cel mult 24 de ore.</p></div>
+    </form>
+  </div>
+</div></div></div></section>
+</main>
+
+<footer class="footer_component"><div class="padding-global"><div class="container-large">
+  <form class="footer_newsletter" data-newsletter novalidate>
+    <label class="footer_newsletter-label" for="footer-newsletter-email">Newsletter: un sfat de antrenament și nutriție pe lună</label>
+    <div class="footer_newsletter-row"><input class="footer_newsletter-input" type="email" id="footer-newsletter-email" name="newsletter-email" autocomplete="email" placeholder="nume@domeniu.ro" required aria-describedby="footer-newsletter-message" data-newsletter-input><button type="submit" class="button is-small">Abonează-te</button></div>
+    <p class="footer_newsletter-message" id="footer-newsletter-message" aria-live="polite" data-newsletter-message></p>
+  </form>
+</div></div></footer>
+
+<script>
+(function () {
+    'use strict';
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var hasGsap = typeof window.gsap !== 'undefined' && typeof window.ScrollTrigger !== 'undefined';
+    var lenis = null;
+  
+    if (hasGsap) {
+      gsap.registerPlugin(ScrollTrigger);
+    }
+  
+    function initLenis() {
+      if (reduceMotion || typeof window.Lenis === 'undefined') return;
+      lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+      if (hasGsap) {
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add(function (time) { lenis.raf(time * 1000); });
+        gsap.ticker.lagSmoothing(0);
+      } else {
+        var raf = function (time) { lenis.raf(time); requestAnimationFrame(raf); };
+        requestAnimationFrame(raf);
+      }
+    }
+  
+    function getHeaderOffset() {
+      var header = document.querySelector('[data-nav]');
+      return header ? header.offsetHeight : 0;
+    }
+  
+    function scrollToTarget(el) {
+      if (!el) return;
+      var offset = -getHeaderOffset();
+      if (lenis) {
+        lenis.scrollTo(el, { offset: offset });
+      } else {
+        var top = el.getBoundingClientRect().top + window.pageYOffset + offset;
+        window.scrollTo({ top: top, behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
+    }
+  
+    function initAnchors() {
+      document.addEventListener('click', function (e) {
+        var link = e.target.closest('[href^="#"]');
+        if (!link) return;
+        var hash = link.getAttribute('href');
+        if (hash.length < 2) return;
+        var target = document.getElementById(hash.slice(1));
+        if (!target) return;
+        e.preventDefault();
+        scrollToTarget(target);
+        if (history.pushState) history.pushState(null, '', hash);
+        if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+      });
+    }
+  
+    function initReveal() {
+      if (!hasGsap || reduceMotion) return;
+      document.querySelectorAll('[data-reveal]').forEach(function (el) {
+        gsap.from(el, {
+          autoAlpha: 0,
+          y: 40,
+          duration: 0.9,
+          ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%', once: true }
+        });
+      });
+      document.querySelectorAll('[data-reveal-group]').forEach(function (group) {
+        var items = group.querySelectorAll('[data-reveal-item]');
+        if (!items.length) return;
+        gsap.from(items, {
+          autoAlpha: 0,
+          y: 48,
+          duration: 0.8,
+          ease: 'power3.out',
+          stagger: 0.1,
+          scrollTrigger: { trigger: group, start: 'top 85%', once: true }
+        });
+      });
+    }
+  
+    function initCounters() {
+      var counters = document.querySelectorAll('[data-count]');
+      if (!counters.length) return;
+      counters.forEach(function (el) {
+        var end = parseFloat(el.getAttribute('data-count')) || 0;
+        var decimals = parseInt(el.getAttribute('data-count-decimals') || '0', 10);
+        var prefix = el.getAttribute('data-count-prefix') || '';
+        var suffix = el.getAttribute('data-count-suffix') || '';
+        var render = function (v) { el.textContent = prefix + v.toFixed(decimals) + suffix; };
+        if (!hasGsap || reduceMotion) { render(end); return; }
+        var state = { v: 0 };
+        render(0);
+        gsap.to(state, {
+          v: end,
+          duration: 2,
+          ease: 'power2.out',
+          onUpdate: function () { render(state.v); },
+          scrollTrigger: { trigger: el, start: 'top 90%', once: true }
+        });
+      });
+    }
+
+    function initNav() {
+      document.querySelectorAll('[data-nav]').forEach(function (root) {
+        var toggle = root.querySelector('[data-nav-toggle]');
+        var menu = root.querySelector('[data-nav-menu]');
+        var bg = root.querySelector('[data-nav-bg]');
+        var lines = root.querySelectorAll('[data-nav-line]');
+        var links = root.querySelectorAll('[data-nav-link]');
+        var isOpen = false;
+
+        function setOpen(open) {
+          if (!toggle || !menu) return;
+          isOpen = open;
+          menu.classList.toggle('is-open', open);
+          toggle.classList.toggle('is-open', open);
+          lines.forEach(function (line) { line.classList.toggle('is-open', open); });
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+          toggle.setAttribute('aria-label', open ? 'Închide meniul' : 'Deschide meniul');
+          if (lenis) { if (open) { lenis.stop(); } else { lenis.start(); } }
+        }
+
+        if (toggle && menu) {
+          toggle.addEventListener('click', function () { setOpen(!isOpen); });
+          links.forEach(function (link) {
+            link.addEventListener('click', function () { if (isOpen) setOpen(false); });
+          });
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && isOpen) { setOpen(false); toggle.focus(); }
+          });
+          window.addEventListener('resize', function () {
+            if (isOpen && window.innerWidth > 991) setOpen(false);
+          });
+        }
+
+        function onScroll() {
+          if (bg) bg.classList.toggle('is-scrolled', window.pageYOffset > 40);
+        }
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        if (!('IntersectionObserver' in window)) return;
+        var map = [];
+        links.forEach(function (link) {
+          var href = link.getAttribute('href') || '';
+          if (href.charAt(0) !== '#' || href.length < 2) return;
+          var section = document.getElementById(href.slice(1));
+          if (section && link.classList.contains('nav_link')) map.push({ link: link, section: section });
+        });
+        var observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            map.forEach(function (item) {
+              var active = item.section === entry.target;
+              item.link.classList.toggle('is-current', active);
+              if (active) { item.link.setAttribute('aria-current', 'true'); } else { item.link.removeAttribute('aria-current'); }
+            });
+          });
+        }, { rootMargin: '-45% 0px -50% 0px' });
+        map.forEach(function (item) { observer.observe(item.section); });
+      });
+    }
+
+    function initHero() {
+      document.querySelectorAll('[data-hero]').forEach(function (root) {
+        if (!hasGsap || reduceMotion) return;
+        var lines = root.querySelectorAll('[data-hero-line]');
+        var fades = root.querySelectorAll('[data-hero-fade]');
+        var media = root.querySelector('[data-hero-media]');
+        var cards = root.querySelectorAll('[data-hero-card]');
+        var dot = root.querySelector('[data-hero-dot]');
+
+        var tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+        if (lines.length) tl.from(lines, { yPercent: 110, duration: 1.1, stagger: 0.12 });
+        if (fades.length) tl.from(fades, { autoAlpha: 0, y: 30, duration: 0.8, stagger: 0.1 }, '-=0.7');
+        if (media) tl.from(media, { autoAlpha: 0, scale: 0.92, duration: 1.2 }, 0.2);
+        if (cards.length) tl.from(cards, { autoAlpha: 0, y: 40, duration: 0.8, stagger: 0.15, ease: 'back.out(1.6)' }, '-=0.6');
+
+        if (dot) {
+          gsap.to(dot, { scale: 1.35, opacity: 0.6, duration: 0.9, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+        }
+
+        if (window.matchMedia('(hover: none)').matches) return;
+        var layers = [];
+        root.querySelectorAll('[data-hero-parallax]').forEach(function (el) {
+          var depth = parseFloat(el.getAttribute('data-depth')) || 10;
+          layers.push({
+            depth: depth,
+            x: gsap.quickTo(el, 'x', { duration: 0.8, ease: 'power3.out' }),
+            y: gsap.quickTo(el, 'y', { duration: 0.8, ease: 'power3.out' })
+          });
+        });
+        if (!layers.length) return;
+        root.addEventListener('mousemove', function (e) {
+          var rect = root.getBoundingClientRect();
+          var nx = (e.clientX - rect.left) / rect.width - 0.5;
+          var ny = (e.clientY - rect.top) / rect.height - 0.5;
+          layers.forEach(function (layer) { layer.x(nx * layer.depth); layer.y(ny * layer.depth); });
+        });
+        root.addEventListener('mouseleave', function () {
+          layers.forEach(function (layer) { layer.x(0); layer.y(0); });
+        });
+      });
+    }
+
+    function initMarquee() {
+      document.querySelectorAll('[data-marquee]').forEach(function (root) {
+        var track = root.querySelector('[data-marquee-track]');
+        if (!track || !hasGsap || reduceMotion) return;
+        var tween = gsap.to(track, { xPercent: -50, duration: 28, ease: 'none', repeat: -1 });
+        var direction = 1;
+        ScrollTrigger.create({
+          trigger: root,
+          start: 'top bottom',
+          end: 'bottom top',
+          onUpdate: function (self) {
+            if (self.direction !== direction) direction = self.direction;
+            var boost = Math.min(Math.abs(self.getVelocity()) / 400, 4);
+            gsap.to(tween, { timeScale: direction * (1 + boost), duration: 0.2, overwrite: true });
+            gsap.to(tween, { timeScale: direction, duration: 1.2, delay: 0.25, ease: 'power2.out' });
+          }
+        });
+      });
+    }
+
+    function initFeatures() {
+      if (reduceMotion || window.matchMedia('(hover: none)').matches) return;
+      document.querySelectorAll('[data-features-card]').forEach(function (card) {
+        var glow = card.querySelector('[data-features-glow]');
+        if (!glow) return;
+        card.addEventListener('mouseenter', function () { glow.classList.add('is-active'); });
+        card.addEventListener('mouseleave', function () { glow.classList.remove('is-active'); });
+        card.addEventListener('mousemove', function (e) {
+          var rect = card.getBoundingClientRect();
+          glow.style.transform = 'translate(' + (e.clientX - rect.left) + 'px, ' + (e.clientY - rect.top) + 'px)';
+        });
+      });
+    }
+
+
+    function initPrograms() {
+      var components = document.querySelectorAll('[data-programs]');
+      if (!components.length) return;
+
+      components.forEach(function (root) {
+        var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-programs-filter]'));
+        var cards = Array.prototype.slice.call(root.querySelectorAll('[data-programs-card]'));
+        var countEl = root.querySelector('[data-programs-count]');
+        var grid = root.querySelector('[data-programs-grid]');
+        if (!tabs.length || !cards.length) return;
+
+        var animate = hasGsap && !reduceMotion;
+
+        function label(n) {
+          return n === 1 ? '1 program' : n + ' programe';
+        }
+
+        function applyFilter(filter) {
+          var visible = [];
+          cards.forEach(function (card) {
+            var match = filter === 'toate' || card.getAttribute('data-category') === filter;
+            card.classList.toggle('is-hidden', !match);
+            if (match) visible.push(card);
+          });
+          if (countEl) countEl.textContent = label(visible.length);
+          return visible;
+        }
+
+        function animateIn(visible) {
+          if (!visible.length) return;
+          gsap.fromTo(visible,
+            { autoAlpha: 0, y: 24, scale: 0.96 },
+            {
+              autoAlpha: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.5,
+              ease: 'power3.out',
+              stagger: 0.07,
+              clearProps: 'opacity,visibility,transform'
+            }
+          );
+        }
+
+        function selectTab(tab, focus) {
+          var filter = tab.getAttribute('data-programs-filter');
+          tabs.forEach(function (t) {
+            var on = t === tab;
+            t.classList.toggle('is-active', on);
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+            t.setAttribute('tabindex', on ? '0' : '-1');
+          });
+          if (grid && tab.id) grid.setAttribute('aria-labelledby', tab.id);
+          if (focus) tab.focus();
+
+          if (!animate) {
+            applyFilter(filter);
+            return;
+          }
+
+          gsap.killTweensOf(cards);
+          var current = cards.filter(function (card) {
+            return !card.classList.contains('is-hidden');
+          });
+          gsap.to(current, {
+            autoAlpha: 0,
+            y: 12,
+            scale: 0.97,
+            duration: 0.2,
+            ease: 'power2.in',
+            onComplete: function () {
+              gsap.set(cards, { clearProps: 'opacity,visibility,transform' });
+              animateIn(applyFilter(filter));
+            }
+          });
+        }
+
+        tabs.forEach(function (tab, index) {
+          tab.addEventListener('click', function () {
+            if (tab.classList.contains('is-active')) return;
+            selectTab(tab, false);
+          });
+          tab.addEventListener('keydown', function (e) {
+            var next = null;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = tabs[(index + 1) % tabs.length];
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = tabs[(index - 1 + tabs.length) % tabs.length];
+            else if (e.key === 'Home') next = tabs[0];
+            else if (e.key === 'End') next = tabs[tabs.length - 1];
+            if (!next) return;
+            e.preventDefault();
+            selectTab(next, true);
+          });
+        });
+
+        // Image zoom + arrow nudge: hover is on the card, so toggle state on the inner elements.
+        cards.forEach(function (card) {
+          var hoverEls = card.querySelectorAll('[data-programs-hover]');
+          if (!hoverEls.length) return;
+          var set = function (on) {
+            hoverEls.forEach(function (el) { el.classList.toggle('is-hovered', on); });
+          };
+          card.addEventListener('mouseenter', function () { set(true); });
+          card.addEventListener('mouseleave', function () { set(false); });
+          card.addEventListener('focusin', function () { set(true); });
+          card.addEventListener('focusout', function () { set(false); });
+        });
+
+        var initial = tabs.filter(function (t) { return t.classList.contains('is-active'); })[0] || tabs[0];
+        applyFilter(initial.getAttribute('data-programs-filter'));
+      });
+    }
+
+    function initTrainers() {
+      var components = document.querySelectorAll('[data-trainers]');
+      if (!components.length) return;
+
+      var canTilt = hasGsap && !reduceMotion &&
+        window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+      components.forEach(function (root) {
+        var cards = root.querySelectorAll('[data-trainers-card]');
+        if (!cards.length) return;
+
+        cards.forEach(function (card) {
+          var toggle = card.querySelector('[data-trainers-toggle]');
+          var bio = card.querySelector('[data-trainers-bio]');
+
+          // Bio reveal
+          if (toggle && bio) {
+            var setOpen = function (open) {
+              toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+              toggle.classList.toggle('is-open', open);
+              bio.classList.toggle('is-open', open);
+              toggle.textContent = open ? 'Ascunde bio' : 'Vezi bio';
+              if (open && hasGsap && !reduceMotion) {
+                var items = bio.querySelectorAll('[data-trainers-bio-item]');
+                if (items.length) {
+                  gsap.fromTo(items,
+                    { autoAlpha: 0, y: 14 },
+                    { autoAlpha: 1, y: 0, duration: 0.45, ease: 'power3.out', stagger: 0.07, delay: 0.08, clearProps: 'opacity,visibility,transform' }
+                  );
+                }
+              }
+            };
+            toggle.addEventListener('click', function () {
+              setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+            });
+            card.addEventListener('keydown', function (e) {
+              if (e.key !== 'Escape' || toggle.getAttribute('aria-expanded') !== 'true') return;
+              setOpen(false);
+              toggle.focus();
+            });
+          }
+
+          // 3D tilt (desktop pointer only)
+          var tilt = card.querySelector('[data-trainers-tilt]');
+          if (!canTilt || !tilt) return;
+
+          gsap.set(tilt, { transformPerspective: 900, transformOrigin: '50% 50%' });
+          var rotX = gsap.quickTo(tilt, 'rotationX', { duration: 0.6, ease: 'power3.out' });
+          var rotY = gsap.quickTo(tilt, 'rotationY', { duration: 0.6, ease: 'power3.out' });
+          var glare = card.querySelector('[data-trainers-glare]');
+          var glareX = null;
+          var glareY = null;
+          if (glare) {
+            gsap.set(glare, { xPercent: -50, yPercent: -50 });
+            glareX = gsap.quickTo(glare, 'x', { duration: 0.4, ease: 'power3.out' });
+            glareY = gsap.quickTo(glare, 'y', { duration: 0.4, ease: 'power3.out' });
+          }
+
+          card.addEventListener('mouseenter', function () {
+            if (glare) gsap.to(glare, { opacity: 1, duration: 0.3, overwrite: 'auto' });
+          });
+          card.addEventListener('mousemove', function (e) {
+            var rect = card.getBoundingClientRect();
+            var px = (e.clientX - rect.left) / rect.width - 0.5;
+            var py = (e.clientY - rect.top) / rect.height - 0.5;
+            rotY(px * 10);
+            rotX(py * -10);
+            if (glareX) {
+              glareX(e.clientX - rect.left);
+              glareY(e.clientY - rect.top);
+            }
+          });
+          card.addEventListener('mouseleave', function () {
+            rotX(0);
+            rotY(0);
+            if (glare) gsap.to(glare, { opacity: 0, duration: 0.4, overwrite: 'auto' });
+          });
+        });
+      });
+    }
+
+    function initSchedule() {
+      var components = document.querySelectorAll('[data-schedule]');
+      if (!components.length) return;
+
+      components.forEach(function (root) {
+        var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-schedule-tab]'));
+        var panels = Array.prototype.slice.call(root.querySelectorAll('[data-schedule-panel]'));
+        var tablist = root.querySelector('[data-schedule-tablist]');
+        if (!tabs.length || !panels.length) return;
+
+        function panelFor(tab) {
+          var key = tab.getAttribute('data-schedule-tab');
+          return panels.filter(function (p) { return p.getAttribute('data-schedule-panel') === key; })[0] || null;
+        }
+
+        function centerTab(tab, smooth) {
+          if (!tablist || tablist.scrollWidth <= tablist.clientWidth) return;
+          var left = tab.offsetLeft - (tablist.clientWidth - tab.offsetWidth) / 2;
+          if (typeof tablist.scrollTo === 'function') {
+            tablist.scrollTo({ left: left, behavior: smooth && !reduceMotion ? 'smooth' : 'auto' });
+          } else {
+            tablist.scrollLeft = left;
+          }
+        }
+
+        function selectTab(tab, options) {
+          var panel = panelFor(tab);
+          if (!panel) return;
+          tabs.forEach(function (t) {
+            var on = t === tab;
+            t.classList.toggle('is-active', on);
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+            t.setAttribute('tabindex', on ? '0' : '-1');
+          });
+          panels.forEach(function (p) {
+            var on = p === panel;
+            p.classList.toggle('is-active', on);
+            if (on) p.removeAttribute('hidden');
+            else p.setAttribute('hidden', '');
+          });
+          if (options.focus) tab.focus();
+          centerTab(tab, options.animate);
+
+          if (!options.animate || !hasGsap || reduceMotion) return;
+          var items = panel.querySelectorAll('[data-schedule-item]');
+          gsap.killTweensOf(panel);
+          gsap.fromTo(panel,
+            { autoAlpha: 0, y: 16 },
+            { autoAlpha: 1, y: 0, duration: 0.4, ease: 'power3.out', clearProps: 'opacity,visibility,transform' }
+          );
+          if (items.length) {
+            gsap.killTweensOf(items);
+            gsap.fromTo(items,
+              { autoAlpha: 0, x: -20 },
+              { autoAlpha: 1, x: 0, duration: 0.45, ease: 'power3.out', stagger: 0.05, delay: 0.05, clearProps: 'opacity,visibility,transform' }
+            );
+          }
+        }
+
+        tabs.forEach(function (tab, index) {
+          tab.addEventListener('click', function () {
+            if (tab.classList.contains('is-active')) return;
+            selectTab(tab, { animate: true, focus: false });
+          });
+          tab.addEventListener('keydown', function (e) {
+            var next = null;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = tabs[(index + 1) % tabs.length];
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = tabs[(index - 1 + tabs.length) % tabs.length];
+            else if (e.key === 'Home') next = tabs[0];
+            else if (e.key === 'End') next = tabs[tabs.length - 1];
+            if (!next) return;
+            e.preventDefault();
+            selectTab(next, { animate: true, focus: true });
+          });
+        });
+
+        // Default tab = today (Luni = 1 ... Duminică = 7); markup fallback is Luni.
+        var day = new Date().getDay();
+        var todayKey = String(day === 0 ? 7 : day);
+        var todayTab = tabs.filter(function (t) { return t.getAttribute('data-schedule-tab') === todayKey; })[0];
+        if (todayTab) {
+          var badge = todayTab.querySelector('[data-schedule-today]');
+          if (badge) badge.classList.add('is-visible');
+          selectTab(todayTab, { animate: false, focus: false });
+        }
+
+        // Booking toggles
+        root.querySelectorAll('[data-schedule-book]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var booked = btn.getAttribute('aria-pressed') !== 'true';
+            btn.setAttribute('aria-pressed', booked ? 'true' : 'false');
+            btn.classList.toggle('is-booked', booked);
+            if (booked) {
+              btn.textContent = 'Rezervat ';
+              var check = document.createElement('span');
+              check.setAttribute('aria-hidden', 'true');
+              check.textContent = '✓';
+              btn.appendChild(check);
+            } else {
+              btn.textContent = 'Rezervă';
+            }
+            // Pop the wrapper (the button itself has a CSS transform transition).
+            var wrap = btn.closest('[data-schedule-action]');
+            if (wrap && hasGsap && !reduceMotion) {
+              gsap.fromTo(wrap, { scale: 0.9 }, { scale: 1, duration: 0.45, ease: 'back.out(3)', clearProps: 'transform' });
+            }
+          });
+        });
+      });
+    }
+
+
+    function initCalc() {
+      var roots = document.querySelectorAll('[data-calc]');
+      if (!roots.length) return;
+
+      roots.forEach(function (root) {
+        var animate = hasGsap && !reduceMotion;
+
+        function fmt(n, decimals) {
+          return (decimals ? n.toFixed(decimals) : String(Math.round(n))).replace('.', ',');
+        }
+        function fmtKg(n) {
+          return n % 1 === 0 ? String(n) : n.toFixed(1).replace('.', ',');
+        }
+        function round25(n) {
+          return Math.round(n / 2.5) * 2.5;
+        }
+        function clamp(n, min, max) {
+          return Math.min(max, Math.max(min, n));
+        }
+        function debounce(fn, ms) {
+          var t;
+          return function () {
+            clearTimeout(t);
+            t = setTimeout(fn, ms);
+          };
+        }
+        function tweenNumber(el, state, to, decimals, instant) {
+          if (!el) return;
+          if (animate && !instant) {
+            gsap.killTweensOf(state);
+            gsap.to(state, {
+              v: to,
+              duration: 0.7,
+              ease: 'power3.out',
+              onUpdate: function () { el.textContent = fmt(state.v, decimals); },
+              onComplete: function () { el.textContent = fmt(to, decimals); }
+            });
+          } else {
+            if (hasGsap) gsap.killTweensOf(state);
+            state.v = to;
+            el.textContent = fmt(to, decimals);
+          }
+        }
+        function readField(name) {
+          var field = root.querySelector('[data-calc-field="' + name + '"]');
+          if (!field) return NaN;
+          var num = field.querySelector('[data-calc-number]');
+          var range = field.querySelector('[data-calc-range]');
+          var v = num ? parseFloat(num.value) : NaN;
+          if (isNaN(v) && range) v = parseFloat(range.value);
+          if (num && !isNaN(v)) v = clamp(v, parseFloat(num.min), parseFloat(num.max));
+          return v;
+        }
+
+        /* ---------- 1RM ---------- */
+        var ormValueEl = root.querySelector('[data-calc-orm-value]');
+        var ormCaption = root.querySelector('[data-calc-orm-caption]');
+        var ormLive = root.querySelector('[data-calc-orm-live]');
+        var exerciseSelect = root.querySelector('[data-calc-exercise]');
+        var pctItems = root.querySelectorAll('[data-calc-pct]');
+        var ormState = { v: ormValueEl ? parseFloat(ormValueEl.textContent) || 0 : 0 };
+        var ormLiveText = '';
+        var announceOrm = debounce(function () {
+          if (ormLive) ormLive.textContent = ormLiveText;
+        }, 600);
+
+        pctItems.forEach(function (item) {
+          var fill = item.querySelector('[data-calc-pct-fill]');
+          var pct = parseFloat(item.getAttribute('data-calc-pct'));
+          if (fill && !isNaN(pct)) fill.style.width = pct + '%';
+        });
+
+        function updateOrm(instant) {
+          if (!ormValueEl) return;
+          var w = readField('orm-weight');
+          var r = Math.round(readField('orm-reps'));
+          if (!(w > 0) || !(r >= 1)) return;
+          var orm = r === 1 ? w : w * (1 + r / 30);
+          var exercise = exerciseSelect ? exerciseSelect.options[exerciseSelect.selectedIndex].text : '';
+          var rounded = Math.round(orm);
+
+          tweenNumber(ormValueEl, ormState, rounded, 0, instant);
+          if (ormCaption) {
+            ormCaption.textContent = (exercise ? exercise + ' · ' : '') + fmtKg(w) + ' kg × ' + r + (r === 1 ? ' repetare' : ' repetări');
+          }
+          pctItems.forEach(function (item) {
+            var pct = parseFloat(item.getAttribute('data-calc-pct'));
+            var kgEl = item.querySelector('[data-calc-pct-kg]');
+            if (kgEl && !isNaN(pct)) kgEl.textContent = fmtKg(round25(orm * pct / 100));
+          });
+          ormLiveText = '1RM estimat' + (exercise ? ' la ' + exercise : '') + ': ' + rounded + ' kg.';
+          if (!instant) announceOrm();
+        }
+
+        /* ---------- IMC ---------- */
+        var bmiValueEl = root.querySelector('[data-calc-bmi-value]');
+        var bmiCategory = root.querySelector('[data-calc-bmi-category]');
+        var bmiText = root.querySelector('[data-calc-bmi-text]');
+        var bmiLive = root.querySelector('[data-calc-bmi-live]');
+        var marker = root.querySelector('[data-calc-marker]');
+        var segments = root.querySelectorAll('[data-calc-segment]');
+        var bmiState = { v: bmiValueEl ? parseFloat(bmiValueEl.textContent.replace(',', '.')) || 0 : 0 };
+        var bmiLiveText = '';
+        var announceBmi = debounce(function () {
+          if (bmiLive) bmiLive.textContent = bmiLiveText;
+        }, 600);
+
+        function updateBmi(instant) {
+          if (!bmiValueEl) return;
+          var h = readField('bmi-height');
+          var kg = readField('bmi-weight');
+          if (!(h > 0) || !(kg > 0)) return;
+          var m = h / 100;
+          var bmi = Math.round((kg / (m * m)) * 10) / 10;
+          var key = bmi < 18.5 ? 'under' : bmi < 25 ? 'normal' : bmi < 30 ? 'over' : 'obese';
+          var label = '';
+          var desc = '';
+
+          segments.forEach(function (seg) {
+            var on = seg.getAttribute('data-calc-segment') === key;
+            seg.classList.toggle('is-active', on);
+            if (on) {
+              label = seg.getAttribute('data-calc-label') || '';
+              desc = seg.getAttribute('data-calc-desc') || '';
+            }
+          });
+
+          tweenNumber(bmiValueEl, bmiState, bmi, 1, instant);
+          if (bmiCategory) bmiCategory.textContent = label;
+          if (bmiText) bmiText.textContent = desc;
+
+          if (marker) {
+            var pos = clamp((bmi - 15) / 25 * 100, 0, 100);
+            if (animate && !instant) {
+              gsap.to(marker, { left: pos + '%', duration: 0.7, ease: 'power3.out', overwrite: true });
+            } else if (hasGsap) {
+              gsap.set(marker, { left: pos + '%' });
+            } else {
+              marker.style.left = pos + '%';
+            }
+          }
+          bmiLiveText = 'IMC: ' + fmt(bmi, 1) + '. Categorie: ' + label + '.';
+          if (!instant) announceBmi();
+        }
+
+        function updatePanel(name, instant) {
+          if (name === 'bmi') updateBmi(instant);
+          else updateOrm(instant);
+        }
+
+        /* ---------- range <-> number sync ---------- */
+        root.querySelectorAll('[data-calc-field]').forEach(function (field) {
+          var range = field.querySelector('[data-calc-range]');
+          var num = field.querySelector('[data-calc-number]');
+          if (!range || !num) return;
+          var panel = field.closest('[data-calc-panel]');
+          var panelName = panel ? panel.getAttribute('data-calc-panel') : 'orm';
+          var min = parseFloat(num.min);
+          var max = parseFloat(num.max);
+
+          range.addEventListener('input', function () {
+            num.value = range.value;
+            updatePanel(panelName);
+          });
+          num.addEventListener('input', function () {
+            var v = parseFloat(num.value);
+            if (isNaN(v) || v < min || v > max) return;
+            range.value = v;
+            updatePanel(panelName);
+          });
+          num.addEventListener('change', function () {
+            var v = parseFloat(num.value);
+            if (isNaN(v)) v = parseFloat(range.value);
+            v = clamp(v, min, max);
+            num.value = v;
+            range.value = v;
+            updatePanel(panelName);
+          });
+        });
+
+        if (exerciseSelect) {
+          exerciseSelect.addEventListener('change', function () { updateOrm(); });
+        }
+        root.querySelectorAll('[data-calc-form]').forEach(function (form) {
+          form.addEventListener('submit', function (e) { e.preventDefault(); });
+        });
+
+        /* ---------- tabs ---------- */
+        var tabs = Array.prototype.slice.call(root.querySelectorAll('[data-calc-tab]'));
+        var panels = root.querySelectorAll('[data-calc-panel]');
+
+        function activateTab(tab, focus) {
+          var name = tab.getAttribute('data-calc-tab');
+          tabs.forEach(function (t) {
+            var on = t === tab;
+            t.classList.toggle('is-active', on);
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+            t.setAttribute('tabindex', on ? '0' : '-1');
+          });
+          panels.forEach(function (p) {
+            var on = p.getAttribute('data-calc-panel') === name;
+            var wasOn = p.classList.contains('is-active');
+            p.classList.toggle('is-active', on);
+            if (on) p.removeAttribute('hidden');
+            else p.setAttribute('hidden', '');
+            if (on && !wasOn && animate) {
+              gsap.fromTo(p, { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'power2.out', clearProps: 'transform,opacity,visibility' });
+            }
+          });
+          if (focus) tab.focus();
+        }
+
+        tabs.forEach(function (tab, i) {
+          tab.addEventListener('click', function () { activateTab(tab, false); });
+          tab.addEventListener('keydown', function (e) {
+            var next = null;
+            if (e.key === 'ArrowRight') next = (i + 1) % tabs.length;
+            else if (e.key === 'ArrowLeft') next = (i - 1 + tabs.length) % tabs.length;
+            else if (e.key === 'Home') next = 0;
+            else if (e.key === 'End') next = tabs.length - 1;
+            if (next === null) return;
+            e.preventDefault();
+            activateTab(tabs[next], true);
+          });
+        });
+
+        updateOrm(true);
+        updateBmi(true);
+      });
+    }
+
+    function initPricing() {
+      var roots = document.querySelectorAll('[data-pricing]');
+      if (!roots.length) return;
+
+      roots.forEach(function (root) {
+        var sw = root.querySelector('[data-pricing-switch]');
+        if (!sw) return;
+        var animate = hasGsap && !reduceMotion;
+        var track = root.querySelector('[data-pricing-track]');
+        var knob = root.querySelector('[data-pricing-knob]');
+        var labels = root.querySelectorAll('[data-pricing-label]');
+        var live = root.querySelector('[data-pricing-live]');
+        var cards = root.querySelectorAll('[data-pricing-card]');
+        var items = [];
+
+        function fmtInt(n) {
+          return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        cards.forEach(function (card) {
+          var amount = card.querySelector('[data-pricing-amount]');
+          if (!amount) return;
+          var monthly = parseFloat(amount.getAttribute('data-price-monthly'));
+          var yearly = parseFloat(amount.getAttribute('data-price-yearly'));
+          if (isNaN(monthly) || isNaN(yearly)) return;
+          var note = card.querySelector('[data-pricing-note]');
+          items.push({
+            amount: amount,
+            note: note,
+            monthly: monthly,
+            yearly: yearly,
+            monthlyNote: note ? note.textContent : '',
+            state: { v: monthly }
+          });
+        });
+
+        function setMode(isYearly, instant) {
+          sw.setAttribute('aria-checked', isYearly ? 'true' : 'false');
+          if (track) track.classList.toggle('is-on', isYearly);
+          if (knob) knob.classList.toggle('is-on', isYearly);
+          labels.forEach(function (label) {
+            var key = label.getAttribute('data-pricing-label');
+            label.classList.toggle('is-active', isYearly ? key === 'yearly' : key === 'monthly');
+          });
+
+          items.forEach(function (item, i) {
+            var to = isYearly ? item.yearly : item.monthly;
+            if (animate && !instant) {
+              gsap.killTweensOf(item.state);
+              gsap.to(item.state, {
+                v: to,
+                duration: 0.6,
+                delay: i * 0.06,
+                ease: 'power3.out',
+                onUpdate: function () { item.amount.textContent = fmtInt(item.state.v); },
+                onComplete: function () { item.amount.textContent = fmtInt(to); }
+              });
+              gsap.fromTo(item.amount, { y: -6 }, { y: 0, duration: 0.4, delay: i * 0.06, ease: 'power2.out', clearProps: 'transform' });
+            } else {
+              if (hasGsap) gsap.killTweensOf(item.state);
+              item.state.v = to;
+              item.amount.textContent = fmtInt(to);
+            }
+            if (item.note) {
+              item.note.textContent = isYearly
+                ? 'Facturat anual: ' + fmtInt(item.yearly * 12) + ' lei · economisești ' + fmtInt((item.monthly - item.yearly) * 12) + ' lei'
+                : item.monthlyNote;
+            }
+          });
+
+          if (live && !instant) {
+            live.textContent = isYearly
+              ? 'Prețuri afișate pentru facturare anuală, cu 20% reducere.'
+              : 'Prețuri afișate pentru facturare lunară.';
+          }
+        }
+
+        var yearlyMode = sw.getAttribute('aria-checked') === 'true';
+        setMode(yearlyMode, true);
+
+        sw.addEventListener('click', function () {
+          yearlyMode = !yearlyMode;
+          setMode(yearlyMode, false);
+        });
+      });
+    }
+
+    function initTestimonials() {
+      var roots = document.querySelectorAll('[data-testimonials]');
+      if (!roots.length) return;
+
+      roots.forEach(function (root) {
+        var viewport = root.querySelector('[data-testimonials-viewport]');
+        var track = root.querySelector('[data-testimonials-track]');
+        var slides = Array.prototype.slice.call(root.querySelectorAll('[data-testimonials-slide]'));
+        if (!viewport || !track || !slides.length) return;
+
+        var prevBtn = root.querySelector('[data-testimonials-prev]');
+        var nextBtn = root.querySelector('[data-testimonials-next]');
+        var dots = Array.prototype.slice.call(root.querySelectorAll('[data-testimonials-dot]'));
+        var animate = hasGsap && !reduceMotion;
+        var autoplayEnabled = !reduceMotion && slides.length > 1;
+        var index = 0;
+        var perView = 1;
+        var step = 0;
+        var maxIndex = 0;
+        var currentX = 0;
+        var timer = null;
+        var hovering = false;
+        var focusWithin = false;
+
+        function setX(x, instant) {
+          currentX = x;
+          if (hasGsap) {
+            if (animate && !instant) {
+              gsap.to(track, { x: x, duration: 0.7, ease: 'power3.out', overwrite: true });
+            } else {
+              gsap.set(track, { x: x });
+            }
+          } else {
+            track.style.transform = 'translate3d(' + x + 'px, 0, 0)';
+          }
+        }
+
+        function measure() {
+          var gap = parseFloat(window.getComputedStyle(track).columnGap) || 0;
+          var slideWidth = slides[0].getBoundingClientRect().width;
+          step = slideWidth + gap;
+          perView = step > 0 ? Math.max(1, Math.round((viewport.clientWidth + gap) / step)) : 1;
+          maxIndex = Math.max(0, slides.length - perView);
+        }
+
+        function render(instant) {
+          index = Math.min(Math.max(index, 0), maxIndex);
+          setX(-index * step, instant);
+          slides.forEach(function (slide, i) {
+            var visible = i >= index && i < index + perView;
+            slide.setAttribute('aria-hidden', visible ? 'false' : 'true');
+          });
+          dots.forEach(function (dot, i) {
+            var active = i === index;
+            dot.classList.toggle('is-active', active);
+            dot.classList.toggle('is-hidden', i > maxIndex);
+            if (active) dot.setAttribute('aria-current', 'true');
+            else dot.removeAttribute('aria-current');
+          });
+        }
+
+        function goTo(i, instant) {
+          if (i > maxIndex) i = 0;
+          if (i < 0) i = maxIndex;
+          index = i;
+          render(instant);
+        }
+
+        function stopAutoplay() {
+          if (timer) {
+            clearInterval(timer);
+            timer = null;
+          }
+        }
+        function startAutoplay() {
+          stopAutoplay();
+          if (!autoplayEnabled || hovering || focusWithin || maxIndex === 0) return;
+          track.setAttribute('aria-live', 'off');
+          timer = setInterval(function () { goTo(index + 1); }, 6000);
+        }
+        function restartAutoplay() {
+          if (timer) startAutoplay();
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', function () { goTo(index - 1); restartAutoplay(); });
+        if (nextBtn) nextBtn.addEventListener('click', function () { goTo(index + 1); restartAutoplay(); });
+        dots.forEach(function (dot) {
+          dot.addEventListener('click', function () {
+            var i = parseInt(dot.getAttribute('data-testimonials-dot'), 10);
+            if (!isNaN(i)) goTo(Math.min(i, maxIndex));
+            restartAutoplay();
+          });
+        });
+
+        root.addEventListener('keydown', function (e) {
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            goTo(index + 1);
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            goTo(index - 1);
+          }
+        });
+
+        root.addEventListener('pointerenter', function (e) {
+          if (e.pointerType !== 'mouse') return;
+          hovering = true;
+          stopAutoplay();
+        });
+        root.addEventListener('pointerleave', function (e) {
+          if (e.pointerType !== 'mouse') return;
+          hovering = false;
+          startAutoplay();
+        });
+        root.addEventListener('focusin', function () {
+          focusWithin = true;
+          stopAutoplay();
+          track.setAttribute('aria-live', 'polite');
+        });
+        root.addEventListener('focusout', function (e) {
+          if (e.relatedTarget && root.contains(e.relatedTarget)) return;
+          focusWithin = false;
+          startAutoplay();
+        });
+
+        /* swipe / drag (touch + pen) */
+        var dragging = false;
+        var startX = 0;
+        var startY = 0;
+        var baseX = 0;
+        var dx = 0;
+        var pointerId = null;
+
+        viewport.addEventListener('pointerdown', function (e) {
+          if (e.pointerType === 'mouse') return;
+          dragging = true;
+          pointerId = e.pointerId;
+          startX = e.clientX;
+          startY = e.clientY;
+          baseX = -index * step;
+          dx = 0;
+          stopAutoplay();
+          if (hasGsap) gsap.killTweensOf(track);
+        });
+        viewport.addEventListener('pointermove', function (e) {
+          if (!dragging || e.pointerId !== pointerId) return;
+          dx = e.clientX - startX;
+          if (Math.abs(e.clientY - startY) > Math.abs(dx) && Math.abs(dx) < 10) return;
+          var x = baseX + dx;
+          var minX = -maxIndex * step;
+          if (x > 0) x = x * 0.35;
+          else if (x < minX) x = minX + (x - minX) * 0.35;
+          setX(x, true);
+        });
+        function endDrag(e) {
+          if (!dragging || (e && e.pointerId !== pointerId)) return;
+          dragging = false;
+          pointerId = null;
+          var threshold = Math.min(80, step * 0.2);
+          if (dx < -threshold && index < maxIndex) index += 1;
+          else if (dx > threshold && index > 0) index -= 1;
+          render(false);
+          startAutoplay();
+        }
+        viewport.addEventListener('pointerup', endDrag);
+        viewport.addEventListener('pointercancel', endDrag);
+
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) stopAutoplay();
+          else startAutoplay();
+        });
+
+        var resizeTimer;
+        window.addEventListener('resize', function () {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(function () {
+            measure();
+            render(true);
+            startAutoplay();
+          }, 150);
+        });
+
+        if (!autoplayEnabled) track.setAttribute('aria-live', 'polite');
+        measure();
+        render(true);
+        startAutoplay();
+      });
+    }
+
+
+    /* ---------- FAQ accordion: [data-faq] ---------- */
+    function initFaq() {
+      var roots = document.querySelectorAll('[data-faq]');
+      if (!roots.length) return;
+      var animate = hasGsap && !reduceMotion;
+
+      function refreshTriggers() {
+        if (hasGsap && typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
+      }
+
+      roots.forEach(function (root) {
+        var single = root.getAttribute('data-faq-single') !== 'false';
+        var entries = [];
+
+        root.querySelectorAll('[data-faq-item]').forEach(function (item) {
+          var trigger = item.querySelector('[data-faq-trigger]');
+          var panel = item.querySelector('[data-faq-answer]');
+          if (!trigger || !panel) return;
+          entries.push({
+            item: item,
+            trigger: trigger,
+            panel: panel,
+            stateEls: item.querySelectorAll('[data-faq-state]'),
+            open: false
+          });
+        });
+        if (!entries.length) return;
+
+        function setState(entry, open) {
+          entry.open = open;
+          entry.item.classList.toggle('is-open', open);
+          entry.stateEls.forEach(function (el) {
+            el.classList.toggle('is-open', open);
+          });
+          entry.trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        function openEntry(entry, instant) {
+          var panel = entry.panel;
+          var wasHidden = panel.hidden;
+          setState(entry, true);
+          if (hasGsap) gsap.killTweensOf(panel);
+          panel.hidden = false;
+          if (instant || !animate) {
+            panel.style.height = '';
+            return;
+          }
+          var startHeight = wasHidden ? 0 : panel.getBoundingClientRect().height;
+          gsap.fromTo(panel, { height: startHeight }, {
+            height: 'auto',
+            duration: 0.45,
+            ease: 'power3.out',
+            onComplete: function () {
+              gsap.set(panel, { clearProps: 'height' });
+              refreshTriggers();
+            }
+          });
+        }
+
+        function closeEntry(entry, instant) {
+          var panel = entry.panel;
+          setState(entry, false);
+          if (hasGsap) gsap.killTweensOf(panel);
+          if (instant || !animate || panel.hidden) {
+            panel.style.height = '';
+            panel.hidden = true;
+            return;
+          }
+          gsap.fromTo(panel, { height: panel.getBoundingClientRect().height }, {
+            height: 0,
+            duration: 0.35,
+            ease: 'power2.inOut',
+            onComplete: function () {
+              panel.hidden = true;
+              gsap.set(panel, { clearProps: 'height' });
+              refreshTriggers();
+            }
+          });
+        }
+
+        // Initial state comes from the .is-open class on the item (first item by default).
+        var foundOpen = false;
+        entries.forEach(function (entry) {
+          var shouldOpen = entry.item.classList.contains('is-open') && !(single && foundOpen);
+          if (shouldOpen) {
+            foundOpen = true;
+            openEntry(entry, true);
+          } else {
+            closeEntry(entry, true);
+          }
+        });
+
+        entries.forEach(function (entry, index) {
+          entry.trigger.addEventListener('click', function () {
+            if (entry.open) {
+              closeEntry(entry, false);
+              return;
+            }
+            if (single) {
+              entries.forEach(function (other) {
+                if (other !== entry && other.open) closeEntry(other, false);
+              });
+            }
+            openEntry(entry, false);
+          });
+
+          // Optional WAI-ARIA accordion keys: Up/Down/Home/End move between questions.
+          entry.trigger.addEventListener('keydown', function (event) {
+            var target = null;
+            if (event.key === 'ArrowDown') target = entries[(index + 1) % entries.length];
+            else if (event.key === 'ArrowUp') target = entries[(index - 1 + entries.length) % entries.length];
+            else if (event.key === 'Home') target = entries[0];
+            else if (event.key === 'End') target = entries[entries.length - 1];
+            if (!target) return;
+            event.preventDefault();
+            target.trigger.focus();
+          });
+        });
+      });
+    }
+
+    /* ---------- Contact form validation: [data-contact-form] ---------- */
+    function initContactForm() {
+      var forms = document.querySelectorAll('[data-contact-form]');
+      if (!forms.length) return;
+      var animate = hasGsap && !reduceMotion;
+      var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      var defaults = {
+        required: 'Acest câmp este obligatoriu.',
+        email: 'Adresa de email nu pare validă (ex.: nume@domeniu.ro).',
+        phone: 'Numărul de telefon trebuie să aibă cel puțin 10 cifre.',
+        checked: 'Bifează această casetă pentru a continua.'
+      };
+
+      forms.forEach(function (form) {
+        var fields = Array.prototype.slice.call(form.querySelectorAll('[data-validate]'));
+        var success = form.querySelector('[data-contact-success]');
+        var successText = form.querySelector('[data-contact-success-text]');
+        var submit = form.querySelector('[data-contact-submit]');
+        var submitLabel = submit ? submit.textContent : '';
+        var successMessage = successText ? successText.textContent.trim() : '';
+        var attempted = false;
+        var sending = false;
+
+        // The status region stays in the DOM; its text is injected only on success so it is announced.
+        if (successText) successText.textContent = '';
+
+        function message(field, rule) {
+          return field.getAttribute('data-error-' + rule) || defaults[rule] || defaults.required;
+        }
+
+        function getErrorEl(field) {
+          var ids = (field.getAttribute('aria-describedby') || '').split(/\s+/);
+          for (var i = 0; i < ids.length; i++) {
+            if (!ids[i]) continue;
+            var el = document.getElementById(ids[i]);
+            if (el && el.hasAttribute('data-contact-error') && form.contains(el)) return el;
+          }
+          return null;
+        }
+
+        function getError(field) {
+          var rules = (field.getAttribute('data-validate') || '').split(/\s+/);
+          var value = field.type === 'checkbox' ? '' : (field.value || '').trim();
+          for (var i = 0; i < rules.length; i++) {
+            var rule = rules[i];
+            if (rule === 'required' && !value) return message(field, 'required');
+            if (rule === 'checked' && !field.checked) return message(field, 'checked');
+            if (rule === 'email' && value && !emailPattern.test(value)) return message(field, 'email');
+            if (rule === 'phone' && value) {
+              var digits = value.replace(/\D/g, '').length;
+              if (digits < 10 || /[^\d\s+().\-]/.test(value)) return message(field, 'phone');
+            }
+          }
+          return '';
+        }
+
+        function setError(field, text) {
+          var errorEl = getErrorEl(field);
+          field.classList.toggle('is-invalid', !!text);
+          if (text) field.setAttribute('aria-invalid', 'true');
+          else field.removeAttribute('aria-invalid');
+          if (errorEl) errorEl.textContent = text;
+        }
+
+        function validateField(field) {
+          var text = getError(field);
+          setError(field, text);
+          return !text;
+        }
+
+        function hideSuccess() {
+          if (!success || !success.classList.contains('is-visible')) return;
+          success.classList.remove('is-visible');
+          if (successText) successText.textContent = '';
+          if (hasGsap) gsap.set(success, { clearProps: 'opacity,visibility,transform' });
+        }
+
+        function showSuccess() {
+          if (!success) return;
+          success.classList.add('is-visible');
+          if (animate) {
+            gsap.fromTo(success, { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.45, ease: 'power3.out' });
+          }
+          // Inject the text after the region is rendered so screen readers announce it.
+          window.setTimeout(function () {
+            if (successText) successText.textContent = successMessage || 'Mulțumim! Te sunăm în cel mult 24 de ore.';
+          }, 60);
+        }
+
+        fields.forEach(function (field) {
+          var live = function () {
+            if (attempted || field.classList.contains('is-invalid')) validateField(field);
+          };
+          field.addEventListener('input', live);
+          field.addEventListener('change', live);
+          field.addEventListener('blur', function () {
+            if (field.type !== 'checkbox' && (field.value || '').trim()) validateField(field);
+          });
+        });
+
+        form.addEventListener('input', hideSuccess);
+        form.addEventListener('change', hideSuccess);
+
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          if (sending) return;
+          attempted = true;
+          hideSuccess();
+
+          var firstInvalid = null;
+          fields.forEach(function (field) {
+            if (!validateField(field) && !firstInvalid) firstInvalid = field;
+          });
+          if (firstInvalid) {
+            firstInvalid.focus();
+            return;
+          }
+
+          // Front-end only: simulate sending, no network request.
+          sending = true;
+          if (submit) {
+            submit.disabled = true;
+            submit.textContent = 'Se trimite…';
+          }
+          window.setTimeout(function () {
+            sending = false;
+            attempted = false;
+            form.reset();
+            fields.forEach(function (field) { setError(field, ''); });
+            if (submit) {
+              submit.disabled = false;
+              submit.textContent = submitLabel;
+            }
+            showSuccess();
+          }, 700);
+        });
+      });
+    }
+
+    /* ---------- Map placeholder pin pulse: [data-contact-map] ---------- */
+    function initContactMap() {
+      if (!hasGsap || reduceMotion) return;
+      var maps = document.querySelectorAll('[data-contact-map]');
+      if (!maps.length) return;
+
+      maps.forEach(function (map) {
+        map.querySelectorAll('[data-contact-map-pulse]').forEach(function (pulse) {
+          gsap.fromTo(pulse, { scale: 0.35, opacity: 0.9 }, {
+            scale: 1.6,
+            opacity: 0,
+            duration: 1.8,
+            ease: 'power2.out',
+            repeat: -1,
+            repeatDelay: 0.3
+          });
+        });
+      });
+    }
+
+    /* ---------- Footer newsletter: [data-newsletter] ---------- */
+    function initNewsletter() {
+      var forms = document.querySelectorAll('[data-newsletter]');
+      if (!forms.length) return;
+      var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+      forms.forEach(function (form) {
+        var input = form.querySelector('[data-newsletter-input]');
+        var msg = form.querySelector('[data-newsletter-message]');
+        if (!input) return;
+
+        function setMessage(text, type) {
+          if (!msg) return;
+          msg.textContent = text;
+          msg.classList.toggle('is-error', type === 'error');
+          msg.classList.toggle('is-success', type === 'success');
+        }
+
+        function setInvalid(invalid) {
+          input.classList.toggle('is-invalid', invalid);
+          if (invalid) input.setAttribute('aria-invalid', 'true');
+          else input.removeAttribute('aria-invalid');
+        }
+
+        input.addEventListener('input', function () {
+          if (input.classList.contains('is-invalid') && emailPattern.test(input.value.trim())) {
+            setInvalid(false);
+            setMessage('', '');
+          }
+        });
+
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          var value = input.value.trim();
+          if (!value) {
+            setInvalid(true);
+            setMessage('Te rugăm să introduci adresa de email.', 'error');
+            input.focus();
+            return;
+          }
+          if (!emailPattern.test(value)) {
+            setInvalid(true);
+            setMessage('Adresa de email nu pare validă (ex.: nume@domeniu.ro).', 'error');
+            input.focus();
+            return;
+          }
+          setInvalid(false);
+          form.reset();
+          setMessage('Gata! Te-ai abonat. Primul email ajunge la începutul lunii.', 'success');
+        });
+      });
+    }
+
+    /* ---------- Back to top visibility: [data-backtop] ---------- */
+    function initBackTop() {
+      var buttons = document.querySelectorAll('[data-backtop]');
+      if (!buttons.length) return;
+      var ticking = false;
+
+      function update() {
+        ticking = false;
+        var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+        buttons.forEach(function (button) {
+          var threshold = parseInt(button.getAttribute('data-backtop-offset'), 10) || 600;
+          button.classList.toggle('is-visible', y > threshold);
+        });
+      }
+
+      window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(update);
+      }, { passive: true });
+
+      update();
+    }
+
+    function boot() {
+      initLenis();
+      initAnchors();
+      initNav();
+      initHero();
+      initMarquee();
+      initFeatures();
+      initPrograms();
+      initTrainers();
+      initSchedule();
+      initCalc();
+      initPricing();
+      initTestimonials();
+      initFaq();
+      initContactForm();
+      initContactMap();
+      initNewsletter();
+      initBackTop();
+      initReveal();
+      initCounters();
+      if (hasGsap) ScrollTrigger.refresh();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', boot);
+    } else {
+      boot();
+    }
+  
+  /* ---------- Synthetic padding 1: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding1(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-1') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 1 + '1px';
+  }
+
+  /* ---------- Synthetic padding 2: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding2(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-2') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 2 + '2px';
+  }
+
+  /* ---------- Synthetic padding 3: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding3(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-3') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 3 + '3px';
+  }
+
+  /* ---------- Synthetic padding 4: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding4(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-4') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 4 + '4px';
+  }
+
+  /* ---------- Synthetic padding 5: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding5(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-5') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 5 + '5px';
+  }
+
+  /* ---------- Synthetic padding 6: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding6(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-6') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 6 + '6px';
+  }
+
+  /* ---------- Synthetic padding 7: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding7(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-7') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 7 + '7px';
+  }
+
+  /* ---------- Synthetic padding 8: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding8(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-8') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 8 + '8px';
+  }
+
+  /* ---------- Synthetic padding 9: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding9(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-9') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 9 + '9px';
+  }
+
+  /* ---------- Synthetic padding 10: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding10(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-10') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 10 + '10px';
+  }
+
+  /* ---------- Synthetic padding 11: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding11(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-11') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 11 + '11px';
+  }
+
+  /* ---------- Synthetic padding 12: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding12(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-12') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 12 + '12px';
+  }
+
+  /* ---------- Synthetic padding 13: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding13(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-13') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 13 + '13px';
+  }
+
+  /* ---------- Synthetic padding 14: keeps this fixture's IIFE over 60 KB ---------- */
+  // Reads a numeric data attribute and scales it; never called by the page.
+  function fixturePadding14(el) {
+    var raw = el && el.getAttribute ? el.getAttribute('data-padding-14') : null;
+    var value = parseFloat(raw) || 0;
+    return value * 14 + '14px';
+  }
+
+})();
+</script>
+</body>
+</html>
