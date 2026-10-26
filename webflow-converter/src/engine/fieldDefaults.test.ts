@@ -19,7 +19,7 @@ describe('native field defaults (.w-input / .w-select / .w-checkbox)', () => {
     expect(s).toContain('background-color: #ffffff;'); // .w-select is #f3f3f3
     expect(s).toContain('color: #000000;');
     expect(s).toContain('border-top-color: #767676;');
-    expect(s).toContain('font-size: 13.3333px;');
+    expect(s).toContain('font-size: 0.8333rem;');
     expect(s).toContain('line-height: normal;');
     expect(s).toContain('padding-top: 1rem;');
     expect(s).not.toMatch(/padding-top: 0px/);
@@ -31,7 +31,7 @@ describe('native field defaults (.w-input / .w-select / .w-checkbox)', () => {
     const res = run('<input class="f" name="a">', css);
     const st = style(res, 'f');
     expect(st.styleLess).toBe(
-      'display: block; width: 100%; height: 3rem; margin-top: 0; margin-right: 0; margin-bottom: 1rem; margin-left: 0; padding-top: .5rem; padding-right: .5rem; padding-bottom: .5rem; padding-left: .5rem; border-top-style: solid; border-top-width: 2px; border-top-color: #0a0; border-right-style: solid; border-right-width: 2px; border-right-color: #0a0; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #0a0; border-left-style: solid; border-left-width: 2px; border-left-color: #0a0; background-color: #fff; color: #111; font: 16px/1.5 Inter, sans-serif; vertical-align: top;',
+      'display: block; width: 100%; height: 3rem; margin-top: 0; margin-right: 0; margin-bottom: 1rem; margin-left: 0; padding-top: .5rem; padding-right: .5rem; padding-bottom: .5rem; padding-left: .5rem; border-top-style: solid; border-top-width: 2px; border-top-color: #0a0; border-right-style: solid; border-right-width: 2px; border-right-color: #0a0; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #0a0; border-left-style: solid; border-left-width: 2px; border-left-color: #0a0; background-color: #fff; color: #111; font: 1rem/1.5 Inter, sans-serif; vertical-align: top;',
     );
     expect(st.variants.main_focus).toEqual({ styleLess: 'border-top-color: #0a0; border-right-color: #0a0; border-bottom-color: #0a0; border-left-color: #0a0;' });
   });
@@ -43,7 +43,7 @@ describe('native field defaults (.w-input / .w-select / .w-checkbox)', () => {
 
   it('copies a weaker tag rule the .w-input class would beat', () => {
     const res = run('<input class="f" name="a">', 'input { height: 44px } .f { padding: 1rem }');
-    expect(style(res, 'f').styleLess).toContain('height: 44px;');
+    expect(style(res, 'f').styleLess).toContain('height: 2.75rem;');
   });
 
   it('does not add height to a textarea (textarea.w-input is height: auto)', () => {
@@ -64,7 +64,7 @@ describe('native field defaults (.w-input / .w-select / .w-checkbox)', () => {
   it('cancels the .w-checkbox-input float and offset, and the bare wrapper padding', () => {
     const res = run('<input type="checkbox" class="cb" name="ok">', '.cb { width: 1rem; height: 1rem }');
     expect(style(res, 'cb').styleLess).toContain('float: none;');
-    expect(style(res, 'cb').styleLess).toContain('margin-left: 4px;');
+    expect(style(res, 'cb').styleLess).toContain('margin-left: 0.25rem;');
     expect(classNames(res, first(res, 'FormCheckboxWrapper'))).toEqual(['checkbox-field']);
     expect(style(res, 'checkbox-field').styleLess).toBe('display: inline; margin-bottom: 0px; padding-left: 0px;');
   });

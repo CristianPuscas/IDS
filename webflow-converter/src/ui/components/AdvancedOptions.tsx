@@ -62,6 +62,11 @@ const COMBO_CHOICES: Choice<'unique' | 'keep'>[] = [
   { value: 'keep', label: 'Keep names', hint: 'Combos keep their names. If your site has a combo of the same name, Webflow merges them and your site’s styles win.' },
 ];
 
+const UNIT_CHOICES: Choice<AdvancedOptions['units']>[] = [
+  { value: 'rem', label: 'rem (Client-First)', hint: 'px lengths become rem (16px = 1rem), in class styles and embed CSS. Border-radius and border, outline and stroke widths stay px; 0, %, vh/vw, em, unitless line-heights and breakpoints are left as written.' },
+  { value: 'keep', label: 'Keep as written', hint: 'Lengths keep the units the source CSS uses.' },
+];
+
 const IMAGE_CHOICES: Choice<AdvancedOptions['externalImages']>[] = [
   { value: 'customElement', label: 'Custom Element', hint: 'External images keep their exact URL, srcset and sizes as an <img> Custom Element.' },
   { value: 'embed', label: 'Embed', hint: 'External images go into Code Embeds with their original HTML.' },
@@ -70,7 +75,7 @@ const IMAGE_CHOICES: Choice<AdvancedOptions['externalImages']>[] = [
 
 /**
  * Collapsible "Advanced options" card: forms, buttons, class prefix (and Client-First utilities), breakpoint snapping, the
- * browser-default reset and external images. Purely controlled; the App persists the values.
+ * browser-default reset, external images, units, CSS variables, combo names and class ids. Purely controlled; the App persists the values.
  * Ownership: ui.
  */
 export function AdvancedOptionsPanel({ value, onChange, open, onOpenChange }: AdvancedOptionsProps) {
@@ -85,7 +90,7 @@ export function AdvancedOptionsPanel({ value, onChange, open, onOpenChange }: Ad
         {changed > 0 && (
           <span className="rounded-full bg-accent/15 px-2 py-0.5 font-mono text-[11px] text-[#8db8ff] ring-1 ring-inset ring-accent/40">{changed} changed</span>
         )}
-        <span className="ml-auto hidden truncate text-[12px] font-normal text-muted sm:inline">Forms, buttons, class prefix, breakpoints, images</span>
+        <span className="ml-auto hidden truncate text-[12px] font-normal text-muted sm:inline">Forms, buttons, class prefix, breakpoints, units, images</span>
       </summary>
       <div className="grid gap-x-6 gap-y-5 border-t border-line p-4 md:grid-cols-2">
         <Segmented legend="Forms" name="adv-forms" choices={FORM_CHOICES} value={value.forms} onChange={(v) => set('forms', v)} />
@@ -107,6 +112,7 @@ export function AdvancedOptionsPanel({ value, onChange, open, onOpenChange }: Ad
           onChange={(v) => set('neutralizeDefaults', v === 'on')}
         />
         <Segmented legend="External images" name="adv-images" choices={IMAGE_CHOICES} value={value.externalImages} onChange={(v) => set('externalImages', v)} />
+        <Segmented legend="Units" name="adv-units" choices={UNIT_CHOICES} value={value.units} onChange={(v) => set('units', v)} />
         <Segmented legend="CSS variables (:root)" name="adv-css-vars" choices={VARIABLE_CHOICES} value={value.cssVariables} onChange={(v) => set('cssVariables', v)} />
         <Segmented
           legend="Combo classes"

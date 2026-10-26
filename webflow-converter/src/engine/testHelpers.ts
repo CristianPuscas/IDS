@@ -6,9 +6,10 @@ import { isTextNode, type ConvertOptions, type ConvertResult, type WfElementNode
 
 /**
  * Options that restore the pre-v8 output for tests about other features: combos keep their source
- * names (no `uniqueCombos` suffix) and `:root` variables stay global `var()`s.
+ * names (no `uniqueCombos` suffix), `:root` variables stay global `var()`s and lengths keep their
+ * source units (no px -> rem, option `units`).
  */
-export const PRE_V8: Readonly<Partial<ConvertOptions>> = Object.freeze({ uniqueCombos: false, cssVariables: 'global' });
+export const PRE_V8: Readonly<Partial<ConvertOptions>> = Object.freeze({ uniqueCombos: false, cssVariables: 'global', units: 'keep' });
 
 /** Element nodes of the payload. */
 export function elements(res: ConvertResult): WfElementNode[] {

@@ -32,6 +32,7 @@ import { isClientFirstUtility } from './clientFirst';
 import { toWebflowClassName } from './classNames';
 import { attrSelector } from './embedCss';
 import { stableUuid } from './ids';
+import { remEquivalent } from './units';
 import { WF_MAX_WIDTH_BREAKPOINTS, WF_MIN_WIDTH_BREAKPOINTS, XSCP_TYPE, type ConvertWarning, type WfStyle, type WfStyleVariants } from './types';
 
 /* ------------------------------------------------------------------------------------------------
@@ -244,7 +245,8 @@ export function plainCssValue(value: string): string {
 }
 
 function normValue(value: string): string {
-  let v = plainCssValue(value).replace(/\s+/g, ' ').replace(/\s*([(),])\s*/g, '$1');
+  // 16px = 1rem (option units): a site class in px matches the same value converted to rem.
+  let v = remEquivalent(plainCssValue(value)).replace(/\s+/g, ' ').replace(/\s*([(),])\s*/g, '$1');
   if (/^#[0-9a-f]{3,8}$/i.test(v)) v = v.toLowerCase();
   if (/^[+-]?0(\.0+)?(px|rem|em|%|vw|vh)?$/i.test(v)) v = '0';
   return v;

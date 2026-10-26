@@ -47,6 +47,20 @@ describe('IDEAL_SYSTEM_PROMPT', () => {
     }
   });
 
+  it('asks for rem units with px only for radius and border/outline/stroke widths', () => {
+    for (const s of [
+      'base 16px',
+      'rem (base 16px: 1rem = 16px) for every length',
+      'px only for border-radius and for border, outline and stroke widths',
+      'Keep as is: 0 (no unit), % for fluid widths, em',
+      'unitless line-height',
+      'px in the media query breakpoints',
+    ]) {
+      expect(IDEAL_SYSTEM_PROMPT, s).toContain(s);
+    }
+    expect(IDEAL_SYSTEM_PROMPT).not.toContain('px only for 1px borders');
+  });
+
   it('stays short enough to paste', () => {
     expect(IDEAL_SYSTEM_PROMPT.split(/\s+/).length).toBeLessThanOrEqual(1150);
   });

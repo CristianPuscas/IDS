@@ -48,7 +48,9 @@ page-wrapper > main-wrapper (<main>) > section_[name] (<section>) > padding-glob
 - text-size-large 1.5rem (1.25rem at 767px), medium 1.25rem, regular 1rem, small 0.875rem, tiny 0.75rem. text-weight-light/normal/medium/semibold/bold/xbold = 300 to 800. Unique or responsive text gets a custom class.
 
 # Units
-- rem (1rem = 16px) in round steps: 0.5, 1, 1.5, 2, 2.5, 3, 4, 5rem; 0.875rem and 0.125rem are fine; px only for 1px borders. Unitless line-height, % for fluid widths.
+- rem (base 16px: 1rem = 16px) for every length: fonts, spacing, sizes, offsets, shadows. Round steps: 0.5, 1, 1.5, 2, 3, 4, 5rem; 0.875rem is fine.
+- px only for border-radius and for border, outline and stroke widths (border: 1px solid…).
+- Keep as is: 0 (no unit), % for fluid widths, em, unitless line-height, and px in the media query breakpoints.
 - No vw/vh sizes or fonts (breaks zoom), except min-height: 100vh on a full-screen hero.
 
 # Colours (Client-First v2.1)
@@ -82,4 +84,4 @@ page-wrapper > main-wrapper (<main>) > section_[name] (<section>) > padding-glob
 - Keep each inline <script> under about 40,000 characters (a Code Embed holds 50,000; 10,000 on free sites). Split by feature; never inline a library.
 
 # Before you answer
-Check every selector and class against these rules and fix violations: class-only selectors, core structure, Client-First names, one utility per element, only is- combos, rem units, the three breakpoints. Return the file, then a short note listing what becomes a Code Embed (pseudo-elements, keyframes, :root variables, scripts, CDN libraries, JS-driven forms).`;
+Check every selector and class against these rules and fix violations: class-only selectors, core structure, Client-First names, one utility per element, only is- combos, rem units (px only for radius and border/outline/stroke widths), the three breakpoints. Return the file, then a short note listing what becomes a Code Embed (pseudo-elements, keyframes, :root variables, scripts, CDN libraries, JS-driven forms).`;

@@ -8,6 +8,7 @@ import {
   type ExternalImageMode,
   type FormMode,
   type SiteClassConflicts,
+  type UnitsMode,
 } from '../../engine/types';
 import { getStorage } from './drafts';
 
@@ -29,6 +30,8 @@ export interface AdvancedOptions {
   cssVariables: CssVariablesMode;
   /** Give styled combo classes a CSS-derived suffix so Webflow cannot merge them with the site's. */
   uniqueCombos: boolean;
+  /** Length units: px -> rem (Client-First, default) or as written. */
+  units: UnitsMode;
   /** Experimental: empty Client-First utility styles so the site's apply. */
   skipClientFirstUtilityStyles: boolean;
   /** Deterministic style ids. */
@@ -46,6 +49,7 @@ export const DEFAULT_ADVANCED: Readonly<AdvancedOptions> = Object.freeze({
   siteClassConflicts: DEFAULT_CONVERT_OPTIONS.siteClassConflicts,
   cssVariables: DEFAULT_CONVERT_OPTIONS.cssVariables,
   uniqueCombos: DEFAULT_CONVERT_OPTIONS.uniqueCombos,
+  units: DEFAULT_CONVERT_OPTIONS.units,
   skipClientFirstUtilityStyles: DEFAULT_CONVERT_OPTIONS.skipClientFirstUtilityStyles,
   stableClassIds: DEFAULT_CONVERT_OPTIONS.stableClassIds,
 });
@@ -66,6 +70,7 @@ const SNAPS: readonly BreakpointSnap[] = ['up', 'off'];
 const IMAGES: readonly ExternalImageMode[] = ['customElement', 'embed', 'image'];
 const CONFLICTS: readonly SiteClassConflicts[] = ['rename', 'reuse'];
 const VARIABLES: readonly CssVariablesMode[] = ['inline', 'scope', 'global'];
+const UNITS: readonly UnitsMode[] = ['rem', 'keep'];
 const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback);
 
 const pick = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T => (allowed.includes(v as T) ? (v as T) : fallback);
@@ -85,6 +90,7 @@ export function sanitizeAdvanced(raw: unknown): AdvancedOptions {
     siteClassConflicts: o.sitePolicy === SITE_POLICY_VERSION ? pick(o.siteClassConflicts, CONFLICTS, DEFAULT_ADVANCED.siteClassConflicts) : DEFAULT_ADVANCED.siteClassConflicts,
     cssVariables: pick(o.cssVariables, VARIABLES, DEFAULT_ADVANCED.cssVariables),
     uniqueCombos: bool(o.uniqueCombos, DEFAULT_ADVANCED.uniqueCombos),
+    units: pick(o.units, UNITS, DEFAULT_ADVANCED.units),
     skipClientFirstUtilityStyles: bool(o.skipClientFirstUtilityStyles, DEFAULT_ADVANCED.skipClientFirstUtilityStyles),
     stableClassIds: bool(o.stableClassIds, DEFAULT_ADVANCED.stableClassIds),
   };

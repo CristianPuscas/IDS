@@ -11,7 +11,7 @@
  *   background (single colour or single image) -> background-color / background-image
  *   grid-template-* `repeat(N, x)` and `minmax(0, Nfr)` -> explicit tracks
  *
- * Units are kept as written. `var(--x)` values are wrapped in `@raw<|…|>` as in real dumps
+ * Units are kept as written here (px -> rem happens before, in ./styleMapper via ./units). `var(--x)` values are wrapped in `@raw<|…|>` as in real dumps
  * (spec 3.5); the variable definitions themselves go to the `<style>` embed.
  *
  * Declarations Webflow cannot hold natively are reported as `embed` so the caller can route them

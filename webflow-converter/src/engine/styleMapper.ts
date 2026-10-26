@@ -33,6 +33,7 @@ import { sortDeclarations } from './propertyOrder';
 import { bandDomain, mediaToBands, snapMediaStack, type Band } from './media';
 import { uuid } from './ids';
 import { classifySelector, isWebflowSafeClassName } from './selectors';
+import { convertCssTextUnits, convertRulesUnits, pxVariablesOf } from './units';
 import type { ConvertOptions, ConvertWarning, ConvertWarningCode, WfStyle, WfVariantKey } from './types';
 
 /** Separator for chain keys (cannot appear in a class name). */
@@ -165,6 +166,12 @@ export interface MapStylesHooks {
    * function that rewrites each of them (or `null` to keep them as they are).
    */
   prepareEmbed?: (selectors: string[]) => ((selector: string) => string) | null;
+  /**
+   * Custom properties whose definitions keep px under `units: 'rem'` (used by a border/radius/
+   * outline/stroke property in the source, before `var()` inlining removed the uses). Added to the
+   * ones found in the rules mapped here.
+   */
+  pxVariables?: ReadonlySet<string>;
 }
 
 /** One native-mappable selector of one rule. */
@@ -242,16 +249,23 @@ export function mapStyles(
     pieces.push({ order, sub, mediaStack: stack, selector, declText: declarationsToCss(decls) });
   };
 
-  // 1. At-rules go to the embed verbatim.
+  // Units (option `units`, ./units): every declaration value, native or embedded, is converted
+  // here, after var() inlining and before anything compares or serialises values.
+  const units = options.units;
+  const pxVariables = new Set([...(hooks.pxVariables ?? []), ...pxVariablesOf(css.rules)]);
+  const convertText = (text: string): string => convertCssTextUnits(text, units, { pxVariables });
+
+  // 1. At-rules go to the embed verbatim (only their declaration values change units).
   for (const at of css.atRules) {
-    pieces.push({ order: at.order, sub: 0, mediaStack: at.mediaStack, raw: at.raw, isImport: at.name === 'import' });
+    const raw = at.name === 'import' || at.name === 'unparsed' ? at.raw : convertText(at.raw);
+    pieces.push({ order: at.order, sub: 0, mediaStack: at.mediaStack, raw, isImport: at.name === 'import' });
     const label =
       at.name === 'nested' ? 'nested CSS rule' : at.name === 'unparsed' ? 'unparsed CSS' : `@${at.name} rule`;
     warn('at-rule', `${verb}: ${label} has no native Webflow equivalent.`, `@${at.name} ${at.prelude}`.trim().slice(0, 160));
   }
 
   // 2. Style rules (+ inline styles) are split per selector into candidates and embed pieces.
-  const inlineRules: CssStyleRule[] = registry.inlineStyles().map(([name, decls], i) => ({
+  const inlineRules: CssStyleRule[] = convertRulesUnits(registry.inlineStyles().map(([name, decls], i) => ({
     kind: 'style',
     selectors: [`.${name}`],
     declarations: decls,
@@ -260,10 +274,10 @@ export function mapStyles(
     body: '',
     raw: '',
     order: 1e9 + i,
-  }));
+  })), units, { pxVariables });
 
   // Defaults rank below every source rule (specificity 0, before everything in source order).
-  const defaultRules: CssStyleRule[] = registry.defaults().map(([name, decls, state], i) => ({
+  const defaultRules: CssStyleRule[] = convertRulesUnits(registry.defaults().map(([name, decls, state], i) => ({
     kind: 'style',
     selectors: [`.${name}${state ? `:${state}` : ''}`],
     declarations: decls.map((d) => ({ property: d.property, value: d.value, important: false })),
@@ -272,13 +286,14 @@ export function mapStyles(
     body: '',
     raw: '',
     order: -1e6 + i,
-  }));
+  })), units, { pxVariables });
+  const sourceRules = convertRulesUnits(css.rules, units, { pxVariables });
   const inlineSet = new Set(inlineRules);
   const defaultSet = new Set(defaultRules);
 
   let nextId = 0;
   const snappedQueries = new Set<string>();
-  for (const rule of [...defaultRules, ...css.rules, ...inlineRules]) {
+  for (const rule of [...defaultRules, ...sourceRules, ...inlineRules]) {
     const isInline = inlineSet.has(rule);
     const media = mediaToBands(rule.mediaStack, options.breakpointTolerancePx, options.includeLargeBreakpoints, options.breakpointSnap);
     // A snapped query moves as a whole: its embed-bound rules use the Webflow breakpoint too, so
@@ -458,7 +473,7 @@ export function mapStyles(
     const rewrite = hooks.prepareEmbed(pieces.filter((p) => p.selector !== undefined).map((p) => p.selector!));
     if (rewrite) for (const p of pieces) if (p.selector !== undefined) p.selector = rewrite(p.selector);
   }
-  if (keep && hooks.prelude) pieces.push({ order: -2e9, sub: 0, mediaStack: [], raw: hooks.prelude });
+  if (keep && hooks.prelude) pieces.push({ order: -2e9, sub: 0, mediaStack: [], raw: convertText(hooks.prelude) });
 
   const leftover = keep ? assembleChunks(pieces, options.maxEmbedChars) : { chunks: [], ruleCount: 0 };
   return { leftoverCss: leftover.chunks, leftoverRuleCount: leftover.ruleCount, warnings, sourceStyledChains };

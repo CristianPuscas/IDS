@@ -29,6 +29,7 @@ import { uuid } from './ids';
 import { extractJs } from './jsExtractor';
 import { loadTerserMinifier } from './jsMinify';
 import { buildNodes } from './nodeBuilder';
+import { pxVariablesOf } from './units';
 import { createStyleRegistry, mapStyles, type MapStylesHooks, type StyleRegistry } from './styleMapper';
 import {
   buildOverrideCss,
@@ -90,6 +91,7 @@ export function resolveOptions(options: Partial<ConvertOptions> = {}): ConvertOp
   if (out.siteClassConflicts !== 'rename' && out.siteClassConflicts !== 'reuse') out.siteClassConflicts = DEFAULT_CONVERT_OPTIONS.siteClassConflicts;
   if (out.cssVariables !== 'inline' && out.cssVariables !== 'scope' && out.cssVariables !== 'global') out.cssVariables = DEFAULT_CONVERT_OPTIONS.cssVariables;
   if (typeof out.uniqueCombos !== 'boolean') out.uniqueCombos = DEFAULT_CONVERT_OPTIONS.uniqueCombos;
+  if (out.units !== 'rem' && out.units !== 'keep') out.units = DEFAULT_CONVERT_OPTIONS.units;
   return out;
 }
 
@@ -212,6 +214,9 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
   // the site's variables nor another section's :root can change the pasted colours (./cssVariables).
   // Without an embed there is nowhere to put scoped definitions, so 'scope' substitutes values too.
   const varMode = opts.cssVariables === 'scope' && !opts.keepUnsupportedInEmbed ? 'inline' : opts.cssVariables;
+  // Variables used by border/radius/outline/stroke properties keep px (option units), even once
+  // inlining removes those uses from the rules.
+  const pxVariables = pxVariablesOf(css.rules);
   const vars = planCssVariables(css.rules, varMode);
   css.rules = vars.rules;
   if (vars.scopeId) {
@@ -247,7 +252,7 @@ function convertUnsafe(input: ConvertInput, options: ConvertOptions): ConvertRes
   });
   warnings.push(...built.warnings);
 
-  const hooks: MapStylesHooks = {};
+  const hooks: MapStylesHooks = { pxVariables };
   if (opts.neutralizeDefaults && opts.keepUnsupportedInEmbed && isFullDocument(html)) {
     const reset = buildBaselineReset(css.rules);
     if (reset) {

@@ -141,7 +141,7 @@ describe('forms: "native" (default)', () => {
     // <button> user-agent font is added (webflow.css gives inputs `font: inherit`).
     expect(style(res, 'btn').styleLess).toBe(
       'display: inline-block; padding-top: 1rem; padding-right: 1rem; padding-bottom: 1rem; padding-left: 1rem; border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; ' +
-        'background-color: #000; font-family: Arial, sans-serif; color: #fff; font-size: 13.3333px; line-height: 1; font-style: normal; font-weight: 400; text-align: center; letter-spacing: normal; text-transform: none; cursor: pointer;',
+        'background-color: #000; font-family: Arial, sans-serif; color: #fff; font-size: 0.8333rem; line-height: 1; font-style: normal; font-weight: 400; text-align: center; letter-spacing: normal; text-transform: none; cursor: pointer;',
     );
   });
 });

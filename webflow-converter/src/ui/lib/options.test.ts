@@ -41,6 +41,7 @@ describe('advanced options', () => {
       siteClassConflicts: 'rename',
       cssVariables: 'inline',
       uniqueCombos: true,
+      units: 'rem',
       skipClientFirstUtilityStyles: false,
       stableClassIds: true,
     });
@@ -58,7 +59,14 @@ describe('advanced options', () => {
 
   it('maps "Use the site\'s class" to the site\'s styles as they are', () => {
     expect(toConvertOptions({ ...DEFAULT_ADVANCED, siteClassConflicts: 'reuse' })).toMatchObject({ siteClassConflicts: 'reuse', siteClassOverrides: 'drop' });
-    expect(toConvertOptions(DEFAULT_ADVANCED)).toMatchObject({ siteClassConflicts: 'rename', cssVariables: 'inline', uniqueCombos: true });
+    expect(toConvertOptions(DEFAULT_ADVANCED)).toMatchObject({ siteClassConflicts: 'rename', cssVariables: 'inline', uniqueCombos: true, units: 'rem' });
+  });
+
+  it('keeps a valid units choice and falls back to rem for anything else', () => {
+    expect(sanitizeAdvanced({ units: 'keep' }).units).toBe('keep');
+    expect(sanitizeAdvanced({ units: 'px' }).units).toBe('rem');
+    expect(sanitizeAdvanced({}).units).toBe('rem');
+    expect(toConvertOptions({ ...DEFAULT_ADVANCED, units: 'keep' })).toMatchObject({ units: 'keep' });
   });
 
   it('round-trips through storage', () => {
