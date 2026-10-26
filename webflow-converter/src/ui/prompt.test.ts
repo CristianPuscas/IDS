@@ -61,6 +61,11 @@ describe('IDEAL_SYSTEM_PROMPT', () => {
     expect(IDEAL_SYSTEM_PROMPT).not.toContain('px only for 1px borders');
   });
 
+  it('describes the inline CSS variables (v8): var() resolved, variables scoped on the wrapper', () => {
+    expect(IDEAL_SYSTEM_PROMPT).toContain('resolves var() to values in native classes and scopes the variables on the pasted wrapper');
+    expect(IDEAL_SYSTEM_PROMPT).not.toContain('keeps var() in native classes');
+  });
+
   it('stays short enough to paste', () => {
     expect(IDEAL_SYSTEM_PROMPT.split(/\s+/).length).toBeLessThanOrEqual(1150);
   });

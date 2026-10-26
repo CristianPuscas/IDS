@@ -55,7 +55,7 @@ page-wrapper > main-wrapper (<main>) > section_[name] (<section>) > padding-glob
 
 # Colours (Client-First v2.1)
 - Define colours once on :root as variables named like Webflow's: primitives (--neutral--white, --neutral--black, --brand--primary) and semantic tokens that alias them (--text-color--primary, --text-color--alternate, --background-color--primary, --background-color--alternate, --border-color--primary, --link-color--primary). Name tokens by role, never by colour.
-- Classes use only semantic tokens: color: var(--text-color--primary). The converter keeps var() in native classes and puts :root in an embed; recreate them as Webflow Variables of the same name (Text Color/primary), or delete the embed if the site has them.
+- Classes use only semantic tokens: color: var(--text-color--primary). The converter resolves var() to values in native classes and scopes the variables on the pasted wrapper; for Webflow Variables, create them with the same names (Text Color/primary).
 
 # CSS rules
 - Class selectors only. The only compound selector is a custom class plus its modifier: .hero_button.is-secondary.

@@ -259,3 +259,56 @@ describe('conversion against the whole library', () => {
     expect(style(res, 'padding-global')._id).toBe(SITE[0]!._id);
   });
 });
+
+describe("library + default units: 'rem' (v9 integration)", () => {
+  // The style guide as a Designer copy written in px (styleLess bytes in px), as on a site that
+  // does not follow Client-First's rem sizing. Our output is rem; 16px = 1rem when comparing.
+  const PX: Record<string, Pick<WfStyle, 'styleLess' | 'variants'>> = {
+    'padding-global': {
+      styleLess: 'padding-right: 40px; padding-left: 40px;',
+      variants: { medium: { styleLess: 'padding-right: 32px; padding-left: 32px;' }, small: { styleLess: 'padding-right: 20px; padding-left: 20px;' } },
+    },
+    'container-large': { styleLess: 'width: 100%; max-width: 1280px; margin-right: auto; margin-left: auto;', variants: {} },
+    'heading-style-h2': {
+      styleLess: 'font-size: 48px; line-height: 1.2; font-weight: 700;',
+      variants: { medium: { styleLess: 'font-size: 40px;' }, small: { styleLess: 'font-size: 32px;' } },
+    },
+  };
+  const SITE_PX: WfStyle[] = SITE.map((s) => (PX[s.name] ? { ...s, ...PX[s.name] } : s));
+  const HTML = '<div class="padding-global"><div class="container-large"><h2 class="heading-style-h2">Hi</h2></div></div>';
+  const CSS = `.padding-global { padding-left: 40px; padding-right: 40px; }
+.container-large { width: 100%; max-width: 1280px; margin-left: auto; margin-right: auto; }
+.heading-style-h2 { font-size: 56px; line-height: 1.1; font-weight: 700; }
+@media (max-width: 991px) { .padding-global { padding-left: 32px; padding-right: 32px; } }
+@media (max-width: 767px) { .padding-global { padding-left: 20px; padding-right: 20px; } }`;
+  const runRem = (siteStyles: WfStyle[]) => {
+    const res = convert({ mode: 'separate', html: HTML, css: CSS, js: '' }, { siteStyles });
+    expect(validateXscp(res.data)).toEqual([]);
+    return res;
+  };
+
+  it('reuses px site classes with identical CSS and pastes their styleLess verbatim (no " 2"), and renames a clash against every page', () => {
+    let lib = add(EMPTY_STYLE_LIBRARY, stylesToLibraryClasses(SITE_PX), 'Style guide');
+    lib = add(lib, [cls('home-h2', 'heading-style-h2-new', 'font-size: 64px;')], 'Home');
+    const res = runRem(librarySiteStyles(lib));
+    const names = elements(res).flatMap((e) => classNames(res, e));
+    for (const name of ['padding-global', 'container-large']) {
+      const site = SITE_PX.find((s) => s.name === name)!;
+      const pasted = res.data.payload.styles.find((s) => s.name === name)!;
+      expect(names).toContain(name);
+      expect(pasted._id).toBe(site._id);
+      // Webflow only merges a pasted class into the site's when the bytes are identical: the
+      // site's own px styleLess, not our rem conversion.
+      expect(pasted.styleLess).toBe(site.styleLess);
+      expect(pasted.variants).toEqual(site.variants);
+    }
+    expect(names.some((n) => / \d+$/.test(n))).toBe(false);
+    // Same name, other CSS: a new name free on every page of the library (page 2 took "-new").
+    expect(names).not.toContain('heading-style-h2');
+    expect(names).not.toContain('heading-style-h2-new');
+    expect(names).toContain('heading-style-h2-new-2');
+    expect(style(res, 'heading-style-h2-new-2').styleLess).toContain('font-size: 3.5rem;');
+    expect(res.stats.reusedClasses).toBe(2);
+    expect(res.stats.renamedClasses).toBe(1);
+  });
+});
