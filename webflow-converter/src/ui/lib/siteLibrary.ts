@@ -1,108 +1,106 @@
-import type { WfStyle } from '../../engine/types';
-import { mergeSiteStyles, parseSiteStyles } from '../../engine/siteStyles';
+import { parseSiteStyles } from '../../engine/siteStyles';
+import { addLibrarySource, deserializeLibrary, EMPTY_STYLE_LIBRARY, serializeLibrary, stylesToLibraryClasses, type StyleLibrary } from '../../engine/styleLibrary';
 import { getStorage } from './drafts';
 
 /**
- * Imported site styles ("Reuse classes from your Webflow site"), kept in localStorage so they
- * survive reloads. Several sites can be stored; one (or none) is active and is passed to
- * `convert()` as `siteStyles`. Every storage access is wrapped in try/catch: private windows and
- * full quotas just mean the import lasts for this page only.
+ * The style guide library ("1. Your site's style guide", ../../engine/styleLibrary) kept in
+ * localStorage so it survives reloads, in its compact form only (never the pasted payload). Every
+ * storage access is wrapped in try/catch: private windows and full quotas just mean the library
+ * lasts for this page only, and the UI says so.
  *
  * Ownership: ui.
  */
 
-/** One imported site. */
-export interface SiteEntry {
-  id: string;
-  /** User-given label, e.g. "My site". */
-  label: string;
-  /** Class styles copied from the Designer, verbatim. */
-  styles: WfStyle[];
-  /** ISO time of the last import. */
-  updatedAt: string;
+/** What the app keeps: the library and whether conversions use it. */
+export interface LibraryState {
+  library: StyleLibrary;
+  /** Use the library when converting. */
+  enabled: boolean;
 }
 
-/** All imported sites plus the active one. */
-export interface SiteLibrary {
-  sites: SiteEntry[];
-  /** Id of the site whose classes are reused, or `null` for none. */
-  activeId: string | null;
+/** How a save went. */
+export type SaveResult = 'saved' | 'quota' | 'unavailable';
+
+export const STYLE_LIBRARY_KEY = 'wf-converter:style-library:v2';
+/** Before the style guide step: several sites of verbatim styles, one active (migrated once). */
+export const LEGACY_SITE_LIBRARY_KEY = 'wf-converter:site-styles:v1';
+
+export const EMPTY_LIBRARY_STATE: LibraryState = Object.freeze({ library: EMPTY_STYLE_LIBRARY, enabled: true }) as LibraryState;
+
+/** True for the error a full localStorage throws (named differently across browsers). */
+export function isQuotaError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as { name?: unknown; code?: unknown };
+  return e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014;
 }
-
-export const SITE_LIBRARY_KEY = 'wf-converter:site-styles:v1';
-export const EMPTY_LIBRARY: SiteLibrary = Object.freeze({ sites: [], activeId: null }) as SiteLibrary;
-
-/** Reads the library; empty when nothing is stored, the data is corrupt, or storage throws. */
-export function loadSiteLibrary(storage: Storage | null = getStorage()): SiteLibrary {
-  if (!storage) return { sites: [], activeId: null };
-  try {
-    const raw = storage.getItem(SITE_LIBRARY_KEY);
-    if (!raw) return { sites: [], activeId: null };
-    return sanitizeLibrary(JSON.parse(raw));
-  } catch {
-    return { sites: [], activeId: null };
-  }
-}
-
-/** Saves the library. Returns `false` when storage is unavailable or full. */
-export function saveSiteLibrary(lib: SiteLibrary, storage: Storage | null = getStorage()): boolean {
-  if (!storage) return false;
-  try {
-    storage.setItem(SITE_LIBRARY_KEY, JSON.stringify(lib));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function sanitizeLibrary(raw: unknown): SiteLibrary {
-  const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
-  const sites: SiteEntry[] = [];
-  if (Array.isArray(o.sites)) {
-    for (const s of o.sites as Record<string, unknown>[]) {
-      if (!s || typeof s.id !== 'string' || typeof s.label !== 'string' || !Array.isArray(s.styles)) continue;
-      const styles = parseSiteStyles(JSON.stringify(s.styles)).styles;
-      if (styles.length === 0) continue;
-      sites.push({ id: s.id, label: s.label, styles, updatedAt: typeof s.updatedAt === 'string' ? s.updatedAt : '' });
-    }
-  }
-  const activeId = typeof o.activeId === 'string' && sites.some((s) => s.id === o.activeId) ? o.activeId : null;
-  return { sites, activeId };
-}
-
-/** Normalised label used to find an existing site ("My Site " = "my site"). */
-const labelKey = (label: string) => label.trim().replace(/\s+/g, ' ').toLowerCase();
 
 /**
- * Adds styles to the site called `label` (created when new) and makes it active. `mode: 'merge'`
- * (default) adds to the classes already imported for that site (several copies of different
- * sections); `'replace'` starts over.
+ * Reads the library; empty when nothing is stored, the data is corrupt, or storage throws. A
+ * library saved by the older "Reuse classes from your Webflow site" import becomes one source per
+ * site.
  */
-export function importIntoLibrary(lib: SiteLibrary, label: string, styles: WfStyle[], mode: 'merge' | 'replace' = 'merge', now = new Date()): SiteLibrary {
-  const name = label.trim().replace(/\s+/g, ' ') || 'My site';
-  const existing = lib.sites.find((s) => labelKey(s.label) === labelKey(name));
-  const updatedAt = now.toISOString();
-  if (existing) {
-    const next: SiteEntry = { ...existing, label: name, styles: mode === 'replace' ? mergeSiteStyles(styles) : mergeSiteStyles(existing.styles, styles), updatedAt };
-    return { sites: lib.sites.map((s) => (s.id === existing.id ? next : s)), activeId: existing.id };
+export function loadStyleLibrary(storage: Storage | null = getStorage()): LibraryState {
+  const empty = (): LibraryState => ({ library: { sources: [], classes: new Map() }, enabled: true });
+  if (!storage) return empty();
+  try {
+    const raw = storage.getItem(STYLE_LIBRARY_KEY);
+    if (raw) {
+      const o = JSON.parse(raw) as { enabled?: unknown };
+      return { library: deserializeLibrary(o), enabled: o.enabled !== false };
+    }
+    const legacy = storage.getItem(LEGACY_SITE_LIBRARY_KEY);
+    return legacy ? migrateLegacy(JSON.parse(legacy)) : empty();
+  } catch {
+    return empty();
   }
-  const id = `site-${now.getTime().toString(36)}-${lib.sites.length}`;
-  return { sites: [...lib.sites, { id, label: name, styles: mergeSiteStyles(styles), updatedAt }], activeId: id };
 }
 
-/** Removes a site; the active one falls back to none. */
-export function removeFromLibrary(lib: SiteLibrary, id: string): SiteLibrary {
-  return { sites: lib.sites.filter((s) => s.id !== id), activeId: lib.activeId === id ? null : lib.activeId };
+function migrateLegacy(raw: unknown): LibraryState {
+  let library: StyleLibrary = { sources: [], classes: new Map() };
+  const o = raw && typeof raw === 'object' ? (raw as { sites?: unknown; activeId?: unknown }) : {};
+  if (Array.isArray(o.sites)) {
+    for (const site of o.sites as Record<string, unknown>[]) {
+      if (!site || typeof site.label !== 'string' || !Array.isArray(site.styles)) continue;
+      const styles = parseSiteStyles(JSON.stringify(site.styles)).styles;
+      if (styles.length === 0) continue;
+      const at = typeof site.updatedAt === 'string' && !Number.isNaN(Date.parse(site.updatedAt)) ? new Date(site.updatedAt) : new Date();
+      library = addLibrarySource(library, { kind: 'designer', label: site.label, classes: stylesToLibraryClasses(styles), variables: [] }, at).library;
+    }
+  }
+  // "None (don't reuse site classes)" was a choice too.
+  return { library, enabled: o.activeId !== null || library.sources.length === 0 };
 }
 
-/** The active site, if any. */
-export function activeSite(lib: SiteLibrary): SiteEntry | null {
-  return lib.sites.find((s) => s.id === lib.activeId) ?? null;
+/**
+ * Saves the library (compact form). On a full quota the old v1 import is removed (it held whole
+ * style objects) and the save is tried once more. An empty library removes the key.
+ */
+export function saveStyleLibrary(state: LibraryState, storage: Storage | null = getStorage()): SaveResult {
+  if (!storage) return 'unavailable';
+  try {
+    if (state.library.sources.length === 0) {
+      storage.removeItem(STYLE_LIBRARY_KEY);
+      storage.removeItem(LEGACY_SITE_LIBRARY_KEY);
+      return 'saved';
+    }
+    const text = JSON.stringify({ ...serializeLibrary(state.library), enabled: state.enabled });
+    try {
+      storage.setItem(STYLE_LIBRARY_KEY, text);
+    } catch (err) {
+      if (!isQuotaError(err)) throw err;
+      storage.removeItem(LEGACY_SITE_LIBRARY_KEY);
+      storage.setItem(STYLE_LIBRARY_KEY, text);
+    }
+    storage.removeItem(LEGACY_SITE_LIBRARY_KEY);
+    return 'saved';
+  } catch (err) {
+    return isQuotaError(err) ? 'quota' : 'unavailable';
+  }
 }
 
-/** Number of base classes (combos not counted), the "142 classes" in the status line. */
-export function classCount(entry: SiteEntry): number {
-  return entry.styles.filter((s) => (s.comb ?? '') === '').length;
+/** Size of the stored form in characters (what counts against the ~5 MB localStorage quota). */
+export function storedSize(state: LibraryState): number {
+  return JSON.stringify({ ...serializeLibrary(state.library), enabled: state.enabled }).length;
 }
 
 /**

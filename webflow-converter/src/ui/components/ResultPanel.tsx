@@ -45,7 +45,7 @@ export function ResultPanel({ result, onCopyAgain, onDownload, onSetPrefix, onIm
   const chips: { label: string; value: string; hint: string }[] = [
     { label: 'Nodes', value: String(stats.nodes), hint: 'Element and text nodes' },
     { label: 'New classes', value: String(stats.newClasses ?? stats.styles), hint: 'Class styles this paste creates in your site' },
-    { label: 'Reused', value: String(stats.reusedClasses ?? 0), hint: siteLabel ? `Classes that reuse "${siteLabel}"'s own styles (no "name 2")` : 'Import your site\'s styles to reuse its classes' },
+    { label: 'Reused', value: String(stats.reusedClasses ?? 0), hint: siteLabel ? `Classes that reuse your site's own styles, from ${siteLabel} (no "name 2")` : 'Add your site\'s style guide to reuse its classes' },
     { label: 'Embeds', value: String(stats.embeds), hint: 'Code Embed elements' },
     { label: 'CSS → embed', value: String(stats.embeddedCssRules), hint: 'CSS rules placed in <style> embeds' },
     { label: 'JS size', value: formatBytes(stats.jsBytes), hint: 'JavaScript placed in <script> embeds' },
@@ -163,7 +163,7 @@ function CollisionNotice({ names, onSetPrefix, onImportSite, imported }: { names
             {names.length} class{names.length === 1 ? '' : 'es'} may clash with existing site classes;
           </strong>{' '}
           Webflow adds “name 2” unless your site has them with identical styles.{' '}
-          {imported ? 'They are not in your imported site styles: import a copy that contains them (e.g. your style guide page).' : 'Import your site’s styles to reuse its classes instead.'}
+          {imported ? 'They are not in your style guide library: add a page that contains them.' : 'Add your site’s style guide to reuse its classes instead.'}
         </p>
         <p className="mt-1 break-words font-mono text-[11.5px] text-amber-200/70">
           {shown.join(', ')}
@@ -173,7 +173,7 @@ function CollisionNotice({ names, onSetPrefix, onImportSite, imported }: { names
       <div className="flex shrink-0 flex-wrap gap-2 self-start">
         {onImportSite && (
           <button type="button" onClick={onImportSite} className="btn-secondary">
-            Import site styles
+            Add style guide
           </button>
         )}
         {onSetPrefix && (

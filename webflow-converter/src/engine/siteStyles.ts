@@ -23,6 +23,10 @@
  * because Webflow merges a pasted combo with a same-named one (`conflictingCombos`). Evidence:
  * hero-construction paste tests (diag4, diag5 /testhero).
  *
+ * `siteStyles` is usually the whole style guide library (./styleLibrary): every page the user added,
+ * plus reference styles read from the published CSS (`isReferenceStyle`), which decide renames but
+ * are never pasted as the site's own. Values compare with 16px = 1rem (`normalizeLengthForCompare`).
+ *
  * Also here: `stableClassIds` (deterministic style ids) and `skipClientFirstUtilityStyles`.
  *
  * Ownership: engine.
@@ -54,14 +58,24 @@ export interface SiteStylesParse {
  * `type` other than `class`) are skipped.
  */
 export function parseSiteStyles(text: string): SiteStylesParse {
+  const data = parseClipboardJson(text);
+  if ('error' in data) return { styles: [], error: data.error };
+  return siteStylesFromData(data.value);
+}
+
+/** `JSON.parse` of clipboard text (BOM and outer whitespace ignored), or why it failed, for the UI. */
+export function parseClipboardJson(text: string): { value: unknown } | { error: string } {
   const trimmed = text.replace(/^﻿/, '').trim();
-  if (!trimmed) return { styles: [], error: 'The clipboard is empty.' };
-  let data: unknown;
+  if (!trimmed) return { error: 'The clipboard is empty.' };
   try {
-    data = JSON.parse(trimmed);
+    return { value: JSON.parse(trimmed) as unknown };
   } catch {
-    return { styles: [], error: 'This is not Webflow clipboard data. In the Webflow Designer, select an element and press Ctrl/Cmd+C, then paste here.' };
+    return { error: 'This is not Webflow clipboard data. In the Webflow Designer, select an element and press Ctrl/Cmd+C, then paste here.' };
   }
+}
+
+/** {@link parseSiteStyles} on already parsed JSON. */
+export function siteStylesFromData(data: unknown): SiteStylesParse {
   let raw: unknown;
   if (Array.isArray(data)) raw = data;
   else if (data && typeof data === 'object') {
@@ -133,6 +147,19 @@ export function splitDuplicateSuffix(name: string): { base: string; n: number } 
   return m ? { base: m[1]!, n: Number(m[2]) } : { base: name.trim(), n: 0 };
 }
 
+/**
+ * `_id` prefix of a style read from the site's published CSS (style guide library, ./styleLibrary)
+ * instead of a Designer copy. Such a style has the site's class name and CSS but not its real
+ * `styleLess` bytes or id, so it is never pasted as the site's own: it only tells "same name, same
+ * CSS" (keep the name) from "same name, different CSS" (rename), and which names are taken.
+ */
+export const REFERENCE_STYLE_PREFIX = 'h2w-ref:';
+
+/** True for a style built from published CSS ({@link REFERENCE_STYLE_PREFIX}). */
+export function isReferenceStyle(style: Pick<WfStyle, '_id'>): boolean {
+  return style._id.startsWith(REFERENCE_STYLE_PREFIX);
+}
+
 /* ------------------------------------------------------------------------------------------------
  * Matching
  * ---------------------------------------------------------------------------------------------- */
@@ -169,9 +196,10 @@ export function matchSiteStyles(chains: readonly ChainStyle[], siteStyles: reado
   // stands for "padding-global": Webflow ignores the suffix when matching (spec 3.6), so pasting
   // that style verbatim reuses it. The base name wins over numbered ones, then the lowest number,
   // then the exact spelling over another one that slugs the same ("Button" vs "button").
-  const rank = (s: WfStyle): [number, number] => {
+  // A style read from published CSS (`isReferenceStyle`) only stands in when no Designer copy has it.
+  const rank = (s: WfStyle): [number, number, number] => {
     const { base, n } = splitDuplicateSuffix(s.name);
-    return [n, base === toWebflowClassName(base) ? 0 : 1];
+    return [isReferenceStyle(s) ? 1 : 0, n, base === toWebflowClassName(base) ? 0 : 1];
   };
   for (const s of siteStyles) {
     if ((s.comb ?? '') !== '') continue;
@@ -182,7 +210,8 @@ export function matchSiteStyles(chains: readonly ChainStyle[], siteStyles: reado
       continue;
     }
     const [a, b] = [rank(s), rank(prev)];
-    if (a[0] < b[0] || (a[0] === b[0] && a[1] < b[1])) bases.set(key, s);
+    const i = a.findIndex((v, j) => v !== b[j]);
+    if (i >= 0 && a[i]! < b[i]!) bases.set(key, s);
   }
 
   const matchedByChain = new Map<string, WfStyle>();
@@ -243,8 +272,25 @@ export function plainCssValue(value: string): string {
   return value.replace(/@raw<\|([\s\S]*?)\|>/g, '$1').trim();
 }
 
+/** Root font size the comparisons assume (Webflow's default, and Client-First's 1rem). */
+const REM_PX = 16;
+
+/**
+ * Lengths in a CSS value written the same way for comparing, so `16px` equals `1rem` (base 16):
+ * every `px` / `rem` number becomes rem with at most 4 decimals (`24px` -> `1.5rem`, `1.0rem` ->
+ * `1rem`), and zero becomes `0`. Other units (`em`, `%`, `vw`…) and numbers inside words or hex
+ * colours are left alone. Only for equality checks: never written to the output.
+ */
+export function normalizeLengthForCompare(value: string): string {
+  return value.replace(/(^|[^\w.#-])([+-]?(?:\d+\.?\d*|\.\d+))(px|rem)(?![\w-])/gi, (_m, pre: string, num: string, unit: string) => {
+    const rem = Number(num) / (unit.toLowerCase() === 'px' ? REM_PX : 1);
+    const rounded = Number(rem.toFixed(4));
+    return `${pre}${rounded === 0 ? '0' : `${rounded}rem`}`;
+  });
+}
+
 function normValue(value: string): string {
-  let v = plainCssValue(value).replace(/\s+/g, ' ').replace(/\s*([(),])\s*/g, '$1');
+  let v = normalizeLengthForCompare(plainCssValue(value).replace(/\s+/g, ' ').replace(/\s*([(),])\s*/g, '$1'));
   if (/^#[0-9a-f]{3,8}$/i.test(v)) v = v.toLowerCase();
   if (/^[+-]?0(\.0+)?(px|rem|em|%|vw|vh)?$/i.test(v)) v = '0';
   return v;
