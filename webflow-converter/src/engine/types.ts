@@ -713,7 +713,18 @@ export interface ConvertOptions {
    * repeated in the `<style>` embed instead) keep their names. Default `true`.
    */
   uniqueCombos: boolean;
+  /**
+   * Length units of the converted CSS (see ./units). `'rem'` (default, Client-First v2): every `px`
+   * length becomes `rem` (base 16px, `24px` -> `1.5rem`), in native class styles and in the
+   * `<style>` embed alike, except border-radius and border / outline / stroke widths, which stay
+   * px. `0`, `%`, viewport units, `em`, unitless line-heights and `@media` breakpoints are left as
+   * written. `'keep'`: units stay as written.
+   */
+  units: UnitsMode;
 }
+
+/** `ConvertOptions.units`. */
+export type UnitsMode = 'rem' | 'keep';
 
 /** `ConvertOptions.cssVariables`. */
 export type CssVariablesMode = 'inline' | 'scope' | 'global';
@@ -788,6 +799,7 @@ export const DEFAULT_CONVERT_OPTIONS: Readonly<ConvertOptions> = Object.freeze({
   skipClientFirstUtilityStyles: false,
   cssVariables: 'inline',
   uniqueCombos: true,
+  units: 'rem',
 });
 
 /** Machine-readable warning categories. The UI may group or filter by these. */

@@ -17,7 +17,7 @@ describe('baseline reset (neutralizeDefaults, F3)', () => {
     const css = embeddedCss(res);
     expect(css.indexOf('body{')).toBeGreaterThan(-1);
     expect(css.indexOf('body{')).toBeLessThan(css.indexOf('.b h3') === -1 ? css.indexOf('h3 {') : css.indexOf('.b h3'));
-    expect(css).toMatch(/body\{letter-spacing:normal;font-size:16px;line-height:normal;color:CanvasText\}/);
+    expect(css).toMatch(/body\{letter-spacing:normal;font-size:1rem;line-height:normal;color:CanvasText\}/);
     expect(res.warnings.some((w) => w.code === 'baseline-reset' && w.severity === 'info')).toBe(true);
   });
 
