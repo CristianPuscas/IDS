@@ -1,0 +1,451 @@
+<!-- Saltbox 3PL Cost Calculator — Webflow Embed (paste into an Embed / Custom Code element) -->
+<link href="https://fonts.googleapis.com/css2?family=Besley:ital,wght@1,500&family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  .sb-calc {
+    --sb-yellow: #FFCD1C;
+    --sb-spruce: #425656;
+    --sb-dark: #242B2B;
+    --sb-bg: #F2F1ED;
+    --sb-white: #FFFFFF;
+    --sb-text: #242B2B;
+    --sb-text-muted: #5A6363;
+    --sb-border: #E4E2DC;
+    --sb-radius-card: 20px;
+    --sb-radius-input: 8px;
+    --sb-radius-btn: 10px;
+    --sb-shadow-card: 0 1px 2px rgba(36, 43, 43, 0.04), 0 8px 24px rgba(36, 43, 43, 0.06);
+    --sb-shadow-btn: 0 1px 2px rgba(36, 43, 43, 0.08), 0 4px 12px rgba(255, 205, 28, 0.18);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--sb-text);
+    background: var(--sb-bg);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    width: 100%;
+  }
+  .sb-calc *, .sb-calc *::before, .sb-calc *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  .sb-calc h1, .sb-calc h2, .sb-calc h3 {
+    font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .sb-calc .sb-wrap { max-width: 1180px; margin: 0 auto; padding: 80px 24px 96px; }
+  @media (max-width: 768px) { .sb-calc .sb-wrap { padding: 48px 16px 64px; } }
+
+  /* Header */
+  .sb-calc .sb-header { text-align: left; max-width: 880px; margin: 0 0 56px; }
+  @media (max-width: 768px) { .sb-calc .sb-header { margin-bottom: 36px; } }
+  .sb-calc .sb-title { font-size: 3.5rem; font-weight: 500; color: var(--sb-dark); line-height: 1.2; margin-bottom: 24px; text-wrap: balance; }
+  @media (max-width: 991px) { .sb-calc .sb-title { font-size: 3.25rem; } }
+  @media (max-width: 767px) { .sb-calc .sb-title { font-size: 2.5rem; } }
+  .sb-calc .sb-title em {
+    font-family: 'Besley', 'Times New Roman', Georgia, serif;
+    font-style: italic; font-weight: 500; display: inline; line-height: 0;
+    background-image: url("https://cdn.prod.website-files.com/667d148040fe70ed2317d980/699ed624f908409b794d5ec2_underline-small.svg");
+    background-position: 50% 90%; background-repeat: no-repeat; background-size: contain;
+  }
+  .sb-calc .sb-subtitle { font-size: 18px; font-weight: 400; color: var(--sb-text); line-height: 27px; margin: 0 0 12px; max-width: 680px; }
+  .sb-calc .sb-support { font-size: 16px; font-weight: 400; color: var(--sb-text); line-height: 24px; max-width: 680px; margin: 0; }
+  .sb-calc .sb-emphasis {
+    font-family: 'Besley', 'Times New Roman', Georgia, serif; font-style: italic; font-weight: 500;
+    background-image: url("https://cdn.prod.website-files.com/667d148040fe70ed2317d980/699ed624f908409b794d5ec2_underline-small.svg");
+    background-position: 50% 100%; background-repeat: no-repeat; background-size: 100% 4px; padding: 0 2px 4px;
+  }
+
+  /* Grid */
+  .sb-calc .sb-grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: 32px; align-items: start; }
+  @media (max-width: 900px) { .sb-calc .sb-grid { grid-template-columns: 1fr; gap: 24px; } }
+
+  /* Form card (left table) */
+  .sb-calc .sb-form { background: var(--sb-white); border-radius: var(--sb-radius-card); padding: 40px; box-shadow: var(--sb-shadow-card); }
+  @media (max-width: 768px) { .sb-calc .sb-form { padding: 28px 24px; } }
+  .sb-calc .sb-step-row { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+  .sb-calc .sb-step-num {
+    flex: 0 0 32px; width: 32px; height: 32px; border-radius: 50%;
+    background: var(--sb-yellow); color: var(--sb-dark);
+    font-family: 'Inter Tight', sans-serif; font-size: 15px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+  }
+  .sb-calc .sb-form-title { font-size: 24px; font-weight: 500; color: var(--sb-dark); }
+  .sb-calc .sb-field { margin-bottom: 22px; }
+  .sb-calc .sb-field:last-child { margin-bottom: 0; }
+  .sb-calc .sb-field label { display: block; font-size: 14px; font-weight: 500; color: var(--sb-dark); margin-bottom: 4px; }
+  .sb-calc .sb-field-help { font-size: 12.5px; color: var(--sb-text-muted); margin-bottom: 8px; line-height: 1.45; }
+  .sb-calc .sb-input-wrap { position: relative; display: flex; align-items: center; }
+  .sb-calc .sb-prefix, .sb-calc .sb-suffix { position: absolute; font-size: 15px; color: var(--sb-text-muted); pointer-events: none; font-weight: 500; }
+  .sb-calc .sb-prefix { left: 12px; }
+  .sb-calc .sb-suffix { right: 12px; }
+  .sb-calc .sb-input {
+    width: 100%; height: auto; padding: 11px 14px;
+    font-family: inherit; font-size: 16px; font-weight: 500; line-height: 1.4;
+    color: var(--sb-dark); background: var(--sb-white);
+    border: 1px solid var(--sb-border); border-radius: var(--sb-radius-input);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .sb-calc .sb-input--pf { padding-left: 26px; }
+  .sb-calc .sb-input--sf { padding-right: 36px; }
+  .sb-calc .sb-input:focus { outline: none; border-color: var(--sb-spruce); box-shadow: 0 0 0 3px rgba(66, 86, 86, 0.12); }
+  .sb-calc .sb-toggle { display: inline-flex; background: #F1F3F2; border-radius: 999px; padding: 3px; margin-bottom: 8px; }
+  .sb-calc .sb-toggle button {
+    border: none; background: transparent; padding: 6px 14px;
+    font-family: inherit; font-size: 13px; font-weight: 600; color: var(--sb-text-muted);
+    border-radius: 999px; cursor: pointer; transition: all 0.15s ease;
+  }
+  .sb-calc .sb-toggle button.is-active { background: var(--sb-dark); color: var(--sb-white); }
+  .sb-calc .sb-assumptions { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--sb-border); font-size: 12px; color: var(--sb-text-muted); line-height: 1.55; }
+  .sb-calc .sb-assumptions strong { color: var(--sb-dark); font-weight: 600; }
+
+  /* Results card */
+  .sb-calc .sb-results { background: var(--sb-spruce); border-radius: var(--sb-radius-card); padding: 40px; color: var(--sb-white); box-shadow: var(--sb-shadow-card); }
+  @media (max-width: 768px) { .sb-calc .sb-results { padding: 28px 24px; } }
+  .sb-calc .sb-results-title { font-size: 24px; font-weight: 500; color: var(--sb-white); }
+  .sb-calc .sb-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+  .sb-calc .sb-compare-card { padding: 18px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .sb-calc .sb-compare-card--saltbox { background: rgba(255, 205, 28, 0.12); border-color: rgba(255, 205, 28, 0.35); }
+  .sb-calc .sb-compare-card-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.7); margin-bottom: 8px; }
+  .sb-calc .sb-compare-card--saltbox .sb-compare-card-label { color: var(--sb-yellow); }
+  .sb-calc .sb-compare-card-num { font-family: 'Inter Tight', sans-serif; font-size: clamp(22px, 3vw, 28px); font-weight: 500; color: var(--sb-white); line-height: 1.2; margin-bottom: 4px; }
+  .sb-calc .sb-compare-card-sub { font-size: 12px; color: rgba(255, 255, 255, 0.65); }
+  .sb-calc .sb-gap { padding: 24px; background: rgba(255, 205, 28, 0.10); border: 1px solid rgba(255, 205, 28, 0.28); border-radius: 12px; text-align: center; margin-bottom: 22px; }
+  .sb-calc .sb-gap-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--sb-yellow); margin-bottom: 8px; }
+  .sb-calc .sb-gap-num { font-family: 'Inter Tight', sans-serif; font-size: clamp(48px, 8vw, 84px); font-weight: 500; color: var(--sb-yellow); line-height: 1.05; margin-bottom: 4px; }
+  .sb-calc .sb-gap-sub { font-size: 14px; color: rgba(255, 255, 255, 0.85); font-weight: 400; }
+  .sb-calc .sb-gap-pct { color: var(--sb-yellow); font-weight: 500; }
+  .sb-calc .sb-cpo-row { display: flex; justify-content: space-between; gap: 16px; padding: 14px 16px; background: rgba(255, 255, 255, 0.04); border-radius: 10px; margin-bottom: 20px; font-size: 13px; }
+  .sb-calc .sb-cpo-row span:first-child { color: rgba(255, 255, 255, 0.7); }
+  .sb-calc .sb-cpo-row span:last-child { color: var(--sb-white); font-weight: 500; }
+  .sb-calc .sb-insight { padding: 16px; background: rgba(255, 255, 255, 0.05); border-left: 3px solid var(--sb-yellow); border-radius: 0 8px 8px 0; font-size: 13.5px; color: rgba(255, 255, 255, 0.88); line-height: 1.55; margin-bottom: 18px; }
+  .sb-calc .sb-insight strong { color: var(--sb-yellow); font-weight: 500; }
+  .sb-calc .sb-disclaimer { font-size: 11.5px; font-style: italic; color: rgba(255, 255, 255, 0.55); line-height: 1.55; margin-bottom: 20px; }
+  .sb-calc .sb-cta {
+    display: block; width: 100%; padding: 18px 24px;
+    background: var(--sb-yellow); color: var(--sb-dark);
+    font-family: 'Inter Tight', sans-serif; font-size: 16px; font-weight: 500;
+    text-align: center; text-decoration: none; border-radius: var(--sb-radius-btn); border: none; cursor: pointer;
+    box-shadow: var(--sb-shadow-btn); transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .sb-calc .sb-cta:hover { background: #FFD940; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(36, 43, 43, 0.10), 0 8px 20px rgba(255, 205, 28, 0.28); }
+
+  /* Trust layer */
+  .sb-calc .sb-trust { margin-top: 48px; padding-top: 40px; border-top: 1px solid var(--sb-border); }
+  .sb-calc .sb-trust-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+  @media (max-width: 768px) { .sb-calc .sb-trust-grid { grid-template-columns: 1fr; gap: 16px; } }
+  .sb-calc .sb-proof { padding: 26px; background: var(--sb-white); border-radius: 16px; box-shadow: var(--sb-shadow-card); }
+  .sb-calc .sb-proof-num { font-family: 'Inter Tight', sans-serif; font-size: 20px; font-weight: 500; color: var(--sb-spruce); margin-bottom: 8px; line-height: 1.25; }
+  .sb-calc .sb-proof-body { font-size: 13.5px; color: var(--sb-text-muted); line-height: 1.55; }
+
+  /* Exit checklist CTA */
+  .sb-calc .sb-exit-cta {
+    margin-top: 32px; padding: 40px; background: var(--sb-spruce); border-radius: var(--sb-radius-card); color: var(--sb-white);
+    display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; box-shadow: var(--sb-shadow-card);
+  }
+  @media (max-width: 768px) { .sb-calc .sb-exit-cta { grid-template-columns: 1fr; padding: 28px 24px; gap: 20px; } }
+  .sb-calc .sb-exit-cta-title { font-family: 'Inter Tight', sans-serif; font-size: clamp(24px, 3.5vw, 32px); font-weight: 500; color: var(--sb-white); line-height: 1.2; margin-bottom: 10px; }
+  .sb-calc .sb-exit-cta-desc { font-size: 16px; font-weight: 400; color: rgba(255, 255, 255, 0.78); line-height: 1.5; max-width: 560px; }
+  .sb-calc .sb-exit-cta-btn {
+    display: inline-block; padding: 16px 26px; background: var(--sb-yellow); color: var(--sb-dark);
+    font-family: 'Inter Tight', sans-serif; font-size: 15px; font-weight: 500; text-decoration: none;
+    border-radius: var(--sb-radius-btn); white-space: nowrap; box-shadow: var(--sb-shadow-btn);
+    transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+  }
+  .sb-calc .sb-exit-cta-btn:hover { background: #FFD940; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(36, 43, 43, 0.10), 0 8px 20px rgba(255, 205, 28, 0.28); }
+</style>
+
+<div class="sb-calc" data-sb-calc>
+  <div class="sb-wrap">
+
+    <header class="sb-header">
+      <h1 class="sb-title">What is your 3PL <em>actually</em> costing you?</h1>
+      <p class="sb-subtitle">Punch in your current fees and see your real annual spend, plus what a Saltbox membership would cost at your volume.</p>
+      <p class="sb-support">Most founders who run this are surprised by the gap. <span class="sb-emphasis">Take 90 seconds and find out.</span></p>
+    </header>
+
+    <div class="sb-grid">
+
+      <!-- ============ FORM (left table) ============ -->
+      <section class="sb-form">
+        <div class="sb-step-row">
+          <div class="sb-step-num">1</div>
+          <h2 class="sb-form-title">Enter your current 3PL costs</h2>
+        </div>
+
+        <div class="sb-field">
+          <label for="sb-orders">Monthly order volume</label>
+          <p class="sb-field-help">Average orders shipped per month over the last 3 months.</p>
+          <div class="sb-input-wrap">
+            <input type="number" id="sb-orders" name="orders" data-sb-input="orders" class="sb-input" min="0" step="100" value="3000" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="sb-field">
+          <label for="sb-pickpack">Per-order pick/pack fee</label>
+          <p class="sb-field-help">Most 3PLs charge $2 to $5 per order. Check your invoice line items.</p>
+          <div class="sb-input-wrap">
+            <span class="sb-prefix">$</span>
+            <input type="number" id="sb-pickpack" name="pickpack" data-sb-input="pickpack" class="sb-input sb-input--pf" min="0" step="0.25" value="3.50" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="sb-field">
+          <label for="sb-storage">Monthly storage fees</label>
+          <p class="sb-field-help">Pallet, shelf, or bin charges combined. Add long-term storage surcharges if billed monthly.</p>
+          <div class="sb-input-wrap">
+            <span class="sb-prefix">$</span>
+            <input type="number" id="sb-storage" name="storage" data-sb-input="storage" class="sb-input sb-input--pf" min="0" step="50" value="1200" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="sb-field">
+          <label>Shipping markup</label>
+          <p class="sb-field-help">How your 3PL adds margin on top of the carrier rate. Pick the form your invoice uses.</p>
+          <div class="sb-toggle" role="tablist">
+            <button type="button" class="is-active" data-markup="dollar">$ per order</button>
+            <button type="button" data-markup="percent">% of rate</button>
+          </div>
+          <div class="sb-input-wrap" data-markup-input="dollar">
+            <span class="sb-prefix">$</span>
+            <input type="number" id="sb-markup-dollar" name="markup_dollar" data-sb-input="markupDollar" class="sb-input sb-input--pf" min="0" step="0.25" value="2.00" inputmode="decimal">
+          </div>
+          <div class="sb-input-wrap" data-markup-input="percent" style="display:none;">
+            <input type="number" id="sb-markup-percent" name="markup_percent" data-sb-input="markupPercent" class="sb-input sb-input--sf" min="0" step="1" value="15" inputmode="numeric">
+            <span class="sb-suffix">%</span>
+          </div>
+        </div>
+
+        <div class="sb-field">
+          <label for="sb-account">Monthly account / platform fees</label>
+          <p class="sb-field-help">Tech, software, integrations, account management. Some 3PLs bundle this into a flat monthly fee.</p>
+          <div class="sb-input-wrap">
+            <span class="sb-prefix">$</span>
+            <input type="number" id="sb-account" name="account" data-sb-input="account" class="sb-input sb-input--pf" min="0" step="25" value="250" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="sb-field">
+          <label for="sb-receiving">Monthly receiving fees</label>
+          <p class="sb-field-help">Total receiving charges in a typical month (per pallet, per carton, or per unit, combined).</p>
+          <div class="sb-input-wrap">
+            <span class="sb-prefix">$</span>
+            <input type="number" id="sb-receiving" name="receiving" data-sb-input="receiving" class="sb-input sb-input--pf" min="0" step="25" value="400" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="sb-field">
+          <label for="sb-returns">Returns processing fee</label>
+          <p class="sb-field-help">Charge per return. We assume 5% returns rate (e-comm typical). Adjust your fee, not the rate.</p>
+          <div class="sb-input-wrap">
+            <span class="sb-prefix">$</span>
+            <input type="number" id="sb-returns" name="returns" data-sb-input="returns" class="sb-input sb-input--pf" min="0" step="0.50" value="4.00" inputmode="decimal">
+          </div>
+        </div>
+
+        <div class="sb-assumptions">
+          <strong>How we estimate.</strong> Returns volume uses a 5% returns rate on your monthly orders. If you entered shipping markup as a %, we apply it to an $8 average carrier rate. Saltbox side reflects the published Access plan rate. Warehouse suite pricing is custom.
+        </div>
+      </section>
+
+      <!-- ============ RESULTS ============ -->
+      <section class="sb-results">
+        <div class="sb-step-row">
+          <div class="sb-step-num">2</div>
+          <h2 class="sb-results-title">Here's what the numbers say</h2>
+        </div>
+
+        <div class="sb-compare">
+          <div class="sb-compare-card">
+            <div class="sb-compare-card-label">Your current 3PL</div>
+            <div class="sb-compare-card-num" data-sb-out="threePLAnnual">$227,400</div>
+            <div class="sb-compare-card-sub">per year</div>
+          </div>
+          <div class="sb-compare-card sb-compare-card--saltbox">
+            <div class="sb-compare-card-label">Saltbox</div>
+            <div class="sb-compare-card-num" data-sb-out="sbAnnual">$4,188</div>
+            <div class="sb-compare-card-sub">membership per year</div>
+          </div>
+        </div>
+
+        <div class="sb-gap">
+          <div class="sb-gap-label">Annual gap</div>
+          <div class="sb-gap-num" data-sb-out="gapNum">$223,212</div>
+          <div class="sb-gap-sub"><span class="sb-gap-pct" data-sb-out="gapPct">98%</span> less on membership vs your current 3PL</div>
+        </div>
+
+        <div class="sb-cpo-row">
+          <span>Cost per order, current 3PL</span>
+          <span data-sb-out="cpoCurrent">$6.32</span>
+        </div>
+        <div class="sb-cpo-row">
+          <span>Cost per order, Saltbox membership</span>
+          <span data-sb-out="cpoSaltbox">$0.12</span>
+        </div>
+
+        <div class="sb-insight" data-sb-out="insight">
+          <strong>What this means.</strong> At 3,000 orders/month, you're paying about $6.32 per order to your 3PL.
+        </div>
+
+        <p class="sb-disclaimer">
+          Saltbox pricing shown reflects published Access plan rates and is provided for illustrative purposes. Warehouse suite pricing is customized based on space size, location, and term. Membership does not include carrier shipping spend or on-site labor, which members handle directly (often at lower rates via Parsel and Saltbox Operations Services). Actual costs vary. Book a call for a personalized quote.
+        </p>
+
+        <a href="https://www.saltbox.com/3pl-comparison" class="sb-cta" data-sb-cta>Book a call to see your actual Saltbox quote</a>
+      </section>
+
+    </div>
+
+    <!-- ============ TRUST LAYER ============ -->
+    <section class="sb-trust">
+      <div class="sb-trust-grid">
+        <div class="sb-proof">
+          <div class="sb-proof-num">1,000+</div>
+          <p class="sb-proof-body">Product-based businesses operating at Saltbox on month-to-month memberships across 12 markets.</p>
+        </div>
+        <div class="sb-proof">
+          <div class="sb-proof-num">Parsel</div>
+          <p class="sb-proof-body">Negotiated carrier rates Saltbox members access directly. No 3PL markup layered on shipping.</p>
+        </div>
+        <div class="sb-proof">
+          <div class="sb-proof-num">Saltbox Operations Services</div>
+          <p class="sb-proof-body">On-demand labor for peak season, FBA prep, or short-term lift. Starts at $45/hour. Use it only when you need it.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="sb-exit-cta">
+      <div class="sb-exit-cta-text">
+        <h2 class="sb-exit-cta-title">Ready to ditch your subpar 3PL?</h2>
+        <p class="sb-exit-cta-desc">Download our 3PL exit checklist on how to move out and move on from your 3PL provider.</p>
+      </div>
+      <a href="https://www.saltbox.com/resources/templates-and-guides/the-3pl-exit-checklist" class="sb-exit-cta-btn">Get the checklist</a>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  (function () {
+    function init(root) {
+      if (root.dataset.sbReady) return;
+      root.dataset.sbReady = '1';
+
+      var fmt0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+      var fmt2 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      var fmtPct = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+      var fmtInt = new Intl.NumberFormat('en-US');
+
+      // Modeling constants
+      var RETURNS_RATE = 0.05;      // 5% returns rate applied to monthly order volume
+      var AVG_CARRIER_RATE = 8.00;  // baseline $/order when shipping markup is entered as a %
+      var SALTBOX_MONTHLY = 349;    // Access plan published rate
+
+      // Left-table inputs and result outputs, looked up inside this embed only
+      var inputs = {};
+      root.querySelectorAll('[data-sb-input]').forEach(function (el) { inputs[el.dataset.sbInput] = el; });
+      var out = {};
+      root.querySelectorAll('[data-sb-out]').forEach(function (el) { out[el.dataset.sbOut] = el; });
+      var cta = root.querySelector('[data-sb-cta]');
+      var ctaBase = cta ? cta.getAttribute('href') : '';
+
+      var markupMode = 'dollar';
+
+      function n(el) {
+        var v = parseFloat(el.value);
+        return isFinite(v) && v >= 0 ? v : 0;
+      }
+
+      // Everything the visitor typed in the left table, plus the computed results
+      function readValues() {
+        var orders = n(inputs.orders);
+        var markupPerOrder = markupMode === 'dollar'
+          ? n(inputs.markupDollar)
+          : (n(inputs.markupPercent) / 100) * AVG_CARRIER_RATE;
+
+        var monthlyAll = n(inputs.storage) + n(inputs.account) + n(inputs.receiving)
+          + orders * n(inputs.pickpack)
+          + orders * markupPerOrder
+          + orders * RETURNS_RATE * n(inputs.returns);
+        var annual3pl = monthlyAll * 12;
+        var annualSaltbox = SALTBOX_MONTHLY * 12;
+        var gap = annual3pl - annualSaltbox;
+
+        return {
+          orders: orders,
+          pickpack: n(inputs.pickpack),
+          storage: n(inputs.storage),
+          markup_mode: markupMode,
+          markup_dollar: n(inputs.markupDollar),
+          markup_percent: n(inputs.markupPercent),
+          account: n(inputs.account),
+          receiving: n(inputs.receiving),
+          returns: n(inputs.returns),
+          monthly_3pl: Math.round(monthlyAll * 100) / 100,
+          annual_3pl: Math.round(annual3pl),
+          annual_saltbox: annualSaltbox,
+          annual_gap: Math.round(gap),
+          gap_pct: annual3pl > 0 ? Math.round((gap / annual3pl) * 100) : 0,
+          cpo_current: orders > 0 ? Math.round((monthlyAll / orders) * 100) / 100 : 0,
+          cpo_saltbox: orders > 0 ? Math.round((SALTBOX_MONTHLY / orders) * 100) / 100 : 0
+        };
+      }
+
+      function recalc() {
+        var v = readValues();
+
+        out.threePLAnnual.textContent = fmt0.format(v.annual_3pl);
+        out.sbAnnual.textContent      = fmt0.format(v.annual_saltbox);
+        out.gapNum.textContent        = fmt0.format(Math.max(0, v.annual_gap));
+        out.gapPct.textContent        = fmtPct.format(Math.max(0, v.gap_pct)) + '%';
+        out.cpoCurrent.textContent    = fmt2.format(v.cpo_current);
+        out.cpoSaltbox.textContent    = fmt2.format(v.cpo_saltbox);
+
+        var msg;
+        if (v.orders === 0 || v.monthly_3pl === 0) {
+          msg = '<strong>Add your numbers.</strong> Even rough estimates work. The math is built to surface the gap, not catch you on a decimal.';
+        } else if (v.annual_gap <= 0) {
+          msg = '<strong>Tight margins on your side.</strong> Your 3PL fees come in under or near a Saltbox membership floor. The fuller picture (carrier rates, labor flexibility) is worth a call to map out.';
+        } else {
+          msg = '<strong>What this means.</strong> At ' + fmtInt.format(v.orders) + ' orders/month, you\'re paying about ' + fmt2.format(v.cpo_current) + ' per order to your 3PL. The gap above shows the delta vs. a Saltbox membership floor, before Parsel shipping rates and Saltbox Operations Services labor are layered in.';
+        }
+        out.insight.innerHTML = msg;
+
+        // Pass the left-table inputs along with the "Book a call" link
+        if (cta && ctaBase) {
+          var url = new URL(ctaBase, window.location.href);
+          Object.keys(v).forEach(function (k) { url.searchParams.set('calc_' + k, v[k]); });
+          cta.href = url.toString();
+        }
+
+        root.dispatchEvent(new CustomEvent('sb-calc:change', { detail: v, bubbles: true }));
+      }
+
+      Object.keys(inputs).forEach(function (k) { inputs[k].addEventListener('input', recalc); });
+
+      var toggleBtns = root.querySelectorAll('.sb-toggle button');
+      toggleBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          markupMode = btn.dataset.markup;
+          toggleBtns.forEach(function (b) { b.classList.toggle('is-active', b === btn); });
+          root.querySelector('[data-markup-input="dollar"]').style.display  = (markupMode === 'dollar')  ? 'flex' : 'none';
+          root.querySelector('[data-markup-input="percent"]').style.display = (markupMode === 'percent') ? 'flex' : 'none';
+          recalc();
+        });
+      });
+
+      // Send the inputs to analytics (GTM / GA4) when the visitor clicks "Book a call"
+      if (cta) {
+        cta.addEventListener('click', function () {
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push(Object.assign({ event: 'sb_calc_book_call' }, readValues()));
+        });
+      }
+
+      // Read the current inputs from anywhere: window.sbCalcInputs()
+      window.sbCalcInputs = readValues;
+
+      recalc();
+    }
+
+    function boot() { document.querySelectorAll('[data-sb-calc]').forEach(init); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+</script>
