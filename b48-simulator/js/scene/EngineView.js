@@ -36,15 +36,19 @@ export class EngineView {
     this.explodeCur = 0;
     this._camTween = null;
     this._time = 0;
+    this._theme = 'dark';
+    this._labelMode = 'none';
+    this.animator = new Animator();
+    this.running = new Running();
   }
 
   // ------------------------------------------------------------------ inițializare
   async init() {
     if (this.ready) return;
     this.stage = new Stage(this.container); // aruncă eroare clară dacă WebGL lipsește
-    this.animator = new Animator();
-    this.running = new Running();
+    this.stage.setTheme(this._theme);
     this.labels = new LabelLayer(this.container);
+    this.labels.setMode(this._labelMode);
     this.leaks = new LeakFX(this.stage.fxRoot, (id) => this._worldBox(id), FLOOR_Y);
     this.tools = new ToolFX(this.stage.fxRoot, (id) => {
       const rec = this.recs.get(id);
@@ -65,9 +69,10 @@ export class EngineView {
     this.stage.engineRoot.updateMatrixWorld(true);
     for (const rec of this.recs.values()) this._measure(rec);
     computeExplodeVectors(this.recs);
+    this._markInternal();
     // stare cinematică inițială (θ = 0)
     this.running.apply(this.recs, () => true);
-    for (const rec of this.recs.values()) refreshLook(rec, 0);
+    this._applyAll();
 
     this.picker = new Picker(this.stage.renderer.domElement, this.stage.camera, () => this._targets(), (hits) => this._resolveHits(hits), {
       onPick: (partId) => this.bus?.emit('view:pick', { partId }),
@@ -111,6 +116,17 @@ export class EngineView {
     rec.sizeLen = size.length();
     rec.homeCenter.copy(rec.localBox.getCenter(new THREE.Vector3())).add(rec.home);
     rec.removeDist = THREE.MathUtils.clamp(1.5 + Math.max(size.x, size.y, size.z) * 0.35, 1.5, 3);
+  }
+
+  /** Piese ascunse în interiorul carcaselor (fără etichetă în modul 'all', cu excepția x-ray). */
+  _markInternal() {
+    const shells = [...XRAY_IDS].map((id) => this.recs.get(id)).filter(Boolean)
+      .map((r) => r.localBox.clone().translate(r.home).expandByScalar(0.03));
+    for (const rec of this.recs.values()) {
+      if (XRAY_IDS.has(rec.id)) { rec.internal = false; continue; }
+      const box = rec.localBox.clone().translate(rec.home);
+      rec.internal = shells.some((s) => s.containsBox(box));
+    }
   }
 
   /** Încarcă modelele .glb declarate (part.model); la eroare rămâne geometria procedurală. */
@@ -171,7 +187,7 @@ export class EngineView {
     const s = this.stage;
     this.labels.update(s.camera, this.recs.values(), this.selectedId, s.width, s.height,
       (rec, out) => rec.localBox.getCenter(out).applyMatrix4(rec.group.matrixWorld),
-      (rec) => rec.group.visible && !rec.ghost);
+      (rec) => rec.group.visible && !rec.ghost && (this.xray || !rec.internal || rec.id === this.selectedId));
   }
 
   // ------------------------------------------------------------------ utilitare
@@ -334,7 +350,7 @@ export class EngineView {
     if (k >= 1) this._camTween = null;
   }
 
-  setLabels(mode) { this.labels?.setMode(mode); }
+  setLabels(mode) { this._labelMode = mode; this.labels?.setMode(mode); }
 
   showLeak(partId, fluid) { if (this.ready) this.leaks.show(partId, fluid); }
   clearLeaks() { this.leaks?.clear(); }
@@ -344,9 +360,9 @@ export class EngineView {
     return this.tools.play(partId, toolId, kind);
   }
 
-  setRunning(bool, opts = {}) { this.running?.set(bool, opts); }
+  setRunning(bool, opts = {}) { this.running.set(bool, opts); }
 
-  setTheme(name) { this.stage?.setTheme(name); }
+  setTheme(name) { this._theme = name === 'light' ? 'light' : 'dark'; this.stage?.setTheme(this._theme); }
 
   dispose() {
     if (!this.stage) return;

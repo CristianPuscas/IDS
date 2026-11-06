@@ -21,7 +21,7 @@ export function computeExplodeVectors(recs) {
       if (radial.lengthSq() > 1e-6) radial.normalize();
       const dir = rec.removalDir.clone().multiplyScalar(1).addScaledVector(radial, 0.4);
       if (dir.lengthSq() < 1e-6) dir.copy(rec.removalDir);
-      const step = 0.7 + Math.min(0.9, rec.sizeLen * 0.12);
+      const step = 0.55 + Math.min(0.7, rec.sizeLen * 0.1);
       v.addScaledVector(dir.normalize(), step);
     } else if (rec.id !== 'bloc_motor') {
       // piese independente (ex. intercooler): doar radial

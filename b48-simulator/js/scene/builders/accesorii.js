@@ -1,7 +1,7 @@
 // Ansamblul „accesorii”: curea (pe învelitoarea fuliilor), întinzător, amortizor, alternator, compresor AC, volantă, suporți.
 import * as THREE from 'three';
 import { hullOfCircles, offsetPoly, polyShape, circlePath, gearShape } from '../geom.js';
-import { BELT_X, BLOCK_X } from '../dims.js';
+import { BELT_X } from '../dims.js';
 import { WATER_PUMP_C } from './racire.js';
 
 // Fulii în planul curelei (u = z, v = y, r)
@@ -83,7 +83,8 @@ export function register(R) {
     b.extrude('steelDark', disc, 0.1, { along: 'x', curve: 48 });
     b.extrude('steel', gearShape(1.27, 1.34, 100, 1.2), 0.06, { along: 'x', p: [-0.02, 0, 0], curve: 64 });
     b.cyl('steel', 0.36, 0.16, [0.02, 0, 0], 'x', 36);
-    b.cyl('aluMach', 1.05, 0.02, [0.06, 0, 0], 'x', 64, 1.05);    // suprafața de frecare
+    const ring = new THREE.Shape(); ring.absarc(0, 0, 1.18, 0, Math.PI * 2, false); ring.holes.push(circlePath(0, 0, 0.98));
+    b.extrude('aluMach', ring, 0.02, { along: 'x', p: [0.06, 0, 0], curve: 64 }); // suprafața de frecare
     for (let k = 0; k < 8; k++) b.bolt([0.1, 0.25 * Math.cos(k * Math.PI / 4), 0.25 * Math.sin(k * Math.PI / 4)], 'x', 0.035);
   });
 
@@ -100,4 +101,3 @@ export function register(R) {
   R.part('suport_motor_dreapta', [-0.6, 0.7, 0.95], (b) => mount(b, -1));
 }
 
-export { BLOCK_X };

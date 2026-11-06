@@ -1,5 +1,4 @@
 // Ansamblul „supraalimentare”: garnitură, turbocompresor (carcase spirale), wastegate, sondă lambda, conducte, intercooler.
-import * as THREE from 'three';
 import { roundedRect, rectPath, voluteGeometry } from '../geom.js';
 import { CYL_X, BLOCK_Z, FLOOR_Y } from '../dims.js';
 
@@ -28,8 +27,9 @@ export function register(R) {
       b.tube('exhaust', [rel([x, EX_Y, EX_Z + 0.06], A), rel([x * 0.85, EX_Y + 0.02, EX_Z + 0.3], A), rel([x * 0.45 + TURB_X * 0.4, 2.42, 1.3], A), rel([TURB_X, 2.3, 1.42], A)], 0.11, { radial: 14 });
     });
     // carcasa turbinei (volută) + disc central
-    b.add(voluteGeometry(0.2, 0.3, 0.08, 0.15), 'exhaust', { p: [TURB_X, 0, 0], r: [-1.2, 0, 0] });
-    b.cyl('exhaust', 0.25, 0.22, [TURB_X + 0.02, 0, 0], 'x', 36);
+    b.add(voluteGeometry(0.17, 0.27, 0.09, 0.19), 'exhaust', { p: [TURB_X, 0, 0], r: [-1.2, 0, 0] });
+    b.cyl('exhaust', 0.27, 0.26, [TURB_X + 0.02, 0, 0], 'x', 36);
+    b.cyl('exhaust', 0.17, 0.08, [TURB_X + 0.17, 0, 0], 'x', 28);
     // ieșire turbină + cot spre țeava de evacuare
     b.tube('exhaust', [[TURB_X + 0.1, 0, 0], [TURB_X + 0.32, 0, 0], [TURB_X + 0.47, -0.18, 0.04], [TURB_X + 0.5, -0.52, 0.08]], 0.13, { radial: 16 });
     b.cyl('steelDark', 0.19, 0.04, [TURB_X + 0.5, -0.55, 0.08], 'y', 28);
@@ -38,8 +38,9 @@ export function register(R) {
     b.tube('steel', [[0.05, -0.12, 0], [0.08, -0.4, -0.1], [0.05, -0.8, -0.6], [0.0, -0.9, -0.82]], 0.022, { radial: 8 });
     b.tube('steel', [[-0.02, 0.12, -0.04], [-0.1, 0.35, -0.3], [-0.3, 0.4, -0.75]], 0.02, { radial: 8 });
     // carcasa compresorului (aluminiu) cu ieșire tangențială sus, spre +Z
-    b.add(voluteGeometry(0.16, 0.24, 0.06, 0.11), 'alu', { p: [COMP_X, 0, 0], r: [-Math.PI * 2 * 0.92, 0, 0] });
-    b.cyl('alu', 0.24, 0.1, [COMP_X + 0.05, 0, 0], 'x', 36);
+    b.add(voluteGeometry(0.15, 0.22, 0.07, 0.13), 'alu', { p: [COMP_X, 0, 0], r: [-Math.PI * 2 * 0.92, 0, 0] });
+    b.cyl('alu', 0.24, 0.16, [COMP_X + 0.04, 0, 0], 'x', 36);
+    b.cyl('alu', 0.3, 0.05, [COMP_X + 0.13, 0, 0], 'x', 36);
     b.lathe('alu', [[0.1, 0], [0.135, 0], [0.135, -0.26], [0.1, -0.26], [0.1, 0]], [COMP_X - 0.02, 0, 0], 'x', 32);
     b.cyl('alu', 0.1, 0.45, rel([COMP_X, 2.34, 1.93], A), 'z', 24);
     b.torus('alu', 0.1, 0.018, rel(COMP_OUT, A), 'z');

@@ -1,6 +1,6 @@
 // Ansamblul „bloc”: bloc motor, arbore cotit, biele, pistoane, segmenți, arbori de echilibrare.
 import * as THREE from 'three';
-import { roundedRect, circlePath, polyShape } from '../geom.js';
+import { roundedRect, circlePath } from '../geom.js';
 import { CYL_X, CRANK_R, ROD_L, BORE_R, DECK_Y, BLOCK_X, BLOCK_Z, JOURNAL_X, PIN_PHASE, pistonPinY } from '../dims.js';
 
 /** Forma unui braț de arbore cotit cu contragreutate (în planul (z,y), manetonul spre +y). */

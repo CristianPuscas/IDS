@@ -1,5 +1,5 @@
 // Ansamblul „electric”: bobine, bujii, senzori arbore cotit / axe cu came, cablaj motor.
-import { CYL_X, COVER_TOP, CAM_Z, BLOCK_X } from '../dims.js';
+import { CYL_X, COVER_TOP, CAM_Z } from '../dims.js';
 
 export function register(R) {
   CYL_X.forEach((x, i) => {

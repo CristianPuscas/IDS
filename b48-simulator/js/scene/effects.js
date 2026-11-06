@@ -17,7 +17,7 @@ export class LeakFX {
   constructor(root, getBox, floorY) {
     this.root = root; this.getBox = getBox; this.floorY = floorY;
     this.leaks = new Map();
-    this.dropGeo = new THREE.SphereGeometry(0.03, 10, 8);
+    this.dropGeo = new THREE.SphereGeometry(0.045, 10, 8);
     this.puffGeo = new THREE.SphereGeometry(0.07, 10, 8);
     this.puddleGeo = new THREE.CircleGeometry(1, 40);
   }
@@ -36,7 +36,7 @@ export class LeakFX {
       lk.puddle.rotation.x = -Math.PI / 2;
       lk.puddle.scale.setScalar(0.001);
       lk.puddle.renderOrder = 3;
-      lk.puddleR = 0.05;
+      lk.puddleR = 0.18;
       this.root.add(lk.puddle);
     } else {
       lk.mat = new THREE.MeshBasicMaterial({ color: def.color, transparent: true, opacity: fluid === 'aer' ? 0.42 : 0.5, depthWrite: false });
@@ -82,7 +82,7 @@ export class LeakFX {
             d.p.y -= d.v * dt * 2.2;
             if (d.p.y <= this.floorY + 0.02) {
               d.active = false; d.wait = 0.3 + Math.random() * 0.6;
-              lk.puddleR = Math.min(0.9, lk.puddleR + 0.03);
+              lk.puddleR = Math.min(1.0, lk.puddleR + 0.05);
             }
           }
           const sc = d.active ? 1 : 0.0001;

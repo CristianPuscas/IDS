@@ -16,7 +16,7 @@ function camShape() {
   return s;
 }
 
-function camshaft(b, z) {
+function camshaft(b) {
   b.cyl('steel', 0.085, 3.85, [0.02, 0, 0], 'x', 20);
   const cam = camShape();
   CYL_X.forEach((x, i) => {
@@ -78,8 +78,8 @@ export function register(R) {
   });
 
   // ---------- axe cu came ----------
-  R.part('ax_came_admisie', [0, CAM_Y, -CAM_Z], (b) => camshaft(b, -CAM_Z));
-  R.part('ax_came_evacuare', [0, CAM_Y, CAM_Z], (b) => camshaft(b, CAM_Z));
+  R.part('ax_came_admisie', [0, CAM_Y, -CAM_Z], (b) => camshaft(b));
+  R.part('ax_came_evacuare', [0, CAM_Y, CAM_Z], (b) => camshaft(b));
 
   // ---------- ax excentric Valvetronic ----------
   R.part('ax_excentric', [0, CAM_Y + 0.13, -0.58], (b) => {

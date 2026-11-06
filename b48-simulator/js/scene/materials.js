@@ -2,8 +2,8 @@
 import * as THREE from 'three';
 
 export const MATERIAL_DEFS = {
-  alu:        { color: 0xa9adb2, metalness: 0.72, roughness: 0.52 },  // aluminiu turnat
-  aluHead:    { color: 0xb9bcc0, metalness: 0.7, roughness: 0.46 },
+  alu:        { color: 0x9da1a6, metalness: 0.7, roughness: 0.56 },  // aluminiu turnat
+  aluHead:    { color: 0xaaaeb2, metalness: 0.7, roughness: 0.5 },
   aluDark:    { color: 0x7d838a, metalness: 0.7, roughness: 0.5 },
   aluMach:    { color: 0xd6d9dc, metalness: 0.9, roughness: 0.26 },   // suprafețe prelucrate
   piston:     { color: 0xc4c6c4, metalness: 0.75, roughness: 0.38 },
