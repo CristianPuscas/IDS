@@ -26,6 +26,12 @@ export class LessonsUI {
     const runner = app.lessons;
     clear(this.el);
     if (runner.active) this.el.appendChild(this.stepCard(false));
+    const key = runner.active ? `${runner.lesson.id}:${runner.index}` : '';
+    if (key && key !== this._lastKey) {
+      const scroller = this.el.closest('.tab-body');
+      if (scroller) scroller.scrollTop = 0;
+    }
+    this._lastKey = key;
     const lessons = runner.lessons();
     const intro = h('p.field-note', app.modes.currentId === 'guided' ? 'Mod ghidat: indicii și verificarea fiecărui pas.' : app.modes.currentId === 'free'
       ? 'Mod liber: puteți parcurge lecțiile cu Înapoi/Sari, fără reguli impuse.' : 'Lecțiile pornesc în modul Ghidat.');
@@ -155,7 +161,12 @@ export class LessonsUI {
     const { app } = this;
     clear(this.hudEl);
     if (app.lessons.active) this.hudEl.appendChild(this.stepCard(true));
-    app.hud.setLesson(app.lessons.active ? this.hudEl : null);
+    else if (app.modes?.currentId === 'guided') {
+      this.hudEl.appendChild(h('div.hud-card',
+        h('div.hud-title', '🎓 Mod ghidat'),
+        h('div.hud-text', 'Alegeți o lecție din tabul „Lecții”. Pașii următori sunt evidențiați în galben în 3D, iar sculele cerute în inventar.')));
+    }
+    app.hud.setLesson(this.hudEl.firstChild ? this.hudEl : null);
   }
 }
 

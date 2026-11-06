@@ -443,9 +443,7 @@ export function createGuidedMode(app) {
     enter() {
       app.sim.setEnforce(true);
       app.left?.activate('lessons');
-      app.hud.setMode(h('div.hud-card',
-        h('div.hud-title', '🎓 Mod ghidat'),
-        h('div.hud-text', 'Alegeți o lecție din tabul „Lecții”. Pașii următori sunt evidențiați în galben în 3D.')));
+      app.lessonsUI?.renderHud();
     },
     exit() {},
     hasUnsavedProgress() { return false; }

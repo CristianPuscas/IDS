@@ -1,0 +1,14 @@
+{
+  "name": "b48-mechanic-simulator",
+  "version": "0.1.0",
+  "description": "Joc web 3D educațional pentru învățarea practică a mecanicii motorului BMW B48 (model aproximativ, valori demonstrative).",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test tests/"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

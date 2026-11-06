@@ -188,7 +188,12 @@ async function boot() {
 function buildUi() {
   const modeHud = h('div.hud-slot');
   const lessonHud = h('div.hud-slot');
-  $('#mode-hud').append(modeHud, lessonHud);
+  const hudToggle = h('button.hud-toggle', { type: 'button', 'aria-expanded': 'true', onclick: () => {
+    const c = $('#mode-hud').classList.toggle('collapsed');
+    hudToggle.setAttribute('aria-expanded', String(!c));
+    hudToggle.textContent = c ? '▸ Arată instrucțiunile' : '▾ Ascunde';
+  } }, '▾ Ascunde');
+  $('#mode-hud').append(hudToggle, modeHud, lessonHud);
   app.hud = {
     setMode(el) { modeHud.replaceChildren(...(el ? [el] : [])); },
     setLesson(el) { if (el) { if (el.parentNode !== lessonHud) lessonHud.replaceChildren(el); } else lessonHud.replaceChildren(); },
