@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ro" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BMW B48 Mechanic Simulator</title>
+  <meta name="description" content="Simulator web 3D educațional pentru învățarea practică a mecanicii motorului BMW B48 (model aproximativ, valori demonstrative).">
+  <meta name="color-scheme" content="dark light">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%231c69d4'/%3E%3Ctext x='16' y='21' font-size='13' text-anchor='middle' fill='white' font-family='Arial'%3EB48%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/panels.css">
+  <script type="importmap">
+  { "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#viewport">Sari la vizualizarea 3D</a>
+
+  <div id="loading" class="loading" role="status" aria-live="polite">
+    <div class="loading-card">
+      <div class="loading-logo" aria-hidden="true">B48</div>
+      <h1>BMW B48 Mechanic Simulator</h1>
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="loading-status">Se încarcă datele…</p>
+      <div id="loading-error" class="loading-error" hidden></div>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-logo" aria-hidden="true">B48</span>
+      <div class="brand-text">
+        <h1 class="brand-title">BMW B48 Mechanic Simulator</h1>
+        <span class="brand-sub">Atelier educațional 3D</span>
+      </div>
+    </div>
+    <div class="header-controls">
+      <button id="btn-toggle-left" class="icon-btn only-narrow" type="button" aria-label="Arată/ascunde panoul stâng" aria-expanded="false">☰</button>
+      <label class="hdr-field">
+        <span class="hdr-label">Mod de joc</span>
+        <select id="mode-select" class="input" aria-label="Mod de joc">
+          <option value="free">Liber</option>
+          <option value="guided">Ghidat (lecții)</option>
+          <option value="exam">Examen</option>
+          <option value="diagnosis">Diagnostic</option>
+          <option value="assembly">Asamblare contra timp</option>
+          <option value="workshop">Atelier (buget)</option>
+        </select>
+      </label>
+      <div class="variant-box">
+        <span id="variant-badge" class="badge badge-demo" title="Varianta motorului folosită pentru specificații">Variantă: generic DEMONSTRATIV</span>
+        <button id="btn-variant" class="btn btn-sm" type="button">Alege varianta</button>
+      </div>
+      <div class="hdr-group" role="group" aria-label="Progres">
+        <button id="btn-save" class="btn btn-sm" type="button" title="Salvează starea motorului și progresul local">💾 Salvează</button>
+        <button id="btn-reset" class="btn btn-sm" type="button" title="Resetează motorul sau progresul">↺ Resetează</button>
+      </div>
+      <div class="hdr-group audio-box" role="group" aria-label="Sunet">
+        <button id="btn-mute" class="icon-btn" type="button" aria-label="Sunet pornit — apasă pentru a opri" aria-pressed="false">🔊</button>
+        <input id="volume" type="range" min="0" max="100" value="70" aria-label="Volum">
+      </div>
+      <button id="btn-theme" class="icon-btn" type="button" aria-label="Comută tema luminoasă/întunecată">🌓</button>
+      <button id="btn-toggle-right" class="icon-btn only-narrow" type="button" aria-label="Arată/ascunde panoul piesei" aria-expanded="false">ⓘ</button>
+    </div>
+  </header>
+
+  <div class="disclaimer-banner" role="note">
+    Model 3D educațional aproximativ — nu este o reproducere exactă. Valorile tehnice marcate NEVERIFICATĂ nu se folosesc pe un motor real.
+  </div>
+
+  <main class="app-main">
+    <aside id="left-panel" class="panel panel-left" aria-label="Lecții, operațiuni și date"></aside>
+
+    <section class="center" aria-label="Spațiu de lucru">
+      <div class="toolbar" role="toolbar" aria-label="Unelte vizualizare 3D">
+        <label class="tb-field" title="Vedere explodată">
+          <span>Explodare</span>
+          <input id="explode" type="range" min="0" max="100" value="0" aria-label="Vedere explodată">
+        </label>
+        <button id="btn-xray" class="btn btn-sm toggle" type="button" aria-pressed="false">X-ray</button>
+        <label class="tb-field">
+          <span>Etichete</span>
+          <select id="labels" class="input input-sm" aria-label="Etichete piese">
+            <option value="none">niciuna</option>
+            <option value="selected" selected>piesa selectată</option>
+            <option value="all">toate</option>
+          </select>
+        </label>
+        <button id="btn-ghost" class="btn btn-sm toggle" type="button" aria-pressed="false" title="Piesele demontate apar transparente">Fantome</button>
+        <button id="btn-camera" class="btn btn-sm" type="button" title="Resetează camera">⌖ Cameră</button>
+        <span class="tb-spacer"></span>
+        <button id="btn-engine" class="btn btn-sm btn-accent" type="button" aria-pressed="false">▶ <span class="lbl">Pornește motorul</span></button>
+        <button id="btn-final" class="btn btn-sm btn-primary" type="button">✔ Verificare finală</button>
+      </div>
+      <div id="viewport" class="viewport" tabindex="-1" aria-label="Vizualizare 3D a motorului">
+        <div id="view-host" class="view-host"></div>
+        <div id="mode-hud" class="mode-hud" aria-live="polite"></div>
+        <div id="hover-label" class="hover-label" hidden></div>
+        <div id="view-error" class="view-error" hidden></div>
+        <div id="toasts" class="toasts" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <aside id="right-panel" class="panel panel-right" aria-label="Piesă selectată">
+      <div class="panel-title">Piesă selectată</div>
+      <div id="part-panel" class="part-panel"></div>
+    </aside>
+  </main>
+
+  <footer class="bottom">
+    <section id="inventory" class="bottom-cell inventory" aria-label="Inventar de scule"></section>
+    <section id="notices" class="bottom-cell notices" aria-label="Progres și explicații"></section>
+    <section id="log" class="bottom-cell log-panel" aria-label="Jurnal operațiuni"></section>
+  </footer>
+
+  <div id="modal-root"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ro"><head><meta charset="utf-8"><title>EngineView dev</title>
+<style>html,body{margin:0;height:100%;background:#111}#v{width:100vw;height:100vh}</style>
+<script type="importmap">
+{ "imports": { "three": "../../../vendor/three/three.module.min.js", "three/addons/": "../../../vendor/three/addons/" } }
+</script></head>
+<body><div id="v"></div>
+<script type="module">
+import { EventBus } from '../../core/eventBus.js';
+import { EngineView } from '../EngineView.js';
+const bus = new EventBus();
+window.events = [];
+for (const e of ['view:ready','view:pick','view:hover']) bus.on(e, (p) => window.events.push([e, p]));
+const data = await (await fetch('./parts.json')).json();
+const view = new EngineView(document.getElementById('v'), bus, data);
+window.view = view;
+try { await view.init(); window.ok = true; } catch (e) { window.initError = e.message; console.error(e); }
+</script></body></html>
