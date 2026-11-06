@@ -1,0 +1,154 @@
+{
+  "selected": "demo",
+  "variants": [
+    {
+      "id": "demo",
+      "code": "B48 (generic, demonstrativ)",
+      "years": null,
+      "models": [],
+      "status": "NEVERIFICATĂ",
+      "note": "Variantă generică folosită de simulator până la alegerea variantei exacte. Toate valorile tehnice sunt NEVERIFICATE; cele marcate „demo” sunt inventate doar pentru funcționarea simulatorului."
+    },
+    {
+      "id": "B48A20M0",
+      "code": "B48A20M0",
+      "years": null,
+      "models": [],
+      "powerKw": null,
+      "torqueNm": null,
+      "status": "NEVERIFICATĂ",
+      "source": {
+        "document": null,
+        "section": null,
+        "page": null,
+        "url": null
+      },
+      "note": "Cod indicat ca exemplu în cerințe; NU a fost găsit în sursele consultate (Wikipedia listează B48A20M1). De confirmat de utilizator."
+    },
+    {
+      "id": "B48B20M0",
+      "code": "B48B20M0",
+      "years": "2016–",
+      "models": [
+        "F20 120i",
+        "F22/F23 220i",
+        "F30/F31/F34 320i",
+        "F30 330e",
+        "F32/F33/F36 420i",
+        "G30/G31 520i",
+        "G01 X3 xDrive20i",
+        "G20 320i"
+      ],
+      "powerKw": 135,
+      "torqueNm": 270,
+      "status": "NEVERIFICATĂ",
+      "source": {
+        "document": "Wikipedia (en) — articolul „BMW B48” (revizia oldid=1347740922)",
+        "section": "Infobox; Design; Models",
+        "page": null,
+        "url": "https://en.wikipedia.org/wiki/BMW_B48",
+        "accessed": "2026-11-06"
+      },
+      "note": "Wikipedia: B48B20M0, 135 kW, 270 N·m (sau 290 N·m), 2016–. Lista de modele este cea a „versiunii de 135 kW” din Wikipedia; asocierea exactă cod ↔ model trebuie confirmată."
+    },
+    {
+      "id": "B48B20O0",
+      "code": "B48B20O0",
+      "years": "2015–",
+      "models": [
+        "F30/F31/F34 330i",
+        "F22/F23 230i",
+        "F32/F33/F36 430i",
+        "G30/G31 530i",
+        "G01 X3 xDrive30i"
+      ],
+      "powerKw": 185,
+      "torqueNm": 350,
+      "status": "NEVERIFICATĂ",
+      "source": {
+        "document": "Wikipedia (en) — articolul „BMW B48” (revizia oldid=1347740922)",
+        "section": "Infobox; Design; Models",
+        "page": null,
+        "url": "https://en.wikipedia.org/wiki/BMW_B48",
+        "accessed": "2026-11-06"
+      },
+      "note": "Wikipedia: B48B20O0, 185 kW, 350 N·m, 2015–. Modelele sunt cele ale „versiunii de 185 kW” din Wikipedia (asociere de confirmat)."
+    },
+    {
+      "id": "B48B20O1",
+      "code": "B48B20O1",
+      "years": "2016– (165 kW) / 2019– (190 kW)",
+      "models": [
+        "G20/G21 330i",
+        "G29 Z4 sDrive30i",
+        "G11 730i",
+        "G32 630i"
+      ],
+      "powerKw": null,
+      "torqueNm": null,
+      "status": "NEVERIFICATĂ",
+      "source": {
+        "document": "Wikipedia (en) — articolul „BMW B48” (revizia oldid=1347740922)",
+        "section": "Infobox; Design; Models",
+        "page": null,
+        "url": "https://en.wikipedia.org/wiki/BMW_B48",
+        "accessed": "2026-11-06"
+      },
+      "note": "Wikipedia listează B48B20O1 pe două rânduri: 165 kW/310 N·m (2016–) și 190 kW/400 N·m (2019–). Modelele sunt cele ale „versiunii de 190 kW”. Pagina bimmer-service.com descrie un manual de atelier pentru B48B20O1/B46B20O1 (sursă neoficială). ST1837 p.10 descrie B46B20O1 (190 kW, 1998 cm³, 82/94,6 mm, 10,2:1)."
+    },
+    {
+      "id": "B48B20O2",
+      "code": "B48B20O2",
+      "years": null,
+      "models": [],
+      "powerKw": null,
+      "torqueNm": null,
+      "status": "NEVERIFICATĂ",
+      "source": {
+        "document": null,
+        "section": null,
+        "page": null,
+        "url": null
+      },
+      "note": "Cod indicat ca exemplu în cerințe; NU a fost găsit în sursele consultate. De confirmat de utilizator."
+    },
+    {
+      "id": "B48B20T1",
+      "code": "B48B20T1 / B48A20T1",
+      "years": "11/2018 (ST1837) / 2019– (Wikipedia)",
+      "models": [
+        "F40 M135i xDrive",
+        "F44 M235i xDrive Gran Coupé",
+        "F39 X2 M35i xDrive"
+      ],
+      "powerKw": 225,
+      "torqueNm": 450,
+      "status": "NEVERIFICATĂ",
+      "source": {
+        "document": "BMW ST1837 Reference Manual B46TU/B48TU (copie ManualsLib) + Wikipedia „BMW B48”",
+        "section": "1.4 Technical data / Models",
+        "page": 10,
+        "url": "https://www.manualslib.com/manual/3882621/Bmw-B48tu.html?page=10",
+        "accessed": "2026-11-06"
+      },
+      "note": "ST1837 p.10: 225 kW (302 CP), 450 N·m, 1998 cm³, 82/94,6 mm, raport 9,5:1. Wikipedia: arbore cotit ranforsat, pistoane cu raport 9,5:1, turbo mai mare."
+    },
+    {
+      "id": "B48TU",
+      "code": "B48TU (Technical Update, familie)",
+      "years": "2018–",
+      "models": [],
+      "powerKw": null,
+      "torqueNm": null,
+      "status": "NEVERIFICATĂ",
+      "source": {
+        "document": "BMW ST1837 Reference Manual B46TU/B48TU (copie ManualsLib) + Wikipedia „BMW B48”",
+        "section": "1.2 Innovations B48TU; Technical Update versions",
+        "page": 7,
+        "url": "https://www.manualslib.com/manual/3882621/Bmw-B48tu.html?page=7",
+        "accessed": "2026-11-06"
+      },
+      "note": "Nu este un cod de motor, ci generația revizuită (2018): lanț de distribuție dintr-o bucată, Split Cooling cu modul de management termic, arbore cotit mai ușor/ranforsat, biele forjate, pompă HDP6 și injectoare HDEV6 la 350 bar (Wikipedia; ST1837 p.7)."
+    }
+  ]
+}

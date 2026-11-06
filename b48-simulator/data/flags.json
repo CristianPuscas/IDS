@@ -1,0 +1,172 @@
+{
+  "flags": [
+    {
+      "id": "baterie_deconectata",
+      "name": "Baterie deconectată",
+      "default": false,
+      "onLabel": "Deconectează bateria",
+      "offLabel": "Reconectează bateria",
+      "toolsOn": [
+        "tubulara_10"
+      ],
+      "toolsOff": [
+        "tubulara_10"
+      ],
+      "requiresOn": {
+        "removed": [],
+        "installed": [],
+        "flags": {}
+      },
+      "requiresOff": {
+        "removed": [],
+        "installed": [],
+        "flags": {}
+      },
+      "mustBeOffToStart": true,
+      "description": "Borna negativă a bateriei este desfăcută. Previne scurtcircuitele și pornirea accidentală când se lucrează la componente electrice (bobine, senzori, alternator). Pe vehicul, ordinea de deconectare și eventualele adaptări după reconectare depind de model (NEVERIFICAT)."
+    },
+    {
+      "id": "motor_rece",
+      "name": "Motor rece",
+      "default": false,
+      "onLabel": "Lasă motorul să se răcească",
+      "offLabel": "Încălzește motorul (simulat)",
+      "toolsOn": [],
+      "toolsOff": [],
+      "requiresOn": {
+        "removed": [],
+        "installed": [],
+        "flags": {}
+      },
+      "requiresOff": {
+        "removed": [],
+        "installed": [],
+        "flags": {}
+      },
+      "mustBeOffToStart": false,
+      "description": "Motorul s-a răcit la temperatura mediului. Este obligatoriu înainte de a deschide sistemul de răcire și de a lucra la turbocompresor sau la evacuare (risc de arsuri). La pornirea simulată nu contează."
+    },
+    {
+      "id": "combustibil_depresurizat",
+      "name": "Sistem de combustibil depresurizat",
+      "default": false,
+      "onLabel": "Depresurizează sistemul de combustibil",
+      "offLabel": "Repune sistemul de combustibil sub presiune",
+      "toolsOn": [],
+      "toolsOff": [],
+      "requiresOn": {
+        "removed": [],
+        "installed": [],
+        "flags": {}
+      },
+      "requiresOff": {
+        "removed": [],
+        "installed": [
+          "pompa_inalta_presiune",
+          "conducta_inalta_presiune",
+          "rampa_combustibil",
+          "injector_1",
+          "injector_2",
+          "injector_3",
+          "injector_4"
+        ],
+        "flags": {}
+      },
+      "mustBeOffToStart": true,
+      "description": "Presiunea din circuitul de înaltă presiune (injecție directă) a fost eliminată înainte de a desface conducte, rampa sau injectoarele. Procedura exactă de depresurizare depinde de variantă și NU este furnizată (NEVERIFICAT); în simulator este o singură acțiune."
+    },
+    {
+      "id": "ulei_golit",
+      "name": "Ulei golit",
+      "default": false,
+      "onLabel": "Golește uleiul de motor",
+      "offLabel": "Umple cu ulei",
+      "toolsOn": [
+        "tava_scurgere"
+      ],
+      "toolsOff": [
+        "palnie_umplere"
+      ],
+      "requiresOn": {
+        "removed": [],
+        "installed": [],
+        "flags": {}
+      },
+      "requiresOff": {
+        "removed": [],
+        "installed": [
+          "baie_ulei",
+          "buson_golire_ulei",
+          "filtru_ulei",
+          "carcasa_filtru_ulei"
+        ],
+        "flags": {}
+      },
+      "mustBeOffToStart": true,
+      "description": "Uleiul a fost scurs în tava de colectare. Pentru umplere trebuie montate baia, bușonul, carcasa și filtrul de ulei. Volumul și specificația uleiului depind de variantă (vezi specificațiile — NEVERIFICATE)."
+    },
+    {
+      "id": "lichid_racire_golit",
+      "name": "Lichid de răcire golit",
+      "default": false,
+      "onLabel": "Golește lichidul de răcire",
+      "offLabel": "Umple cu lichid de răcire",
+      "toolsOn": [
+        "tava_scurgere"
+      ],
+      "toolsOff": [
+        "palnie_umplere",
+        "pompa_vacuum_racire"
+      ],
+      "requiresOn": {
+        "removed": [],
+        "installed": [],
+        "flags": {
+          "motor_rece": true
+        }
+      },
+      "requiresOff": {
+        "removed": [],
+        "installed": [
+          "pompa_apa",
+          "termostat",
+          "conducte_racire",
+          "chiulasa",
+          "racitor_ulei"
+        ],
+        "flags": {}
+      },
+      "mustBeOffToStart": true,
+      "description": "Lichidul de răcire a fost golit. Nu se deschide niciodată sistemul de răcire cu motorul cald (presiune și temperatură mare) — de aceea se cere „motor rece”. Procedura de umplere și aerisire specifică variantei NU este furnizată (NEVERIFICAT)."
+    },
+    {
+      "id": "distributie_blocata",
+      "name": "Distribuție blocată (scule de calare montate)",
+      "default": false,
+      "onLabel": "Montează sculele de blocare a distribuției",
+      "offLabel": "Demontează sculele de blocare",
+      "toolsOn": [
+        "scula_blocare_ax_came",
+        "scula_blocare_volanta"
+      ],
+      "toolsOff": [
+        "scula_blocare_ax_came",
+        "scula_blocare_volanta"
+      ],
+      "requiresOn": {
+        "removed": [
+          "capac_chiulasa"
+        ],
+        "installed": [],
+        "flags": {}
+      },
+      "requiresOff": {
+        "removed": [],
+        "installed": [],
+        "flags": {}
+      },
+      "mustBeOffToStart": true,
+      "description": "Axele cu came și arborele cotit sunt fixate cu scule speciale în poziția de calare, înainte de a desface lanțul sau unitățile VANOS. Pozițiile și sculele reale (coduri BMW) NU sunt furnizate — NEVERIFICAT. Pornirea motorului cu sculele montate provoacă avarii grave."
+    }
+  ]
+}

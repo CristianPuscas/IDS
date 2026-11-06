@@ -1,0 +1,459 @@
+{
+  "tools": [
+    {
+      "id": "clichet_1_4",
+      "name": "Clichet 1/4\"",
+      "category": "ratchet",
+      "description": "Clichet cu antrenare 1/4\" pentru șuruburi mici (senzori, capace, fixări M6). Nu controlează cuplul de strângere.",
+      "size": null,
+      "range": null,
+      "price": 60,
+      "defaultOwned": true,
+      "icon": "🔧"
+    },
+    {
+      "id": "clichet_3_8",
+      "name": "Clichet 3/8\"",
+      "category": "ratchet",
+      "description": "Clichet cu antrenare 3/8\", uz general. În simulator se folosește și pentru acționarea întinzătorului curelei de accesorii.",
+      "size": null,
+      "range": null,
+      "price": 70,
+      "defaultOwned": true,
+      "icon": "🔧"
+    },
+    {
+      "id": "clichet_1_2",
+      "name": "Clichet 1/2\"",
+      "category": "ratchet",
+      "description": "Clichet robust cu antrenare 1/2\" pentru șuruburi mari (suporturi, amortizor, volantă). Nu controlează cuplul.",
+      "size": null,
+      "range": null,
+      "price": 90,
+      "defaultOwned": true,
+      "icon": "🔧"
+    },
+    {
+      "id": "tubulara_10",
+      "name": "Cheie tubulară 10 mm",
+      "category": "socket",
+      "description": "Tubulară hexagonală de 10 mm. În simulator: borna bateriei și piulițe mici.",
+      "size": "10 mm",
+      "range": null,
+      "price": 15,
+      "defaultOwned": true,
+      "icon": "🔩"
+    },
+    {
+      "id": "tubulara_13",
+      "name": "Cheie tubulară 13 mm",
+      "category": "socket",
+      "description": "Tubulară hexagonală de 13 mm pentru piulițe și șuruburi medii.",
+      "size": "13 mm",
+      "range": null,
+      "price": 15,
+      "defaultOwned": true,
+      "icon": "🔩"
+    },
+    {
+      "id": "tubulara_16",
+      "name": "Cheie tubulară 16 mm",
+      "category": "socket",
+      "description": "Tubulară hexagonală de 16 mm pentru șuruburi mari și piese filetate (în simulator, și pentru senzori/racorduri filetate — aproximare).",
+      "size": "16 mm",
+      "range": null,
+      "price": 18,
+      "defaultOwned": true,
+      "icon": "🔩"
+    },
+    {
+      "id": "tubulara_e8",
+      "name": "Cheie tubulară Torx exterior E8",
+      "category": "socket",
+      "description": "Tubulară pentru șuruburi cu cap Torx exterior (E-Torx) mărimea E8, frecvente la fixările mici ale motoarelor moderne.",
+      "size": "E8",
+      "range": null,
+      "price": 20,
+      "defaultOwned": true,
+      "icon": "🔩"
+    },
+    {
+      "id": "tubulara_e10",
+      "name": "Cheie tubulară Torx exterior E10",
+      "category": "socket",
+      "description": "Tubulară E-Torx E10, folosită în simulator pentru capace, baie de ulei, galerie de admisie și alte fixări M6–M8.",
+      "size": "E10",
+      "range": null,
+      "price": 25,
+      "defaultOwned": true,
+      "icon": "🔩"
+    },
+    {
+      "id": "tubulara_e12",
+      "name": "Cheie tubulară Torx exterior E12",
+      "category": "socket",
+      "description": "Tubulară E-Torx E12 pentru fixări medii (alternator, întinzător, bușon — aproximare în simulator).",
+      "size": "E12",
+      "range": null,
+      "price": 25,
+      "defaultOwned": true,
+      "icon": "🔩"
+    },
+    {
+      "id": "tubulara_e14",
+      "name": "Cheie tubulară Torx exterior E14",
+      "category": "socket",
+      "description": "Tubulară E-Torx E14 pentru șuruburi mari (chiulasă, paliere — aproximare în simulator).",
+      "size": "E14",
+      "range": null,
+      "price": 30,
+      "defaultOwned": true,
+      "icon": "🔩"
+    },
+    {
+      "id": "tubulara_e18",
+      "name": "Cheie tubulară Torx exterior E18",
+      "category": "socket",
+      "description": "Tubulară E-Torx E18 pentru șuruburi centrale mari (amortizor, VANOS — aproximare în simulator).",
+      "size": "E18",
+      "range": null,
+      "price": 35,
+      "defaultOwned": true,
+      "icon": "🔩"
+    },
+    {
+      "id": "cheie_torx_t30",
+      "name": "Cheie Torx interior T30",
+      "category": "screwdriver",
+      "description": "Bit/șurubelniță Torx interior T30 pentru șuruburi mici (senzori, electrovalve).",
+      "size": "T30",
+      "range": null,
+      "price": 12,
+      "defaultOwned": true,
+      "icon": "🪛"
+    },
+    {
+      "id": "cheie_torx_t40",
+      "name": "Cheie Torx interior T40",
+      "category": "screwdriver",
+      "description": "Bit/șurubelniță Torx interior T40 pentru fixări medii.",
+      "size": "T40",
+      "range": null,
+      "price": 12,
+      "defaultOwned": true,
+      "icon": "🪛"
+    },
+    {
+      "id": "cheie_bujii",
+      "name": "Cheie tubulară pentru bujii",
+      "category": "socket",
+      "description": "Tubulară lungă, cu pereți subțiri și insert de cauciuc/magnet care ține bujia. Mărimea exactă pentru bujiile B48 este NEVERIFICATĂ.",
+      "size": null,
+      "range": null,
+      "price": 40,
+      "defaultOwned": true,
+      "icon": "🕯️"
+    },
+    {
+      "id": "cheie_filtru_ulei",
+      "name": "Cheie pentru capacul filtrului de ulei",
+      "category": "wrench",
+      "description": "Cheie tip cupă care se potrivește pe capacul carcasei filtrului de ulei (filtru cu element interschimbabil). Dimensiunea exactă este NEVERIFICATĂ.",
+      "size": null,
+      "range": null,
+      "price": 45,
+      "defaultOwned": true,
+      "icon": "🛢️"
+    },
+    {
+      "id": "cheie_dinamometrica_mica",
+      "name": "Cheie dinamometrică mică (2–25 Nm)",
+      "category": "torque",
+      "description": "Cheie dinamometrică cu declanșare pentru cupluri mici: bujii, capac chiulasă, senzori. Se folosește doar la strângere, nu la desfacere.",
+      "size": null,
+      "range": [
+        2,
+        25
+      ],
+      "price": 250,
+      "defaultOwned": true,
+      "icon": "📏"
+    },
+    {
+      "id": "cheie_dinamometrica",
+      "name": "Cheie dinamometrică (20–100 Nm)",
+      "category": "torque",
+      "description": "Cheie dinamometrică medie pentru majoritatea fixărilor motorului. Se folosește doar la strângere.",
+      "size": null,
+      "range": [
+        20,
+        100
+      ],
+      "price": 320,
+      "defaultOwned": true,
+      "icon": "📏"
+    },
+    {
+      "id": "cheie_dinamometrica_mare",
+      "name": "Cheie dinamometrică mare (60–300 Nm)",
+      "category": "torque",
+      "description": "Cheie dinamometrică pentru cupluri mari (șuruburi centrale, suporturi).",
+      "size": null,
+      "range": [
+        60,
+        300
+      ],
+      "price": 450,
+      "defaultOwned": false,
+      "icon": "📏"
+    },
+    {
+      "id": "unghiometru",
+      "name": "Unghiometru (raportor pentru strângere unghiulară)",
+      "category": "angle",
+      "description": "Disc gradat montat între clichet și tubulară; măsoară unghiul suplimentar de rotire la strângerea „cuplu + unghi”.",
+      "size": null,
+      "range": null,
+      "price": 80,
+      "defaultOwned": false,
+      "icon": "📐"
+    },
+    {
+      "id": "surubelnita_plata",
+      "name": "Șurubelniță plată",
+      "category": "screwdriver",
+      "description": "Șurubelniță cu vârf plat pentru coliere cu șurub, cleme și deblocarea siguranțelor conectorilor.",
+      "size": null,
+      "range": null,
+      "price": 10,
+      "defaultOwned": true,
+      "icon": "🪛"
+    },
+    {
+      "id": "clesti_coliere",
+      "name": "Clește pentru coliere",
+      "category": "pliers",
+      "description": "Clește pentru deschiderea colierelor elastice de pe furtunuri și conducte.",
+      "size": null,
+      "range": null,
+      "price": 55,
+      "defaultOwned": true,
+      "icon": "🗜️"
+    },
+    {
+      "id": "clesti_patent",
+      "name": "Clește patent",
+      "category": "pliers",
+      "description": "Clește universal pentru prindere, clipsuri și siguranțe.",
+      "size": null,
+      "range": null,
+      "price": 35,
+      "defaultOwned": true,
+      "icon": "🗜️"
+    },
+    {
+      "id": "scula_blocare_ax_came",
+      "name": "Sculă de blocare a axelor cu came",
+      "category": "special",
+      "description": "Sculă specială care fixează axele cu came în poziția de calare. Codul de sculă BMW și poziția exactă de montare NU sunt furnizate (NEVERIFICAT).",
+      "size": null,
+      "range": null,
+      "price": 600,
+      "defaultOwned": false,
+      "icon": "🔒",
+      "bmwCode": null,
+      "bmwCodeStatus": "NEVERIFICAT"
+    },
+    {
+      "id": "scula_blocare_volanta",
+      "name": "Sculă de blocare a volantei / arborelui cotit",
+      "category": "special",
+      "description": "Știft/sculă specială care blochează arborele cotit în poziția de calare. Codul BMW și procedura exactă NU sunt furnizate (NEVERIFICAT).",
+      "size": null,
+      "range": null,
+      "price": 350,
+      "defaultOwned": false,
+      "icon": "🔒",
+      "bmwCode": null,
+      "bmwCodeStatus": "NEVERIFICAT"
+    },
+    {
+      "id": "extractor_amortizor",
+      "name": "Extractor pentru amortizorul de vibrații",
+      "category": "special",
+      "description": "Extractor pentru scoaterea fuliei/amortizorului de pe capătul arborelui cotit. Codul BMW NU este furnizat (NEVERIFICAT).",
+      "size": null,
+      "range": null,
+      "price": 400,
+      "defaultOwned": false,
+      "icon": "⚙️",
+      "bmwCode": null,
+      "bmwCodeStatus": "NEVERIFICAT"
+    },
+    {
+      "id": "micrometru",
+      "name": "Micrometru de exterior",
+      "category": "measure",
+      "description": "Instrument de măsurare a diametrelor exterioare (piston, fusuri, tije de supapă, came) cu rezoluție de ordinul 0,01 mm sau mai fină.",
+      "size": null,
+      "range": null,
+      "price": 220,
+      "defaultOwned": false,
+      "icon": "📏"
+    },
+    {
+      "id": "alezometru",
+      "name": "Alezometru (comparator de interior)",
+      "category": "measure",
+      "description": "Instrument pentru măsurarea diametrului interior al cilindrilor, conicității și ovalității.",
+      "size": null,
+      "range": null,
+      "price": 380,
+      "defaultOwned": false,
+      "icon": "📏"
+    },
+    {
+      "id": "rigla_lera",
+      "name": "Riglă de precizie + leră",
+      "category": "measure",
+      "description": "Riglă rectificată folosită împreună cu lera pentru verificarea planeității suprafețelor (chiulasă, bloc).",
+      "size": null,
+      "range": null,
+      "price": 260,
+      "defaultOwned": false,
+      "icon": "📐"
+    },
+    {
+      "id": "lera",
+      "name": "Leră (set lamele calibrate)",
+      "category": "measure",
+      "description": "Set de lamele de grosimi cunoscute pentru măsurarea jocurilor (distanța electrozilor bujiei, jocul la capetele segmenților, jocuri axiale).",
+      "size": null,
+      "range": null,
+      "price": 40,
+      "defaultOwned": true,
+      "icon": "📏"
+    },
+    {
+      "id": "comparator",
+      "name": "Comparator cu cadran și suport magnetic",
+      "category": "measure",
+      "description": "Ceas comparator pentru jocuri axiale/radiale (arbore cotit, turbocompresor) și bătăi.",
+      "size": null,
+      "range": null,
+      "price": 240,
+      "defaultOwned": false,
+      "icon": "⏱️"
+    },
+    {
+      "id": "sublar",
+      "name": "Șubler",
+      "category": "measure",
+      "description": "Instrument universal de măsurare a lungimilor, diametrelor și adâncimilor; în simulator și pentru alungirea lanțului.",
+      "size": null,
+      "range": null,
+      "price": 90,
+      "defaultOwned": true,
+      "icon": "📏"
+    },
+    {
+      "id": "tester_compresie",
+      "name": "Tester de compresie",
+      "category": "diagnostic",
+      "description": "Manometru cu racord filetat în locașul bujiei; măsoară presiunea maximă din cilindru la antrenarea cu demarorul.",
+      "size": null,
+      "range": null,
+      "price": 300,
+      "defaultOwned": false,
+      "icon": "🧪"
+    },
+    {
+      "id": "tester_pierderi_presiune",
+      "name": "Tester de pierderi de presiune (leak-down)",
+      "category": "diagnostic",
+      "description": "Introduce aer comprimat în cilindru la PMI și indică procentul de pierdere și pe unde scapă aerul (admisie, evacuare, carter, sistem de răcire).",
+      "size": null,
+      "range": null,
+      "price": 550,
+      "defaultOwned": false,
+      "icon": "🧪"
+    },
+    {
+      "id": "multimetru",
+      "name": "Multimetru digital",
+      "category": "diagnostic",
+      "description": "Măsoară tensiune, rezistență și continuitate (bobine, senzori, cablaj).",
+      "size": null,
+      "range": null,
+      "price": 150,
+      "defaultOwned": false,
+      "icon": "🔌"
+    },
+    {
+      "id": "tester_presiune_racire",
+      "name": "Tester de presiune pentru sistemul de răcire",
+      "category": "diagnostic",
+      "description": "Pompă cu manometru și adaptoare pentru vasul de expansiune; pune sistemul sub presiune și arată dacă presiunea scade (scurgeri).",
+      "size": null,
+      "range": null,
+      "price": 420,
+      "defaultOwned": false,
+      "icon": "🧪"
+    },
+    {
+      "id": "endoscop",
+      "name": "Endoscop (cameră de inspecție)",
+      "category": "diagnostic",
+      "description": "Cameră flexibilă introdusă prin locașul bujiei pentru inspecția camerei de ardere, a capului pistonului și a supapelor.",
+      "size": null,
+      "range": null,
+      "price": 350,
+      "defaultOwned": false,
+      "icon": "🔍"
+    },
+    {
+      "id": "tava_scurgere",
+      "name": "Tavă de scurgere a fluidelor",
+      "category": "fluid",
+      "description": "Recipient pentru colectarea uleiului și a lichidului de răcire la golire. Fluidele uzate se predau la colectare autorizată.",
+      "size": null,
+      "range": null,
+      "price": 45,
+      "defaultOwned": true,
+      "icon": "🪣"
+    },
+    {
+      "id": "palnie_umplere",
+      "name": "Pâlnie de umplere",
+      "category": "fluid",
+      "description": "Pâlnie pentru umplerea cu ulei și lichid de răcire fără a murdări motorul.",
+      "size": null,
+      "range": null,
+      "price": 15,
+      "defaultOwned": true,
+      "icon": "🫗"
+    },
+    {
+      "id": "pompa_vacuum_racire",
+      "name": "Dispozitiv de umplere sub vid a sistemului de răcire",
+      "category": "fluid",
+      "description": "Opțional. Creează vid în circuitul de răcire și îl umple fără pungi de aer. Procedura de aerisire specifică variantei NU este furnizată.",
+      "size": null,
+      "range": null,
+      "price": 500,
+      "defaultOwned": false,
+      "icon": "🫗"
+    },
+    {
+      "id": "manometru_ulei",
+      "name": "Manometru pentru presiunea uleiului",
+      "category": "diagnostic",
+      "description": "Manometru cu adaptor montat în locul senzorului de presiune a uleiului; verifică presiunea reală din circuit.",
+      "size": null,
+      "range": null,
+      "price": 280,
+      "defaultOwned": false,
+      "icon": "🧪"
+    }
+  ]
+}

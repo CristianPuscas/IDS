@@ -1,0 +1,5043 @@
+{
+  "assemblies": [
+    {
+      "id": "bloc",
+      "name": "Bloc motor și mecanism bielă-manivelă",
+      "color": "#7d8590"
+    },
+    {
+      "id": "chiulasa",
+      "name": "Chiulasă și mecanism supape",
+      "color": "#8899aa"
+    },
+    {
+      "id": "distributie",
+      "name": "Distribuție pe lanț și VANOS",
+      "color": "#b0884f"
+    },
+    {
+      "id": "ungere",
+      "name": "Ungere",
+      "color": "#a0702a"
+    },
+    {
+      "id": "racire",
+      "name": "Răcire",
+      "color": "#4f8fd0"
+    },
+    {
+      "id": "supraalimentare",
+      "name": "Turbo și intercooler",
+      "color": "#c0603a"
+    },
+    {
+      "id": "admisie",
+      "name": "Admisie",
+      "color": "#5a9a6a"
+    },
+    {
+      "id": "combustibil",
+      "name": "Alimentare cu combustibil",
+      "color": "#c9a227"
+    },
+    {
+      "id": "electric",
+      "name": "Aprindere, senzori, cablaje",
+      "color": "#8a5cc0"
+    },
+    {
+      "id": "accesorii",
+      "name": "Accesorii și suporturi",
+      "color": "#5c6f7a"
+    }
+  ],
+  "connectors": [
+    {
+      "id": "conector_bobina_1",
+      "name": "Conector bobină cil. 1",
+      "between": [
+        "bobina_1",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_bobina_2",
+      "name": "Conector bobină cil. 2",
+      "between": [
+        "bobina_2",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_bobina_3",
+      "name": "Conector bobină cil. 3",
+      "between": [
+        "bobina_3",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_bobina_4",
+      "name": "Conector bobină cil. 4",
+      "between": [
+        "bobina_4",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_injector_1",
+      "name": "Conector injector cil. 1",
+      "between": [
+        "injector_1",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_injector_2",
+      "name": "Conector injector cil. 2",
+      "between": [
+        "injector_2",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_injector_3",
+      "name": "Conector injector cil. 3",
+      "between": [
+        "injector_3",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_injector_4",
+      "name": "Conector injector cil. 4",
+      "between": [
+        "injector_4",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_senzor_ax_came_admisie",
+      "name": "Conector senzor ax cu came admisie",
+      "between": [
+        "senzor_ax_came_admisie",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_senzor_ax_came_evacuare",
+      "name": "Conector senzor ax cu came evacuare",
+      "between": [
+        "senzor_ax_came_evacuare",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_senzor_arbore_cotit",
+      "name": "Conector senzor arbore cotit",
+      "between": [
+        "senzor_arbore_cotit",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_senzor_presiune_ulei",
+      "name": "Conector senzor presiune ulei",
+      "between": [
+        "senzor_presiune_ulei",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_senzor_nivel_ulei",
+      "name": "Conector senzor nivel ulei",
+      "between": [
+        "senzor_nivel_ulei",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_senzor_temperatura",
+      "name": "Conector senzor temperatură lichid de răcire",
+      "between": [
+        "senzor_temperatura_lichid",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_senzor_presiune_admisie",
+      "name": "Conector senzor presiune admisie",
+      "between": [
+        "senzor_presiune_admisie",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_clapeta",
+      "name": "Conector clapetă de accelerație",
+      "between": [
+        "clapeta_acceleratie",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_valvetronic",
+      "name": "Conector servomotor Valvetronic",
+      "between": [
+        "valvetronic_servomotor",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_electrovalva_vanos_admisie",
+      "name": "Conector electrovalvă VANOS admisie",
+      "between": [
+        "electrovalva_vanos_admisie",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_electrovalva_vanos_evacuare",
+      "name": "Conector electrovalvă VANOS evacuare",
+      "between": [
+        "electrovalva_vanos_evacuare",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_alternator",
+      "name": "Conector și cablu B+ alternator",
+      "between": [
+        "alternator",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      }
+    },
+    {
+      "id": "conector_sonda_lambda",
+      "name": "Conector sondă lambda",
+      "between": [
+        "sonda_lambda",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_wastegate",
+      "name": "Conector actuator wastegate",
+      "between": [
+        "actuator_wastegate",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    },
+    {
+      "id": "conector_pompa_inalta_presiune",
+      "name": "Conector electrovalvă pompă înaltă presiune",
+      "between": [
+        "pompa_inalta_presiune",
+        "cablaj_motor"
+      ],
+      "requiresFlags": {}
+    }
+  ],
+  "parts": [
+    {
+      "id": "bloc_motor",
+      "name": "Bloc motor",
+      "assembly": "bloc",
+      "description": "Blocul motor (carterul superior) este piesa de bază din aliaj de aluminiu în care sunt prelucrați cei patru cilindri. Pe el se montează chiulasa, arborele cotit, baia de ulei și majoritatea accesoriilor. La B48 blocul are construcție „closed-deck”.",
+      "function": "Susține toate celelalte componente, preia forțele de ardere și conține canalele de ulei și de lichid de răcire.",
+      "notes": "Bloc din aluminiu cu construcție closed-deck (Wikipedia, „BMW B48”, secțiunea Design). Alezaj nominal 82 mm (ST1837 p.10). În simulator blocul este baza fixă de pe stand; măsurătorile de alezaj se fac după scoaterea pistoanelor.",
+      "accuracy": "aproximativ",
+      "mountsOn": [],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "suprafete_cilindri",
+          "name": "Suprafața cilindrilor",
+          "ok": "Fără zgârieturi adânci, urme de gripare sau uzură în treaptă (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "alezaj_cil_1",
+          "name": "Alezaj cilindrul 1",
+          "tool": "alezometru",
+          "specRef": "spec_alezaj_cilindru",
+          "requiresRemoved": false
+        },
+        {
+          "id": "alezaj_cil_2",
+          "name": "Alezaj cilindrul 2",
+          "tool": "alezometru",
+          "specRef": "spec_alezaj_cilindru",
+          "requiresRemoved": false
+        },
+        {
+          "id": "alezaj_cil_3",
+          "name": "Alezaj cilindrul 3",
+          "tool": "alezometru",
+          "specRef": "spec_alezaj_cilindru",
+          "requiresRemoved": false
+        },
+        {
+          "id": "alezaj_cil_4",
+          "name": "Alezaj cilindrul 4",
+          "tool": "alezometru",
+          "specRef": "spec_alezaj_cilindru",
+          "requiresRemoved": false
+        },
+        {
+          "id": "ovalitate_cil_1",
+          "name": "Ovalitate cilindrul 1",
+          "tool": "alezometru",
+          "specRef": "spec_ovalitate_cilindru",
+          "requiresRemoved": false
+        },
+        {
+          "id": "ovalitate_cil_2",
+          "name": "Ovalitate cilindrul 2",
+          "tool": "alezometru",
+          "specRef": "spec_ovalitate_cilindru",
+          "requiresRemoved": false
+        },
+        {
+          "id": "ovalitate_cil_3",
+          "name": "Ovalitate cilindrul 3",
+          "tool": "alezometru",
+          "specRef": "spec_ovalitate_cilindru",
+          "requiresRemoved": false
+        },
+        {
+          "id": "ovalitate_cil_4",
+          "name": "Ovalitate cilindrul 4",
+          "tool": "alezometru",
+          "specRef": "spec_ovalitate_cilindru",
+          "requiresRemoved": false
+        },
+        {
+          "id": "planeitate_bloc",
+          "name": "Planeitate suprafață superioară bloc",
+          "tool": "rigla_lera",
+          "specRef": "spec_planeitate_bloc",
+          "requiresRemoved": false
+        }
+      ],
+      "cost": 9500,
+      "laborMin": 600,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "arbore_cotit",
+      "name": "Arbore cotit",
+      "assembly": "bloc",
+      "description": "Arborele cotit transformă mișcarea liniară a pistoanelor în mișcare de rotație. Are fusuri palier (sprijinite în bloc) și fusuri maneton (pe care se montează bielele). La B48TU arborele este ranforsat, cu fusuri palier mai mari, și mai ușor.",
+      "function": "Transmite cuplul motor către volantă și antrenează lanțul de distribuție și cureaua de accesorii.",
+      "notes": "ST1837 p.7: „Reinforced crankshaft with larger main bearing diameter” și reduceri de greutate (B48TU). Wikipedia: arbore cotit forjat la B48TU. Numărul real de șuruburi de palier și cuplurile NU sunt furnizate (valori demonstrative).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "baie_ulei",
+        "pompa_ulei",
+        "sorb_ulei",
+        "arbori_echilibrare"
+      ],
+      "requiresFlags": {
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 10,
+        "type": "șurub capac palier",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e14"
+        ],
+        "torqueSpec": "spec_cuplu_palier_arbore_cotit",
+        "sequenceSpec": "spec_ordine_palier_arbore_cotit"
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "fusuri",
+          "name": "Starea fusurilor",
+          "ok": "Fusuri lucioase, fără rizuri, urme de gripare sau decolorare termică (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "fusuri_palier",
+          "name": "Diametru fusuri palier",
+          "tool": "micrometru",
+          "specRef": "spec_diametru_fus_palier",
+          "requiresRemoved": true
+        },
+        {
+          "id": "fusuri_maneton",
+          "name": "Diametru fusuri maneton",
+          "tool": "micrometru",
+          "specRef": "spec_diametru_fus_maneton",
+          "requiresRemoved": true
+        },
+        {
+          "id": "joc_axial",
+          "name": "Joc axial arbore cotit",
+          "tool": "comparator",
+          "specRef": "spec_joc_axial_arbore_cotit",
+          "requiresRemoved": false
+        }
+      ],
+      "cost": 4200,
+      "laborMin": 420,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "biela_1",
+      "name": "Bielă cil. 1",
+      "assembly": "bloc",
+      "description": "Biela cilindrului 1 leagă pistonul de fusul maneton al arborelui cotit. Capacul bielei este fixat cu două șuruburi. La B48TU bielele sunt forjate, fără bucșă în piciorul bielei.",
+      "function": "Transmite forța de la piston la arborele cotit.",
+      "notes": "ST1837 p.7: „New connecting rods without a bearing on small end” (B48TU); ST1837 p.15: cuzineții de bielă sunt disponibili într-o singură mărime standard. Biela se scoate prin partea superioară, împreună cu pistonul (după demontarea chiulasei și a băii de ulei).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "arbore_cotit"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "chiulasa",
+        "baie_ulei"
+      ],
+      "requiresFlags": {
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 2,
+        "type": "șurub capac bielă",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_biela",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "cuzineti",
+          "name": "Cuzineți bielă",
+          "ok": "Uzură uniformă, fără urme de gripare sau material desprins (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "joc_lateral",
+          "name": "Joc lateral bielă",
+          "tool": "lera",
+          "specRef": "spec_joc_lateral_biela",
+          "requiresRemoved": false
+        }
+      ],
+      "cost": 650,
+      "laborMin": 45,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "biela_2",
+      "name": "Bielă cil. 2",
+      "assembly": "bloc",
+      "description": "Biela cilindrului 2 leagă pistonul de fusul maneton al arborelui cotit. Capacul bielei este fixat cu două șuruburi. La B48TU bielele sunt forjate, fără bucșă în piciorul bielei.",
+      "function": "Transmite forța de la piston la arborele cotit.",
+      "notes": "ST1837 p.7: „New connecting rods without a bearing on small end” (B48TU); ST1837 p.15: cuzineții de bielă sunt disponibili într-o singură mărime standard. Biela se scoate prin partea superioară, împreună cu pistonul (după demontarea chiulasei și a băii de ulei).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "arbore_cotit"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "chiulasa",
+        "baie_ulei"
+      ],
+      "requiresFlags": {
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 2,
+        "type": "șurub capac bielă",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_biela",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "cuzineti",
+          "name": "Cuzineți bielă",
+          "ok": "Uzură uniformă, fără urme de gripare sau material desprins (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "joc_lateral",
+          "name": "Joc lateral bielă",
+          "tool": "lera",
+          "specRef": "spec_joc_lateral_biela",
+          "requiresRemoved": false
+        }
+      ],
+      "cost": 650,
+      "laborMin": 45,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "biela_3",
+      "name": "Bielă cil. 3",
+      "assembly": "bloc",
+      "description": "Biela cilindrului 3 leagă pistonul de fusul maneton al arborelui cotit. Capacul bielei este fixat cu două șuruburi. La B48TU bielele sunt forjate, fără bucșă în piciorul bielei.",
+      "function": "Transmite forța de la piston la arborele cotit.",
+      "notes": "ST1837 p.7: „New connecting rods without a bearing on small end” (B48TU); ST1837 p.15: cuzineții de bielă sunt disponibili într-o singură mărime standard. Biela se scoate prin partea superioară, împreună cu pistonul (după demontarea chiulasei și a băii de ulei).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "arbore_cotit"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "chiulasa",
+        "baie_ulei"
+      ],
+      "requiresFlags": {
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 2,
+        "type": "șurub capac bielă",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_biela",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "cuzineti",
+          "name": "Cuzineți bielă",
+          "ok": "Uzură uniformă, fără urme de gripare sau material desprins (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "joc_lateral",
+          "name": "Joc lateral bielă",
+          "tool": "lera",
+          "specRef": "spec_joc_lateral_biela",
+          "requiresRemoved": false
+        }
+      ],
+      "cost": 650,
+      "laborMin": 45,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "biela_4",
+      "name": "Bielă cil. 4",
+      "assembly": "bloc",
+      "description": "Biela cilindrului 4 leagă pistonul de fusul maneton al arborelui cotit. Capacul bielei este fixat cu două șuruburi. La B48TU bielele sunt forjate, fără bucșă în piciorul bielei.",
+      "function": "Transmite forța de la piston la arborele cotit.",
+      "notes": "ST1837 p.7: „New connecting rods without a bearing on small end” (B48TU); ST1837 p.15: cuzineții de bielă sunt disponibili într-o singură mărime standard. Biela se scoate prin partea superioară, împreună cu pistonul (după demontarea chiulasei și a băii de ulei).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "arbore_cotit"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "chiulasa",
+        "baie_ulei"
+      ],
+      "requiresFlags": {
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 2,
+        "type": "șurub capac bielă",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_biela",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "cuzineti",
+          "name": "Cuzineți bielă",
+          "ok": "Uzură uniformă, fără urme de gripare sau material desprins (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "joc_lateral",
+          "name": "Joc lateral bielă",
+          "tool": "lera",
+          "specRef": "spec_joc_lateral_biela",
+          "requiresRemoved": false
+        }
+      ],
+      "cost": 650,
+      "laborMin": 45,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "piston_1",
+      "name": "Piston cil. 1",
+      "assembly": "bloc",
+      "description": "Pistonul cilindrului 1 preia presiunea gazelor de ardere și o transmite bielei prin bolț. Are canale pentru segmenți și un cap profilat pentru injecția directă. Se demontează doar pe banc, după scoaterea bielei.",
+      "function": "Formează peretele mobil al camerei de ardere și transformă presiunea în forță.",
+      "notes": "ST1837 p.7: pistoane noi cu raport de compresie modificat la B48TU. Bolțul este reținut cu siguranțe (circlipsuri) — scoaterea lor în simulator nu cere sculă separată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "biela_1"
+      ],
+      "benchOnly": true,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "cap_piston",
+          "name": "Capul pistonului",
+          "ok": "Calamină normală, fără topire, fisuri sau urme de lovire de supape (simulat)."
+        },
+        {
+          "id": "manta",
+          "name": "Mantaua pistonului",
+          "ok": "Fără urme de gripare (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "diametru",
+          "name": "Diametru piston",
+          "tool": "micrometru",
+          "specRef": "spec_diametru_piston",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 520,
+      "laborMin": 20,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "piston_2",
+      "name": "Piston cil. 2",
+      "assembly": "bloc",
+      "description": "Pistonul cilindrului 2 preia presiunea gazelor de ardere și o transmite bielei prin bolț. Are canale pentru segmenți și un cap profilat pentru injecția directă. Se demontează doar pe banc, după scoaterea bielei.",
+      "function": "Formează peretele mobil al camerei de ardere și transformă presiunea în forță.",
+      "notes": "ST1837 p.7: pistoane noi cu raport de compresie modificat la B48TU. Bolțul este reținut cu siguranțe (circlipsuri) — scoaterea lor în simulator nu cere sculă separată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "biela_2"
+      ],
+      "benchOnly": true,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "cap_piston",
+          "name": "Capul pistonului",
+          "ok": "Calamină normală, fără topire, fisuri sau urme de lovire de supape (simulat)."
+        },
+        {
+          "id": "manta",
+          "name": "Mantaua pistonului",
+          "ok": "Fără urme de gripare (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "diametru",
+          "name": "Diametru piston",
+          "tool": "micrometru",
+          "specRef": "spec_diametru_piston",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 520,
+      "laborMin": 20,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "piston_3",
+      "name": "Piston cil. 3",
+      "assembly": "bloc",
+      "description": "Pistonul cilindrului 3 preia presiunea gazelor de ardere și o transmite bielei prin bolț. Are canale pentru segmenți și un cap profilat pentru injecția directă. Se demontează doar pe banc, după scoaterea bielei.",
+      "function": "Formează peretele mobil al camerei de ardere și transformă presiunea în forță.",
+      "notes": "ST1837 p.7: pistoane noi cu raport de compresie modificat la B48TU. Bolțul este reținut cu siguranțe (circlipsuri) — scoaterea lor în simulator nu cere sculă separată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "biela_3"
+      ],
+      "benchOnly": true,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "cap_piston",
+          "name": "Capul pistonului",
+          "ok": "Calamină normală, fără topire, fisuri sau urme de lovire de supape (simulat)."
+        },
+        {
+          "id": "manta",
+          "name": "Mantaua pistonului",
+          "ok": "Fără urme de gripare (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "diametru",
+          "name": "Diametru piston",
+          "tool": "micrometru",
+          "specRef": "spec_diametru_piston",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 520,
+      "laborMin": 20,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "piston_4",
+      "name": "Piston cil. 4",
+      "assembly": "bloc",
+      "description": "Pistonul cilindrului 4 preia presiunea gazelor de ardere și o transmite bielei prin bolț. Are canale pentru segmenți și un cap profilat pentru injecția directă. Se demontează doar pe banc, după scoaterea bielei.",
+      "function": "Formează peretele mobil al camerei de ardere și transformă presiunea în forță.",
+      "notes": "ST1837 p.7: pistoane noi cu raport de compresie modificat la B48TU. Bolțul este reținut cu siguranțe (circlipsuri) — scoaterea lor în simulator nu cere sculă separată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "biela_4"
+      ],
+      "benchOnly": true,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "cap_piston",
+          "name": "Capul pistonului",
+          "ok": "Calamină normală, fără topire, fisuri sau urme de lovire de supape (simulat)."
+        },
+        {
+          "id": "manta",
+          "name": "Mantaua pistonului",
+          "ok": "Fără urme de gripare (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "diametru",
+          "name": "Diametru piston",
+          "tool": "micrometru",
+          "specRef": "spec_diametru_piston",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 520,
+      "laborMin": 20,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "segmenti_1",
+      "name": "Segmenți piston cil. 1",
+      "assembly": "bloc",
+      "description": "Setul de segmenți al pistonului 1: doi segmenți de compresie și un segment de ungere. Etanșează camera de ardere față de carter și controlează pelicula de ulei de pe cilindru.",
+      "function": "Etanșare compresie, transfer de căldură spre cilindru și raclarea uleiului.",
+      "notes": "Se măsoară jocul la capete introducând segmentul în cilindru. Segmenții demontați se înlocuiesc de regulă cu un set nou (practică generală de atelier).",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "piston_1"
+      ],
+      "benchOnly": true,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": true,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "mobilitate",
+          "name": "Mobilitatea în canal",
+          "ok": "Segmenții se rotesc liber în canale, fără calamină (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "joc_capete",
+          "name": "Joc la capetele segmentului",
+          "tool": "lera",
+          "specRef": "spec_joc_capete_segmenti",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 180,
+      "laborMin": 15,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "segmenti_2",
+      "name": "Segmenți piston cil. 2",
+      "assembly": "bloc",
+      "description": "Setul de segmenți al pistonului 2: doi segmenți de compresie și un segment de ungere. Etanșează camera de ardere față de carter și controlează pelicula de ulei de pe cilindru.",
+      "function": "Etanșare compresie, transfer de căldură spre cilindru și raclarea uleiului.",
+      "notes": "Se măsoară jocul la capete introducând segmentul în cilindru. Segmenții demontați se înlocuiesc de regulă cu un set nou (practică generală de atelier).",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "piston_2"
+      ],
+      "benchOnly": true,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": true,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "mobilitate",
+          "name": "Mobilitatea în canal",
+          "ok": "Segmenții se rotesc liber în canale, fără calamină (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "joc_capete",
+          "name": "Joc la capetele segmentului",
+          "tool": "lera",
+          "specRef": "spec_joc_capete_segmenti",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 180,
+      "laborMin": 15,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "segmenti_3",
+      "name": "Segmenți piston cil. 3",
+      "assembly": "bloc",
+      "description": "Setul de segmenți al pistonului 3: doi segmenți de compresie și un segment de ungere. Etanșează camera de ardere față de carter și controlează pelicula de ulei de pe cilindru.",
+      "function": "Etanșare compresie, transfer de căldură spre cilindru și raclarea uleiului.",
+      "notes": "Se măsoară jocul la capete introducând segmentul în cilindru. Segmenții demontați se înlocuiesc de regulă cu un set nou (practică generală de atelier).",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "piston_3"
+      ],
+      "benchOnly": true,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": true,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "mobilitate",
+          "name": "Mobilitatea în canal",
+          "ok": "Segmenții se rotesc liber în canale, fără calamină (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "joc_capete",
+          "name": "Joc la capetele segmentului",
+          "tool": "lera",
+          "specRef": "spec_joc_capete_segmenti",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 180,
+      "laborMin": 15,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "segmenti_4",
+      "name": "Segmenți piston cil. 4",
+      "assembly": "bloc",
+      "description": "Setul de segmenți al pistonului 4: doi segmenți de compresie și un segment de ungere. Etanșează camera de ardere față de carter și controlează pelicula de ulei de pe cilindru.",
+      "function": "Etanșare compresie, transfer de căldură spre cilindru și raclarea uleiului.",
+      "notes": "Se măsoară jocul la capete introducând segmentul în cilindru. Segmenții demontați se înlocuiesc de regulă cu un set nou (practică generală de atelier).",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "piston_4"
+      ],
+      "benchOnly": true,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": true,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "mobilitate",
+          "name": "Mobilitatea în canal",
+          "ok": "Segmenții se rotesc liber în canale, fără calamină (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "joc_capete",
+          "name": "Joc la capetele segmentului",
+          "tool": "lera",
+          "specRef": "spec_joc_capete_segmenti",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 180,
+      "laborMin": 15,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "arbori_echilibrare",
+      "name": "Arbori de echilibrare",
+      "assembly": "bloc",
+      "description": "Doi arbori cu mase excentrice care se rotesc cu viteză dublă față de arborele cotit, în sensuri opuse. Compensează forțele de inerție de ordinul 2 specifice motoarelor cu 4 cilindri în linie. În simulator sunt reprezentați ca un singur ansamblu sub arborele cotit.",
+      "function": "Reduc vibrațiile motorului, mai ales la turații mari.",
+      "notes": "Poziția și modul de antrenare exacte la B48 trebuie confirmate în documentația variantei (NEVERIFICAT). Calarea arborilor de echilibrare față de arborele cotit este critică — procedura NU este furnizată.",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "baie_ulei",
+        "pompa_ulei"
+      ],
+      "requiresFlags": {
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 6,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_arbori_echilibrare",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "lagare",
+          "name": "Lagăre și pinioane",
+          "ok": "Fără joc excesiv sau dinți ciupiți (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1400,
+      "laborMin": 90,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "garnitura_chiulasa",
+      "name": "Garnitură chiulasă",
+      "assembly": "chiulasa",
+      "description": "Garnitură multistrat din oțel montată între bloc și chiulasă. Etanșează camerele de ardere, canalele de ulei și cele de lichid de răcire. Este de unică folosință.",
+      "function": "Etanșarea dintre bloc și chiulasă pentru gaze de ardere, ulei și lichid de răcire.",
+      "notes": "Grosimea/varianta garniturii poate depinde de cota de ieșire a pistoanelor — NEVERIFICAT pentru B48.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": true,
+      "singleUse": true,
+      "sealsFluid": "lichid_racire",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără străpungeri între cilindri, urme de gaze sau de lichid de răcire (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 260,
+      "laborMin": 10,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "chiulasa",
+      "name": "Chiulasă",
+      "assembly": "chiulasa",
+      "description": "Chiulasa din aluminiu închide cilindrii la partea superioară și conține camerele de ardere, canalele de admisie și evacuare, supapele (4 pe cilindru) și mecanismul Valvetronic. Pe ea se montează axele cu came, injectoarele, bujiile și galeria de admisie.",
+      "function": "Formează camera de ardere și găzduiește distribuția gazelor (supape, came, Valvetronic).",
+      "notes": "Chiulasă din aluminiu (Wikipedia); 4 supape/cilindru (ST1837 p.10); chiulasă modificată la B46TU/B48TU (ST1837 p.7). Șuruburile de chiulasă sunt de regulă de unică folosință — NEVERIFICAT pentru varianta selectată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "garnitura_chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "lant_distributie"
+      ],
+      "requiresFlags": {
+        "lichid_racire_golit": true,
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 10,
+        "type": "șurub chiulasă",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e14"
+        ],
+        "torqueSpec": "spec_cuplu_chiulasa",
+        "sequenceSpec": "spec_ordine_chiulasa"
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "camere_ardere",
+          "name": "Camere de ardere",
+          "ok": "Fără fisuri între scaunele supapelor (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "planeitate",
+          "name": "Planeitate suprafață chiulasă",
+          "tool": "rigla_lera",
+          "specRef": "spec_planeitate_chiulasa",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 6800,
+      "laborMin": 360,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "ax_came_admisie",
+      "name": "Ax cu came admisie",
+      "assembly": "chiulasa",
+      "description": "Arborele cu came de admisie acționează supapele de admisie prin culbutori cu role. Este antrenat de lanțul de distribuție prin unitatea VANOS de admisie. Poziția lui față de arborele cotit (calarea) este esențială.",
+      "function": "Comandă deschiderea și închiderea supapelor de admisie.",
+      "notes": "Double VANOS pe ambele axe (Wikipedia). Înainte de demontare distribuția trebuie blocată cu sculele speciale; pozițiile de calare NU sunt furnizate (vezi spec_calare_distributie).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "garnitura_capac_chiulasa"
+      ],
+      "requiresFlags": {
+        "distributie_blocata": true
+      },
+      "fasteners": {
+        "count": 10,
+        "type": "șurub capac lagăr",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8"
+        ],
+        "torqueSpec": "spec_cuplu_capace_ax_came",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "came",
+          "name": "Suprafața camelor",
+          "ok": "Fără ciupituri, uzură în trepte sau decolorare (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "inaltime_came",
+          "name": "Înălțimea camelor",
+          "tool": "micrometru",
+          "specRef": "spec_inaltime_cama_admisie",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 1300,
+      "laborMin": 60,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "ax_came_evacuare",
+      "name": "Ax cu came evacuare",
+      "assembly": "chiulasa",
+      "description": "Arborele cu came de evacuare acționează supapele de evacuare prin culbutori cu role. Este antrenat de lanțul de distribuție prin unitatea VANOS de evacuare. Poziția lui față de arborele cotit (calarea) este esențială.",
+      "function": "Comandă deschiderea și închiderea supapelor de evacuare.",
+      "notes": "Double VANOS pe ambele axe (Wikipedia). Înainte de demontare distribuția trebuie blocată cu sculele speciale; pozițiile de calare NU sunt furnizate (vezi spec_calare_distributie).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "garnitura_capac_chiulasa"
+      ],
+      "requiresFlags": {
+        "distributie_blocata": true
+      },
+      "fasteners": {
+        "count": 10,
+        "type": "șurub capac lagăr",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8"
+        ],
+        "torqueSpec": "spec_cuplu_capace_ax_came",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "came",
+          "name": "Suprafața camelor",
+          "ok": "Fără ciupituri, uzură în trepte sau decolorare (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "inaltime_came",
+          "name": "Înălțimea camelor",
+          "tool": "micrometru",
+          "specRef": "spec_inaltime_cama_evacuare",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 1300,
+      "laborMin": 60,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "ax_excentric",
+      "name": "Ax excentric Valvetronic",
+      "assembly": "chiulasa",
+      "description": "Axul excentric face parte din sistemul Valvetronic de cursă variabilă a supapelor de admisie. Rotit de servomotor, modifică poziția pârghiilor intermediare și astfel cursa supapelor. Permite controlul sarcinii motorului fără clapetă de accelerație închisă.",
+      "function": "Reglează continuu cursa supapelor de admisie.",
+      "notes": "Valvetronic = variable valve lift (Wikipedia, „BMW B48”, Design). Poziția exactă și procedura de montare a axului NU sunt furnizate.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "valvetronic_servomotor",
+        "garnitura_capac_chiulasa"
+      ],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 4,
+        "type": "șurub capac lagăr",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8"
+        ],
+        "torqueSpec": "spec_cuplu_m6_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "profil",
+          "name": "Profilul excentric",
+          "ok": "Fără uzură sau urme de gripare (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 900,
+      "laborMin": 45,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "valvetronic_servomotor",
+      "name": "Servomotor Valvetronic",
+      "assembly": "chiulasa",
+      "description": "Motor electric montat pe chiulasă care rotește axul excentric Valvetronic printr-un angrenaj melcat. Este comandat de unitatea de control a motorului și are senzor de poziție integrat.",
+      "function": "Acționează axul excentric pentru a varia cursa supapelor de admisie.",
+      "notes": "Componentă electrică — cere baterie deconectată și conectorul decuplat. După înlocuire poate fi necesară o adaptare cu tester (NEVERIFICAT).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 3,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8",
+          "cheie_torx_t30"
+        ],
+        "torqueSpec": "spec_cuplu_m6_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "conector",
+          "name": "Conector și garnitură",
+          "ok": "Pini curați, garnitura O-ring intactă (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1450,
+      "laborMin": 30,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "culbutori_tacheti",
+      "name": "Culbutori cu role și tacheți hidraulici",
+      "assembly": "chiulasa",
+      "description": "Set de culbutori (pârghii cu role) și elemente hidraulice de compensare a jocului. Transmit mișcarea de la came la supape și elimină nevoia de reglare manuală a jocului. În simulator setul complet este o singură piesă.",
+      "function": "Transmit mișcarea camelor la supape și compensează automat jocul.",
+      "notes": "Culbutorii se marchează la demontare pentru a fi montați în aceeași poziție (practică generală).",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "ax_came_admisie",
+        "ax_came_evacuare",
+        "ax_excentric"
+      ],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "role",
+          "name": "Role culbutori",
+          "ok": "Rolele se rotesc liber, fără joc (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 950,
+      "laborMin": 30,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "arcuri_supape",
+      "name": "Arcuri supape (cu talere și semiconuri)",
+      "assembly": "chiulasa",
+      "description": "Arcurile închid supapele și le mențin pe scaun. Sunt reținute de talere și semiconuri. Se demontează doar pe banc, cu chiulasa scoasă, folosind un dispozitiv de comprimat arcuri.",
+      "function": "Readuc supapele pe scaun și asigură contactul permanent cu mecanismul de acționare.",
+      "notes": "Dispozitivul de comprimat arcuri nu este modelat ca sculă separată. Simeringurile de supapă se înlocuiesc la reparație (practică generală).",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": true,
+      "blockedBy": [
+        "culbutori_tacheti"
+      ],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "arcuri",
+          "name": "Arcuri",
+          "ok": "Fără spire rupte sau tasare vizibilă (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 480,
+      "laborMin": 60,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "supape_admisie",
+      "name": "Supape admisie (set 8 buc.)",
+      "assembly": "chiulasa",
+      "description": "Setul celor 8 supape de admisie (câte două pe cilindru). Supapele deschid și închid canalele de admisie ale camerei de ardere. Se scot pe banc, prin partea camerei de ardere, după demontarea arcurilor.",
+      "function": "Controlează intrarea aerului în/din cilindru.",
+      "notes": "Cursa supapelor de admisie este variată de sistemul Valvetronic.",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": true,
+      "blockedBy": [
+        "arcuri_supape"
+      ],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "aer",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "etansare",
+          "name": "Etanșarea pe scaun",
+          "ok": "Fațeta de etanșare continuă, fără arsuri sau ciupituri (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "diametru_tija",
+          "name": "Diametru tijă supapă",
+          "tool": "micrometru",
+          "specRef": "spec_diametru_tija_supapa",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 640,
+      "laborMin": 90,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "supape_evacuare",
+      "name": "Supape evacuare (set 8 buc.)",
+      "assembly": "chiulasa",
+      "description": "Setul celor 8 supape de evacuare (câte două pe cilindru). Supapele deschid și închid canalele de evacuare ale camerei de ardere. Se scot pe banc, prin partea camerei de ardere, după demontarea arcurilor.",
+      "function": "Controlează ieșirea gazelor arse în/din cilindru.",
+      "notes": "Supapele de evacuare lucrează la temperaturi foarte mari; o supapă arsă sau neetanșă produce compresie scăzută pe cilindrul respectiv.",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": true,
+      "blockedBy": [
+        "arcuri_supape"
+      ],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "gaze_evacuare",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "etansare",
+          "name": "Etanșarea pe scaun",
+          "ok": "Fațeta de etanșare continuă, fără arsuri sau ciupituri (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "diametru_tija",
+          "name": "Diametru tijă supapă",
+          "tool": "micrometru",
+          "specRef": "spec_diametru_tija_supapa",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 640,
+      "laborMin": 90,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "garnitura_capac_chiulasa",
+      "name": "Garnitură capac chiulasă",
+      "assembly": "chiulasa",
+      "description": "Garnitură din elastomer montată în canalul capacului chiulasei, pe tot conturul și în jurul puțurilor bujiilor. Etanșează compartimentul distribuției față de exterior. Este de unică folosință: odată comprimată și întărită nu mai etanșează sigur.",
+      "function": "Împiedică scurgerile de ulei dintre capacul chiulasei și chiulasă.",
+      "notes": "Garnitura întărită este o cauză frecventă de scurgeri de ulei; o sursă neoficială (bimmer-service.com) menționează scurgeri la garnitura capacului după 80.000–120.000 km (NEVERIFICAT). La montaj se folosește garnitură nouă.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": true,
+      "singleUse": true,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Garnitură elastică, fără fisuri, întărire sau porțiuni strivite (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 140,
+      "laborMin": 5,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "capac_chiulasa",
+      "name": "Capac chiulasă",
+      "assembly": "chiulasa",
+      "description": "Capacul chiulasei (capacul culbutorilor) închide partea superioară a chiulasei, peste axele cu came și mecanismul Valvetronic. Pe el se montează bobinele de inducție și senzorii axelor cu came. La B48 capacul integrează și sistemul de ventilație a carterului.",
+      "function": "Închide etanș mecanismul supapelor, susține bobinele și senzorii și separă uleiul din gazele de carter.",
+      "notes": "La B48 ventilația carterului (separatorul de ulei și supapele aferente) este integrată în capacul chiulasei, nu este o piesă separată; un defect al ventilației se rezolvă de regulă prin înlocuirea capacului (informație generală, NEVERIFICATĂ). Se montează doar cu garnitură nouă, strângând șuruburile în ordinea indicată și la cuplul din specificație (valori demonstrative).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "garnitura_capac_chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 14,
+        "type": "șurub",
+        "size": "E10",
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_capac_chiulasa",
+        "sequenceSpec": "spec_ordine_capac_chiulasa"
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "ventilatie",
+          "name": "Ventilația carterului integrată",
+          "ok": "Membrana/supapele de ventilație funcționează, fără fluierat sau aspirație anormală (simulat)."
+        },
+        {
+          "id": "suprafata_etansare",
+          "name": "Suprafața de etanșare",
+          "ok": "Canalul garniturii curat, fără deformări (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 950,
+      "laborMin": 40,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "capac_motor_acustic",
+      "name": "Capac acustic motor",
+      "assembly": "chiulasa",
+      "description": "Capac decorativ și fonoabsorbant din plastic, montat peste capacul chiulasei și bobine. Se fixează prin presare pe știfturi cu bucșe de cauciuc și se scoate trăgându-l în sus.",
+      "function": "Reduce zgomotul motorului și protejează bobinele și conectorii.",
+      "notes": "ST1837 p.7 menționează la B48TU un capac de motor cu logo M Performance (la anumite versiuni). Fixarea exactă poate diferi pe variantă.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "capac_chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Bucșele de prindere intacte, fără fisuri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 320,
+      "laborMin": 2,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "lant_distributie",
+      "name": "Lanț distribuție",
+      "assembly": "distributie",
+      "description": "Lanțul de distribuție antrenează axele cu came de la arborele cotit. La B48 distribuția este pe partea dinspre cutia de viteze (partea de ieșire a puterii). La B48TU lanțul este dintr-o singură bucată (anterior în două părți).",
+      "function": "Sincronizează axele cu came cu arborele cotit.",
+      "notes": "ST1837 p.15: distribuție pe partea de ieșire a forțelor, lanț dintr-o singură parte, lanț cu bucșe de 8 mm (B46TU/B48TU). Wikipedia: lanț dintr-o bucată la B48TU față de două părți anterior. Demontarea cere distribuția blocată; procedura reală (inclusiv accesul pe partea cutiei) NU este furnizată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "vanos_admisie",
+        "vanos_evacuare",
+        "intinzator_lant"
+      ],
+      "requiresFlags": {
+        "distributie_blocata": true
+      },
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "zale",
+          "name": "Zale și bucșe",
+          "ok": "Fără joc excesiv între zale sau rigidizări (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "alungire",
+          "name": "Alungire lanț",
+          "tool": "sublar",
+          "specRef": "spec_alungire_lant",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 650,
+      "laborMin": 240,
+      "removalDir": [
+        1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "pinion_arbore_cotit",
+      "name": "Pinion lanț arbore cotit",
+      "assembly": "distributie",
+      "description": "Roata dințată de pe capătul arborelui cotit care antrenează lanțul de distribuție. Se scoate numai după demontarea lanțului.",
+      "function": "Transmite mișcarea de la arborele cotit la lanțul de distribuție.",
+      "notes": "Modul de fixare (presat, cu pană sau prin fricțiune) NU este confirmat pentru B48 — în simulator nu are elemente de fixare separate.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "arbore_cotit"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "lant_distributie"
+      ],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "dinti",
+          "name": "Dinți pinion",
+          "ok": "Fără uzură în formă de cârlig (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 280,
+      "laborMin": 20,
+      "removalDir": [
+        1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "vanos_admisie",
+      "name": "Unitate VANOS admisie",
+      "assembly": "distributie",
+      "description": "Unitatea VANOS de admisie este un variator hidraulic de fază montat pe capătul axului cu came de admisie. Cu ajutorul presiunii uleiului rotește axul față de pinionul antrenat de lanț. Se fixează cu un șurub central.",
+      "function": "Modifică continuu calajul axului cu came de admisie (Double VANOS).",
+      "notes": "ST1837 (capitolul „Valve gear” / VANOS, p.19) descrie modificări ale pinioanelor axelor cu came odată cu noul lanț. Ulei murdar poate bloca mecanismul VANOS (sursă neoficială: bimmer-service.com). Demontarea cere distribuția blocată și contra-ținerea axului — procedura reală NU este furnizată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "ax_came_admisie"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "intinzator_lant"
+      ],
+      "requiresFlags": {
+        "distributie_blocata": true
+      },
+      "fasteners": {
+        "count": 1,
+        "type": "șurub central",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e18"
+        ],
+        "torqueSpec": "spec_cuplu_vanos_central",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "blocare",
+          "name": "Știftul de blocare și rotirea",
+          "ok": "Rotorul revine în poziția de bază și se blochează corect (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1100,
+      "laborMin": 40,
+      "removalDir": [
+        1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "vanos_evacuare",
+      "name": "Unitate VANOS evacuare",
+      "assembly": "distributie",
+      "description": "Unitatea VANOS de evacuare este un variator hidraulic de fază montat pe capătul axului cu came de evacuare. Cu ajutorul presiunii uleiului rotește axul față de pinionul antrenat de lanț. Se fixează cu un șurub central.",
+      "function": "Modifică continuu calajul axului cu came de evacuare (Double VANOS).",
+      "notes": "ST1837 (capitolul „Valve gear” / VANOS, p.19) descrie modificări ale pinioanelor axelor cu came odată cu noul lanț. Ulei murdar poate bloca mecanismul VANOS (sursă neoficială: bimmer-service.com). Demontarea cere distribuția blocată și contra-ținerea axului — procedura reală NU este furnizată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "ax_came_evacuare"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "intinzator_lant"
+      ],
+      "requiresFlags": {
+        "distributie_blocata": true
+      },
+      "fasteners": {
+        "count": 1,
+        "type": "șurub central",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e18"
+        ],
+        "torqueSpec": "spec_cuplu_vanos_central",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "blocare",
+          "name": "Știftul de blocare și rotirea",
+          "ok": "Rotorul revine în poziția de bază și se blochează corect (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1100,
+      "laborMin": 40,
+      "removalDir": [
+        1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "intinzator_lant",
+      "name": "Întinzător hidraulic lanț",
+      "assembly": "distributie",
+      "description": "Întinzătorul hidraulic apasă pe șina întinzătorului și menține lanțul tensionat, folosind presiunea uleiului de motor și un arc. Este înfiletat în bloc/chiulasă din exterior.",
+      "function": "Menține tensiunea corectă a lanțului și amortizează vibrațiile acestuia.",
+      "notes": "Un întinzător uzat sau fără presiune de ulei la pornire produce zgomot de lanț la pornirea la rece. ST1837 are o secțiune dedicată „Chain tensioner” (p.18).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "garnitura_capac_chiulasa"
+      ],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 1,
+        "type": "corp filetat",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_16"
+        ],
+        "torqueSpec": "spec_cuplu_intinzator_lant",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "piston",
+          "name": "Pistonul întinzătorului",
+          "ok": "Pistonul se mișcă uniform, fără blocaje (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 340,
+      "laborMin": 20,
+      "removalDir": [
+        0,
+        0,
+        1
+      ],
+      "model": null
+    },
+    {
+      "id": "sina_intinzator",
+      "name": "Șină întinzător",
+      "assembly": "distributie",
+      "description": "Șină din plastic pe care apasă întinzătorul hidraulic. Este articulată la un capăt și ghidează partea slăbită a lanțului.",
+      "function": "Transmite forța întinzătorului asupra lanțului.",
+      "notes": "Uzura adâncă a șinei indică lanț alungit sau întinzător defect.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "lant_distributie"
+      ],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 1,
+        "type": "șurub articulație",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_m8_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "uzura",
+          "name": "Uzura suprafeței de alunecare",
+          "ok": "Fără canale adânci sau fisuri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 180,
+      "laborMin": 15,
+      "removalDir": [
+        1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "sina_ghidare",
+      "name": "Șină de ghidare lanț",
+      "assembly": "distributie",
+      "description": "Șină fixă din plastic care ghidează partea tensionată a lanțului de distribuție și reduce vibrațiile acestuia. Se demontează după scoaterea lanțului.",
+      "function": "Ghidează lanțul și limitează oscilațiile lui.",
+      "notes": "Se verifică împreună cu șina întinzătorului.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "lant_distributie"
+      ],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 2,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_m8_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "uzura",
+          "name": "Uzura suprafeței de alunecare",
+          "ok": "Fără canale adânci sau fisuri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 160,
+      "laborMin": 15,
+      "removalDir": [
+        1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "electrovalva_vanos_admisie",
+      "name": "Electrovalvă VANOS admisie",
+      "assembly": "distributie",
+      "description": "Electrovalva (supapa solenoid) VANOS de admisie distribuie uleiul sub presiune către camerele unității VANOS de admisie. Este comandată de unitatea de control a motorului prin semnal modulat.",
+      "function": "Controlează debitul de ulei care reglează calajul axului cu came de admisie.",
+      "notes": "Componentă electrică — cere baterie deconectată și conectorul decuplat. Sita de ulei a electrovalvei se verifică la colmatare. Poziția exactă pe chiulasă este aproximativă în model.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 1,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "cheie_torx_t30"
+        ],
+        "torqueSpec": "spec_cuplu_m6_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "sita",
+          "name": "Sita de ulei",
+          "ok": "Sita curată, fără depuneri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 420,
+      "laborMin": 15,
+      "removalDir": [
+        -1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "electrovalva_vanos_evacuare",
+      "name": "Electrovalvă VANOS evacuare",
+      "assembly": "distributie",
+      "description": "Electrovalva (supapa solenoid) VANOS de evacuare distribuie uleiul sub presiune către camerele unității VANOS de evacuare. Este comandată de unitatea de control a motorului prin semnal modulat.",
+      "function": "Controlează debitul de ulei care reglează calajul axului cu came de evacuare.",
+      "notes": "Componentă electrică — cere baterie deconectată și conectorul decuplat. Sita de ulei a electrovalvei se verifică la colmatare. Poziția exactă pe chiulasă este aproximativă în model.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 1,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "cheie_torx_t30"
+        ],
+        "torqueSpec": "spec_cuplu_m6_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "sita",
+          "name": "Sita de ulei",
+          "ok": "Sita curată, fără depuneri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 420,
+      "laborMin": 15,
+      "removalDir": [
+        -1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "etansare_baie_ulei",
+      "name": "Etanșare baie ulei",
+      "assembly": "ungere",
+      "description": "Garnitura (sau cordonul de etanșare) dintre bloc și baia de ulei. Este de unică folosință și se înlocuiește la fiecare demontare a băii.",
+      "function": "Împiedică scurgerile de ulei la îmbinarea bloc–baie.",
+      "notes": "Tipul exact (garnitură profilată sau etanșant lichid) depinde de variantă — NEVERIFICAT.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": true,
+      "singleUse": true,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără porțiuni rupte sau strivite (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 120,
+      "laborMin": 10,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "baie_ulei",
+      "name": "Baie ulei",
+      "assembly": "ungere",
+      "description": "Baia de ulei închide partea inferioară a motorului și conține rezerva de ulei (sistem cu carter umed). Pe ea se montează bușonul de golire și senzorul de nivel.",
+      "function": "Rezervor de ulei și închidere inferioară a carterului.",
+      "notes": "Sistem de ungere cu carter umed (Wikipedia). Uleiul trebuie golit înainte de demontare.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "etansare_baie_ulei"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 16,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_baie_ulei",
+        "sequenceSpec": "spec_ordine_baie_ulei"
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "depuneri",
+          "name": "Depuneri în baie",
+          "ok": "Fără așchii metalice sau nămol (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 780,
+      "laborMin": 60,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "buson_golire_ulei",
+      "name": "Bușon golire ulei",
+      "assembly": "ungere",
+      "description": "Șurub filetat cu inel de etanșare, montat în punctul cel mai de jos al băii de ulei. Prin desfacerea lui se scurge uleiul uzat.",
+      "function": "Permite golirea uleiului de motor.",
+      "notes": "Inelul de etanșare se înlocuiește la fiecare schimb (practică generală). Strângerea excesivă poate deteriora filetul băii.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "baie_ulei"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 1,
+        "type": "bușon filetat cu inel de etanșare",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e12"
+        ],
+        "torqueSpec": "spec_cuplu_buson_golire_ulei",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "magnet",
+          "name": "Filet și inel",
+          "ok": "Filet nedeteriorat, fără particule metalice (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 35,
+      "laborMin": 3,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "senzor_nivel_ulei",
+      "name": "Senzor nivel ulei",
+      "assembly": "ungere",
+      "description": "Senzor montat în baia de ulei care măsoară nivelul (și de regulă temperatura) uleiului. Înlocuiește joja clasică — nivelul se citește electronic.",
+      "function": "Informează unitatea de control despre nivelul uleiului.",
+      "notes": "Componentă electrică; se demontează doar cu uleiul golit și bateria deconectată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "baie_ulei"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "ulei_golit": true,
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 3,
+        "type": "piuliță",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_10"
+        ],
+        "torqueSpec": "spec_cuplu_senzori",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "garnitura",
+          "name": "Garnitura senzorului",
+          "ok": "Garnitura intactă (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 380,
+      "laborMin": 15,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "pompa_ulei",
+      "name": "Pompă ulei",
+      "assembly": "ungere",
+      "description": "Pompa de ulei aspiră uleiul din baie prin sorb și îl trimite sub presiune în circuitul de ungere. Este montată în partea inferioară a blocului și antrenată printr-un lanț separat.",
+      "function": "Asigură presiunea și debitul de ulei pentru ungere, VANOS și întinzător.",
+      "notes": "ST1837 p.15 menționează antrenarea pompei combinate ulei–vacuum printr-un lanț separat (text extras parțial — de confirmat). Reglajul presiunii (pompă reglabilă) NU este confirmat pentru varianta selectată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "baie_ulei"
+      ],
+      "requiresFlags": {
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 4,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_pompa_ulei",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "rotor",
+          "name": "Rotoare / palete",
+          "ok": "Fără rizuri sau joc excesiv (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1250,
+      "laborMin": 60,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "sorb_ulei",
+      "name": "Sorb ulei",
+      "assembly": "ungere",
+      "description": "Tubul de aspirație cu sită fină prin care pompa aspiră uleiul din baie. Capătul lui stă aproape de fundul băii, ca să rămână scufundat și la accelerații.",
+      "function": "Filtrează grosier și aduce uleiul la pompă.",
+      "notes": "O sită colmatată reduce presiunea uleiului. Inelul O de la racord se înlocuiește (practică generală).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "pompa_ulei"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "baie_ulei"
+      ],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 2,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8"
+        ],
+        "torqueSpec": "spec_cuplu_m6_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "sita",
+          "name": "Sita sorbului",
+          "ok": "Sita curată, fără depuneri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 150,
+      "laborMin": 10,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "carcasa_filtru_ulei",
+      "name": "Carcasă filtru ulei",
+      "assembly": "ungere",
+      "description": "Modulul carcasei filtrului de ulei, montat pe bloc. Conține locașul elementului filtrant și susține radiatorul (schimbătorul de căldură) ulei–lichid de răcire.",
+      "function": "Găzduiește filtrul de ulei și dirijează uleiul spre răcitor și spre motor.",
+      "notes": "Garniturile carcasei sunt o sursă cunoscută de scurgeri la multe motoare BMW (informație generală, NEVERIFICATĂ pentru B48).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 4,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_carcasa_filtru_ulei",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "garnituri",
+          "name": "Garniturile carcasei",
+          "ok": "Fără urme de ulei pe exterior (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 650,
+      "laborMin": 45,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "filtru_ulei",
+      "name": "Filtru ulei (element + capac)",
+      "assembly": "ungere",
+      "description": "Element filtrant din hârtie montat în carcasa filtrului și închis cu un capac filetat cu inel O. Reține impuritățile din ulei. Se înlocuiește la fiecare schimb de ulei.",
+      "function": "Curăță uleiul de particule înainte ca acesta să ajungă la lagăre.",
+      "notes": "Capacul se desface și se strânge cu cheia specială de filtru; inelul O al capacului se înlocuiește odată cu elementul. Intervalul de schimb este demonstrativ (spec_interval_schimb_ulei).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "carcasa_filtru_ulei"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 1,
+        "type": "capac filetat",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "cheie_filtru_ulei"
+        ],
+        "torqueSpec": "spec_cuplu_capac_filtru_ulei",
+        "sequenceSpec": null
+      },
+      "removeTools": [
+        "cheie_filtru_ulei"
+      ],
+      "isGasket": false,
+      "singleUse": true,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "element",
+          "name": "Elementul filtrant",
+          "ok": "Element integru, fără particule metalice (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 75,
+      "laborMin": 10,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "racitor_ulei",
+      "name": "Răcitor ulei (schimbător de căldură)",
+      "assembly": "ungere",
+      "description": "Schimbător de căldură ulei–lichid de răcire montat pe carcasa filtrului. Menține uleiul la temperatura optimă.",
+      "function": "Transferă căldura din ulei în lichidul de răcire.",
+      "notes": "Sistem cu carter umed și schimbător de căldură cu apă (Wikipedia). O garnitură defectă poate amesteca uleiul cu lichidul de răcire. O sursă neoficială menționează scurgeri la schimbătorul de căldură după 80.000–120.000 km (NEVERIFICAT).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "carcasa_filtru_ulei"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "lichid_racire_golit": true,
+        "ulei_golit": true
+      },
+      "fasteners": {
+        "count": 3,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8"
+        ],
+        "torqueSpec": "spec_cuplu_m6_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "amestec",
+          "name": "Amestec ulei–lichid",
+          "ok": "Fără ulei în lichidul de răcire sau invers (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 520,
+      "laborMin": 30,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "senzor_presiune_ulei",
+      "name": "Senzor presiune ulei",
+      "assembly": "ungere",
+      "description": "Senzor înfiletat în blocul motor care măsoară presiunea uleiului din galeria principală. În locul lui se poate monta un manometru de verificare.",
+      "function": "Monitorizează presiunea uleiului pentru avertizare și reglaj.",
+      "notes": "În simulator, testul de presiune a uleiului cere demontarea senzorului și montarea manometrului în locul lui.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 1,
+        "type": "senzor filetat",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_16"
+        ],
+        "torqueSpec": "spec_cuplu_senzori_filetati",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "ulei",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "conector",
+          "name": "Conector",
+          "ok": "Pini curați, fără urme de ulei în conector (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 260,
+      "laborMin": 10,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "pompa_apa",
+      "name": "Pompă de apă (lichid de răcire)",
+      "assembly": "racire",
+      "description": "Pompa de lichid de răcire, montată pe partea din față a motorului, circulă lichidul prin bloc, chiulasă și radiator. În simulator este antrenată de cureaua de accesorii.",
+      "function": "Asigură circulația lichidului de răcire.",
+      "notes": "ST1837 (capitolul „Coolant pump”, p.31) descrie pompa de lichid de răcire revizuită (cu supapă de suprapresiune) la B46TU/B48TU, iar p.7 conceptul „Split Cooling”. O sursă neoficială indică defectarea pompei/termostatului frecvent între 80.000 și 120.000 km (NEVERIFICAT).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "lichid_racire_golit": true
+      },
+      "fasteners": {
+        "count": 5,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_pompa_apa",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "lichid_racire",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "rulment",
+          "name": "Rulment și etanșare",
+          "ok": "Fără joc la fulie și fără urme de lichid la orificiul de control (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 950,
+      "laborMin": 60,
+      "removalDir": [
+        -1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "termostat",
+      "name": "Termostat / modul de management termic",
+      "assembly": "racire",
+      "description": "Componenta care reglează circulația lichidului de răcire între circuitul mic și radiator. La B48TU rolul este preluat de un modul de management termic cu supapă rotativă electrică; în simulator este reprezentat simplificat ca „termostat”.",
+      "function": "Menține temperatura de funcționare a motorului.",
+      "notes": "ST1837 p.7 și capitolele „Cooling system” / „Heat management module” (p.22–25): Split Cooling și modul de management termic cu supapă electrică (Split Cooling Valve) la B46TU/B48TU. Construcția exactă diferă pe variantă — model aproximativ.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "lichid_racire_golit": true
+      },
+      "fasteners": {
+        "count": 3,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8"
+        ],
+        "torqueSpec": "spec_cuplu_termostat",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "lichid_racire",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "functionare",
+          "name": "Funcționare",
+          "ok": "Se deschide/rotește corect la temperatura de lucru (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 780,
+      "laborMin": 45,
+      "removalDir": [
+        -1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "conducte_racire",
+      "name": "Conducte și furtunuri de răcire",
+      "assembly": "racire",
+      "description": "Setul de conducte și furtunuri care leagă pompa de apă, modulul termostatic și restul circuitului de răcire. Sunt fixate cu coliere elastice.",
+      "function": "Transportă lichidul de răcire între componentele circuitului.",
+      "notes": "În simulator toate conductele sunt o singură piesă. Colierele se desfac cu clește pentru coliere.",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "pompa_apa",
+        "termostat"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "lichid_racire_golit": true
+      },
+      "fasteners": null,
+      "removeTools": [
+        "clesti_coliere"
+      ],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "lichid_racire",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "elasticitate",
+          "name": "Elasticitatea furtunurilor",
+          "ok": "Furtunuri elastice, fără umflături sau fisuri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 420,
+      "laborMin": 30,
+      "removalDir": [
+        -1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "senzor_temperatura_lichid",
+      "name": "Senzor temperatură lichid de răcire",
+      "assembly": "racire",
+      "description": "Senzor (termistor) montat în chiulasă care măsoară temperatura lichidului de răcire. Este fixat cu o clemă de siguranță.",
+      "function": "Furnizează temperatura motorului unității de control.",
+      "notes": "Se demontează cu lichidul golit și bateria deconectată. Clema se scoate cu o șurubelniță plată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "lichid_racire_golit": true,
+        "baterie_deconectata": true
+      },
+      "fasteners": null,
+      "removeTools": [
+        "surubelnita_plata"
+      ],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "lichid_racire",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "inel",
+          "name": "Inel O",
+          "ok": "Inelul de etanșare intact (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 160,
+      "laborMin": 10,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "garnitura_turbo",
+      "name": "Garnitură turbocompresor",
+      "assembly": "supraalimentare",
+      "description": "Garnitură metalică dintre flanșa turbocompresorului (cu galerie de evacuare integrată) și chiulasă. Este de unică folosință.",
+      "function": "Etanșează gazele de evacuare la îmbinarea turbo–chiulasă.",
+      "notes": "O scăpare de gaze aici produce un țăcănit/șuierat la sarcină.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": true,
+      "singleUse": true,
+      "sealsFluid": "gaze_evacuare",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără urme de funingine pe margini (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 90,
+      "laborMin": 5,
+      "removalDir": [
+        0,
+        0,
+        1
+      ],
+      "model": null
+    },
+    {
+      "id": "turbocompresor",
+      "name": "Turbocompresor twin-scroll",
+      "assembly": "supraalimentare",
+      "description": "Turbocompresorul cu două intrări (twin-scroll) folosește energia gazelor de evacuare pentru a comprima aerul de admisie. Galeria de evacuare este integrată în carcasa turbinei, iar fluxurile de gaze ale cilindrilor sunt separate pe perechi. Este montat pe partea de evacuare a chiulasei.",
+      "function": "Supraalimentează motorul pentru putere și cuplu mai mari.",
+      "notes": "Twin-scroll (Wikipedia; ST1837 capitolul „Exhaust system”, p.32). ST1837 p.7: la B48TU de putere mare — turbo mai mare cu supapă de recirculare (air-diverter) integrată. Se lucrează doar cu motorul rece. O sursă neoficială indică uzura frecventă după 150.000–200.000 km (NEVERIFICAT).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "garnitura_turbo"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "motor_rece": true
+      },
+      "fasteners": {
+        "count": 8,
+        "type": "piuliță/șurub flanșă",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_13",
+          "tubulara_e12"
+        ],
+        "torqueSpec": "spec_cuplu_turbocompresor",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "gaze_evacuare",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "rotor",
+          "name": "Rotorul compresorului",
+          "ok": "Palete intacte, fără atingeri de carcasă sau urme de ulei (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "joc_axial",
+          "name": "Joc axial arbore turbo",
+          "tool": "comparator",
+          "specRef": "spec_joc_axial_turbo",
+          "requiresRemoved": false
+        },
+        {
+          "id": "joc_radial",
+          "name": "Joc radial arbore turbo",
+          "tool": "comparator",
+          "specRef": "spec_joc_radial_turbo",
+          "requiresRemoved": false
+        }
+      ],
+      "cost": 5200,
+      "laborMin": 180,
+      "removalDir": [
+        0,
+        0,
+        1
+      ],
+      "model": null
+    },
+    {
+      "id": "actuator_wastegate",
+      "name": "Actuator wastegate",
+      "assembly": "supraalimentare",
+      "description": "Actuator montat pe turbocompresor care deschide clapeta wastegate, deviind o parte din gaze pe lângă turbină. Astfel limitează presiunea de supraalimentare.",
+      "function": "Reglează presiunea de supraalimentare.",
+      "notes": "Tipul actuatorului (electric sau pneumatic) trebuie confirmat pe variantă (NEVERIFICAT); în simulator are conector electric. După înlocuire poate fi necesară adaptarea cu tester.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "turbocompresor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 3,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8"
+        ],
+        "torqueSpec": "spec_cuplu_m6_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "tija",
+          "name": "Tija și clapeta",
+          "ok": "Mișcare liberă, fără joc excesiv (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 980,
+      "laborMin": 40,
+      "removalDir": [
+        0,
+        0,
+        1
+      ],
+      "model": null
+    },
+    {
+      "id": "sonda_lambda",
+      "name": "Sondă lambda (amonte)",
+      "assembly": "supraalimentare",
+      "description": "Senzorul de oxigen montat la ieșirea turbinei, înaintea catalizatorului. Măsoară conținutul de oxigen din gazele de evacuare pentru reglarea amestecului.",
+      "function": "Permite reglarea în buclă închisă a amestecului aer–combustibil.",
+      "notes": "În realitate se folosește o tubulară cu fantă pentru cablu; în simulator se acceptă tubulara de 16 mm (aproximare). Filetul se protejează cu pastă specială la montaj (practică generală).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "turbocompresor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 1,
+        "type": "senzor filetat",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_16"
+        ],
+        "torqueSpec": "spec_cuplu_sonda_lambda",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "gaze_evacuare",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "varf",
+          "name": "Vârful sondei",
+          "ok": "Depuneri normale, fără ulei sau calamină albă (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 640,
+      "laborMin": 15,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "conducta_aer_turbo",
+      "name": "Conductă aer spre turbo (aspirație)",
+      "assembly": "supraalimentare",
+      "description": "Conducta care aduce aerul filtrat de la filtrul de aer la intrarea compresorului. Se fixează cu coliere.",
+      "function": "Alimentează compresorul cu aer filtrat.",
+      "notes": "Trebuie scoasă pentru a verifica jocul arborelui turbo la roata compresorului.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "turbocompresor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [
+        "clesti_coliere",
+        "surubelnita_plata"
+      ],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "aer",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "ulei",
+          "name": "Urme de ulei",
+          "ok": "Fără ulei în conductă (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 210,
+      "laborMin": 10,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "intercooler",
+      "name": "Intercooler (răcit cu lichid)",
+      "assembly": "supraalimentare",
+      "description": "Răcitorul aerului de supraalimentare de tip aer–lichid. Scade temperatura aerului comprimat înainte de admisie, crescând densitatea acestuia.",
+      "function": "Răcește aerul comprimat de turbo.",
+      "notes": "Wikipedia: intercooler aer–lichid (air-to-liquid). Poziția reală diferă pe variantă și vehicul — în model este aproximativă.",
+      "accuracy": "aproximativ",
+      "mountsOn": [],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 4,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_m6_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "aer",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "ulei",
+          "name": "Ulei în intercooler",
+          "ok": "Fără acumulări de ulei (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1600,
+      "laborMin": 60,
+      "removalDir": [
+        0,
+        -1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "conducta_turbo_intercooler",
+      "name": "Conductă turbo → intercooler",
+      "assembly": "supraalimentare",
+      "description": "Conducta de presiune care duce aerul comprimat de la turbocompresor la intercooler. Se fixează cu coliere/cleme.",
+      "function": "Transportă aerul comprimat spre răcire.",
+      "notes": "O fisură produce pierdere de presiune de supraalimentare și șuierat.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "turbocompresor",
+        "intercooler"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [
+        "clesti_coliere",
+        "surubelnita_plata"
+      ],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "aer",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 260,
+      "laborMin": 15,
+      "removalDir": [
+        0,
+        0,
+        1
+      ],
+      "model": null
+    },
+    {
+      "id": "conducta_intercooler_admisie",
+      "name": "Conductă intercooler → clapetă",
+      "assembly": "supraalimentare",
+      "description": "Conducta care duce aerul răcit de la intercooler la clapeta de accelerație. Se fixează cu coliere la ambele capete.",
+      "function": "Alimentează galeria de admisie cu aer comprimat răcit.",
+      "notes": "ST1837 p.7: conducte de aer de admisie noi la versiunile de putere mare B48TU.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "intercooler",
+        "clapeta_acceleratie"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [
+        "clesti_coliere",
+        "surubelnita_plata"
+      ],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "aer",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 240,
+      "laborMin": 15,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "garnitura_galerie_admisie",
+      "name": "Garnituri galerie admisie",
+      "assembly": "admisie",
+      "description": "Garniturile profilate dintre galeria de admisie și chiulasă, câte una pentru fiecare canal. Sunt de unică folosință.",
+      "function": "Etanșează admisia față de aerul nemăsurat.",
+      "notes": "O garnitură neetanșă provoacă aspirație de aer fals și mers neuniform.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": true,
+      "singleUse": true,
+      "sealsFluid": "aer",
+      "inspectRequiresRemoved": true,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Garnituri elastice, nefisurate (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 80,
+      "laborMin": 5,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "galerie_admisie",
+      "name": "Galerie admisie",
+      "assembly": "admisie",
+      "description": "Galeria de admisie din material plastic distribuie aerul către cei patru cilindri. Pe ea se montează clapeta de accelerație și senzorul de presiune din admisie. Este pe partea de admisie a motorului.",
+      "function": "Distribuie uniform aerul către cilindri.",
+      "notes": "Materialul și forma exactă depind de variantă (model aproximativ).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "garnitura_galerie_admisie"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 8,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_galerie_admisie",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "aer",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "depuneri",
+          "name": "Depuneri în canale",
+          "ok": "Depuneri de ulei/calamină în limite normale (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1150,
+      "laborMin": 75,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "clapeta_acceleratie",
+      "name": "Clapetă de accelerație",
+      "assembly": "admisie",
+      "description": "Corp de clapetă cu acționare electrică montat pe galeria de admisie. La motoarele cu Valvetronic sarcina este controlată în principal prin cursa supapelor, iar clapeta rămâne mult deschisă.",
+      "function": "Reglează debitul de aer în situații speciale (pornire, regim de avarie, depresiune pentru ventilație).",
+      "notes": "Componentă electrică. După înlocuire/curățare poate fi necesară adaptarea cu tester (NEVERIFICAT).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "galerie_admisie"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 4,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8"
+        ],
+        "torqueSpec": "spec_cuplu_m6_generic",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "aer",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "depuneri",
+          "name": "Depuneri pe clapetă",
+          "ok": "Clapetă curată, se mișcă liber (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1050,
+      "laborMin": 25,
+      "removalDir": [
+        -1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "senzor_presiune_admisie",
+      "name": "Senzor presiune admisie",
+      "assembly": "admisie",
+      "description": "Senzor montat pe galeria de admisie care măsoară presiunea (și temperatura) aerului din galerie. Este etanșat cu un inel O și fixat cu un șurub.",
+      "function": "Furnizează presiunea de supraalimentare unității de control.",
+      "notes": "Componentă electrică; inelul O se verifică la montaj.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "galerie_admisie"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 1,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "cheie_torx_t30"
+        ],
+        "torqueSpec": "spec_cuplu_senzori",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "aer",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 290,
+      "laborMin": 10,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "pompa_inalta_presiune",
+      "name": "Pompă de înaltă presiune",
+      "assembly": "combustibil",
+      "description": "Pompă cu piston antrenată mecanic de motor, care ridică presiunea benzinei pentru injecția directă. Are o electrovalvă de reglare a debitului comandată de unitatea de control.",
+      "function": "Furnizează benzina la presiunea necesară injecției directe.",
+      "notes": "Wikipedia: pompă Bosch antrenată de motor; B48TU: Bosch HDP6 pentru 350 bar (ST1837 p.34 „Fuel high-pressure pump”, p.7). Sistemul se depresurizează înainte de demontare (procedura reală NU este furnizată).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "combustibil_depresurizat": true
+      },
+      "fasteners": {
+        "count": 2,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_pompa_inalta_presiune",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "combustibil",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "scurgeri",
+          "name": "Scurgeri de combustibil",
+          "ok": "Fără urme de benzină la racorduri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 2400,
+      "laborMin": 60,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "conducta_inalta_presiune",
+      "name": "Conductă de înaltă presiune",
+      "assembly": "combustibil",
+      "description": "Țeavă de oțel care leagă pompa de înaltă presiune de rampa de combustibil. Racordurile sunt cu piulițe olandeze și con de etanșare.",
+      "function": "Transportă benzina sub presiune înaltă spre rampă.",
+      "notes": "Reutilizarea conductelor de înaltă presiune trebuie verificată în documentația variantei (NEVERIFICAT). În realitate se folosește o cheie pentru piulițe olandeze; în simulator se acceptă tubulara de 16 mm.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "pompa_inalta_presiune",
+        "rampa_combustibil"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "combustibil_depresurizat": true
+      },
+      "fasteners": {
+        "count": 2,
+        "type": "piuliță olandeză",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_16"
+        ],
+        "torqueSpec": "spec_cuplu_conducta_inalta_presiune",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "combustibil",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "conuri",
+          "name": "Conurile de etanșare",
+          "ok": "Fără urme de deformare sau scurgeri (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 380,
+      "laborMin": 20,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "rampa_combustibil",
+      "name": "Rampă de combustibil",
+      "assembly": "combustibil",
+      "description": "Rampa (rail) de înaltă presiune distribuie benzina către cele patru injectoare și are senzor de presiune. Este montată pe partea de admisie a chiulasei.",
+      "function": "Acumulator de presiune și distribuitor de combustibil pentru injectoare.",
+      "notes": "ST1837 p.35 („Direct Rail”) descrie sistemul de rampă și montarea injectoarelor, cu precauții la lucrul cu presiune înaltă. Model aproximativ.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "combustibil_depresurizat": true
+      },
+      "fasteners": {
+        "count": 2,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e10"
+        ],
+        "torqueSpec": "spec_cuplu_rampa_combustibil",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "combustibil",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "senzor",
+          "name": "Senzorul de presiune din rampă",
+          "ok": "Fără scurgeri la senzor (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1350,
+      "laborMin": 45,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "injector_1",
+      "name": "Injector cil. 1",
+      "assembly": "combustibil",
+      "description": "Injectorul cilindrului 1 pulverizează benzina direct în camera de ardere. Este de tip electromagnetic, comandat de unitatea de control, și etanșat în chiulasă cu un inel special.",
+      "function": "Dozează și pulverizează combustibilul în cilindru.",
+      "notes": "Wikipedia: Bosch HDEV5 (200 bar) la B48, HDEV6 (350 bar) la B48TU; ST1837 p.37 („Solenoid valve injector”). Extragerea injectoarelor cu injecție directă cere de regulă sculă de extragere și inele de etanșare noi — procedura exactă NU este furnizată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "rampa_combustibil"
+      ],
+      "requiresFlags": {
+        "combustibil_depresurizat": true
+      },
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "combustibil",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "varf",
+          "name": "Vârful injectorului",
+          "ok": "Fără depuneri excesive de calamină (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 980,
+      "laborMin": 25,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "injector_2",
+      "name": "Injector cil. 2",
+      "assembly": "combustibil",
+      "description": "Injectorul cilindrului 2 pulverizează benzina direct în camera de ardere. Este de tip electromagnetic, comandat de unitatea de control, și etanșat în chiulasă cu un inel special.",
+      "function": "Dozează și pulverizează combustibilul în cilindru.",
+      "notes": "Wikipedia: Bosch HDEV5 (200 bar) la B48, HDEV6 (350 bar) la B48TU; ST1837 p.37 („Solenoid valve injector”). Extragerea injectoarelor cu injecție directă cere de regulă sculă de extragere și inele de etanșare noi — procedura exactă NU este furnizată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "rampa_combustibil"
+      ],
+      "requiresFlags": {
+        "combustibil_depresurizat": true
+      },
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "combustibil",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "varf",
+          "name": "Vârful injectorului",
+          "ok": "Fără depuneri excesive de calamină (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 980,
+      "laborMin": 25,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "injector_3",
+      "name": "Injector cil. 3",
+      "assembly": "combustibil",
+      "description": "Injectorul cilindrului 3 pulverizează benzina direct în camera de ardere. Este de tip electromagnetic, comandat de unitatea de control, și etanșat în chiulasă cu un inel special.",
+      "function": "Dozează și pulverizează combustibilul în cilindru.",
+      "notes": "Wikipedia: Bosch HDEV5 (200 bar) la B48, HDEV6 (350 bar) la B48TU; ST1837 p.37 („Solenoid valve injector”). Extragerea injectoarelor cu injecție directă cere de regulă sculă de extragere și inele de etanșare noi — procedura exactă NU este furnizată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "rampa_combustibil"
+      ],
+      "requiresFlags": {
+        "combustibil_depresurizat": true
+      },
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "combustibil",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "varf",
+          "name": "Vârful injectorului",
+          "ok": "Fără depuneri excesive de calamină (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 980,
+      "laborMin": 25,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "injector_4",
+      "name": "Injector cil. 4",
+      "assembly": "combustibil",
+      "description": "Injectorul cilindrului 4 pulverizează benzina direct în camera de ardere. Este de tip electromagnetic, comandat de unitatea de control, și etanșat în chiulasă cu un inel special.",
+      "function": "Dozează și pulverizează combustibilul în cilindru.",
+      "notes": "Wikipedia: Bosch HDEV5 (200 bar) la B48, HDEV6 (350 bar) la B48TU; ST1837 p.37 („Solenoid valve injector”). Extragerea injectoarelor cu injecție directă cere de regulă sculă de extragere și inele de etanșare noi — procedura exactă NU este furnizată.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "rampa_combustibil"
+      ],
+      "requiresFlags": {
+        "combustibil_depresurizat": true
+      },
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "combustibil",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "varf",
+          "name": "Vârful injectorului",
+          "ok": "Fără depuneri excesive de calamină (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 980,
+      "laborMin": 25,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "bobina_1",
+      "name": "Bobină inducție cil. 1",
+      "assembly": "electric",
+      "description": "Bobina tip creion a cilindrului 1, introdusă prin capacul chiulasei peste bujie. Transformă tensiunea de bord în tensiune înaltă pentru scânteie. Se scoate prin tragere verticală, după decuplarea conectorului.",
+      "function": "Produce tensiunea înaltă necesară bujiei.",
+      "notes": "Nu are șuruburi de fixare în simulator (montaj prin presare). O bobină defectă produce rateuri pe cilindrul respectiv; diagnoza practică include interschimbarea bobinelor între cilindri.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "capac_chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "izolatie",
+          "name": "Izolația bobinei",
+          "ok": "Fără fisuri, urme de descărcare sau ulei în capișon (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 290,
+      "laborMin": 3,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "bobina_2",
+      "name": "Bobină inducție cil. 2",
+      "assembly": "electric",
+      "description": "Bobina tip creion a cilindrului 2, introdusă prin capacul chiulasei peste bujie. Transformă tensiunea de bord în tensiune înaltă pentru scânteie. Se scoate prin tragere verticală, după decuplarea conectorului.",
+      "function": "Produce tensiunea înaltă necesară bujiei.",
+      "notes": "Nu are șuruburi de fixare în simulator (montaj prin presare). O bobină defectă produce rateuri pe cilindrul respectiv; diagnoza practică include interschimbarea bobinelor între cilindri.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "capac_chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "izolatie",
+          "name": "Izolația bobinei",
+          "ok": "Fără fisuri, urme de descărcare sau ulei în capișon (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 290,
+      "laborMin": 3,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "bobina_3",
+      "name": "Bobină inducție cil. 3",
+      "assembly": "electric",
+      "description": "Bobina tip creion a cilindrului 3, introdusă prin capacul chiulasei peste bujie. Transformă tensiunea de bord în tensiune înaltă pentru scânteie. Se scoate prin tragere verticală, după decuplarea conectorului.",
+      "function": "Produce tensiunea înaltă necesară bujiei.",
+      "notes": "Nu are șuruburi de fixare în simulator (montaj prin presare). O bobină defectă produce rateuri pe cilindrul respectiv; diagnoza practică include interschimbarea bobinelor între cilindri.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "capac_chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "izolatie",
+          "name": "Izolația bobinei",
+          "ok": "Fără fisuri, urme de descărcare sau ulei în capișon (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 290,
+      "laborMin": 3,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "bobina_4",
+      "name": "Bobină inducție cil. 4",
+      "assembly": "electric",
+      "description": "Bobina tip creion a cilindrului 4, introdusă prin capacul chiulasei peste bujie. Transformă tensiunea de bord în tensiune înaltă pentru scânteie. Se scoate prin tragere verticală, după decuplarea conectorului.",
+      "function": "Produce tensiunea înaltă necesară bujiei.",
+      "notes": "Nu are șuruburi de fixare în simulator (montaj prin presare). O bobină defectă produce rateuri pe cilindrul respectiv; diagnoza practică include interschimbarea bobinelor între cilindri.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "capac_chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "izolatie",
+          "name": "Izolația bobinei",
+          "ok": "Fără fisuri, urme de descărcare sau ulei în capișon (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 290,
+      "laborMin": 3,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "bujie_1",
+      "name": "Bujie cil. 1",
+      "assembly": "electric",
+      "description": "Bujia cilindrului 1 produce scânteia care aprinde amestecul. Este înfiletată în chiulasă, în puțul acoperit de bobină. Se desface cu cheia de bujii doar cu motorul rece.",
+      "function": "Aprinde amestecul aer–combustibil.",
+      "notes": "Se montează întâi cu mâna, pentru a nu strica filetul din aluminiu, apoi cu cheia dinamometrică. Tipul, distanța electrozilor și cuplul real depind de variantă (valori demonstrative).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "bobina_1"
+      ],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 1,
+        "type": "filet bujie",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "cheie_bujii"
+        ],
+        "torqueSpec": "spec_cuplu_bujie",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "gaze_evacuare",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "electrozi",
+          "name": "Aspectul electrozilor",
+          "ok": "Culoare cafeniu-deschis, fără ulei, calamină sau eroziune excesivă (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "distanta_electrozi",
+          "name": "Distanța dintre electrozi",
+          "tool": "lera",
+          "specRef": "spec_distanta_electrozi_bujie",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 85,
+      "laborMin": 5,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "bujie_2",
+      "name": "Bujie cil. 2",
+      "assembly": "electric",
+      "description": "Bujia cilindrului 2 produce scânteia care aprinde amestecul. Este înfiletată în chiulasă, în puțul acoperit de bobină. Se desface cu cheia de bujii doar cu motorul rece.",
+      "function": "Aprinde amestecul aer–combustibil.",
+      "notes": "Se montează întâi cu mâna, pentru a nu strica filetul din aluminiu, apoi cu cheia dinamometrică. Tipul, distanța electrozilor și cuplul real depind de variantă (valori demonstrative).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "bobina_2"
+      ],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 1,
+        "type": "filet bujie",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "cheie_bujii"
+        ],
+        "torqueSpec": "spec_cuplu_bujie",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "gaze_evacuare",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "electrozi",
+          "name": "Aspectul electrozilor",
+          "ok": "Culoare cafeniu-deschis, fără ulei, calamină sau eroziune excesivă (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "distanta_electrozi",
+          "name": "Distanța dintre electrozi",
+          "tool": "lera",
+          "specRef": "spec_distanta_electrozi_bujie",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 85,
+      "laborMin": 5,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "bujie_3",
+      "name": "Bujie cil. 3",
+      "assembly": "electric",
+      "description": "Bujia cilindrului 3 produce scânteia care aprinde amestecul. Este înfiletată în chiulasă, în puțul acoperit de bobină. Se desface cu cheia de bujii doar cu motorul rece.",
+      "function": "Aprinde amestecul aer–combustibil.",
+      "notes": "Se montează întâi cu mâna, pentru a nu strica filetul din aluminiu, apoi cu cheia dinamometrică. Tipul, distanța electrozilor și cuplul real depind de variantă (valori demonstrative).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "bobina_3"
+      ],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 1,
+        "type": "filet bujie",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "cheie_bujii"
+        ],
+        "torqueSpec": "spec_cuplu_bujie",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "gaze_evacuare",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "electrozi",
+          "name": "Aspectul electrozilor",
+          "ok": "Culoare cafeniu-deschis, fără ulei, calamină sau eroziune excesivă (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "distanta_electrozi",
+          "name": "Distanța dintre electrozi",
+          "tool": "lera",
+          "specRef": "spec_distanta_electrozi_bujie",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 85,
+      "laborMin": 5,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "bujie_4",
+      "name": "Bujie cil. 4",
+      "assembly": "electric",
+      "description": "Bujia cilindrului 4 produce scânteia care aprinde amestecul. Este înfiletată în chiulasă, în puțul acoperit de bobină. Se desface cu cheia de bujii doar cu motorul rece.",
+      "function": "Aprinde amestecul aer–combustibil.",
+      "notes": "Se montează întâi cu mâna, pentru a nu strica filetul din aluminiu, apoi cu cheia dinamometrică. Tipul, distanța electrozilor și cuplul real depind de variantă (valori demonstrative).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "bobina_4"
+      ],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 1,
+        "type": "filet bujie",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "cheie_bujii"
+        ],
+        "torqueSpec": "spec_cuplu_bujie",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": "gaze_evacuare",
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "electrozi",
+          "name": "Aspectul electrozilor",
+          "ok": "Culoare cafeniu-deschis, fără ulei, calamină sau eroziune excesivă (simulat)."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "distanta_electrozi",
+          "name": "Distanța dintre electrozi",
+          "tool": "lera",
+          "specRef": "spec_distanta_electrozi_bujie",
+          "requiresRemoved": true
+        }
+      ],
+      "cost": 85,
+      "laborMin": 5,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "senzor_arbore_cotit",
+      "name": "Senzor poziție arbore cotit",
+      "assembly": "electric",
+      "description": "Senzor inductiv/Hall care citește roata de impulsuri a arborelui cotit. Semnalul lui este esențial: fără el motorul nu pornește.",
+      "function": "Furnizează turația și poziția arborelui cotit.",
+      "notes": "Componentă electrică; poziția exactă pe bloc este aproximativă în model.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 1,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "cheie_torx_t30"
+        ],
+        "torqueSpec": "spec_cuplu_senzori",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "varf",
+          "name": "Vârful senzorului",
+          "ok": "Fără particule metalice aderente (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 210,
+      "laborMin": 15,
+      "removalDir": [
+        0,
+        0,
+        1
+      ],
+      "model": null
+    },
+    {
+      "id": "senzor_ax_came_admisie",
+      "name": "Senzor ax cu came admisie",
+      "assembly": "electric",
+      "description": "Senzor Hall montat în capacul chiulasei, care citește roata de impulsuri a axului cu came de admisie. Împreună cu senzorul arborelui cotit permite recunoașterea cilindrilor și controlul VANOS.",
+      "function": "Semnalizează poziția axului cu came de admisie.",
+      "notes": "Fiind montat pe capacul chiulasei, trebuie demontat înaintea capacului. Inelul O se verifică la montaj.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "capac_chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 1,
+        "type": "șurub",
+        "size": "E8",
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8"
+        ],
+        "torqueSpec": "spec_cuplu_senzori",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "inel",
+          "name": "Inel O",
+          "ok": "Inelul O intact, fără ulei în conector (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 230,
+      "laborMin": 5,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "senzor_ax_came_evacuare",
+      "name": "Senzor ax cu came evacuare",
+      "assembly": "electric",
+      "description": "Senzor Hall montat în capacul chiulasei, care citește roata de impulsuri a axului cu came de evacuare. Împreună cu senzorul arborelui cotit permite recunoașterea cilindrilor și controlul VANOS.",
+      "function": "Semnalizează poziția axului cu came de evacuare.",
+      "notes": "Fiind montat pe capacul chiulasei, trebuie demontat înaintea capacului. Inelul O se verifică la montaj.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "capac_chiulasa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 1,
+        "type": "șurub",
+        "size": "E8",
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e8"
+        ],
+        "torqueSpec": "spec_cuplu_senzori",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "inel",
+          "name": "Inel O",
+          "ok": "Inelul O intact, fără ulei în conector (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 230,
+      "laborMin": 5,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "cablaj_motor",
+      "name": "Cablaj motor",
+      "assembly": "electric",
+      "description": "Fasciculul de cabluri al motorului, cu toți conectorii senzorilor și actuatorilor. Se fixează în canale și clipsuri pe motor.",
+      "function": "Leagă electric toate componentele motorului de unitatea de control.",
+      "notes": "Se demontează doar după decuplarea tuturor conectorilor. Unitatea de control a motorului (DME) este descrisă în ST1837 (secțiunea Engine electrical system), dar nu este modelată.",
+      "accuracy": "schematic",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": null,
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "izolatie",
+          "name": "Izolația cablurilor",
+          "ok": "Fără roaderi, topiri sau oxidare în conectori (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 2600,
+      "laborMin": 120,
+      "removalDir": [
+        0,
+        1,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "curea_accesorii",
+      "name": "Curea de accesorii",
+      "assembly": "accesorii",
+      "description": "Curea trapezoidală canelată (poly-V) care antrenează alternatorul, compresorul de aer condiționat și pompa de apă de la fulia/amortizorul arborelui cotit. Este tensionată de un întinzător automat.",
+      "function": "Transmite mișcarea de la arborele cotit la accesorii.",
+      "notes": "ST1837 p.7 și p.20: ghidaj de curea modificat la B48TU. Pentru scoatere se rotește întinzătorul cu un clichet (în simulator: clichet 3/8\"). Traseul exact al curelei depinde de variantă.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "amortizor_vibratii",
+        "alternator",
+        "compresor_ac",
+        "pompa_apa"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": null,
+      "removeTools": [
+        "clichet_3_8"
+      ],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "caneluri",
+          "name": "Canelurile curelei",
+          "ok": "Fără fisuri transversale, ciupituri sau lucire excesivă (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 160,
+      "laborMin": 15,
+      "removalDir": [
+        -1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "intinzator_curea",
+      "name": "Întinzător curea",
+      "assembly": "accesorii",
+      "description": "Întinzător automat cu arc și rolă, care menține tensiunea curelei de accesorii. Brațul lui se rotește cu un clichet pentru a monta/demonta cureaua.",
+      "function": "Menține tensiunea corectă a curelei.",
+      "notes": "Se verifică rola (zgomot, joc) și amortizarea brațului.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [
+        "curea_accesorii"
+      ],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 2,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e12"
+        ],
+        "torqueSpec": "spec_cuplu_intinzator_curea",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "rola",
+          "name": "Rola întinzătorului",
+          "ok": "Se rotește silențios, fără joc (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 420,
+      "laborMin": 20,
+      "removalDir": [
+        -1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "amortizor_vibratii",
+      "name": "Amortizor de vibrații (fulie arbore cotit)",
+      "assembly": "accesorii",
+      "description": "Fulia arborelui cotit cu amortizor torsional integrat (inel de elastomer între butuc și masa exterioară). Antrenează cureaua de accesorii și reduce vibrațiile torsionale ale arborelui cotit.",
+      "function": "Antrenează cureaua și amortizează vibrațiile torsionale.",
+      "notes": "Pentru desfacerea șurubului se blochează arborele cotit; poate fi necesar un extractor. Procedura și cuplul reale NU sunt furnizate (valori demonstrative, cuplu + unghi).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "arbore_cotit"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 1,
+        "type": "șurub central",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e18"
+        ],
+        "torqueSpec": "spec_cuplu_amortizor",
+        "sequenceSpec": null
+      },
+      "removeTools": [
+        "extractor_amortizor"
+      ],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "elastomer",
+          "name": "Inelul de elastomer",
+          "ok": "Fără fisuri, desprinderi sau deplasarea inelului exterior (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 680,
+      "laborMin": 40,
+      "removalDir": [
+        -1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "alternator",
+      "name": "Alternator",
+      "assembly": "accesorii",
+      "description": "Generatorul de curent alternativ cu redresor și regulator integrat, antrenat de cureaua de accesorii. Încarcă bateria și alimentează consumatorii vehiculului.",
+      "function": "Produce energie electrică.",
+      "notes": "Cablul B+ este conectat permanent la baterie: conectorul alternatorului se desface DOAR cu bateria deconectată. Montajul exact (poziție, număr de șuruburi) depinde de variantă.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {
+        "baterie_deconectata": true
+      },
+      "fasteners": {
+        "count": 2,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e12"
+        ],
+        "torqueSpec": "spec_cuplu_alternator",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "rulmenti",
+          "name": "Rulmenți și fulie",
+          "ok": "Rotire liberă, fără zgomot; roata liberă a fuliei funcționează (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1900,
+      "laborMin": 45,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "compresor_ac",
+      "name": "Compresor aer condiționat",
+      "assembly": "accesorii",
+      "description": "Compresorul instalației de climatizare, antrenat de cureaua de accesorii prin fulia proprie. Este legat de circuitul de agent frigorific prin conducte rigide.",
+      "function": "Comprimă agentul frigorific în circuitul de climatizare.",
+      "notes": "Pe vehicul, circuitul de agent frigorific se golește/umple doar de personal autorizat, cu echipament dedicat. Simulatorul nu modelează agentul frigorific.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 3,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e12"
+        ],
+        "torqueSpec": "spec_cuplu_compresor_ac",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "ambreiaj",
+          "name": "Ambreiaj/fulie",
+          "ok": "Fulia se rotește liber, fără zgomot (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 2300,
+      "laborMin": 60,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "volanta",
+      "name": "Volantă",
+      "assembly": "accesorii",
+      "description": "Volanta (sau placa de antrenare la cutie automată) montată pe capătul arborelui cotit dinspre cutia de viteze. Are coroana dințată pentru demaror și uniformizează rotația.",
+      "function": "Stochează energie cinetică, transmite cuplul spre cutie și oferă coroana pentru demaror.",
+      "notes": "Șuruburile volantei sunt de regulă de unică folosință și se strâng cu cuplu + unghi (NEVERIFICAT pentru B48). Pentru desfacere arborele cotit se blochează.",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "arbore_cotit"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 8,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_e12"
+        ],
+        "torqueSpec": "spec_cuplu_volanta",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "coroana",
+          "name": "Coroana dințată și suprafața",
+          "ok": "Dinți neuzați, suprafață fără fisuri termice (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 1700,
+      "laborMin": 60,
+      "removalDir": [
+        1,
+        0,
+        0
+      ],
+      "model": null
+    },
+    {
+      "id": "suport_motor_stanga",
+      "name": "Suport motor stânga (partea de admisie)",
+      "assembly": "accesorii",
+      "description": "Consola de prindere a motorului pe partea stânga (partea de admisie), pe care se sprijină tampoanele elastice spre caroserie. În simulator susține motorul pe stand.",
+      "function": "Fixează motorul și transmite greutatea/forțele către suporturi.",
+      "notes": "Poziția și forma suporturilor depind de vehicul (model schematic al poziției).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 3,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_16"
+        ],
+        "torqueSpec": "spec_cuplu_suport_motor",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "fisuri",
+          "name": "Fisuri ale consolei",
+          "ok": "Fără fisuri la găurile de prindere (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 450,
+      "laborMin": 30,
+      "removalDir": [
+        0,
+        0,
+        -1
+      ],
+      "model": null
+    },
+    {
+      "id": "suport_motor_dreapta",
+      "name": "Suport motor dreapta (partea de evacuare)",
+      "assembly": "accesorii",
+      "description": "Consola de prindere a motorului pe partea dreapta (partea de evacuare), pe care se sprijină tampoanele elastice spre caroserie. În simulator susține motorul pe stand.",
+      "function": "Fixează motorul și transmite greutatea/forțele către suporturi.",
+      "notes": "Poziția și forma suporturilor depind de vehicul (model schematic al poziției).",
+      "accuracy": "aproximativ",
+      "mountsOn": [
+        "bloc_motor"
+      ],
+      "benchOnly": false,
+      "blockedBy": [],
+      "requiresFlags": {},
+      "fasteners": {
+        "count": 3,
+        "type": "șurub",
+        "size": null,
+        "sizeStatus": "NEVERIFICATĂ",
+        "tools": [
+          "tubulara_16"
+        ],
+        "torqueSpec": "spec_cuplu_suport_motor",
+        "sequenceSpec": null
+      },
+      "removeTools": [],
+      "isGasket": false,
+      "singleUse": false,
+      "sealsFluid": null,
+      "inspectRequiresRemoved": false,
+      "inspections": [
+        {
+          "id": "vizual",
+          "name": "Inspecție vizuală",
+          "ok": "Fără fisuri, deformări, coroziune sau urme de scurgeri (simulat)."
+        },
+        {
+          "id": "fisuri",
+          "name": "Fisuri ale consolei",
+          "ok": "Fără fisuri la găurile de prindere (simulat)."
+        }
+      ],
+      "measurements": [],
+      "cost": 450,
+      "laborMin": 30,
+      "removalDir": [
+        0,
+        0,
+        1
+      ],
+      "model": null
+    }
+  ]
+}

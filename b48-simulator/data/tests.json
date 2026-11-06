@@ -1,0 +1,153 @@
+{
+  "tests": [
+    {
+      "id": "test_compresie",
+      "name": "Test compresie",
+      "tool": "tester_compresie",
+      "perCylinder": true,
+      "variants": [
+        "uscat",
+        "umed"
+      ],
+      "requires": {
+        "removed": [
+          "bujie_1",
+          "bujie_2",
+          "bujie_3",
+          "bujie_4"
+        ],
+        "installed": [],
+        "flags": {
+          "baterie_deconectata": false
+        }
+      },
+      "specRef": "spec_compresie",
+      "description": "Se înfiletează testerul în locașul bujiei și se antrenează motorul cu demarorul (clapeta complet deschisă, injecția/aprinderea dezactivate pe vehicul). „Umed” = se repetă după introducerea unei cantități mici de ulei în cilindru: dacă valoarea crește mult, problema este la segmenți; dacă nu, la supape sau garnitura de chiulasă. Valorile sunt simulate (NEVERIFICATE)."
+    },
+    {
+      "id": "test_pierderi_presiune",
+      "name": "Test pierderi de presiune (leak-down)",
+      "tool": "tester_pierderi_presiune",
+      "perCylinder": true,
+      "variants": [],
+      "requires": {
+        "removed": [
+          "bujie_1",
+          "bujie_2",
+          "bujie_3",
+          "bujie_4"
+        ],
+        "installed": [],
+        "flags": {}
+      },
+      "specRef": "spec_pierderi_presiune",
+      "description": "Cu pistonul la PMI în cursa de compresie, se introduce aer comprimat în cilindru și se citește procentul de pierdere. Locul pe unde se aude aerul indică defectul: admisie (supapă admisie), evacuare (supapă evacuare), carter/umplere ulei (segmenți), bule în vasul de expansiune (garnitură chiulasă). Valorile sunt simulate."
+    },
+    {
+      "id": "test_presiune_ulei",
+      "name": "Test presiune ulei",
+      "tool": "manometru_ulei",
+      "perCylinder": false,
+      "variants": [],
+      "requires": {
+        "removed": [
+          "senzor_presiune_ulei"
+        ],
+        "installed": [
+          "baie_ulei",
+          "buson_golire_ulei",
+          "filtru_ulei",
+          "carcasa_filtru_ulei"
+        ],
+        "flags": {
+          "ulei_golit": false,
+          "baterie_deconectata": false
+        }
+      },
+      "specRef": "spec_presiune_ulei_ralanti",
+      "description": "Manometrul se montează în locul senzorului de presiune a uleiului; se pornește motorul (simulat) și se citește presiunea la ralanti cu motorul cald. Presiune mică: pompă/sorb, lagăre uzate, ulei necorespunzător. Valorile sunt simulate."
+    },
+    {
+      "id": "test_etanseitate_racire",
+      "name": "Test etanșeitate sistem de răcire",
+      "tool": "tester_presiune_racire",
+      "perCylinder": false,
+      "variants": [],
+      "requires": {
+        "removed": [],
+        "installed": [
+          "pompa_apa",
+          "termostat",
+          "conducte_racire",
+          "racitor_ulei"
+        ],
+        "flags": {
+          "lichid_racire_golit": false,
+          "motor_rece": true
+        }
+      },
+      "specRef": "spec_test_presiune_racire",
+      "description": "Cu motorul rece, testerul se montează la vasul de expansiune și sistemul se pune sub presiune; după un timp de așteptare se citește presiunea rămasă. Scăderea indică o scurgere (externă: pompă, furtunuri; internă: garnitură chiulasă, răcitor ulei). Valorile sunt simulate."
+    },
+    {
+      "id": "test_bobine",
+      "name": "Test bobine de inducție",
+      "tool": "multimetru",
+      "perCylinder": true,
+      "variants": [],
+      "requires": {
+        "removed": [
+          "bobina_1",
+          "bobina_2",
+          "bobina_3",
+          "bobina_4"
+        ],
+        "installed": [],
+        "flags": {
+          "baterie_deconectata": true
+        }
+      },
+      "specRef": "spec_rezistenta_bobina",
+      "description": "Măsurarea simulată a rezistenței înfășurării primare a fiecărei bobine, pe banc. În practică se completează cu interschimbarea bobinelor între cilindri și urmărirea rateului. Valorile sunt simulate (NEVERIFICATE)."
+    },
+    {
+      "id": "test_endoscop",
+      "name": "Inspecție cu endoscopul",
+      "tool": "endoscop",
+      "perCylinder": true,
+      "variants": [],
+      "requires": {
+        "removed": [
+          "bujie_1",
+          "bujie_2",
+          "bujie_3",
+          "bujie_4"
+        ],
+        "installed": [],
+        "flags": {}
+      },
+      "specRef": null,
+      "description": "Camera se introduce prin locașul bujiei pentru a vedea capul pistonului, pereții cilindrului și talerele supapelor (urme de lichid de răcire, calamină, zgârieturi, supape arse). Rezultat calitativ (constatări), fără valoare numerică."
+    },
+    {
+      "id": "test_joc_turbo",
+      "name": "Verificare joc arbore turbocompresor",
+      "tool": "comparator",
+      "perCylinder": false,
+      "variants": [],
+      "requires": {
+        "removed": [
+          "conducta_aer_turbo"
+        ],
+        "installed": [
+          "turbocompresor"
+        ],
+        "flags": {
+          "motor_rece": true
+        }
+      },
+      "specRef": "spec_joc_axial_turbo",
+      "description": "Cu conducta de aspirație scoasă, se verifică jocul axial al arborelui turbo cu comparatorul și se observă dacă roata compresorului atinge carcasa. Joc excesiv = lagăre uzate (șuierat, fum albastru, ulei în conducte). Valorile sunt simulate."
+    }
+  ]
+}

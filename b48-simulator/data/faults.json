@@ -1,0 +1,674 @@
+{
+  "faults": [
+    {
+      "id": "F_segmenti_cil3",
+      "title": "Uzură segmenți — cilindrul 3",
+      "difficulty": 2,
+      "category": "mecanic",
+      "symptoms": [
+        "Consum de ulei crescut între schimburi",
+        "Fum albăstrui la accelerare după ralanti prelungit",
+        "Putere ușor scăzută",
+        "Gaze de carter (blow-by) crescute — presiune la bușonul de umplere"
+      ],
+      "sound": {
+        "misfireCylinder": 3,
+        "roughness": 0.3,
+        "chainRattle": 0,
+        "turboWhistle": 0,
+        "knock": 0,
+        "hiss": 0
+      },
+      "tests": {
+        "test_compresie": {
+          "uscat": [
+            13,
+            13.1,
+            8.5,
+            12.9
+          ],
+          "umed": [
+            13.2,
+            13.3,
+            11.8,
+            13.1
+          ]
+        },
+        "test_pierderi_presiune": [
+          6,
+          5,
+          28,
+          6
+        ]
+      },
+      "measurements": {
+        "segmenti_3.joc_capete": 0.9,
+        "bloc_motor.alezaj_cil_3": 82.02,
+        "bloc_motor.ovalitate_cil_3": 0.015
+      },
+      "partStates": {
+        "segmenti_3": {
+          "damaged": true,
+          "finding": "Segmenții cilindrului 3 sunt uzați, cu joc mare la capete și urme de calamină în canale."
+        }
+      },
+      "differential": [
+        "Supapă neetanșă pe cilindrul 3 (compresia nu ar crește la testul umed)",
+        "Garnitură de chiulasă străpunsă (doi cilindri vecini afectați, bule în lichidul de răcire)",
+        "Cilindru 3 zgâriat/ovalizat (se verifică cu alezometrul)",
+        "Ventilația carterului defectă (consum de ulei fără compresie scăzută)"
+      ],
+      "recommendedChecks": [
+        "Test compresie uscat și umed pe toți cilindrii",
+        "Test pierderi de presiune — ascultă la bușonul de umplere ulei",
+        "Inspecție cu endoscopul a cilindrului 3",
+        "După demontare: jocul la capetele segmenților și alezajul/ovalitatea cilindrului"
+      ],
+      "rootCauseParts": [
+        "segmenti_3"
+      ],
+      "explanation": "Compresia mică pe cilindrul 3 care crește semnificativ la testul umed arată că uleiul a etanșat temporar segmenții — deci pierderea are loc pe lângă segmenți, spre carter. Testul de pierderi confirmă: aerul se aude la bușonul de umplere. Cilindrul are cote în toleranță, deci se înlocuiesc segmenții.",
+      "valuesNote": "Toate valorile sunt simulate, NEVERIFICATE, coerente doar cu specificațiile demonstrative ale simulatorului. NU reprezintă valori reale B48."
+    },
+    {
+      "id": "F_garnitura_capac_ulei",
+      "title": "Pierdere de ulei — garnitura capacului de chiulasă",
+      "difficulty": 1,
+      "category": "etanșare",
+      "symptoms": [
+        "Miros de ulei ars după drum, în compartimentul motor",
+        "Urme de ulei pe marginea capacului chiulasei și pe partea de evacuare",
+        "Nivel de ulei care scade lent",
+        "Ocazional ulei în puțurile bujiilor"
+      ],
+      "sound": {
+        "misfireCylinder": 0,
+        "roughness": 0,
+        "chainRattle": 0,
+        "turboWhistle": 0,
+        "knock": 0,
+        "hiss": 0
+      },
+      "tests": {
+        "test_compresie": {
+          "uscat": [
+            13,
+            13.1,
+            12.9,
+            13
+          ],
+          "umed": [
+            13.2,
+            13.3,
+            13.1,
+            13.2
+          ]
+        },
+        "test_pierderi_presiune": [
+          5,
+          6,
+          5,
+          6
+        ]
+      },
+      "measurements": {
+        "bujie_2.distanta_electrozi": 0.72
+      },
+      "partStates": {
+        "garnitura_capac_chiulasa": {
+          "damaged": true,
+          "finding": "Garnitura capacului este întărită și fisurată pe partea de evacuare; urme de ulei în puțul bujiei 2."
+        }
+      },
+      "differential": [
+        "Fisură în capacul chiulasei (piesă din plastic)",
+        "Garnitura carcasei filtrului de ulei (scurgere mai jos, pe bloc)",
+        "Simering/etanșări pe partea distribuției",
+        "Ventilația carterului defectă, care crește presiunea în carter și forțează garniturile"
+      ],
+      "recommendedChecks": [
+        "Curățare și inspecție vizuală pentru a localiza punctul cel mai înalt al scurgerii",
+        "Inspecția puțurilor bujiilor după demontarea bobinelor",
+        "Verificarea ventilației carterului (integrată în capac)",
+        "Verificarea garniturii carcasei filtrului de ulei"
+      ],
+      "rootCauseParts": [
+        "garnitura_capac_chiulasa"
+      ],
+      "explanation": "Uleiul apare pe conturul capacului, iar compresia este normală — defectul este o etanșare exterioară. Garnitura de elastomer s-a întărit în timp. Soluția: demontarea capacului (lecția M1) și montarea unei garnituri noi, cu strângere la cuplu și în ordinea corectă.",
+      "valuesNote": "Toate valorile sunt simulate, NEVERIFICATE, coerente doar cu specificațiile demonstrative ale simulatorului. NU reprezintă valori reale B48."
+    },
+    {
+      "id": "F_termostat_blocat",
+      "title": "Răcire — termostat / modul termic blocat închis",
+      "difficulty": 2,
+      "category": "răcire",
+      "symptoms": [
+        "Temperatura motorului urcă rapid peste normal în trafic și la sarcină",
+        "Ventilatorul radiatorului funcționează la maxim",
+        "Furtunul spre radiator rămâne relativ rece",
+        "Fără pierderi vizibile de lichid"
+      ],
+      "sound": {
+        "misfireCylinder": 0,
+        "roughness": 0,
+        "chainRattle": 0,
+        "turboWhistle": 0,
+        "knock": 0.1,
+        "hiss": 0
+      },
+      "tests": {
+        "test_etanseitate_racire": 1.4,
+        "test_compresie": {
+          "uscat": [
+            13,
+            13.1,
+            12.9,
+            13
+          ],
+          "umed": [
+            13.2,
+            13.3,
+            13.1,
+            13.2
+          ]
+        }
+      },
+      "measurements": {},
+      "partStates": {
+        "termostat": {
+          "damaged": true,
+          "finding": "Termostatul/supapa modulului termic nu se deschide la temperatura de lucru."
+        }
+      },
+      "differential": [
+        "Pompă de apă cu rotor deteriorat sau patinare a curelei",
+        "Aer în circuitul de răcire (aerisire incompletă)",
+        "Radiator colmatat",
+        "Garnitură de chiulasă (gaze în circuitul de răcire)"
+      ],
+      "recommendedChecks": [
+        "Test de etanșeitate a sistemului de răcire (exclude scurgerile)",
+        "Comparare temperatură furtun tur/retur radiator (simulat)",
+        "Verificare vizuală a curelei și a pompei de apă",
+        "Inspecția termostatului demontat"
+      ],
+      "rootCauseParts": [
+        "termostat"
+      ],
+      "explanation": "Sistemul ține presiunea (nu există scurgeri), compresia este normală, dar lichidul nu ajunge la radiator: termostatul a rămas închis. La B48TU funcția este realizată de un modul termic electric — diagnosticul real se face și cu testerul (NEVERIFICAT).",
+      "valuesNote": "Toate valorile sunt simulate, NEVERIFICATE, coerente doar cu specificațiile demonstrative ale simulatorului. NU reprezintă valori reale B48."
+    },
+    {
+      "id": "F_pompa_apa_scurgere",
+      "title": "Răcire — pompă de apă cu etanșare uzată",
+      "difficulty": 2,
+      "category": "răcire",
+      "symptoms": [
+        "Nivel de lichid de răcire care scade",
+        "Urme roz/albastre uscate sub pompa de apă",
+        "Supraîncălzire ocazională",
+        "Ușor zgomot de rulment la ralanti"
+      ],
+      "sound": {
+        "misfireCylinder": 0,
+        "roughness": 0.05,
+        "chainRattle": 0,
+        "turboWhistle": 0,
+        "knock": 0,
+        "hiss": 0.1
+      },
+      "tests": {
+        "test_etanseitate_racire": 0.7,
+        "test_compresie": {
+          "uscat": [
+            13,
+            13.1,
+            12.9,
+            13
+          ],
+          "umed": [
+            13.2,
+            13.3,
+            13.1,
+            13.2
+          ]
+        }
+      },
+      "measurements": {},
+      "partStates": {
+        "pompa_apa": {
+          "damaged": true,
+          "finding": "Etanșarea axului pompei curge; rulmentul are joc ușor."
+        }
+      },
+      "differential": [
+        "Furtun de răcire fisurat sau colier slăbit",
+        "Garnitura modulului termostatic",
+        "Răcitor de ulei neetanș (lichid în ulei)",
+        "Garnitură de chiulasă (pierdere internă)"
+      ],
+      "recommendedChecks": [
+        "Test de etanșeitate cu sistemul sub presiune și inspecție vizuală",
+        "Verificarea jocului fuliei pompei",
+        "Verificarea uleiului pentru urme de lichid de răcire",
+        "Inspecția conductelor și colierelor"
+      ],
+      "rootCauseParts": [
+        "pompa_apa"
+      ],
+      "explanation": "Presiunea scade la test, iar scurgerea este externă, sub pompă: etanșarea axului este uzată. Pompa se înlocuiește; sistemul se umple și se aerisește după procedura variantei (NEVERIFICAT).",
+      "valuesNote": "Toate valorile sunt simulate, NEVERIFICATE, coerente doar cu specificațiile demonstrative ale simulatorului. NU reprezintă valori reale B48."
+    },
+    {
+      "id": "F_turbo_joc",
+      "title": "Turbocompresor — joc axial/radial excesiv, șuierat",
+      "difficulty": 3,
+      "category": "supraalimentare",
+      "symptoms": [
+        "Șuierat ascuțit (sirenă) care crește cu turația",
+        "Putere scăzută, presiune de supraalimentare instabilă",
+        "Fum albăstrui la evacuare",
+        "Ulei în conducta turbo → intercooler"
+      ],
+      "sound": {
+        "misfireCylinder": 0,
+        "roughness": 0.1,
+        "chainRattle": 0,
+        "turboWhistle": 0.8,
+        "knock": 0,
+        "hiss": 0
+      },
+      "tests": {
+        "test_joc_turbo": 0.25,
+        "test_compresie": {
+          "uscat": [
+            13,
+            13.1,
+            12.9,
+            13
+          ],
+          "umed": [
+            13.2,
+            13.3,
+            13.1,
+            13.2
+          ]
+        }
+      },
+      "measurements": {
+        "turbocompresor.joc_axial": 0.25,
+        "turbocompresor.joc_radial": 0.8
+      },
+      "partStates": {
+        "turbocompresor": {
+          "damaged": true,
+          "finding": "Lagărele turbo sunt uzate; roata compresorului atinge carcasa la mișcarea radială."
+        }
+      },
+      "differential": [
+        "Conductă de presiune fisurată (șuierat fără joc în arbore)",
+        "Garnitura turbo – chiulasă neetanșă (țăcănit la sarcină)",
+        "Actuator wastegate defect (presiune instabilă fără zgomot)",
+        "Ventilația carterului defectă (ulei în admisie fără joc la turbo)"
+      ],
+      "recommendedChecks": [
+        "Verificarea jocului axial și radial cu comparatorul (conducta de aspirație scoasă)",
+        "Inspecția conductelor de presiune și a intercoolerului pentru ulei",
+        "Verificarea actuatorului wastegate",
+        "Verificarea alimentării cu ulei a turbo"
+      ],
+      "rootCauseParts": [
+        "turbocompresor"
+      ],
+      "explanation": "Jocul axial măsurat (0,25 mm) depășește limita demonstrativă (0,1 mm), iar roata atinge carcasa: lagărele sunt uzate. Turbo se înlocuiește, cu garnitură nouă și verificarea alimentării cu ulei (cauza uzurii).",
+      "valuesNote": "Toate valorile sunt simulate, NEVERIFICATE, coerente doar cu specificațiile demonstrative ale simulatorului. NU reprezintă valori reale B48."
+    },
+    {
+      "id": "F_lant_intinzator",
+      "title": "Distribuție — lanț alungit și întinzător slăbit",
+      "difficulty": 3,
+      "category": "distribuție",
+      "symptoms": [
+        "Zgomot metalic de zornăit (lanț) câteva secunde la pornirea la rece",
+        "Zgomotul dispare după ce crește presiunea uleiului",
+        "Ocazional martor motor (corelație ax cu came / arbore cotit — simulat)",
+        "Mers ușor neuniform la ralanti rece"
+      ],
+      "sound": {
+        "misfireCylinder": 0,
+        "roughness": 0.1,
+        "chainRattle": 0.7,
+        "turboWhistle": 0,
+        "knock": 0,
+        "hiss": 0
+      },
+      "tests": {
+        "test_compresie": {
+          "uscat": [
+            13,
+            13.1,
+            12.9,
+            13
+          ],
+          "umed": [
+            13.2,
+            13.3,
+            13.1,
+            13.2
+          ]
+        },
+        "test_presiune_ulei": 2.1
+      },
+      "measurements": {
+        "lant_distributie.alungire": 0.9
+      },
+      "partStates": {
+        "lant_distributie": {
+          "damaged": true,
+          "finding": "Lanțul este alungit peste limită; zalele au joc vizibil."
+        },
+        "intinzator_lant": {
+          "damaged": true,
+          "finding": "Întinzătorul își pierde presiunea după oprire; pistonul iese prea mult."
+        },
+        "sina_intinzator": {
+          "damaged": false,
+          "finding": "Șina întinzătorului are uzură ușoară, încă în limite (simulat)."
+        }
+      },
+      "differential": [
+        "Presiune de ulei scăzută la pornire (filtru, ulei necorespunzător)",
+        "Unitate VANOS cu știft de blocare uzat (țăcănit la pornire)",
+        "Rulment de accesoriu zgomotos (zgomot continuu, nu doar la pornire)",
+        "Zgomot de supape (tacheți hidraulici golți)"
+      ],
+      "recommendedChecks": [
+        "Ascultarea zgomotului la pornirea la rece (sunet simulat)",
+        "Test presiune ulei",
+        "Verificarea întinzătorului și a șinelor după demontarea capacului",
+        "Măsurarea alungirii lanțului după demontare"
+      ],
+      "rootCauseParts": [
+        "lant_distributie",
+        "intinzator_lant"
+      ],
+      "explanation": "Presiunea uleiului este normală, deci zgomotul la pornire provine din distribuție: întinzătorul nu mai menține tensiunea până se umple cu ulei, iar lanțul este alungit. Se înlocuiesc lanțul și întinzătorul; procedura de calare a variantei este obligatorie (NU este furnizată).",
+      "valuesNote": "Toate valorile sunt simulate, NEVERIFICATE, coerente doar cu specificațiile demonstrative ale simulatorului. NU reprezintă valori reale B48."
+    },
+    {
+      "id": "F_garnitura_chiulasa",
+      "title": "Etanșare — garnitură de chiulasă străpunsă între cil. 2 și 3",
+      "difficulty": 3,
+      "category": "etanșare",
+      "symptoms": [
+        "Fum alb dulceag la evacuare, mai ales la pornire",
+        "Consum de lichid de răcire fără scurgeri vizibile",
+        "Bule în vasul de expansiune cu motorul pornit",
+        "Supraîncălzire și mers neuniform"
+      ],
+      "sound": {
+        "misfireCylinder": 2,
+        "roughness": 0.35,
+        "chainRattle": 0,
+        "turboWhistle": 0,
+        "knock": 0,
+        "hiss": 0.2
+      },
+      "tests": {
+        "test_compresie": {
+          "uscat": [
+            13,
+            9.5,
+            9.8,
+            13
+          ],
+          "umed": [
+            13.1,
+            9.7,
+            10,
+            13.1
+          ]
+        },
+        "test_pierderi_presiune": [
+          5,
+          30,
+          32,
+          6
+        ],
+        "test_etanseitate_racire": 0.8
+      },
+      "measurements": {
+        "chiulasa.planeitate": 0.04,
+        "bloc_motor.planeitate_bloc": 0.01
+      },
+      "partStates": {
+        "garnitura_chiulasa": {
+          "damaged": true,
+          "finding": "Garnitura este străpunsă între cilindrii 2 și 3, cu urme de lichid de răcire în camerele de ardere."
+        }
+      },
+      "differential": [
+        "Segmenți uzați pe doi cilindri (compresia ar crește la testul umed)",
+        "Fisură în chiulasă",
+        "Răcitor de ulei neetanș (lichid în ulei, nu în cilindri)",
+        "Supape neetanșe pe cilindrii 2 și 3"
+      ],
+      "recommendedChecks": [
+        "Test compresie uscat/umed — doi cilindri vecini scăzuți",
+        "Test pierderi de presiune — bule în vasul de expansiune",
+        "Test de etanșeitate a răcirii",
+        "Inspecție cu endoscopul (pistoane spălate de lichid de răcire)",
+        "După demontare: planeitatea chiulasei și a blocului"
+      ],
+      "rootCauseParts": [
+        "garnitura_chiulasa"
+      ],
+      "explanation": "Doi cilindri vecini au compresie mică ce nu crește la testul umed, aerul ajunge în vasul de expansiune, iar sistemul de răcire pierde presiune: garnitura este străpunsă între ei. Planeitatea chiulasei este în limita demonstrativă, deci se înlocuiește garnitura (și șuruburile de chiulasă, conform documentației variantei — NEVERIFICAT).",
+      "valuesNote": "Toate valorile sunt simulate, NEVERIFICATE, coerente doar cu specificațiile demonstrative ale simulatorului. NU reprezintă valori reale B48."
+    },
+    {
+      "id": "F_bobina_cil2",
+      "title": "Bobină defectă — rateu pe cilindrul 2",
+      "difficulty": 1,
+      "category": "electric",
+      "symptoms": [
+        "Martor motor aprins / intermitent",
+        "Mers neuniform și vibrații la ralanti",
+        "Smucituri la accelerare sub sarcină",
+        "Memoria de defecte indică rateuri pe cilindrul 2 (simulat)"
+      ],
+      "sound": {
+        "misfireCylinder": 2,
+        "roughness": 0.5,
+        "chainRattle": 0,
+        "turboWhistle": 0,
+        "knock": 0,
+        "hiss": 0
+      },
+      "tests": {
+        "test_bobine": [
+          0.8,
+          2.9,
+          0.8,
+          0.9
+        ],
+        "test_compresie": {
+          "uscat": [
+            13,
+            13.1,
+            12.9,
+            13
+          ],
+          "umed": [
+            13.2,
+            13.3,
+            13.1,
+            13.2
+          ]
+        }
+      },
+      "measurements": {
+        "bujie_2.distanta_electrozi": 0.74
+      },
+      "partStates": {
+        "bobina_2": {
+          "damaged": true,
+          "finding": "Izolația bobinei 2 are o fisură cu urme de descărcare; rezistența este în afara intervalului."
+        }
+      },
+      "differential": [
+        "Bujie uzată sau fisurată pe cilindrul 2",
+        "Injector 2 defect (rateul nu se mută la interschimbarea bobinelor)",
+        "Compresie scăzută pe cilindrul 2",
+        "Conector bobină 2 oxidat sau deteriorat"
+      ],
+      "recommendedChecks": [
+        "Interschimbarea bobinelor 2 și 3 și urmărirea rateului (simulat)",
+        "Test bobine cu multimetrul",
+        "Inspecția bujiei 2 și măsurarea distanței dintre electrozi",
+        "Test compresie pentru a exclude o cauză mecanică"
+      ],
+      "rootCauseParts": [
+        "bobina_2"
+      ],
+      "explanation": "Compresia este normală, bujia este în limite, dar bobina 2 are rezistență anormală și urme de descărcare. Bobina se înlocuiește (vezi lecția M1 pentru demontarea bobinelor). Valorile de rezistență sunt pur demonstrative.",
+      "valuesNote": "Toate valorile sunt simulate, NEVERIFICATE, coerente doar cu specificațiile demonstrative ale simulatorului. NU reprezintă valori reale B48."
+    },
+    {
+      "id": "F_supape_evac_cil4",
+      "title": "Compresie incorectă — supapă de evacuare neetanșă pe cilindrul 4",
+      "difficulty": 3,
+      "category": "mecanic",
+      "symptoms": [
+        "Rateu constant pe cilindrul 4, inclusiv la ralanti",
+        "Pornire mai grea",
+        "Putere scăzută",
+        "Pocnituri ușoare în evacuare (simulat)"
+      ],
+      "sound": {
+        "misfireCylinder": 4,
+        "roughness": 0.45,
+        "chainRattle": 0,
+        "turboWhistle": 0,
+        "knock": 0,
+        "hiss": 0
+      },
+      "tests": {
+        "test_compresie": {
+          "uscat": [
+            13,
+            13.1,
+            12.9,
+            7.5
+          ],
+          "umed": [
+            13.1,
+            13.2,
+            13,
+            7.8
+          ]
+        },
+        "test_pierderi_presiune": [
+          5,
+          6,
+          5,
+          35
+        ]
+      },
+      "measurements": {
+        "supape_evacuare.diametru_tija": 4.99,
+        "segmenti_4.joc_capete": 0.32
+      },
+      "partStates": {
+        "supape_evacuare": {
+          "damaged": true,
+          "finding": "O supapă de evacuare a cilindrului 4 are fațeta arsă și nu etanșează pe scaun."
+        }
+      },
+      "differential": [
+        "Segmenți uzați pe cilindrul 4 (compresia ar crește la testul umed)",
+        "Garnitură de chiulasă (de obicei afectează doi cilindri vecini)",
+        "Tachet hidraulic blocat care ține supapa deschisă",
+        "Bobină sau injector defect (compresia ar fi normală)"
+      ],
+      "recommendedChecks": [
+        "Test compresie uscat și umed",
+        "Test pierderi de presiune — aerul se aude la evacuare",
+        "Inspecție cu endoscopul a talerelor supapelor",
+        "După demontarea chiulasei: verificarea etanșării supapelor"
+      ],
+      "rootCauseParts": [
+        "supape_evacuare"
+      ],
+      "explanation": "Compresia mică pe cilindrul 4 nu crește la testul umed (segmenții sunt în regulă), iar la testul de pierderi aerul iese pe evacuare: supapa de evacuare nu etanșează. Se demontează chiulasa și se recondiționează/înlocuiesc supapele.",
+      "valuesNote": "Toate valorile sunt simulate, NEVERIFICATE, coerente doar cu specificațiile demonstrative ale simulatorului. NU reprezintă valori reale B48."
+    },
+    {
+      "id": "F_ventilatie_carter",
+      "title": "Ventilația carterului (integrată în capac) defectă",
+      "difficulty": 2,
+      "category": "etanșare",
+      "symptoms": [
+        "Fluierat/șuierat din zona capacului chiulasei la ralanti",
+        "Mers neuniform la ralanti, amestec sărac (simulat)",
+        "Consum de ulei crescut, ulei în admisie",
+        "Garnituri care încep să curgă din cauza presiunii în carter"
+      ],
+      "sound": {
+        "misfireCylinder": 0,
+        "roughness": 0.2,
+        "chainRattle": 0,
+        "turboWhistle": 0,
+        "knock": 0,
+        "hiss": 0.5
+      },
+      "tests": {
+        "test_compresie": {
+          "uscat": [
+            13,
+            13.1,
+            12.9,
+            13
+          ],
+          "umed": [
+            13.2,
+            13.3,
+            13.1,
+            13.2
+          ]
+        },
+        "test_pierderi_presiune": [
+          5,
+          5,
+          6,
+          5
+        ]
+      },
+      "measurements": {},
+      "partStates": {
+        "capac_chiulasa": {
+          "damaged": true,
+          "finding": "Membrana ventilației carterului integrată în capac este fisurată; se aude aspirație de aer."
+        }
+      },
+      "differential": [
+        "Garnitură galerie admisie neetanșă (aer fals)",
+        "Garnitura capacului chiulasei întărită",
+        "Turbo cu joc (ulei în admisie)",
+        "Segmenți uzați (blow-by mare)"
+      ],
+      "recommendedChecks": [
+        "Ascultarea zonei capacului chiulasei (sunet simulat)",
+        "Inspecția ventilației carterului după demontarea capacului acustic",
+        "Test compresie pentru a exclude blow-by din segmenți",
+        "Verificarea garniturilor galeriei de admisie"
+      ],
+      "rootCauseParts": [
+        "capac_chiulasa"
+      ],
+      "explanation": "Compresia este normală, iar zgomotul de aspirație vine de la capac: membrana ventilației integrate s-a fisurat. Fiind integrată, se înlocuiește capacul chiulasei (cu garnitură nouă) — vezi lecția M1. Informația că ventilația este integrată provine din descrieri generale (NEVERIFICAT pe variantă).",
+      "valuesNote": "Toate valorile sunt simulate, NEVERIFICATE, coerente doar cu specificațiile demonstrative ale simulatorului. NU reprezintă valori reale B48."
+    }
+  ]
+}

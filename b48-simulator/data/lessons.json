@@ -1,0 +1,2009 @@
+{
+  "lessons": [
+    {
+      "id": "L_A",
+      "code": "A",
+      "title": "Identificarea componentelor motorului",
+      "status": "disponibilă",
+      "objectives": [
+        "Recunoașterea principalelor ansambluri ale motorului B48",
+        "Înțelegerea rolului fiecărui sistem (bloc, chiulasă, distribuție, ungere, răcire, supraalimentare, admisie, combustibil, electric, accesorii)",
+        "Familiarizarea cu modurile de vizualizare (explodat, X-ray)",
+        "Cunoașterea particularităților B48: lanț pe partea cutiei, Valvetronic, VANOS, injecție directă, turbo twin-scroll"
+      ],
+      "estimatedMin": 20,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "a1",
+          "type": "info",
+          "title": "Bun venit la motorul B48",
+          "text": "B48 este un motor pe benzină cu 4 cilindri în linie, turbo, cu bloc și chiulasă din aluminiu, produs din 2014. Varianta de 2,0 l are 1998 cm³ (alezaj 82 mm, cursă 94,6 mm — ST1837 p.10). Modelul 3D este educațional și aproximativ.",
+          "focus": "bloc_motor"
+        },
+        {
+          "id": "a2",
+          "type": "info",
+          "title": "Blocul și mecanismul bielă-manivelă",
+          "text": "Blocul conține cei 4 cilindri. În interior, pistoanele cu segmenți sunt legate prin biele de arborele cotit. Doi arbori de echilibrare reduc vibrațiile specifice motoarelor cu 4 cilindri.",
+          "focus": "arbore_cotit"
+        },
+        {
+          "id": "a3",
+          "type": "info",
+          "title": "Chiulasa și distribuția gazelor",
+          "text": "Chiulasa are 4 supape pe cilindru, două axe cu came cu VANOS (calaj variabil) și sistemul Valvetronic (cursă variabilă a supapelor de admisie, cu ax excentric și servomotor).",
+          "focus": "chiulasa"
+        },
+        {
+          "id": "a4",
+          "type": "info",
+          "title": "Distribuția pe lanț — pe partea cutiei",
+          "text": "La B48 lanțul de distribuție este pe partea dinspre cutia de viteze (partea de ieșire a puterii), nu în față. La B48TU lanțul este dintr-o singură bucată (ST1837 p.15; Wikipedia).",
+          "focus": "lant_distributie"
+        },
+        {
+          "id": "a5",
+          "type": "info",
+          "title": "Admisie, turbo și injecție directă",
+          "text": "Admisia este pe o parte a motorului, evacuarea și turbocompresorul twin-scroll pe cealaltă. Galeria de evacuare este integrată în turbo. Benzina este injectată direct în cilindri la presiune înaltă (200 bar la B48, 350 bar la B48TU — Wikipedia; ST1837 p.7).",
+          "focus": "turbocompresor"
+        },
+        {
+          "id": "a6",
+          "type": "info",
+          "title": "Ungere și răcire",
+          "text": "Ungerea folosește carter umed: baia de ulei, pompa, filtrul cu element interschimbabil și răcitorul ulei–lichid. Răcirea folosește pompă de apă, termostat/modul termic (Split Cooling la B48TU) și conducte.",
+          "focus": "baie_ulei"
+        },
+        {
+          "id": "a7",
+          "type": "info",
+          "title": "Aprinderea și capacul chiulasei",
+          "text": "Fiecare cilindru are o bobină tip creion montată prin capacul chiulasei, peste bujie. Capacul integrează ventilația carterului și susține senzorii axelor cu came.",
+          "focus": "capac_chiulasa"
+        },
+        {
+          "id": "a8",
+          "type": "demo",
+          "demo": "explode",
+          "target": null,
+          "text": "Vizualizare explodată: observă cum piesele se depărtează pe direcția lor de demontare."
+        },
+        {
+          "id": "a9",
+          "type": "identify",
+          "target": "bloc_motor",
+          "text": "Selectează blocul motor."
+        },
+        {
+          "id": "a10",
+          "type": "identify",
+          "target": "chiulasa",
+          "text": "Selectează chiulasa."
+        },
+        {
+          "id": "a11",
+          "type": "identify",
+          "target": "capac_chiulasa",
+          "text": "Selectează capacul chiulasei."
+        },
+        {
+          "id": "a12",
+          "type": "identify",
+          "target": "baie_ulei",
+          "text": "Selectează baia de ulei."
+        },
+        {
+          "id": "a13",
+          "type": "identify",
+          "target": "turbocompresor",
+          "text": "Selectează turbocompresorul."
+        },
+        {
+          "id": "a14",
+          "type": "identify",
+          "target": "galerie_admisie",
+          "text": "Selectează galeria de admisie."
+        },
+        {
+          "id": "a15",
+          "type": "identify",
+          "target": "alternator",
+          "text": "Selectează alternatorul."
+        },
+        {
+          "id": "a16",
+          "type": "identify",
+          "target": "curea_accesorii",
+          "text": "Selectează cureaua de accesorii."
+        },
+        {
+          "id": "a17",
+          "type": "identify",
+          "target": "pompa_apa",
+          "text": "Selectează pompa de apă."
+        },
+        {
+          "id": "a18",
+          "type": "identify",
+          "target": "filtru_ulei",
+          "text": "Selectează filtrul de ulei."
+        },
+        {
+          "id": "a19",
+          "type": "identify",
+          "target": "bobina_1",
+          "text": "Selectează bobina cilindrului 1."
+        },
+        {
+          "id": "a20",
+          "type": "identify",
+          "target": "rampa_combustibil",
+          "text": "Selectează rampa de combustibil."
+        },
+        {
+          "id": "a21",
+          "type": "demo",
+          "demo": "xray",
+          "target": "chiulasa",
+          "text": "Vizualizare cu raze X: blocul, chiulasa și capacele devin transparente. Observă pistoanele, bielele și arborele cotit."
+        },
+        {
+          "id": "a22",
+          "type": "identify",
+          "target": "arbore_cotit",
+          "text": "Selectează arborele cotit (folosește vizualizarea X-ray)."
+        },
+        {
+          "id": "a23",
+          "type": "identify",
+          "target": "lant_distributie",
+          "text": "Selectează lanțul de distribuție."
+        },
+        {
+          "id": "a24",
+          "type": "identify",
+          "target": "vanos_admisie",
+          "text": "Selectează unitatea VANOS de admisie."
+        },
+        {
+          "id": "a25",
+          "type": "identify",
+          "target": "valvetronic_servomotor",
+          "text": "Selectează servomotorul Valvetronic."
+        },
+        {
+          "id": "a26",
+          "type": "identify",
+          "target": "volanta",
+          "text": "Selectează volanta."
+        },
+        {
+          "id": "a27",
+          "type": "quiz",
+          "question": "Pe ce parte a motorului B48 se află distribuția pe lanț?",
+          "options": [
+            "În față, lângă cureaua de accesorii",
+            "Pe partea dinspre cutia de viteze",
+            "Sub baia de ulei",
+            "Pe partea de admisie"
+          ],
+          "answer": 1,
+          "explanation": "La B48 lanțul este pe partea de ieșire a puterii, spre cutia de viteze (ST1837 p.15)."
+        },
+        {
+          "id": "a28",
+          "type": "quiz",
+          "question": "Ce face sistemul Valvetronic?",
+          "options": [
+            "Variază calajul axelor cu came",
+            "Variază cursa supapelor de admisie",
+            "Reglează presiunea uleiului",
+            "Comandă wastegate-ul"
+          ],
+          "answer": 1,
+          "explanation": "Valvetronic variază cursa supapelor de admisie prin axul excentric; VANOS variază calajul."
+        },
+        {
+          "id": "a29",
+          "type": "quiz",
+          "question": "Unde este integrată ventilația carterului la B48?",
+          "options": [
+            "În baia de ulei",
+            "În capacul chiulasei",
+            "În galeria de admisie",
+            "În turbocompresor"
+          ],
+          "answer": 1,
+          "explanation": "Ventilația carterului este integrată în capacul chiulasei (de aceea un defect se rezolvă de regulă prin înlocuirea capacului)."
+        },
+        {
+          "id": "a30",
+          "type": "quiz",
+          "question": "Ce tip de turbocompresor folosește B48?",
+          "options": [
+            "Bi-turbo secvențial",
+            "Twin-scroll, cu galerie de evacuare integrată",
+            "Compresor mecanic",
+            "Turbo cu geometrie variabilă"
+          ],
+          "answer": 1,
+          "explanation": "B48 folosește un singur turbo twin-scroll (Wikipedia)."
+        }
+      ],
+      "finalTest": [
+        {
+          "question": "Câți cilindri are motorul B48?",
+          "options": [
+            "3",
+            "4",
+            "6",
+            "8"
+          ],
+          "answer": 1,
+          "explanation": "B48 este un motor cu 4 cilindri în linie."
+        },
+        {
+          "question": "Ce piesă transformă mișcarea pistoanelor în rotație?",
+          "options": [
+            "Axul cu came",
+            "Arborele cotit",
+            "Volanta",
+            "Arborele de echilibrare"
+          ],
+          "answer": 1,
+          "explanation": "Arborele cotit, prin biele."
+        },
+        {
+          "question": "Ce componentă reglează calajul axelor cu came?",
+          "options": [
+            "Valvetronic",
+            "VANOS",
+            "Wastegate",
+            "Termostatul"
+          ],
+          "answer": 1,
+          "explanation": "VANOS (pe ambele axe — Double VANOS)."
+        },
+        {
+          "question": "Ce rol are intercoolerul?",
+          "options": [
+            "Răcește uleiul",
+            "Răcește aerul comprimat de turbo",
+            "Încălzește admisia",
+            "Filtrează aerul"
+          ],
+          "answer": 1,
+          "explanation": "Răcește aerul de supraalimentare (la B48 de tip aer–lichid)."
+        },
+        {
+          "question": "Unde se montează bobinele de inducție?",
+          "options": [
+            "Pe galeria de admisie",
+            "Prin capacul chiulasei, peste bujii",
+            "Pe bloc",
+            "Pe turbo"
+          ],
+          "answer": 1,
+          "explanation": "Bobinele tip creion trec prin capacul chiulasei și stau pe bujii."
+        },
+        {
+          "question": "Cum sunt marcate valorile tehnice în acest simulator?",
+          "options": [
+            "Toate sunt oficiale BMW",
+            "NEVERIFICATĂ, iar cele inventate și „valoare demonstrativă”",
+            "Nu au marcaj",
+            "Doar cuplurile sunt marcate"
+          ],
+          "answer": 1,
+          "explanation": "Varianta exactă nu este aleasă: toate valorile sunt NEVERIFICATE, iar cele inventate sunt demonstrative."
+        }
+      ]
+    },
+    {
+      "id": "L_B",
+      "code": "B",
+      "title": "Pregătirea motorului pentru demontare",
+      "status": "disponibilă",
+      "objectives": [
+        "Aplicarea regulilor de siguranță la atelier",
+        "Deconectarea bateriei cu scula corectă",
+        "Înțelegerea motivelor pentru motor rece și sistem de combustibil depresurizat",
+        "Golirea uleiului și a lichidului de răcire",
+        "Strângerea bușonului cu cheia dinamometrică"
+      ],
+      "estimatedMin": 20,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "b1",
+          "type": "info",
+          "title": "Siguranța la atelier",
+          "text": "Lucrează doar cu motorul oprit, rece și asigurat (pe stand sau vehicul ridicat corect). Poartă ochelari și mănuși rezistente la ulei și combustibil. Ține la îndemână un stingător și materiale absorbante. Fluidele uzate se colectează și se predau la centre autorizate.",
+          "focus": "bloc_motor"
+        },
+        {
+          "id": "b2",
+          "type": "info",
+          "title": "Ce pregătim",
+          "text": "Înainte de orice demontare: deconectăm bateria, lăsăm motorul să se răcească, depresurizăm sistemul de combustibil și golim uleiul și lichidul de răcire. Procedurile reale pot diferi pe variantă — aici sunt simplificate.",
+          "focus": null
+        },
+        {
+          "id": "b3",
+          "type": "tool",
+          "tool": "tubulara_10",
+          "text": "Alege cheia tubulară de 10 mm pentru borna bateriei."
+        },
+        {
+          "id": "b4",
+          "type": "action",
+          "action": "flag_on",
+          "target": "baterie_deconectata",
+          "params": {},
+          "text": "Deconectează bateria (borna negativă).",
+          "hint": "Folosește tubulara de 10 mm. Pe vehicul, verifică dacă există cerințe speciale de deconectare (NEVERIFICAT)."
+        },
+        {
+          "id": "b5",
+          "type": "action",
+          "action": "flag_on",
+          "target": "motor_rece",
+          "params": {},
+          "text": "Lasă motorul să se răcească complet.",
+          "hint": "Nu deschide sistemul de răcire cu motorul cald: lichidul este sub presiune și fierbinte."
+        },
+        {
+          "id": "b6",
+          "type": "info",
+          "title": "Sistemul de combustibil",
+          "text": "Injecția directă lucrează la presiuni foarte mari (200–350 bar în funcție de generație — Wikipedia, ST1837). Înainte de a desface pompa, conducta de înaltă presiune, rampa sau injectoarele, sistemul trebuie depresurizat. Procedura reală NU este furnizată.",
+          "focus": "rampa_combustibil"
+        },
+        {
+          "id": "b7",
+          "type": "action",
+          "action": "flag_on",
+          "target": "combustibil_depresurizat",
+          "params": {},
+          "text": "Depresurizează sistemul de combustibil (acțiune simulată).",
+          "hint": "În simulator este o singură acțiune; în realitate urmează procedura variantei."
+        },
+        {
+          "id": "b8",
+          "type": "quiz",
+          "question": "De ce se deconectează bateria înainte de lucru?",
+          "options": [
+            "Ca să se descarce",
+            "Pentru a preveni scurtcircuite și acționări accidentale",
+            "Ca să se răcească motorul",
+            "Nu este necesar"
+          ],
+          "answer": 1,
+          "explanation": "Deconectarea previne scurtcircuitele (ex. la cablul B+ al alternatorului) și pornirea accidentală."
+        },
+        {
+          "id": "b9",
+          "type": "info",
+          "title": "Golirea uleiului",
+          "text": "Uleiul se scurge prin bușonul din baia de ulei, într-o tavă. Bușonul are un inel de etanșare care se înlocuiește. Filtrul de ulei (element + capac) se schimbă odată cu uleiul.",
+          "focus": "buson_golire_ulei"
+        },
+        {
+          "id": "b10",
+          "type": "tool",
+          "tool": "tubulara_e12",
+          "text": "Alege tubulara potrivită pentru bușonul de golire (în simulator: E12)."
+        },
+        {
+          "id": "b11",
+          "type": "action",
+          "action": "loosen",
+          "target": "buson_golire_ulei",
+          "params": {},
+          "text": "Slăbește bușonul de golire a uleiului.",
+          "hint": "Pune tava sub baie înainte de a-l scoate de tot."
+        },
+        {
+          "id": "b12",
+          "type": "tool",
+          "tool": "tava_scurgere",
+          "text": "Așază tava de scurgere sub baia de ulei."
+        },
+        {
+          "id": "b13",
+          "type": "action",
+          "action": "remove",
+          "target": "buson_golire_ulei",
+          "params": {},
+          "text": "Scoate bușonul și lasă uleiul să curgă.",
+          "hint": "Atenție: uleiul poate fi fierbinte."
+        },
+        {
+          "id": "b14",
+          "type": "action",
+          "action": "flag_on",
+          "target": "ulei_golit",
+          "params": {},
+          "text": "Lasă uleiul să se scurgă complet în tavă.",
+          "hint": "Tava de scurgere trebuie să fie scula activă."
+        },
+        {
+          "id": "b15",
+          "type": "action",
+          "action": "inspect",
+          "target": "buson_golire_ulei",
+          "params": {},
+          "text": "Inspectează bușonul și filetul.",
+          "hint": "Caută particule metalice și filet deteriorat."
+        },
+        {
+          "id": "b16",
+          "type": "action",
+          "action": "install",
+          "target": "buson_golire_ulei",
+          "params": {
+            "newPart": true
+          },
+          "text": "Montează bușonul cu inel de etanșare nou.",
+          "hint": "Înfiletează întâi cu mâna."
+        },
+        {
+          "id": "b17",
+          "type": "tool",
+          "tool": "cheie_dinamometrica",
+          "text": "Alege cheia dinamometrică (20–100 Nm)."
+        },
+        {
+          "id": "b18",
+          "type": "action",
+          "action": "tighten",
+          "target": "buson_golire_ulei",
+          "params": {
+            "torque": 25
+          },
+          "text": "Strânge bușonul la cuplul din specificație (25 Nm — valoare demonstrativă, NEVERIFICATĂ).",
+          "hint": "Strângerea excesivă poate distruge filetul băii."
+        },
+        {
+          "id": "b19",
+          "type": "info",
+          "title": "Golirea lichidului de răcire",
+          "text": "Lichidul de răcire se golește doar cu motorul rece, deschizând mai întâi încet bușonul vasului de expansiune. Lichidul este toxic — se colectează separat de ulei.",
+          "focus": "pompa_apa"
+        },
+        {
+          "id": "b20",
+          "type": "tool",
+          "tool": "tava_scurgere",
+          "text": "Folosește din nou tava de scurgere (curată, separată pentru lichid de răcire)."
+        },
+        {
+          "id": "b21",
+          "type": "action",
+          "action": "flag_on",
+          "target": "lichid_racire_golit",
+          "params": {},
+          "text": "Golește lichidul de răcire.",
+          "hint": "Necesită motor rece."
+        },
+        {
+          "id": "b22",
+          "type": "quiz",
+          "question": "De ce se cere „motor rece” înainte de golirea lichidului de răcire?",
+          "options": [
+            "Lichidul rece curge mai repede",
+            "Sistemul cald este sub presiune și lichidul poate provoca arsuri",
+            "Ca să nu se strice tava",
+            "Nu contează"
+          ],
+          "answer": 1,
+          "explanation": "Un sistem de răcire cald este presurizat; deschiderea lui provoacă jeturi de lichid fierbinte."
+        }
+      ],
+      "finalTest": [
+        {
+          "question": "Ce sculă se folosește pentru borna bateriei în simulator?",
+          "options": [
+            "Cheia de bujii",
+            "Tubulara de 10 mm",
+            "Cheia dinamometrică mare",
+            "Clește patent"
+          ],
+          "answer": 1,
+          "explanation": "Tubulara de 10 mm."
+        },
+        {
+          "question": "Ce se înlocuiește la bușonul de golire?",
+          "options": [
+            "Nimic",
+            "Inelul de etanșare",
+            "Baia de ulei",
+            "Senzorul de nivel"
+          ],
+          "answer": 1,
+          "explanation": "Inelul de etanșare este de unică folosință (practică generală)."
+        },
+        {
+          "question": "Ce condiție este necesară pentru golirea lichidului de răcire?",
+          "options": [
+            "Baterie conectată",
+            "Motor rece",
+            "Ulei golit",
+            "Distribuție blocată"
+          ],
+          "answer": 1,
+          "explanation": "Motorul trebuie să fie rece."
+        },
+        {
+          "question": "De ce se depresurizează sistemul de combustibil?",
+          "options": [
+            "Pentru a economisi benzină",
+            "Presiunea foarte mare poate provoca răniri și incendii la desfacere",
+            "Ca să se răcească injectoarele",
+            "Este doar o formalitate"
+          ],
+          "answer": 1,
+          "explanation": "Injecția directă lucrează la sute de bar."
+        },
+        {
+          "question": "Cuplul de 25 Nm al bușonului din simulator este:",
+          "options": [
+            "O valoare oficială BMW",
+            "O valoare demonstrativă, NEVERIFICATĂ",
+            "O valoare pentru toate motoarele",
+            "Maximul admis"
+          ],
+          "answer": 1,
+          "explanation": "Toate cuplurile din MVP sunt demonstrative."
+        }
+      ]
+    },
+    {
+      "id": "L_M1",
+      "code": "M1",
+      "title": "Capac chiulasă, bobine și bujii — demontare și reasamblare completă",
+      "status": "disponibilă",
+      "objectives": [
+        "Demontarea în ordinea corectă a capacului acustic, bobinelor, senzorilor axelor cu came și capacului chiulasei",
+        "Respectarea condițiilor prealabile: baterie deconectată, conectori decuplați, scula corectă",
+        "Demontarea, inspecția și măsurarea bujiilor",
+        "Reasamblarea cu piese noi (bujii, garnitură), la cuplu și în ordinea de strângere",
+        "Verificarea finală a lucrării"
+      ],
+      "estimatedMin": 45,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "m1",
+          "type": "info",
+          "title": "Siguranța înainte de toate",
+          "text": "Motorul trebuie să fie oprit și rece (bujiile se desfac din chiulasă de aluminiu doar la rece). Poartă ochelari și mănuși. Curăță zona capacului înainte de demontare: murdăria nu trebuie să cadă în puțurile bujiilor sau în chiulasă.",
+          "focus": "capac_chiulasa"
+        },
+        {
+          "id": "m2",
+          "type": "info",
+          "title": "Ce vom face",
+          "text": "Vom demonta capacul acustic, bobinele, senzorii axelor cu came și capacul chiulasei, vom scoate bujiile și le vom verifica, apoi vom reasambla totul cu bujii noi și garnitură nouă, la cuplu și în ordinea corectă. Atenție: toate cuplurile și ordinile din simulator sunt valori demonstrative, NEVERIFICATE.",
+          "focus": "capac_chiulasa"
+        },
+        {
+          "id": "m3",
+          "type": "tool",
+          "tool": "tubulara_10",
+          "text": "Alege cheia tubulară de 10 mm."
+        },
+        {
+          "id": "m4",
+          "type": "action",
+          "action": "flag_on",
+          "target": "baterie_deconectata",
+          "params": {},
+          "text": "Deconectează bateria.",
+          "hint": "Bobinele și senzorii sunt componente electrice — lucrează doar cu bateria deconectată."
+        },
+        {
+          "id": "m5",
+          "type": "action",
+          "action": "remove",
+          "target": "capac_motor_acustic",
+          "params": {},
+          "text": "Scoate capacul acustic al motorului trăgându-l vertical.",
+          "hint": "Nu are șuruburi: se trage uniform de pe știfturile cu bucșe de cauciuc."
+        },
+        {
+          "id": "m6",
+          "type": "action",
+          "action": "disconnect",
+          "target": "conector_bobina_1",
+          "params": {},
+          "text": "Decuplează conectorul bobinei 1.",
+          "hint": "Apasă siguranța conectorului; nu trage de cabluri."
+        },
+        {
+          "id": "m7",
+          "type": "action",
+          "action": "disconnect",
+          "target": "conector_bobina_2",
+          "params": {},
+          "text": "Decuplează conectorul bobinei 2.",
+          "hint": "Apasă siguranța conectorului; nu trage de cabluri."
+        },
+        {
+          "id": "m8",
+          "type": "action",
+          "action": "disconnect",
+          "target": "conector_bobina_3",
+          "params": {},
+          "text": "Decuplează conectorul bobinei 3.",
+          "hint": "Apasă siguranța conectorului; nu trage de cabluri."
+        },
+        {
+          "id": "m9",
+          "type": "action",
+          "action": "disconnect",
+          "target": "conector_bobina_4",
+          "params": {},
+          "text": "Decuplează conectorul bobinei 4.",
+          "hint": "Apasă siguranța conectorului; nu trage de cabluri."
+        },
+        {
+          "id": "m10",
+          "type": "action",
+          "action": "remove",
+          "target": "bobina_1",
+          "params": {},
+          "text": "Scoate bobina 1 trăgând-o vertical.",
+          "hint": "Trage drept în sus, fără a îndoi bobina."
+        },
+        {
+          "id": "m11",
+          "type": "action",
+          "action": "remove",
+          "target": "bobina_2",
+          "params": {},
+          "text": "Scoate bobina 2 trăgând-o vertical.",
+          "hint": "Trage drept în sus, fără a îndoi bobina."
+        },
+        {
+          "id": "m12",
+          "type": "action",
+          "action": "remove",
+          "target": "bobina_3",
+          "params": {},
+          "text": "Scoate bobina 3 trăgând-o vertical.",
+          "hint": "Trage drept în sus, fără a îndoi bobina."
+        },
+        {
+          "id": "m13",
+          "type": "action",
+          "action": "remove",
+          "target": "bobina_4",
+          "params": {},
+          "text": "Scoate bobina 4 trăgând-o vertical.",
+          "hint": "Trage drept în sus, fără a îndoi bobina."
+        },
+        {
+          "id": "m14",
+          "type": "action",
+          "action": "disconnect",
+          "target": "conector_senzor_ax_came_admisie",
+          "params": {},
+          "text": "Decuplează conectorul senzorului axului cu came de admisie.",
+          "hint": "Senzorul este montat pe capacul chiulasei."
+        },
+        {
+          "id": "m15",
+          "type": "action",
+          "action": "disconnect",
+          "target": "conector_senzor_ax_came_evacuare",
+          "params": {},
+          "text": "Decuplează conectorul senzorului axului cu came de evacuare.",
+          "hint": "Senzorul este montat pe capacul chiulasei."
+        },
+        {
+          "id": "m16",
+          "type": "tool",
+          "tool": "tubulara_e8",
+          "text": "Alege tubulara E8 pentru șuruburile senzorilor."
+        },
+        {
+          "id": "m17",
+          "type": "action",
+          "action": "loosen",
+          "target": "senzor_ax_came_admisie",
+          "params": {},
+          "text": "Slăbește șurubul senzorului axului cu came de admisie.",
+          "hint": "Scula activă trebuie să fie tubulara E8."
+        },
+        {
+          "id": "m18",
+          "type": "action",
+          "action": "remove",
+          "target": "senzor_ax_came_admisie",
+          "params": {},
+          "text": "Scoate senzorul axului cu came de admisie.",
+          "hint": "Verifică inelul O."
+        },
+        {
+          "id": "m19",
+          "type": "action",
+          "action": "loosen",
+          "target": "senzor_ax_came_evacuare",
+          "params": {},
+          "text": "Slăbește șurubul senzorului axului cu came de evacuare.",
+          "hint": "Scula activă trebuie să fie tubulara E8."
+        },
+        {
+          "id": "m20",
+          "type": "action",
+          "action": "remove",
+          "target": "senzor_ax_came_evacuare",
+          "params": {},
+          "text": "Scoate senzorul axului cu came de evacuare.",
+          "hint": "Verifică inelul O."
+        },
+        {
+          "id": "m21",
+          "type": "quiz",
+          "question": "De ce trebuie scoși senzorii axelor cu came înaintea capacului chiulasei?",
+          "options": [
+            "Pentru că sunt montați pe capacul chiulasei",
+            "Pentru că sunt fragili",
+            "Pentru că blochează bujiile",
+            "Nu este necesar"
+          ],
+          "answer": 0,
+          "explanation": "Senzorii sunt montați pe capac (mountsOn: capac_chiulasa): capacul nu poate fi ridicat cu ei montați."
+        },
+        {
+          "id": "m22",
+          "type": "tool",
+          "tool": "tubulara_e10",
+          "text": "Alege tubulara E10 pentru șuruburile capacului chiulasei."
+        },
+        {
+          "id": "m23",
+          "type": "action",
+          "action": "loosen",
+          "target": "capac_chiulasa",
+          "params": {},
+          "text": "Slăbește cele 14 șuruburi ale capacului chiulasei.",
+          "hint": "Slăbește treptat, în ordinea inversă strângerii (din exterior spre centru), ca să nu deformezi capacul."
+        },
+        {
+          "id": "m24",
+          "type": "action",
+          "action": "remove",
+          "target": "capac_chiulasa",
+          "params": {},
+          "text": "Ridică și scoate capacul chiulasei.",
+          "hint": "Ridică uniform; nu folosi pârghii pe suprafața de etanșare."
+        },
+        {
+          "id": "m25",
+          "type": "action",
+          "action": "remove",
+          "target": "garnitura_capac_chiulasa",
+          "params": {},
+          "text": "Scoate garnitura capacului chiulasei.",
+          "hint": "Garnitura este de unică folosință — nu se refolosește."
+        },
+        {
+          "id": "m26",
+          "type": "action",
+          "action": "inspect",
+          "target": "capac_chiulasa",
+          "params": {},
+          "text": "Inspectează capacul: suprafața de etanșare și ventilația carterului integrată.",
+          "hint": "Ventilația carterului la B48 este integrată în capac."
+        },
+        {
+          "id": "m27",
+          "type": "action",
+          "action": "inspect",
+          "target": "garnitura_capac_chiulasa",
+          "params": {},
+          "text": "Inspectează garnitura veche (întărire, fisuri, porțiuni strivite).",
+          "hint": "Starea ei explică eventualele scurgeri de ulei."
+        },
+        {
+          "id": "m28",
+          "type": "tool",
+          "tool": "cheie_bujii",
+          "text": "Alege cheia tubulară pentru bujii."
+        },
+        {
+          "id": "m29",
+          "type": "action",
+          "action": "loosen",
+          "target": "bujie_1",
+          "params": {},
+          "text": "Slăbește bujia 1.",
+          "hint": "Doar cu motorul rece. Dacă bujia se blochează, nu forța."
+        },
+        {
+          "id": "m30",
+          "type": "action",
+          "action": "remove",
+          "target": "bujie_1",
+          "params": {},
+          "text": "Scoate bujia 1.",
+          "hint": "Insertul cheii ține bujia — extrage-o drept."
+        },
+        {
+          "id": "m31",
+          "type": "action",
+          "action": "loosen",
+          "target": "bujie_2",
+          "params": {},
+          "text": "Slăbește bujia 2.",
+          "hint": "Doar cu motorul rece. Dacă bujia se blochează, nu forța."
+        },
+        {
+          "id": "m32",
+          "type": "action",
+          "action": "remove",
+          "target": "bujie_2",
+          "params": {},
+          "text": "Scoate bujia 2.",
+          "hint": "Insertul cheii ține bujia — extrage-o drept."
+        },
+        {
+          "id": "m33",
+          "type": "action",
+          "action": "loosen",
+          "target": "bujie_3",
+          "params": {},
+          "text": "Slăbește bujia 3.",
+          "hint": "Doar cu motorul rece. Dacă bujia se blochează, nu forța."
+        },
+        {
+          "id": "m34",
+          "type": "action",
+          "action": "remove",
+          "target": "bujie_3",
+          "params": {},
+          "text": "Scoate bujia 3.",
+          "hint": "Insertul cheii ține bujia — extrage-o drept."
+        },
+        {
+          "id": "m35",
+          "type": "action",
+          "action": "loosen",
+          "target": "bujie_4",
+          "params": {},
+          "text": "Slăbește bujia 4.",
+          "hint": "Doar cu motorul rece. Dacă bujia se blochează, nu forța."
+        },
+        {
+          "id": "m36",
+          "type": "action",
+          "action": "remove",
+          "target": "bujie_4",
+          "params": {},
+          "text": "Scoate bujia 4.",
+          "hint": "Insertul cheii ține bujia — extrage-o drept."
+        },
+        {
+          "id": "m37",
+          "type": "tool",
+          "tool": "lera",
+          "text": "Alege lera pentru măsurarea distanței dintre electrozi."
+        },
+        {
+          "id": "m38",
+          "type": "action",
+          "action": "measure",
+          "target": "bujie_1.distanta_electrozi",
+          "params": {},
+          "text": "Măsoară distanța dintre electrozii bujiei 1.",
+          "hint": "Compară cu specificația (valoare demonstrativă)."
+        },
+        {
+          "id": "m39",
+          "type": "action",
+          "action": "inspect",
+          "target": "bujie_1",
+          "params": {},
+          "text": "Inspectează aspectul electrozilor bujiei 1.",
+          "hint": "Culoarea și depunerile spun multe despre arderea din cilindru."
+        },
+        {
+          "id": "m40",
+          "type": "quiz",
+          "question": "Ce arată o bujie cu ulei pe electrozi?",
+          "options": [
+            "Ardere perfectă",
+            "Ulei ajuns în cilindru sau în puțul bujiei (segmenți, supape, garnitură)",
+            "Amestec prea sărac",
+            "Bobină nouă"
+          ],
+          "answer": 1,
+          "explanation": "Uleiul pe bujie indică pătrunderea uleiului în cilindru sau o scurgere în puțul bujiei (ex. garnitura capacului)."
+        },
+        {
+          "id": "m41",
+          "type": "action",
+          "action": "install",
+          "target": "bujie_1",
+          "params": {
+            "newPart": true
+          },
+          "text": "Montează bujia nouă 1, înfiletând-o întâi cu mâna.",
+          "hint": "Înfiletarea cu mâna previne deteriorarea filetului din aluminiu."
+        },
+        {
+          "id": "m42",
+          "type": "action",
+          "action": "install",
+          "target": "bujie_2",
+          "params": {
+            "newPart": true
+          },
+          "text": "Montează bujia nouă 2, înfiletând-o întâi cu mâna.",
+          "hint": "Înfiletarea cu mâna previne deteriorarea filetului din aluminiu."
+        },
+        {
+          "id": "m43",
+          "type": "action",
+          "action": "install",
+          "target": "bujie_3",
+          "params": {
+            "newPart": true
+          },
+          "text": "Montează bujia nouă 3, înfiletând-o întâi cu mâna.",
+          "hint": "Înfiletarea cu mâna previne deteriorarea filetului din aluminiu."
+        },
+        {
+          "id": "m44",
+          "type": "action",
+          "action": "install",
+          "target": "bujie_4",
+          "params": {
+            "newPart": true
+          },
+          "text": "Montează bujia nouă 4, înfiletând-o întâi cu mâna.",
+          "hint": "Înfiletarea cu mâna previne deteriorarea filetului din aluminiu."
+        },
+        {
+          "id": "m45",
+          "type": "tool",
+          "tool": "cheie_dinamometrica_mica",
+          "text": "Alege cheia dinamometrică mică (2–25 Nm)."
+        },
+        {
+          "id": "m46",
+          "type": "action",
+          "action": "tighten",
+          "target": "bujie_1",
+          "params": {
+            "torque": 20
+          },
+          "text": "Strânge bujia 1 la cuplul din specificație (20 Nm — valoare demonstrativă, NEVERIFICATĂ).",
+          "hint": "Cuplul real depinde de tipul bujiei și de variantă."
+        },
+        {
+          "id": "m47",
+          "type": "action",
+          "action": "tighten",
+          "target": "bujie_2",
+          "params": {
+            "torque": 20
+          },
+          "text": "Strânge bujia 2 la cuplul din specificație (20 Nm — valoare demonstrativă, NEVERIFICATĂ).",
+          "hint": "Cuplul real depinde de tipul bujiei și de variantă."
+        },
+        {
+          "id": "m48",
+          "type": "action",
+          "action": "tighten",
+          "target": "bujie_3",
+          "params": {
+            "torque": 20
+          },
+          "text": "Strânge bujia 3 la cuplul din specificație (20 Nm — valoare demonstrativă, NEVERIFICATĂ).",
+          "hint": "Cuplul real depinde de tipul bujiei și de variantă."
+        },
+        {
+          "id": "m49",
+          "type": "action",
+          "action": "tighten",
+          "target": "bujie_4",
+          "params": {
+            "torque": 20
+          },
+          "text": "Strânge bujia 4 la cuplul din specificație (20 Nm — valoare demonstrativă, NEVERIFICATĂ).",
+          "hint": "Cuplul real depinde de tipul bujiei și de variantă."
+        },
+        {
+          "id": "m50",
+          "type": "quiz",
+          "question": "De ce se folosește cheia dinamometrică la bujii?",
+          "options": [
+            "Este mai rapidă",
+            "Un cuplu prea mare poate rupe bujia sau filetul, unul prea mic duce la pierderi de compresie și supraîncălzire",
+            "Nu contează cuplul",
+            "Ca să nu se zgârie bujia"
+          ],
+          "answer": 1,
+          "explanation": "Cuplul controlat protejează filetul din chiulasa de aluminiu și asigură etanșarea și transferul de căldură."
+        },
+        {
+          "id": "m51",
+          "type": "action",
+          "action": "install",
+          "target": "garnitura_capac_chiulasa",
+          "params": {
+            "newPart": true
+          },
+          "text": "Montează o garnitură nouă a capacului chiulasei.",
+          "hint": "Asigură-te că stă complet în canal, inclusiv în jurul puțurilor bujiilor."
+        },
+        {
+          "id": "m52",
+          "type": "action",
+          "action": "install",
+          "target": "capac_chiulasa",
+          "params": {},
+          "text": "Așază capacul chiulasei pe poziție.",
+          "hint": "Verifică să nu prinzi garnitura."
+        },
+        {
+          "id": "m53",
+          "type": "action",
+          "action": "tighten",
+          "target": "capac_chiulasa",
+          "params": {
+            "torque": 10,
+            "order": [
+              7,
+              8,
+              6,
+              9,
+              5,
+              10,
+              4,
+              11,
+              3,
+              12,
+              2,
+              13,
+              1,
+              14
+            ]
+          },
+          "text": "Strânge șuruburile capacului la 10 Nm în ordinea indicată (în spirală, din centru spre exterior) — valori demonstrative, NEVERIFICATE.",
+          "hint": "Ordinea: 7, 8, 6, 9, 5, 10, 4, 11, 3, 12, 2, 13, 1, 14."
+        },
+        {
+          "id": "m54",
+          "type": "quiz",
+          "question": "De ce se strâng șuruburile capacului din centru spre exterior?",
+          "options": [
+            "Pentru viteză",
+            "Pentru a apăsa uniform garnitura și a evita deformarea capacului",
+            "Pentru că așa ies mai ușor",
+            "Nu contează ordinea"
+          ],
+          "answer": 1,
+          "explanation": "Strângerea din centru spre exterior împinge eventualele deformări spre margini și comprimă uniform garnitura."
+        },
+        {
+          "id": "m55",
+          "type": "action",
+          "action": "install",
+          "target": "senzor_ax_came_admisie",
+          "params": {},
+          "text": "Montează senzorul axului cu came de admisie.",
+          "hint": "Verifică inelul O; unge-l ușor cu ulei curat."
+        },
+        {
+          "id": "m56",
+          "type": "action",
+          "action": "tighten",
+          "target": "senzor_ax_came_admisie",
+          "params": {
+            "torque": 8
+          },
+          "text": "Strânge șurubul senzorului de admisie la 8 Nm (valoare demonstrativă).",
+          "hint": "Folosește cheia dinamometrică mică."
+        },
+        {
+          "id": "m57",
+          "type": "action",
+          "action": "install",
+          "target": "senzor_ax_came_evacuare",
+          "params": {},
+          "text": "Montează senzorul axului cu came de evacuare.",
+          "hint": "Verifică inelul O; unge-l ușor cu ulei curat."
+        },
+        {
+          "id": "m58",
+          "type": "action",
+          "action": "tighten",
+          "target": "senzor_ax_came_evacuare",
+          "params": {
+            "torque": 8
+          },
+          "text": "Strânge șurubul senzorului de evacuare la 8 Nm (valoare demonstrativă).",
+          "hint": "Folosește cheia dinamometrică mică."
+        },
+        {
+          "id": "m59",
+          "type": "action",
+          "action": "connect",
+          "target": "conector_senzor_ax_came_admisie",
+          "params": {},
+          "text": "Cuplează conectorul senzorului axului cu came de admisie.",
+          "hint": "Ascultă clicul siguranței."
+        },
+        {
+          "id": "m60",
+          "type": "action",
+          "action": "connect",
+          "target": "conector_senzor_ax_came_evacuare",
+          "params": {},
+          "text": "Cuplează conectorul senzorului axului cu came de evacuare.",
+          "hint": "Ascultă clicul siguranței."
+        },
+        {
+          "id": "m61",
+          "type": "action",
+          "action": "install",
+          "target": "bobina_1",
+          "params": {},
+          "text": "Montează bobina 1 până se așază pe bujie.",
+          "hint": "Apasă vertical până la capăt."
+        },
+        {
+          "id": "m62",
+          "type": "action",
+          "action": "install",
+          "target": "bobina_2",
+          "params": {},
+          "text": "Montează bobina 2 până se așază pe bujie.",
+          "hint": "Apasă vertical până la capăt."
+        },
+        {
+          "id": "m63",
+          "type": "action",
+          "action": "install",
+          "target": "bobina_3",
+          "params": {},
+          "text": "Montează bobina 3 până se așază pe bujie.",
+          "hint": "Apasă vertical până la capăt."
+        },
+        {
+          "id": "m64",
+          "type": "action",
+          "action": "install",
+          "target": "bobina_4",
+          "params": {},
+          "text": "Montează bobina 4 până se așază pe bujie.",
+          "hint": "Apasă vertical până la capăt."
+        },
+        {
+          "id": "m65",
+          "type": "action",
+          "action": "connect",
+          "target": "conector_bobina_1",
+          "params": {},
+          "text": "Cuplează conectorul bobinei 1.",
+          "hint": "Verifică siguranța conectorului."
+        },
+        {
+          "id": "m66",
+          "type": "action",
+          "action": "connect",
+          "target": "conector_bobina_2",
+          "params": {},
+          "text": "Cuplează conectorul bobinei 2.",
+          "hint": "Verifică siguranța conectorului."
+        },
+        {
+          "id": "m67",
+          "type": "action",
+          "action": "connect",
+          "target": "conector_bobina_3",
+          "params": {},
+          "text": "Cuplează conectorul bobinei 3.",
+          "hint": "Verifică siguranța conectorului."
+        },
+        {
+          "id": "m68",
+          "type": "action",
+          "action": "connect",
+          "target": "conector_bobina_4",
+          "params": {},
+          "text": "Cuplează conectorul bobinei 4.",
+          "hint": "Verifică siguranța conectorului."
+        },
+        {
+          "id": "m69",
+          "type": "action",
+          "action": "install",
+          "target": "capac_motor_acustic",
+          "params": {},
+          "text": "Montează capacul acustic al motorului.",
+          "hint": "Apasă uniform pe știfturi."
+        },
+        {
+          "id": "m70",
+          "type": "tool",
+          "tool": "tubulara_10",
+          "text": "Alege din nou tubulara de 10 mm."
+        },
+        {
+          "id": "m71",
+          "type": "action",
+          "action": "flag_off",
+          "target": "baterie_deconectata",
+          "params": {},
+          "text": "Reconectează bateria.",
+          "hint": "Pe vehicul pot fi necesare inițializări după reconectare (NEVERIFICAT)."
+        },
+        {
+          "id": "m72",
+          "type": "action",
+          "action": "final_check",
+          "target": null,
+          "params": {},
+          "text": "Rulează verificarea finală: piese montate, cupluri, ordine, conectori, garnituri, baterie.",
+          "hint": "Dacă apar probleme, raportul le listează pe fiecare."
+        },
+        {
+          "id": "m73",
+          "type": "quiz",
+          "question": "Ce ar indica verificarea finală dacă ai refolosi garnitura veche a capacului?",
+          "options": [
+            "Nimic",
+            "O problemă de etanșare (garnitură de unică folosință refolosită — risc de scurgere de ulei)",
+            "Rateu pe cilindrul 1",
+            "Baterie descărcată"
+          ],
+          "answer": 1,
+          "explanation": "Garniturile de unică folosință refolosite sunt raportate ca problemă și pot provoca scurgeri."
+        }
+      ],
+      "finalTest": [
+        {
+          "question": "Care este prima acțiune practică înainte de a scoate bobinele?",
+          "options": [
+            "Scoaterea bujiilor",
+            "Deconectarea bateriei",
+            "Slăbirea capacului",
+            "Golirea uleiului"
+          ],
+          "answer": 1,
+          "explanation": "Bateria se deconectează înainte de a lucra la componente electrice."
+        },
+        {
+          "question": "Ce trebuie făcut înainte de a scoate o bobină?",
+          "options": [
+            "Decuplarea conectorului ei",
+            "Slăbirea bujiei",
+            "Golirea lichidului de răcire",
+            "Nimic"
+          ],
+          "answer": 0,
+          "explanation": "Conectorul se decuplează întâi; altfel se rupe siguranța sau cablajul."
+        },
+        {
+          "question": "De ce nu se poate scoate capacul chiulasei cu senzorii axelor cu came montați?",
+          "options": [
+            "Senzorii sunt montați pe capac",
+            "Senzorii țin bujiile",
+            "Senzorii sunt în chiulasă",
+            "Se poate"
+          ],
+          "answer": 0,
+          "explanation": "Senzorii sunt fixați pe capac."
+        },
+        {
+          "question": "Garnitura capacului chiulasei se:",
+          "options": [
+            "Refolosește dacă arată bine",
+            "Înlocuiește cu una nouă la fiecare demontare",
+            "Lipește cu silicon",
+            "Elimină"
+          ],
+          "answer": 1,
+          "explanation": "Este de unică folosință."
+        },
+        {
+          "question": "Cum se strâng șuruburile capacului în simulator?",
+          "options": [
+            "În orice ordine",
+            "În spirală, din centru spre exterior, la cuplul din specificație",
+            "Doar cele din colțuri",
+            "Cu clichetul, „după simț”"
+          ],
+          "answer": 1,
+          "explanation": "Ordinea și cuplul sunt definite în specificații (demonstrative)."
+        },
+        {
+          "question": "Ce sculă se folosește pentru a măsura distanța dintre electrozii bujiei?",
+          "options": [
+            "Micrometrul",
+            "Lera",
+            "Comparatorul",
+            "Multimetrul"
+          ],
+          "answer": 1,
+          "explanation": "Lera (lamele calibrate)."
+        }
+      ]
+    },
+    {
+      "id": "L_C",
+      "code": "C",
+      "title": "Demontarea accesoriilor și a sistemelor auxiliare",
+      "status": "disponibilă",
+      "objectives": [
+        "Demontarea și montarea curelei de accesorii cu întinzătorul automat",
+        "Lucrul în siguranță la alternator (cablul B+)",
+        "Demontarea și montarea întinzătorului și a alternatorului",
+        "Strângerea la cuplu și verificarea finală"
+      ],
+      "estimatedMin": 25,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "c1",
+          "type": "info",
+          "title": "Accesoriile motorului",
+          "text": "Cureaua de accesorii antrenează alternatorul, compresorul A/C și pompa de apă de la amortizorul arborelui cotit. Este tensionată de un întinzător automat. La B48TU ghidajul curelei a fost modificat (ST1837 p.7).",
+          "focus": "curea_accesorii"
+        },
+        {
+          "id": "c2",
+          "type": "info",
+          "title": "Siguranță: cablul B+ al alternatorului",
+          "text": "Alternatorul este legat direct la bateria vehiculului prin cablul B+, nesiguranțat. Conectorul alternatorului se desface DOAR după deconectarea bateriei.",
+          "focus": "alternator"
+        },
+        {
+          "id": "c3",
+          "type": "tool",
+          "tool": "tubulara_10",
+          "text": "Alege cheia tubulară de 10 mm."
+        },
+        {
+          "id": "c4",
+          "type": "action",
+          "action": "flag_on",
+          "target": "baterie_deconectata",
+          "params": {},
+          "text": "Deconectează bateria.",
+          "hint": "Obligatoriu înainte de a lucra la alternator."
+        },
+        {
+          "id": "c5",
+          "type": "info",
+          "title": "Desenează traseul curelei",
+          "text": "Înainte de a scoate cureaua, notează sau fotografiază traseul ei pe fulii. Traseul exact depinde de variantă.",
+          "focus": "curea_accesorii"
+        },
+        {
+          "id": "c6",
+          "type": "tool",
+          "tool": "clichet_3_8",
+          "text": "Alege clichetul 3/8\" pentru rotirea întinzătorului."
+        },
+        {
+          "id": "c7",
+          "type": "action",
+          "action": "remove",
+          "target": "curea_accesorii",
+          "params": {},
+          "text": "Rotește întinzătorul cu clichetul și scoate cureaua de pe fulii.",
+          "hint": "Eliberează întinzătorul încet, nu-l lăsa să lovească."
+        },
+        {
+          "id": "c8",
+          "type": "action",
+          "action": "inspect",
+          "target": "curea_accesorii",
+          "params": {},
+          "text": "Inspectează cureaua (fisuri, ciupituri, lucire).",
+          "hint": "O curea fisurată se înlocuiește."
+        },
+        {
+          "id": "c9",
+          "type": "tool",
+          "tool": "tubulara_e12",
+          "text": "Alege tubulara E12."
+        },
+        {
+          "id": "c10",
+          "type": "action",
+          "action": "loosen",
+          "target": "intinzator_curea",
+          "params": {},
+          "text": "Slăbește șuruburile întinzătorului curelei.",
+          "hint": "Scula activă: tubulara E12."
+        },
+        {
+          "id": "c11",
+          "type": "action",
+          "action": "remove",
+          "target": "intinzator_curea",
+          "params": {},
+          "text": "Scoate întinzătorul curelei.",
+          "hint": ""
+        },
+        {
+          "id": "c12",
+          "type": "action",
+          "action": "inspect",
+          "target": "intinzator_curea",
+          "params": {},
+          "text": "Verifică rola întinzătorului (zgomot, joc).",
+          "hint": ""
+        },
+        {
+          "id": "c13",
+          "type": "action",
+          "action": "disconnect",
+          "target": "conector_alternator",
+          "params": {},
+          "text": "Decuplează conectorul și cablul B+ al alternatorului.",
+          "hint": "Necesită bateria deconectată."
+        },
+        {
+          "id": "c14",
+          "type": "action",
+          "action": "loosen",
+          "target": "alternator",
+          "params": {},
+          "text": "Slăbește șuruburile de fixare ale alternatorului.",
+          "hint": "Susține alternatorul — este greu."
+        },
+        {
+          "id": "c15",
+          "type": "action",
+          "action": "remove",
+          "target": "alternator",
+          "params": {},
+          "text": "Scoate alternatorul.",
+          "hint": "Cureaua trebuie să fie deja scoasă."
+        },
+        {
+          "id": "c16",
+          "type": "action",
+          "action": "inspect",
+          "target": "alternator",
+          "params": {},
+          "text": "Verifică rulmenții și roata liberă a fuliei alternatorului.",
+          "hint": ""
+        },
+        {
+          "id": "c17",
+          "type": "quiz",
+          "question": "De ce trebuie scoasă cureaua înainte de alternator?",
+          "options": [
+            "Pentru că alternatorul e montat peste curea",
+            "Pentru că cureaua este montată pe fulia alternatorului și îl blochează",
+            "Pentru că altfel se descarcă bateria",
+            "Nu trebuie"
+          ],
+          "answer": 1,
+          "explanation": "Cureaua înfășoară fulia alternatorului; piesa se poate scoate abia după ce cureaua e demontată."
+        },
+        {
+          "id": "c18",
+          "type": "action",
+          "action": "install",
+          "target": "alternator",
+          "params": {},
+          "text": "Montează alternatorul la loc.",
+          "hint": "Aliniază-l pe bucșele de centrare."
+        },
+        {
+          "id": "c19",
+          "type": "tool",
+          "tool": "cheie_dinamometrica",
+          "text": "Alege cheia dinamometrică (20–100 Nm)."
+        },
+        {
+          "id": "c20",
+          "type": "action",
+          "action": "tighten",
+          "target": "alternator",
+          "params": {
+            "torque": 40
+          },
+          "text": "Strânge șuruburile alternatorului la 40 Nm (valoare demonstrativă, NEVERIFICATĂ).",
+          "hint": ""
+        },
+        {
+          "id": "c21",
+          "type": "action",
+          "action": "connect",
+          "target": "conector_alternator",
+          "params": {},
+          "text": "Cuplează conectorul și cablul B+ al alternatorului.",
+          "hint": "Bateria trebuie să fie încă deconectată."
+        },
+        {
+          "id": "c22",
+          "type": "action",
+          "action": "install",
+          "target": "intinzator_curea",
+          "params": {},
+          "text": "Montează întinzătorul curelei.",
+          "hint": ""
+        },
+        {
+          "id": "c23",
+          "type": "action",
+          "action": "tighten",
+          "target": "intinzator_curea",
+          "params": {
+            "torque": 35
+          },
+          "text": "Strânge șuruburile întinzătorului la 35 Nm (valoare demonstrativă, NEVERIFICATĂ).",
+          "hint": ""
+        },
+        {
+          "id": "c24",
+          "type": "tool",
+          "tool": "clichet_3_8",
+          "text": "Alege clichetul 3/8\" pentru întinzător."
+        },
+        {
+          "id": "c25",
+          "type": "action",
+          "action": "install",
+          "target": "curea_accesorii",
+          "params": {},
+          "text": "Montează cureaua pe traseul notat, apoi eliberează întinzătorul.",
+          "hint": "Verifică așezarea curelei în canelurile fiecărei fulii."
+        },
+        {
+          "id": "c26",
+          "type": "tool",
+          "tool": "tubulara_10",
+          "text": "Alege tubulara de 10 mm."
+        },
+        {
+          "id": "c27",
+          "type": "action",
+          "action": "flag_off",
+          "target": "baterie_deconectata",
+          "params": {},
+          "text": "Reconectează bateria.",
+          "hint": ""
+        },
+        {
+          "id": "c28",
+          "type": "action",
+          "action": "final_check",
+          "target": null,
+          "params": {},
+          "text": "Rulează verificarea finală.",
+          "hint": ""
+        }
+      ],
+      "finalTest": [
+        {
+          "question": "Ce condiție trebuie îndeplinită înainte de a desface conectorul alternatorului?",
+          "options": [
+            "Motor cald",
+            "Baterie deconectată",
+            "Ulei golit",
+            "Curea montată"
+          ],
+          "answer": 1,
+          "explanation": "Cablul B+ este sub tensiune permanentă."
+        },
+        {
+          "question": "Cu ce se rotește întinzătorul curelei în simulator?",
+          "options": [
+            "Cheia de bujii",
+            "Clichetul 3/8\"",
+            "Cleștele patent",
+            "Mâna"
+          ],
+          "answer": 1,
+          "explanation": "Cu clichetul 3/8\"."
+        },
+        {
+          "question": "Ce trebuie notat înainte de a scoate cureaua?",
+          "options": [
+            "Culoarea ei",
+            "Traseul pe fulii",
+            "Temperatura",
+            "Nimic"
+          ],
+          "answer": 1,
+          "explanation": "Traseul, pentru remontarea corectă."
+        },
+        {
+          "question": "Ce piese antrenează cureaua de accesorii în simulator?",
+          "options": [
+            "Axele cu came",
+            "Alternatorul, compresorul A/C și pompa de apă",
+            "Pompa de ulei",
+            "Turbocompresorul"
+          ],
+          "answer": 1,
+          "explanation": "Alternator, compresor A/C, pompă de apă."
+        },
+        {
+          "question": "Cuplurile folosite în această lecție sunt:",
+          "options": [
+            "Oficiale BMW",
+            "Demonstrative, NEVERIFICATE",
+            "Universale",
+            "Maxime"
+          ],
+          "answer": 1,
+          "explanation": "Toate sunt demonstrative până la alegerea variantei."
+        }
+      ]
+    },
+    {
+      "id": "L_D",
+      "code": "D",
+      "title": "Distribuția pe lanț și reperele de calare",
+      "status": "planificată",
+      "objectives": [
+        "Înțelegerea rolului lanțului, întinzătorului, șinelor și unităților VANOS",
+        "Înțelegerea conceptului de calare și a sculelor de blocare",
+        "Recunoașterea simptomelor de uzură a distribuției"
+      ],
+      "estimatedMin": 30,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "d1",
+          "type": "info",
+          "title": "Distribuția B48",
+          "text": "Lanțul este pe partea dinspre cutia de viteze; la B48TU este dintr-o singură bucată, cu bucșe de 8 mm (ST1837 p.15).",
+          "focus": "lant_distributie"
+        },
+        {
+          "id": "d2",
+          "type": "info",
+          "title": "VANOS",
+          "text": "Unitățile VANOS de admisie și evacuare variază calajul axelor cu came cu ajutorul presiunii uleiului, comandate de electrovalve.",
+          "focus": "vanos_admisie"
+        },
+        {
+          "id": "d3",
+          "type": "info",
+          "title": "Calarea",
+          "text": "Înainte de a desface lanțul, axele cu came și arborele cotit se blochează cu scule speciale în poziția de calare. Pozițiile și sculele (coduri BMW) NU sunt furnizate în simulator.",
+          "focus": "ax_came_admisie"
+        },
+        {
+          "id": "d4",
+          "type": "info",
+          "title": "Simptome de uzură",
+          "text": "Zgomot de lanț la pornirea la rece, coduri de corelație ax cu came/arbore cotit, uzura șinelor.",
+          "focus": "intinzator_lant"
+        },
+        {
+          "id": "d5",
+          "type": "info",
+          "title": "Despre procedura detaliată",
+          "text": "Procedurile detaliate (ordine exactă, cupluri, scule speciale, poziții de calare) cer varianta exactă a motorului (cod motor, an, model) și documentație verificată. Până atunci lecția conține doar informații generale.",
+          "focus": null
+        }
+      ],
+      "finalTest": []
+    },
+    {
+      "id": "L_E",
+      "code": "E",
+      "title": "Chiulasa — demontare, verificare, montare",
+      "status": "planificată",
+      "objectives": [
+        "Cunoașterea componentelor chiulasei și a mecanismului Valvetronic",
+        "Înțelegerea condițiilor prealabile pentru demontarea chiulasei",
+        "Verificarea planeității și a garniturii"
+      ],
+      "estimatedMin": 30,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "e1",
+          "type": "info",
+          "title": "Componentele chiulasei",
+          "text": "Axe cu came, culbutori cu role, tacheți hidraulici, supape (4/cilindru), arcuri, ax excentric și servomotor Valvetronic.",
+          "focus": "chiulasa"
+        },
+        {
+          "id": "e2",
+          "type": "info",
+          "title": "Condiții prealabile",
+          "text": "Ulei și lichid de răcire golite, distribuție demontată, accesoriile de pe chiulasă scoase (turbo, galerie, rampă, injectoare).",
+          "focus": "chiulasa"
+        },
+        {
+          "id": "e3",
+          "type": "info",
+          "title": "Șuruburile chiulasei",
+          "text": "Se strâng în etape (cuplu + unghi) și sunt de regulă de unică folosință. Valorile reale NU sunt furnizate.",
+          "focus": "garnitura_chiulasa"
+        },
+        {
+          "id": "e4",
+          "type": "info",
+          "title": "Despre procedura detaliată",
+          "text": "Procedurile detaliate (ordine exactă, cupluri, scule speciale, poziții de calare) cer varianta exactă a motorului (cod motor, an, model) și documentație verificată. Până atunci lecția conține doar informații generale.",
+          "focus": null
+        }
+      ],
+      "finalTest": []
+    },
+    {
+      "id": "L_F",
+      "code": "F",
+      "title": "Cilindri, pistoane, segmenți și arbore cotit",
+      "status": "planificată",
+      "objectives": [
+        "Înțelegerea mecanismului bielă-manivelă",
+        "Cunoașterea măsurătorilor de bază: alezaj, ovalitate, joc la capetele segmenților, fusuri, joc axial",
+        "Recunoașterea uzurii"
+      ],
+      "estimatedMin": 30,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "f1",
+          "type": "info",
+          "title": "Mecanismul bielă-manivelă",
+          "text": "Pistoanele, bielele și arborele cotit transformă presiunea în rotație. La B48TU bielele sunt forjate și arborele cotit ranforsat (ST1837 p.7; Wikipedia).",
+          "focus": "arbore_cotit"
+        },
+        {
+          "id": "f2",
+          "type": "info",
+          "title": "Demontarea pistoanelor",
+          "text": "Pistoanele cu biele se scot prin partea superioară, după demontarea chiulasei și a băii de ulei; pistonul și segmenții se separă doar pe banc.",
+          "focus": "piston_1"
+        },
+        {
+          "id": "f3",
+          "type": "info",
+          "title": "Cuzineți",
+          "text": "ST1837 p.15: cuzineții de bielă au o singură mărime standard; cei de palier au clasificare. Detaliile cer documentația variantei.",
+          "focus": "biela_1"
+        },
+        {
+          "id": "f4",
+          "type": "info",
+          "title": "Despre procedura detaliată",
+          "text": "Procedurile detaliate (ordine exactă, cupluri, scule speciale, poziții de calare) cer varianta exactă a motorului (cod motor, an, model) și documentație verificată. Până atunci lecția conține doar informații generale.",
+          "focus": null
+        }
+      ],
+      "finalTest": []
+    },
+    {
+      "id": "L_G",
+      "code": "G",
+      "title": "Sistemele de ungere și răcire",
+      "status": "planificată",
+      "objectives": [
+        "Înțelegerea circuitului de ulei (pompă, filtru, răcitor, senzori)",
+        "Înțelegerea circuitului de răcire și a conceptului Split Cooling",
+        "Teste: presiune ulei, etanșeitate răcire"
+      ],
+      "estimatedMin": 30,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "g1",
+          "type": "info",
+          "title": "Ungerea",
+          "text": "Carter umed, pompă de ulei antrenată prin lanț separat, filtru cu element, răcitor ulei–lichid.",
+          "focus": "pompa_ulei"
+        },
+        {
+          "id": "g2",
+          "type": "info",
+          "title": "Răcirea",
+          "text": "Pompă de apă, termostat/modul termic. La B48TU: Split Cooling cu supapă electrică de management termic (ST1837 p.7, p.22–25).",
+          "focus": "termostat"
+        },
+        {
+          "id": "g3",
+          "type": "info",
+          "title": "Umplere și aerisire",
+          "text": "Umplerea și aerisirea sistemului de răcire urmează o procedură specifică variantei, adesea cu tester. NU este furnizată.",
+          "focus": "pompa_apa"
+        },
+        {
+          "id": "g4",
+          "type": "info",
+          "title": "Despre procedura detaliată",
+          "text": "Procedurile detaliate (ordine exactă, cupluri, scule speciale, poziții de calare) cer varianta exactă a motorului (cod motor, an, model) și documentație verificată. Până atunci lecția conține doar informații generale.",
+          "focus": null
+        }
+      ],
+      "finalTest": []
+    },
+    {
+      "id": "L_H",
+      "code": "H",
+      "title": "Turbocompresorul și supraalimentarea",
+      "status": "planificată",
+      "objectives": [
+        "Înțelegerea turbo-ului twin-scroll cu galerie integrată",
+        "Rolul wastegate-ului și al intercoolerului aer–lichid",
+        "Verificarea jocului arborelui turbo"
+      ],
+      "estimatedMin": 30,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "h1",
+          "type": "info",
+          "title": "Twin-scroll",
+          "text": "Fluxurile de gaze ale cilindrilor sunt separate pe perechi până la turbină, pentru răspuns mai rapid.",
+          "focus": "turbocompresor"
+        },
+        {
+          "id": "h2",
+          "type": "info",
+          "title": "Wastegate și intercooler",
+          "text": "Wastegate-ul limitează presiunea; intercoolerul aer–lichid răcește aerul comprimat (Wikipedia).",
+          "focus": "actuator_wastegate"
+        },
+        {
+          "id": "h3",
+          "type": "info",
+          "title": "Diagnostic",
+          "text": "Șuierat, fum albastru, ulei în conducte → se verifică jocul axial/radial cu conducta de aspirație scoasă.",
+          "focus": "conducta_aer_turbo"
+        },
+        {
+          "id": "h4",
+          "type": "info",
+          "title": "Despre procedura detaliată",
+          "text": "Procedurile detaliate (ordine exactă, cupluri, scule speciale, poziții de calare) cer varianta exactă a motorului (cod motor, an, model) și documentație verificată. Până atunci lecția conține doar informații generale.",
+          "focus": null
+        }
+      ],
+      "finalTest": []
+    },
+    {
+      "id": "L_I",
+      "code": "I",
+      "title": "Măsurători, toleranțe și uzură",
+      "status": "planificată",
+      "objectives": [
+        "Folosirea corectă a micrometrului, alezometrului, lerei, riglei și comparatorului",
+        "Interpretarea rezultatelor față de specificații",
+        "Înțelegerea diferenței dintre valori demonstrative și valori verificate"
+      ],
+      "estimatedMin": 30,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "i1",
+          "type": "info",
+          "title": "Instrumente",
+          "text": "Micrometru (diametre exterioare), alezometru (cilindri), leră (jocuri), riglă + leră (planeitate), comparator (jocuri axiale).",
+          "focus": "bloc_motor"
+        },
+        {
+          "id": "i2",
+          "type": "info",
+          "title": "Toleranțe",
+          "text": "Fiecare măsurătoare se compară cu intervalul [min, max] din specificație. În simulator toate intervalele sunt demonstrative (NEVERIFICATE).",
+          "focus": null
+        },
+        {
+          "id": "i3",
+          "type": "info",
+          "title": "Uzura",
+          "text": "Uzura se apreciază prin comparare între cilindri și față de valorile nominale din documentația variantei.",
+          "focus": "piston_1"
+        },
+        {
+          "id": "i4",
+          "type": "info",
+          "title": "Despre procedura detaliată",
+          "text": "Procedurile detaliate (ordine exactă, cupluri, scule speciale, poziții de calare) cer varianta exactă a motorului (cod motor, an, model) și documentație verificată. Până atunci lecția conține doar informații generale.",
+          "focus": null
+        }
+      ],
+      "finalTest": []
+    },
+    {
+      "id": "L_J",
+      "code": "J",
+      "title": "Reasamblarea completă a motorului",
+      "status": "planificată",
+      "objectives": [
+        "Ordinea generală de reasamblare",
+        "Folosirea pieselor noi de unică folosință",
+        "Respectarea cuplurilor și ordinilor de strângere"
+      ],
+      "estimatedMin": 30,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "j1",
+          "type": "info",
+          "title": "Ordinea inversă",
+          "text": "În general, reasamblarea urmează ordinea inversă a demontării, de la bloc spre exterior.",
+          "focus": "bloc_motor"
+        },
+        {
+          "id": "j2",
+          "type": "info",
+          "title": "Piese noi",
+          "text": "Garniturile, etanșările și șuruburile de unică folosință se înlocuiesc; lista exactă depinde de variantă.",
+          "focus": "garnitura_chiulasa"
+        },
+        {
+          "id": "j3",
+          "type": "info",
+          "title": "Calarea la montaj",
+          "text": "Distribuția se montează cu sculele de blocare montate și se verifică după rotirea arborelui cotit — procedura reală NU este furnizată.",
+          "focus": "lant_distributie"
+        },
+        {
+          "id": "j4",
+          "type": "info",
+          "title": "Despre procedura detaliată",
+          "text": "Procedurile detaliate (ordine exactă, cupluri, scule speciale, poziții de calare) cer varianta exactă a motorului (cod motor, an, model) și documentație verificată. Până atunci lecția conține doar informații generale.",
+          "focus": null
+        }
+      ],
+      "finalTest": []
+    },
+    {
+      "id": "L_K",
+      "code": "K",
+      "title": "Verificări finale și pornirea simulată",
+      "status": "planificată",
+      "objectives": [
+        "Lista de verificare înainte de pornire",
+        "Umplerea fluidelor și reconectarea bateriei",
+        "Interpretarea raportului final și a sunetului motorului"
+      ],
+      "estimatedMin": 30,
+      "initialState": null,
+      "steps": [
+        {
+          "id": "k1",
+          "type": "info",
+          "title": "Înainte de pornire",
+          "text": "Toate piesele montate și strânse, conectorii cuplați, fluidele completate, sculele de blocare scoase, bateria reconectată.",
+          "focus": null
+        },
+        {
+          "id": "k2",
+          "type": "info",
+          "title": "Pornirea simulată",
+          "text": "Simulatorul generează sunetul motorului: rateuri, zgomot de lanț, șuierat de turbo sau scurgeri arată greșelile de montaj.",
+          "focus": "bloc_motor"
+        },
+        {
+          "id": "k3",
+          "type": "info",
+          "title": "Pe un motor real",
+          "text": "Prima pornire după reparație cere proceduri specifice (umplere ulei, aerisire, adaptări cu tester) — NU sunt furnizate.",
+          "focus": null
+        },
+        {
+          "id": "k4",
+          "type": "info",
+          "title": "Despre procedura detaliată",
+          "text": "Procedurile detaliate (ordine exactă, cupluri, scule speciale, poziții de calare) cer varianta exactă a motorului (cod motor, an, model) și documentație verificată. Până atunci lecția conține doar informații generale.",
+          "focus": null
+        }
+      ],
+      "finalTest": []
+    }
+  ]
+}
