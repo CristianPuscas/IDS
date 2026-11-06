@@ -1,0 +1,114 @@
+{
+  "parts": {
+    "assemblies": [
+      { "id": "bloc", "name": "Bloc motor", "color": "#888888" },
+      { "id": "chiulasa", "name": "Chiulasă", "color": "#8899aa" },
+      { "id": "electric", "name": "Aprindere", "color": "#aa8844" },
+      { "id": "ungere", "name": "Ungere", "color": "#665544" }
+    ],
+    "connectors": [
+      { "id": "conector_bobina_1", "name": "Conector bobină cil. 1", "between": ["bobina_1", "cablaj_motor"], "requiresFlags": {} },
+      { "id": "conector_bobina_2", "name": "Conector bobină cil. 2", "between": ["bobina_2", "cablaj_motor"], "requiresFlags": {} }
+    ],
+    "parts": [
+      { "id": "bloc_motor", "name": "Bloc motor", "assembly": "bloc", "description": "Bloc.", "function": "Suport.", "accuracy": "schematic",
+        "mountsOn": [], "fasteners": null, "cost": 5000, "laborMin": 600, "removalDir": [0, -1, 0] },
+      { "id": "garnitura_capac_chiulasa", "name": "Garnitură capac chiulasă", "assembly": "chiulasa", "description": "Garnitură.", "function": "Etanșare.",
+        "accuracy": "schematic", "mountsOn": ["bloc_motor"], "fasteners": null, "isGasket": true, "singleUse": true, "sealsFluid": "ulei",
+        "cost": 80, "laborMin": 5, "removalDir": [0, 1, 0] },
+      { "id": "capac_chiulasa", "name": "Capac chiulasă", "assembly": "chiulasa", "description": "Capac.", "function": "Închide.", "accuracy": "aproximativ",
+        "mountsOn": ["garnitura_capac_chiulasa"], "requiresFlags": { "baterie_deconectata": true },
+        "fasteners": { "count": 4, "type": "șurub", "size": "E10", "sizeStatus": "NEVERIFICATĂ", "tools": ["tubulara_e10"],
+          "torqueSpec": "spec_cuplu_capac", "sequenceSpec": "spec_ordine_capac" },
+        "inspections": [ { "id": "vizual", "name": "Inspecție vizuală", "ok": "Fără fisuri (simulat)." } ],
+        "measurements": [ { "id": "planeitate", "name": "Planeitate suprafață", "tool": "rigla_lera", "specRef": "spec_planeitate", "requiresRemoved": true } ],
+        "cost": 900, "laborMin": 20, "removalDir": [0, 1, 0] },
+      { "id": "bobina_1", "name": "Bobină cil. 1", "assembly": "electric", "description": "Bobină.", "function": "Scânteie.", "accuracy": "aproximativ",
+        "mountsOn": ["capac_chiulasa"], "requiresFlags": { "baterie_deconectata": true },
+        "fasteners": { "count": 1, "type": "șurub", "size": "E8", "sizeStatus": "NEVERIFICATĂ", "tools": ["tubulara_e8"], "torqueSpec": "spec_cuplu_bobina", "sequenceSpec": null },
+        "cost": 250, "laborMin": 3, "removalDir": [0, 1, 0] },
+      { "id": "bobina_2", "name": "Bobină cil. 2", "assembly": "electric", "description": "Bobină.", "function": "Scânteie.", "accuracy": "aproximativ",
+        "mountsOn": ["capac_chiulasa"], "requiresFlags": { "baterie_deconectata": true },
+        "fasteners": { "count": 1, "type": "șurub", "size": "E8", "sizeStatus": "NEVERIFICATĂ", "tools": ["tubulara_e8"], "torqueSpec": "spec_cuplu_bobina", "sequenceSpec": null },
+        "cost": 250, "laborMin": 3, "removalDir": [0, 1, 0] },
+      { "id": "bujie_1", "name": "Bujie cil. 1", "assembly": "electric", "description": "Bujie.", "function": "Aprindere.", "accuracy": "schematic",
+        "mountsOn": ["bloc_motor"], "blockedBy": ["bobina_1"],
+        "fasteners": { "count": 1, "type": "bujie", "size": "14 mm", "sizeStatus": "NEVERIFICATĂ", "tools": ["cheie_bujii"], "torqueSpec": "spec_cuplu_bujie", "sequenceSpec": null },
+        "cost": 60, "laborMin": 4, "removalDir": [0, 1, 0] },
+      { "id": "pompa_ulei", "name": "Pompă ulei", "assembly": "ungere", "description": "Pompă.", "function": "Presiune ulei.", "accuracy": "schematic",
+        "mountsOn": ["bloc_motor"], "sealsFluid": "ulei",
+        "fasteners": { "count": 3, "type": "șurub", "size": "E10", "sizeStatus": "NEVERIFICATĂ", "tools": ["tubulara_e10"], "torqueSpec": "spec_cuplu_pompa", "sequenceSpec": null },
+        "cost": 700, "laborMin": 30, "removalDir": [0, -1, 0] },
+      { "id": "rotor_pompa_ulei", "name": "Rotor pompă ulei", "assembly": "ungere", "description": "Rotor.", "function": "Pompare.", "accuracy": "schematic",
+        "mountsOn": ["pompa_ulei"], "benchOnly": true, "fasteners": null, "cost": 200, "laborMin": 10, "removalDir": [0, -1, 0] },
+      { "id": "filtru_ulei", "name": "Filtru ulei", "assembly": "ungere", "description": "Filtru.", "function": "Filtrare.", "accuracy": "schematic",
+        "mountsOn": ["bloc_motor"], "requiresFlags": { "ulei_golit": true }, "removeTools": ["cheie_filtru_ulei"], "sealsFluid": "ulei",
+        "fasteners": null, "cost": 50, "laborMin": 5, "removalDir": [0, 1, 0] },
+      { "id": "cablaj_motor", "name": "Cablaj motor", "assembly": "electric", "description": "Cablaj.", "function": "Conexiuni.", "accuracy": "schematic",
+        "mountsOn": ["bloc_motor"], "requiresFlags": { "baterie_deconectata": true }, "fasteners": null, "cost": 1500, "laborMin": 60, "removalDir": [0, 1, 0] }
+    ]
+  },
+  "flags": { "flags": [
+    { "id": "baterie_deconectata", "name": "Baterie deconectată", "default": false, "onLabel": "Deconectează bateria", "offLabel": "Reconectează bateria",
+      "toolsOn": ["tubulara_10"], "toolsOff": ["tubulara_10"], "requiresOn": { "removed": [], "installed": [], "flags": {} },
+      "requiresOff": { "removed": [], "installed": [], "flags": {} }, "mustBeOffToStart": true, "description": "Borna negativă." },
+    { "id": "ulei_golit", "name": "Ulei golit", "default": false, "onLabel": "Golește uleiul", "offLabel": "Umple cu ulei",
+      "toolsOn": [], "toolsOff": [], "requiresOn": { "removed": [], "installed": [], "flags": {} },
+      "requiresOff": { "removed": [], "installed": ["filtru_ulei", "pompa_ulei"], "flags": {} }, "mustBeOffToStart": true, "description": "Ulei." }
+  ]},
+  "tools": { "tools": [
+    { "id": "tubulara_10", "name": "Tubulară 10 mm", "category": "socket", "size": "10", "range": null, "price": 10, "defaultOwned": true },
+    { "id": "tubulara_e8", "name": "Tubulară E8", "category": "socket", "size": "E8", "range": null, "price": 20, "defaultOwned": true },
+    { "id": "tubulara_e10", "name": "Tubulară E10", "category": "socket", "size": "E10", "range": null, "price": 25, "defaultOwned": true },
+    { "id": "cheie_bujii", "name": "Cheie bujii", "category": "special", "size": "14", "range": null, "price": 30, "defaultOwned": true },
+    { "id": "cheie_filtru_ulei", "name": "Cheie filtru ulei", "category": "special", "size": null, "range": null, "price": 40, "defaultOwned": true },
+    { "id": "cheie_dinamometrica_mica", "name": "Cheie dinamometrică mică", "category": "torque", "size": null, "range": [2, 25], "price": 300, "defaultOwned": true },
+    { "id": "cheie_dinamometrica", "name": "Cheie dinamometrică", "category": "torque", "size": null, "range": [20, 100], "price": 400, "defaultOwned": true },
+    { "id": "unghiometru", "name": "Unghiometru", "category": "angle", "size": null, "range": null, "price": 60, "defaultOwned": true },
+    { "id": "rigla_lera", "name": "Riglă + leră", "category": "measure", "size": null, "range": null, "price": 80, "defaultOwned": true },
+    { "id": "multimetru", "name": "Multimetru", "category": "diagnostic", "size": null, "range": null, "price": 150, "defaultOwned": true }
+  ]},
+  "specs": { "specs": [
+    { "id": "spec_cuplu_capac", "name": "Cuplu șuruburi capac chiulasă", "type": "torque", "value": 10, "unit": "Nm", "min": 9, "max": 11, "angle": null, "order": null,
+      "status": "NEVERIFICATĂ", "demo": true, "variant": "demo", "source": { "document": null, "section": null, "page": null, "url": null }, "note": "Demo." },
+    { "id": "spec_ordine_capac", "name": "Ordine strângere capac chiulasă", "type": "sequence", "value": null, "unit": null, "min": null, "max": null, "angle": null,
+      "order": [2, 4, 1, 3], "status": "NEVERIFICATĂ", "demo": true, "variant": "demo", "source": { "document": null, "section": null, "page": null, "url": null }, "note": "Demo." },
+    { "id": "spec_cuplu_bobina", "name": "Cuplu șurub bobină", "type": "torque", "value": 8, "unit": "Nm", "min": 7, "max": 9, "angle": null, "order": null,
+      "status": "NEVERIFICATĂ", "demo": true, "variant": "demo", "source": { "document": null, "section": null, "page": null, "url": null }, "note": "Demo." },
+    { "id": "spec_cuplu_bujie", "name": "Cuplu bujie", "type": "torque", "value": 23, "unit": "Nm", "min": 21, "max": 25, "angle": null, "order": null,
+      "status": "NEVERIFICATĂ", "demo": true, "variant": "demo", "source": { "document": null, "section": null, "page": null, "url": null }, "note": "Demo." },
+    { "id": "spec_cuplu_pompa", "name": "Cuplu pompă ulei", "type": "torque", "value": 8, "unit": "Nm", "min": 7, "max": 9, "angle": 90, "order": null,
+      "status": "NEVERIFICATĂ", "demo": true, "variant": "demo", "source": { "document": null, "section": null, "page": null, "url": null }, "note": "Demo." },
+    { "id": "spec_planeitate", "name": "Planeitate capac", "type": "dimension", "value": 0.02, "unit": "mm", "min": 0, "max": 0.05, "angle": null, "order": null,
+      "status": "NEVERIFICATĂ", "demo": true, "variant": "demo", "source": { "document": null, "section": null, "page": null, "url": null }, "note": "Demo." },
+    { "id": "spec_rezistenta_bobina", "name": "Rezistență primar bobină", "type": "info", "value": 0.6, "unit": "Ω", "min": 0.4, "max": 0.8, "angle": null, "order": null,
+      "status": "NEVERIFICATĂ", "demo": true, "variant": "demo", "source": { "document": null, "section": null, "page": null, "url": null }, "note": "Demo." }
+  ]},
+  "tests": { "tests": [
+    { "id": "test_bobine", "name": "Test bobine", "tool": "multimetru", "perCylinder": true, "variants": [],
+      "requires": { "removed": [], "installed": [], "flags": { "baterie_deconectata": true } }, "specRef": "spec_rezistenta_bobina", "description": "Rezistență." }
+  ]},
+  "faults": { "faults": [
+    { "id": "F_bobina_1", "title": "Bobină defectă — cilindrul 1", "difficulty": 1, "category": "electric",
+      "symptoms": ["Rateu la ralanti."],
+      "sound": { "misfireCylinder": 1, "roughness": 0.4, "chainRattle": 0, "turboWhistle": 0, "knock": 0, "hiss": 0 },
+      "tests": { "test_bobine": [5.0, 0.6, 0.6, 0.6] },
+      "measurements": { "capac_chiulasa.planeitate": 0.12 },
+      "partStates": { "bobina_1": { "damaged": true, "finding": "Fisură în corpul bobinei (simulat)." } },
+      "differential": ["Bujie uzată."], "recommendedChecks": ["Test bobine."],
+      "rootCauseParts": ["bobina_1"], "explanation": "Bobina 1 are înfășurarea întreruptă.", "valuesNote": "Valori simulate, NEVERIFICATE." }
+  ]},
+  "lessons": { "lessons": [
+    { "id": "L_T", "code": "T", "title": "Lecție test", "status": "disponibilă", "objectives": ["Test"], "estimatedMin": 5,
+      "initialState": { "removed": ["bobina_1"], "flags": {} },
+      "steps": [
+        { "id": "t1", "type": "info", "title": "Start", "text": "Info.", "focus": "capac_chiulasa" },
+        { "id": "t2", "type": "tool", "tool": "tubulara_e10", "text": "Alege E10." },
+        { "id": "t3", "type": "action", "action": "measure", "target": "capac_chiulasa.planeitate", "text": "Măsoară." },
+        { "id": "t4", "type": "action", "action": "disconnect", "target": "conector_bobina_2", "text": "Deconectează." },
+        { "id": "t5", "type": "quiz", "question": "?", "options": ["a", "b"], "answer": 1, "explanation": "b." }
+      ],
+      "finalTest": [ { "question": "?", "options": ["a", "b"], "answer": 0, "explanation": "a." } ] }
+  ]},
+  "variants": { "selected": "demo", "variants": [ { "id": "demo", "code": "B48 (generic, demonstrativ)", "years": null, "models": [], "note": "Demo." } ] }
+}

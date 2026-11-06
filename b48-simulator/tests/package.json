@@ -1,0 +1,7 @@
+{
+  "name": "b48-simulator-tests",
+  "private": true,
+  "type": "module",
+  "main": "run-all.mjs",
+  "description": "Permite `node --test tests/` în Node 22 (care tratează directorul ca modul): încarcă toate fișierele *.test.mjs."
+}
