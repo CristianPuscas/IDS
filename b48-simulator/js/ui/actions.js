@@ -60,7 +60,11 @@ export class Actions {
         case 'inspect': return await openInspectDialog(app, target);
         case 'measure': {
           let partId = target; let measId = opts.measurementId;
-          if (!measId && typeof target === 'string' && target.includes('.')) [partId, measId] = target.split('.');
+          if (typeof target === 'string' && target.includes('.')) {
+            const [pid, mid] = target.split('.');
+            partId = pid;
+            measId = measId || mid;
+          }
           return await openMeasureDialog(app, partId, measId);
         }
         case 'test': return await openTestDialog(app, target, opts);
