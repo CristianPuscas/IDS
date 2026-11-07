@@ -210,6 +210,10 @@ export class LessonRunner {
     if (!step || this.stepState.done) return;
     const { sim } = this.app;
     if (!this.matches(step, op)) {
+      if (step.action === 'tighten' && op.action === 'loosen' && op.target === step.target && op.result?.ok) {
+        this.setFeedback('tip', 'Bine — elementele de fixare sunt slăbite. Acum strângeți din nou, corect.');
+        return;
+      }
       if (op.result?.ok && MECH_OPS.has(op.action) && this.hints) {
         this.setFeedback('tip', `Operațiunea „${ACTION_LABELS[op.action] || op.action}” a fost efectuată, dar pasul cerut este: ${step.text || ACTION_LABELS[step.action]}.`);
       }

@@ -75,12 +75,16 @@ export class EngineView {
     this._applyAll();
 
     this.picker = new Picker(this.stage.renderer.domElement, this.stage.camera, () => this._targets(), (hits) => this._resolveHits(hits), {
-      onPick: (partId) => this.bus?.emit('view:pick', { partId }),
-      onHover: (partId) => this.bus?.emit('view:hover', { partId }),
+      onPick: (partId) => { this.invalidate(); this.bus?.emit('view:pick', { partId }); },
+      onHover: (partId) => { this.invalidate(); this.bus?.emit('view:hover', { partId }); },
     });
     this._onControlStart = () => { this._camTween = null; };
     this.stage.controls.addEventListener('start', this._onControlStart);
-    this.stage.start((dt, t) => this._frame(dt, t), () => this._afterRender());
+    this._onControlChange = () => this.invalidate();
+    this.stage.controls.addEventListener('change', this._onControlChange);
+    this._ro2 = new ResizeObserver(() => this.invalidate());
+    this._ro2.observe(this.container || this.stage.renderer.domElement);
+    this.stage.start((dt, t) => this._frame(dt, t), () => this._afterRender(), () => this._needsRender());
     this.ready = true;
     this.bus?.emit('view:ready', { partIds: this.getPartIds() });
   }
@@ -181,6 +185,24 @@ export class EngineView {
     this._updateCamTween(now);
     this.leaks.update(dt);
     this.tools.update(now);
+  }
+
+  /** Cere randarea următoarelor cadre (după orice schimbare de stare). */
+  invalidate(ms = 400) {
+    this._dirtyUntil = Math.max(this._dirtyUntil || 0, performance.now() + ms);
+  }
+
+  /** Există ceva în mișcare sau o schimbare recentă? */
+  _needsRender() {
+    const now = performance.now();
+    return now < (this._dirtyUntil || 0)
+      || this.running.on || Math.abs(this.running.omega || 0) > 1e-3
+      || this.animator.tweens.size > 0
+      || this.explodeCur !== this.explodeTarget
+      || !!this.hintId
+      || !!this._camTween
+      || this.leaks.leaks.size > 0
+      || this.tools.active.size > 0;
   }
 
   _afterRender() {
@@ -367,6 +389,8 @@ export class EngineView {
   dispose() {
     if (!this.stage) return;
     this.ready = false;
+    this._ro2?.disconnect();
+    this.stage.controls.removeEventListener('change', this._onControlChange);
     this.animator.finishAll();
     this.tools.dispose();
     this.leaks.dispose();
@@ -378,4 +402,18 @@ export class EngineView {
     this.stage.dispose();
     this.stage = null;
   }
+}
+
+// Orice apel public poate schimba scena → marcăm cadrele următoare pentru randare.
+for (const name of Object.getOwnPropertyNames(EngineView.prototype)) {
+  if (name === 'constructor' || name.startsWith('_') || name === 'invalidate') continue;
+  const desc = Object.getOwnPropertyDescriptor(EngineView.prototype, name);
+  if (!desc || typeof desc.value !== 'function') continue;
+  const fn = desc.value;
+  EngineView.prototype[name] = function (...args) {
+    this.invalidate?.();
+    const out = fn.apply(this, args);
+    if (out && typeof out.then === 'function') out.then(() => this.invalidate?.(), () => this.invalidate?.());
+    return out;
+  };
 }

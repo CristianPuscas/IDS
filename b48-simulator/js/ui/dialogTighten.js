@@ -57,10 +57,16 @@ export function openTightenDialog(app, partId, { params = null } = {}) {
     ...((app.data.tools?.tools || []).filter((t) => t.category === 'torque').map((t) => t.id))].filter(Boolean));
   const usable = [...toolIds].map((id) => sim.getTool(id)).filter(Boolean).filter((t) => app.modes?.isToolUsable?.(t.id) ?? true);
   const toolSel = h('select.input', { 'aria-label': 'Sculă folosită la strângere' },
-    usable.length ? usable.map((t) => h('option', { value: t.id }, `${t.icon || ''} ${t.name}${t.range ? ` (${t.range[0]}–${t.range[1]} Nm)` : ''}`))
+    usable.length ? usable.map((t) => h('option', { value: t.id }, `${t.icon || ''} ${t.name}${t.range && !/Nm/.test(t.name) ? ` (${t.range[0]}–${t.range[1]} Nm)` : ''}`))
       : h('option', { value: '' }, '— nicio sculă potrivită —'));
-  if (sim.activeTool && usable.some((t) => t.id === sim.activeTool)) toolSel.value = sim.activeTool;
-  else if (usable.some((t) => t.category === 'torque')) toolSel.value = usable.find((t) => t.category === 'torque').id;
+  // implicit: scula activă dacă e cheie dinamometrică; altfel cheia dinamometrică potrivită domeniului specificației
+  const torqueTools = usable.filter((t) => t.category === 'torque');
+  const active = usable.find((t) => t.id === sim.activeTool);
+  const target = Number(torqueSpec?.value);
+  const fitting = torqueTools.find((t) => Array.isArray(t.range) && target >= t.range[0] && target <= t.range[1]);
+  if (active && (active.category === 'torque' || !torqueTools.length)) toolSel.value = active.id;
+  else if (fitting || torqueTools[0]) toolSel.value = (fitting || torqueTools[0]).id;
+  else if (active) toolSel.value = active.id;
 
   const torqueIn = h('input.input', { type: 'number', min: '0', step: '0.5', inputMode: 'decimal', 'aria-label': 'Cuplu în Nm', placeholder: 'ex. 10' });
   const angleIn = h('input.input', { type: 'number', min: '0', max: '360', step: '5', 'aria-label': 'Unghi în grade', placeholder: 'ex. 90' });
@@ -86,7 +92,7 @@ export function openTightenDialog(app, partId, { params = null } = {}) {
   const pts = boltPositions(count, W, H);
   const diagram = svg('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bolt-diagram', role: 'group', 'aria-label': 'Diagrama șuruburilor — apăsați în ordinea de strângere' });
   diagram.appendChild(svg('rect', { x: 14, y: 14, width: W - 28, height: H - 28, rx: 26, class: 'bolt-cover' }));
-  const label = svg('text', { x: W / 2, y: H / 2 + 5, 'text-anchor': 'middle', class: 'bolt-cover-label' });
+  const label = svg('text', { x: W / 2, y: count <= 3 ? H - 24 : H / 2 + 5, 'text-anchor': 'middle', class: 'bolt-cover-label' });
   label.textContent = part.name;
   diagram.appendChild(label);
   const boltEls = pts.map(([x, y], i) => {

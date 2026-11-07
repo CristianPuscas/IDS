@@ -190,12 +190,14 @@ export class Stage {
   }
 
   /** Pornește bucla; onFrame(dt, t) e apelată înainte de randare. */
-  start(onFrame, afterRender) {
+  start(onFrame, afterRender, shouldRender = () => true) {
     this.renderer.setAnimationLoop(() => {
       const dt = Math.min(0.05, this.clock.getDelta());
       const t = this.clock.elapsedTime;
       onFrame(dt, t);
       this.controls.update();
+      // randare la cerere: când scena e statică nu mai desenăm (economie mare pe sisteme fără GPU)
+      if (!shouldRender()) return;
       this.renderer.render(this.scene, this.camera);
       afterRender?.(dt, t);
     });

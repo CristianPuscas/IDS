@@ -14,13 +14,13 @@ export function renderReport(app, report) {
   const leaks = report?.leaks || [];
   const name = (i) => sim.getPart(i.partId)?.name || sim.getConnector(i.connectorId)?.name || sim.getFlagDef(i.flagId)?.name || '';
   const sound = report?.sound || {};
-  const soundItems = Object.entries(sound).filter(([, v]) => v && v !== 0);
+  const soundItems = Object.entries(sound).filter(([k, v]) => k in SOUND_LABELS && v && v !== 0 && !Array.isArray(v));
   return h('div.report',
     h(`div.report-status.${report?.startable ? 'ok' : 'bad'}`,
       report?.startable ? (issues.length ? '⚠ Motorul poate porni, dar există probleme.' : '✔ Totul este în ordine — motorul poate porni.') : '✖ Motorul NU poate porni în această stare.'),
     h('h3.sub', `Probleme (${issues.length})`),
     issues.length ? h('ul.issue-list', issues.map((i) => h(`li.issue.issue-${i.type}`,
-      h('span.badge.badge-warn', ISSUE_LABELS[i.type] || i.type), ' ', h('span', i.message), name(i) ? h('span.muted', ` — ${name(i)}`) : null)))
+      h('span.badge.badge-warn', ISSUE_LABELS[i.type] || i.type), ' ', h('span', i.message), name(i) && !String(i.message || '').includes(name(i)) ? h('span.muted', ` — ${name(i)}`) : null)))
       : h('p.muted', 'Nicio problemă detectată.'),
     h('h3.sub', `Scurgeri (${leaks.length})`),
     leaks.length ? h('ul', leaks.map((l) => h('li', `${sim.getPart(l.partId)?.name || l.partId}: ${FLUIDS[l.fluid] || l.fluid}`))) : h('p.muted', 'Nicio scurgere.'),

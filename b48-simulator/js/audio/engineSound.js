@@ -179,6 +179,8 @@ export function startEngine(ctx, destination, profile, { rpm = 800, startable = 
 
   if (!willStart) {
     starter.onended = () => { resolveStarted(false); handle.running = false; try { out.disconnect(); } catch { /* deja */ } };
+    // rezervă: dacă contextul audio e suspendat, onended nu vine — rezolvăm după durata demarorului
+    setTimeout(() => { resolveStarted(false); handle.running = false; }, (crankSec + 0.4) * 1000);
     handle.stop = () => { try { starter.stop(); } catch { /* deja oprit */ } };
     return handle;
   }
